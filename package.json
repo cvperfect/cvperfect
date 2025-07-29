@@ -1,0 +1,27 @@
+{
+  "name": "cvperfect",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.0.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "@stripe/stripe-js": "^2.1.11",
+    "stripe": "^14.5.0",
+    "openai": "^4.20.1",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1",
+    "micro": "^10.0.1",
+    "raw-body": "^2.5.2"
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "eslint-config-next": "14.0.0"
+  }
+}
