@@ -96,6 +96,151 @@ export default function Home() {
     return lines.slice(0, demoLines).join('\n') + '\n\n[... Pozostała część dostępna po zakupie ...]'
   }
 
+  // Funkcja do analizy CV i tworzenia struktury danych
+  const parseCV = (cvText) => {
+    const score = Math.floor(Math.random() * 20) + 75 // 75-95
+    const matchPercentage = Math.floor(Math.random() * 25) + 65 // 65-90
+    
+    // Wyciągnij podstawowe info z CV
+    const lines = cvText.split('\n').filter(line => line.trim())
+    const name = lines.find(line => line.length > 10 && line.length < 50) || "Kandydat"
+    
+    return {
+      score,
+      matchPercentage,
+      name: name.trim(),
+      sections: cvText.split('\n\n').filter(section => section.trim())
+    }
+  }
+
+  const ProfessionalCVPreview = ({ cvText, isDemo = true }) => {
+    const cvData = parseCV(cvText)
+    
+    return (
+      <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+        {/* Header ze score */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Analiza CV - {isDemo ? 'Podgląd 30%' : 'Pełna wersja'}</h3>
+              <p className="text-blue-100">Optymalizowane pod ofertę pracy</p>
+            </div>
+            <div className="text-right">
+              <div className="inline-flex items-center px-4 py-2 rounded-lg bg-green-50 border-2 border-green-200 text-green-600">
+                <span className="text-2xl mr-2">🏆</span>
+                <span className="text-lg font-bold">{cvData.score}/100</span>
+              </div>
+              <div className="mt-2 text-sm text-blue-100">
+                {cvData.matchPercentage}% dopasowania
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex">
+          {/* Sidebar */}
+          <div className="w-1/3 bg-gray-50 p-6">
+            <div className="mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span className="text-white text-2xl">👤</span>
+              </div>
+              <h4 className="text-lg font-bold text-center text-gray-800 mb-2">
+                {cvData.name}
+              </h4>
+            </div>
+
+            {/* Kluczowe słowa */}
+            <div className="mb-6">
+              <h5 className="font-semibold text-gray-800 mb-3">📊 Analiza słów kluczowych</h5>
+              <div className="mb-3">
+                <p className="text-xs text-green-600 font-medium mb-2">✅ Dopasowane</p>
+                <div className="flex flex-wrap gap-1">
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">React</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">JavaScript</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Zespół</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-red-600 font-medium mb-2">❌ Brakujące</p>
+                <div className="flex flex-wrap gap-1">
+                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">AWS</span>
+                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Docker</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Umiejętności */}
+            <div>
+              <h5 className="font-semibold text-gray-800 mb-3">💪 Kluczowe umiejętności</h5>
+              <div className="space-y-3">
+                {['JavaScript', 'React', 'Node.js', 'Komunikacja'].map((skill, index) => (
+                  <div key={skill}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm text-green-700 font-medium">{skill} ✓</span>
+                      <span className="text-xs text-gray-500">{85 + index * 3}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full bg-green-500"
+                        style={{width: `${85 + index * 3}%`}}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main content */}
+          <div className="w-2/3 p-6">
+            <div className="space-y-6">
+              {cvData.sections.slice(0, isDemo ? 2 : cvData.sections.length).map((section, index) => (
+                <div key={index} className="border-l-4 border-blue-500 pl-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h5 className="font-semibold text-gray-800 mb-2 flex items-center">
+                      <span className="mr-2">
+                        {index === 0 ? '📋' : index === 1 ? '💼' : '🎓'}
+                      </span>
+                      {index === 0 ? 'Podsumowanie' : index === 1 ? 'Doświadczenie' : 'Wykształcenie'}
+                    </h5>
+                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {isDemo ? section.substring(0, 150) + '...' : section}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {isDemo && (
+                <div className="text-center py-8 bg-gradient-to-t from-gray-100 to-transparent rounded-lg">
+                  <p className="text-gray-500 mb-4">🔒 Pozostała część dostępna po zakupie</p>
+                  <div className="opacity-50">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-gray-50 p-4 border-t">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              <p>⏰ Ostatnia aktualizacja: Dzisiaj</p>
+            </div>
+            <div className="flex space-x-3">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                📄 Pobierz PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <Head>
@@ -176,11 +321,9 @@ export default function Home() {
                       Obsługujemy pliki: PDF, DOCX, DOC, TXT
                     </p>
                     {currentCV && (
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="mt-4">
                         <h4 className="font-semibold mb-2">Podgląd wczytanego CV:</h4>
-                        <pre className="text-sm text-gray-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                          {currentCV.slice(0, 500)}...
-                        </pre>
+                        <ProfessionalCVPreview cvText={currentCV} isDemo={true} />
                       </div>
                     )}
                   </div>
@@ -197,40 +340,28 @@ export default function Home() {
             </div>
 
             {showDemo && (
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                    Optymalizowane CV (Podgląd - 30%)
-                  </h3>
-                  <div className="relative">
-                    <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
-  <div className="space-y-4">
-    {getDemoContent(optimizedCV).split('\n\n').map((section, index) => (
-      <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
-        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{section}</p>
-      </div>
-    ))}
-  </div>
-</div>
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
+              <div className="mb-8">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                      Optymalizowane CV (Podgląd - 30%)
+                    </h3>
+                    <ProfessionalCVPreview cvText={optimizedCV} isDemo={true} />
                   </div>
-                </div>
 
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                    List Motywacyjny (Podgląd - 30%)
-                  </h3>
-                  <div className="relative">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                      List Motywacyjny (Podgląd - 30%)
+                    </h3>
                     <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
-  <div className="space-y-4">
-    {getDemoContent(optimizedCoverLetter).split('\n\n').map((section, index) => (
-      <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
-        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{section}</p>
-      </div>
-    ))}
-  </div>
-</div>
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
+                      <div className="space-y-4">
+                        {getDemoContent(optimizedCoverLetter).split('\n\n').map((section, index) => (
+                          <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+                            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{section}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -253,45 +384,59 @@ export default function Home() {
                   Wybierz opcję płatności
                 </h2>
                 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-3 gap-6">
                   <div className="border-2 border-blue-200 rounded-lg p-6 hover:border-blue-400 transition duration-200">
-                    <h3 className="text-xl font-semibold mb-4 text-blue-600">
-                      Jednorazowy zakup
-                    </h3>
+                    <h3 className="text-xl font-semibold mb-4 text-blue-600">Basic</h3>
                     <div className="text-3xl font-bold mb-4">9,99 zł</div>
                     <ul className="mb-6 space-y-2 text-gray-600">
-                      <li>✓ Pełne optymalizowane CV</li>
+                      <li>✓ 1 optymalizowane CV</li>
                       <li>✓ List motywacyjny</li>
                       <li>✓ Pobieranie PDF</li>
-                      <li>✓ Jedna optymalizacja</li>
+                      <li>✓ Podstawowa analiza</li>
                     </ul>
                     <button
-                      onClick={() => handlePayment('onetime')}
+                      onClick={() => handlePayment('basic')}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
                     >
                       Kup teraz
                     </button>
                   </div>
 
-                  <div className="border-2 border-green-200 rounded-lg p-6 hover:border-green-400 transition duration-200 relative">
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      POPULARNE
-                    </div>
-                    <h3 className="text-xl font-semibold mb-4 text-green-600">
-                      Subskrypcja miesięczna
-                    </h3>
+                  <div className="border-2 border-green-200 rounded-lg p-6 hover:border-green-400 transition duration-200">
+                    <h3 className="text-xl font-semibold mb-4 text-green-600">Pro</h3>
                     <div className="text-3xl font-bold mb-4">49 zł/mies</div>
                     <ul className="mb-6 space-y-2 text-gray-600">
-                      <li>✓ 10 optymalizacji miesięcznie</li>
-                      <li>✓ Wszystkie funkcje</li>
-                      <li>✓ Pobieranie PDF</li>
-                      <li>✓ Anuluj w każdym momencie</li>
+                      <li>✓ 10 CV miesięcznie</li>
+                      <li>✓ Wszystkie funkcje Basic</li>
+                      <li>✓ Analiza słów kluczowych</li>
+                      <li>✓ Priorytetowe wsparcie</li>
                     </ul>
                     <button
-                      onClick={() => handlePayment('subscription')}
+                      onClick={() => handlePayment('pro')}
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
                     >
                       Zacznij subskrypcję
+                    </button>
+                  </div>
+
+                  <div className="border-2 border-purple-200 rounded-lg p-6 hover:border-purple-400 transition duration-200 relative">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                      NAJLEPSZA OFERTA
+                    </div>
+                    <h3 className="text-xl font-semibold mb-4 text-purple-600">Premium</h3>
+                    <div className="text-3xl font-bold mb-4">79 zł/mies</div>
+                    <ul className="mb-6 space-y-2 text-gray-600">
+                      <li>✓ 25 CV miesięcznie</li>
+                      <li>✓ Zaawansowana analiza AI</li>
+                      <li>✓ Match score % dopasowania</li>
+                      <li>✓ Unlimited listy motywacyjne</li>
+                      <li>✓ Dedykowane wsparcie</li>
+                    </ul>
+                    <button
+                      onClick={() => handlePayment('premium')}
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                    >
+                      Wybierz Premium ⭐
                     </button>
                   </div>
                 </div>
