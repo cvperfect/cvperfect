@@ -121,4 +121,53 @@ export default function Kontakt() {
                     Sugestie
                   </h3>
                   <p style={{ color: '#6b7280', fontSize: '14px' }}>
-                    Pomysły na nowe
+                    Pomysły na nowe funkcje
+                  </p>
+                </div>
+              </div>
+
+              <div style={{
+                background: '#fef3c7',
+                padding: '24px',
+                borderRadius: '12px',
+                marginBottom: '32px'
+              }}>
+                <h3 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '12px', color: '#92400e' }}>
+                  ⚡ Szybka pomoc
+                </h3>
+                <p style={{ color: '#78350f', marginBottom: '12px' }}>
+                  Zanim napiszesz do nas, sprawdź czy Twój problem nie jest opisany w naszych materiałach pomocniczych:
+                </p>
+                <ul style={{ color: '#78350f', marginLeft: '20px' }}>
+                  <li>Problemy z płatnościami - sprawdź status w swoim banku</li>
+                  <li>CV nie optymalizuje się - sprawdź połączenie internetowe</li>
+                  <li>Nie możesz pobrać PDF - wyczyść cache przeglądarki</li>
+                </ul>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <Link 
+                  href="/"
+                  style={{
+                    display: 'inline-block',
+                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    padding: '16px 32px',
+                    borderRadius: '12px',
+                    fontWeight: '600',
+                    fontSize: '16px',
+                    boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  ← Powrót do CvPerfect
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
