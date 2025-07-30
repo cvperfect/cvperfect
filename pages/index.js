@@ -203,9 +203,15 @@ export default function Home() {
                     Optymalizowane CV (Podgląd - 30%)
                   </h3>
                   <div className="relative">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded border max-h-96 overflow-y-auto">
-                      {getDemoContent(optimizedCV)}
-                    </pre>
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
+  <div className="space-y-4">
+    {getDemoContent(optimizedCV).split('\n\n').map((section, index) => (
+      <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{section}</p>
+      </div>
+    ))}
+  </div>
+</div>
                     <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
                   </div>
                 </div>
@@ -215,9 +221,15 @@ export default function Home() {
                     List Motywacyjny (Podgląd - 30%)
                   </h3>
                   <div className="relative">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded border max-h-96 overflow-y-auto">
-                      {getDemoContent(optimizedCoverLetter)}
-                    </pre>
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
+  <div className="space-y-4">
+    {getDemoContent(optimizedCoverLetter).split('\n\n').map((section, index) => (
+      <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{section}</p>
+      </div>
+    ))}
+  </div>
+</div>
                     <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
                   </div>
                 </div>
