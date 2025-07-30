@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
+import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 
 export default function Home() {
   const [jobPosting, setJobPosting] = useState('')
@@ -57,6 +55,7 @@ export default function Home() {
         setOptimizedCV(data.optimizedCV)
         setOptimizedCoverLetter(data.coverLetter)
         setShowDemo(true)
+        console.log('ShowDemo set to true')
       } else {
         alert('Błąd: ' + data.error)
       }
@@ -68,16 +67,43 @@ export default function Home() {
   }
 
   const handlePayment = async (priceType) => {
-    const stripe = await stripePromise
+  console.log('Button clicked:', priceType)
+  try {
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ priceType, cv: optimizedCV, coverLetter: optimizedCoverLetter }),
+      body: JSON.stringify({ 
+        priceType, 
+        cv: optimizedCV, 
+        coverLetter: optimizedCoverLetter,
+        originalCV: currentCV,
+        jobPosting: jobPosting
+      }),
     })
+    
     const session = await response.json()
-    const result = await stripe.redirectToCheckout({ sessionId: session.id })
-    if (result.error) alert(result.error.message)
+    console.log('Full session response:', session)
+    console.log('Session ID:', session.id)
+    console.log('Session URL:', session.url)
+    console.log('Session error:', session.error)
+    
+    // BEZPOŚREDNI REDIRECT - użyj URL od Stripe
+    if (session.url) {
+      console.log('Using Stripe URL:', session.url)
+      window.location.href = session.url
+    } else if (session.id) {
+      console.log('Fallback URL:', `https://checkout.stripe.com/pay/${session.id}`)
+      window.location.href = `https://checkout.stripe.com/pay/${session.id}`
+    } else {
+      console.error('No session ID or URL, full response:', session)
+      throw new Error('No session ID received')
+    }
+    
+  } catch (error) {
+    console.log('Payment error:', error)
+    alert('Błąd płatności. Sprawdź połączenie i spróbuj ponownie.')
   }
+}
 
   return (
     <>
@@ -258,132 +284,14 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Results */}
+          {/* Results - NOWY DASHBOARD */}
           {showDemo && (
-            <div className="results-card">
-              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <h3 className="results-title">
-                  🎉 Twoje CV zostało zoptymalizowane!
-                </h3>
-                <p style={{ fontSize: '18px', color: '#6b7280', margin: 0 }}>
-                  Sprawdź jak AI poprawiło Twoje CV pod konkretną ofertę pracy
-                </p>
-              </div>
-
-              <div className="preview-section">
-                <h4 className="preview-title">
-                  <span style={{ marginRight: '8px' }}>📄</span>
-                  Podgląd zoptymalizowanego CV (30%)
-                </h4>
-                <div className="preview-content">
-                  <p style={{ margin: 0, lineHeight: '1.6', color: '#374151' }}>
-                    {optimizedCV.substring(0, 300)}...
-                  </p>
-                  <div className="preview-locked">
-                    <span style={{ color: '#3b82f6', fontWeight: '500' }}>
-                      🔒 Pozostała część dostępna po zakupie
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  onClick={() => setShowPaywall(true)}
-                  className="unlock-button"
-                >
-                  <span style={{ marginRight: '8px' }}>🔓</span>
-                  Pobierz pełne CV i list motywacyjny
-                </button>
-              </div>
-            </div>
+            <CVAnalysisDashboard 
+              optimizedCV={optimizedCV}
+              onPayment={handlePayment}
+            />
           )}
 
-          {/* Pricing - RESPONSIVE */}
-          {showPaywall && (
-            <div className="pricing-card">
-              <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                <h2 className="pricing-title">
-                  💎 Wybierz idealny plan dla siebie
-                </h2>
-                <p style={{ fontSize: '18px', color: '#6b7280', margin: 0 }}>
-                  Wszystkie plany obejmują pełne CV, list motywacyjny i pobieranie PDF
-                </p>
-              </div>
-              
-              <div className="pricing-grid">
-                
-                {/* Basic */}
-                <div className="pricing-plan basic">
-                  <div style={{ fontSize: '40px', marginBottom: '16px' }}>⚡</div>
-                  <h3 style={{ color: '#3b82f6', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
-                    Basic
-                  </h3>
-                  <div className="price">9,99 zł</div>
-                  <div className="price-period">jednorazowo</div>
-                  <ul className="feature-list">
-                    <li><span className="check">✓</span>1 optymalizowane CV</li>
-                    <li><span className="check">✓</span>List motywacyjny</li>
-                    <li><span className="check">✓</span>Pobieranie PDF</li>
-                    <li><span className="check">✓</span>Podstawowa analiza</li>
-                  </ul>
-                  <button 
-                    onClick={() => handlePayment('basic')} 
-                    className="plan-button basic-button"
-                  >
-                    Rozpocznij Basic
-                  </button>
-                </div>
-
-                {/* Pro */}
-                <div className="pricing-plan pro">
-                  <div style={{ fontSize: '40px', marginBottom: '16px' }}>🚀</div>
-                  <h3 style={{ color: '#10b981', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
-                    Pro
-                  </h3>
-                  <div className="price">49 zł</div>
-                  <div className="price-period">miesięcznie</div>
-                  <ul className="feature-list">
-                    <li><span className="check">✓</span>10 CV miesięcznie</li>
-                    <li><span className="check">✓</span>Analiza słów kluczowych</li>
-                    <li><span className="check">✓</span>Wszystkie funkcje Basic</li>
-                    <li><span className="check">✓</span>Priorytetowe wsparcie</li>
-                  </ul>
-                  <button 
-                    onClick={() => handlePayment('pro')} 
-                    className="plan-button pro-button"
-                  >
-                    Rozpocznij Pro
-                  </button>
-                </div>
-
-                {/* Premium */}
-                <div className="pricing-plan premium">
-                  <div className="best-offer-badge">
-                    NAJLEPSZA OFERTA ⭐
-                  </div>
-                  <div style={{ fontSize: '40px', marginBottom: '16px', marginTop: '16px' }}>💎</div>
-                  <h3 style={{ color: '#8b5cf6', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
-                    Premium
-                  </h3>
-                  <div className="price">79 zł</div>
-                  <div className="price-period">miesięcznie</div>
-                  <ul className="feature-list">
-                    <li><span className="check">✓</span>25 CV miesięcznie</li>
-                    <li><span className="check">✓</span>Zaawansowana analiza AI</li>
-                    <li><span className="check">✓</span>Match score % dopasowania</li>
-                    <li><span className="check">✓</span>Dedykowane wsparcie VIP</li>
-                  </ul>
-                  <button 
-                    onClick={() => handlePayment('premium')} 
-                    className="plan-button premium-button"
-                  >
-                    Wybierz Premium ⭐
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Testimonials Section */}
@@ -734,196 +642,6 @@ export default function Home() {
           animation: spin 1s linear infinite;
         }
 
-        .results-card {
-          background: rgba(255, 255, 255, 0.95);
-          border-radius: 24px;
-          padding: 48px;
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-          margin-bottom: 48px;
-          color: #1f2937;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .results-title {
-          font-size: 32px;
-          font-weight: 800;
-          margin: 0 0 16px 0;
-          background: linear-gradient(135deg, #10b981, #059669);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .preview-section {
-          background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-          padding: 32px;
-          border-radius: 20px;
-          margin-bottom: 32px;
-          border: 1px solid #bae6fd;
-        }
-
-        .preview-title {
-          font-size: 20px;
-          font-weight: 600;
-          margin-bottom: 16px;
-          color: #0c4a6e;
-          display: flex;
-          align-items: center;
-        }
-
-        .preview-content {
-          background: white;
-          padding: 24px;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-        }
-
-        .preview-locked {
-          margin-top: 16px;
-          padding: 12px;
-          background: rgba(59, 130, 246, 0.1);
-          border-radius: 8px;
-          border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .unlock-button {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          border: none;
-          padding: 18px 36px;
-          border-radius: 16px;
-          font-size: 18px;
-          font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-          transition: all 0.3s ease;
-          transform: translateY(-2px);
-        }
-
-        .pricing-card {
-          background: rgba(255, 255, 255, 0.95);
-          border-radius: 24px;
-          padding: 48px;
-          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-          color: #1f2937;
-          margin-bottom: 48px;
-        }
-
-        .pricing-title {
-          font-size: 36px;
-          font-weight: 800;
-          margin: 0 0 16px 0;
-          background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .pricing-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 24px;
-          max-width: 900px;
-          margin: 0 auto;
-        }
-
-        .pricing-plan {
-          border-radius: 20px;
-          padding: 32px;
-          text-align: center;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-
-        .pricing-plan.basic {
-          border: 2px solid #3b82f6;
-          background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.02));
-        }
-
-        .pricing-plan.pro {
-          border: 2px solid #10b981;
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
-        }
-
-        .pricing-plan.premium {
-          border: 2px solid #8b5cf6;
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.02));
-        }
-
-        .best-offer-badge {
-          position: absolute;
-          top: -16px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          color: white;
-          padding: 8px 24px;
-          border-radius: 25px;
-          font-size: 12px;
-          font-weight: bold;
-          box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-        }
-
-        .price {
-          font-size: 36px;
-          font-weight: 800;
-          margin-bottom: 8px;
-          color: #1f2937;
-        }
-
-        .price-period {
-          font-size: 14px;
-          color: #6b7280;
-          margin-bottom: 24px;
-        }
-
-        .feature-list {
-          text-align: left;
-          margin-bottom: 32px;
-          list-style: none;
-          padding: 0;
-          font-size: 16px;
-        }
-
-        .feature-list li {
-          margin-bottom: 12px;
-          display: flex;
-          align-items: center;
-        }
-
-        .check {
-          color: #10b981;
-          margin-right: 8px;
-          font-weight: bold;
-        }
-
-        .plan-button {
-          border: none;
-          padding: 16px 32px;
-          border-radius: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          width: 100%;
-          font-size: 16px;
-          transition: all 0.3s ease;
-        }
-
-        .basic-button {
-          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-          color: white;
-        }
-
-        .pro-button {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-        }
-
-        .premium-button {
-          background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          color: white;
-          box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
-        }
-
         .testimonials-section {
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
@@ -1083,26 +801,6 @@ export default function Home() {
 
           .file-upload-zone {
             padding: 32px;
-          }
-
-          .results-card {
-            padding: 24px;
-          }
-
-          .results-title {
-            font-size: 24px;
-          }
-
-          .pricing-card {
-            padding: 24px;
-          }
-
-          .pricing-title {
-            font-size: 28px;
-          }
-
-          .pricing-grid {
-            grid-template-columns: 1fr;
           }
         }
 
