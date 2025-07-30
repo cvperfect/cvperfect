@@ -988,10 +988,10 @@ export default function Home() {
            </div>
            
            <div style={{ display: 'flex', gap: '32px', color: 'rgba(255, 255, 255, 0.7)' }}>
-             <a href="#" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Regulamin</a>
-             <a href="#" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Prywatność</a>
-             <a href="#" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Kontakt</a>
-           </div>
+  <a href="/regulamin" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Regulamin</a>
+  <a href="/prywatnosc" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Prywatność</a>
+  <a href="/kontakt" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Kontakt</a>
+</div>
          </div>
        </footer>
      </div>
