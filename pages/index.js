@@ -113,76 +113,133 @@ export default function Home() {
     }
   }
 
-  const ProfessionalCVPreview = ({ cvText, isDemo = true }) => {
-    const cvData = parseCV(cvText)
+  import React from 'react';
+
+const UniqueCVLayout = ({ cvText, isDemo = true }) => {
+  // Parsowanie CV do sekcji
+  const parseCV = (text) => {
+    const score = Math.floor(Math.random() * 20) + 75;
+    const match = Math.floor(Math.random() * 25) + 65;
     
-    return (
-      <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
-        {/* Header ze score */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6">
+    // Sprawdź czy text istnieje i jest string
+    if (!text || typeof text !== 'string') {
+      return { 
+        score, 
+        match, 
+        sections: ['Przykładowe CV zostanie tutaj wyświetlone po wczytaniu tekstu.'] 
+      };
+    }
+    
+    const sections = text.split('\n\n').filter(s => s.trim());
+    
+    return { score, match, sections };
+  };
+
+  const cvData = parseCV(cvText);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      {/* Top Bar z metrykami */}
+      <div className="bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-600 p-1">
+        <div className="bg-white m-1 rounded-xl p-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-xl font-bold mb-2">Analiza CV - {isDemo ? 'Podgląd 30%' : 'Pełna wersja'}</h3>
-              <p className="text-blue-100">Optymalizowane pod ofertę pracy</p>
+            <div className="flex items-center space-x-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-600">{cvData.score}</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide">Ocena CV</div>
+              </div>
+              <div className="w-px h-8 bg-gray-200"></div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{cvData.match}%</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide">Dopasowanie</div>
+              </div>
+              <div className="w-px h-8 bg-gray-200"></div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">ATS</div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide">Gotowe</div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="inline-flex items-center px-4 py-2 rounded-lg bg-green-50 border-2 border-green-200 text-green-600">
-                <span className="text-2xl mr-2">🏆</span>
-                <span className="text-lg font-bold">{cvData.score}/100</span>
+            
+            <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className={`w-2 h-2 rounded-full ${i <= 4 ? 'bg-yellow-400' : 'bg-gray-200'}`}></div>
+                ))}
               </div>
-              <div className="mt-2 text-sm text-blue-100">
-                {cvData.matchPercentage}% dopasowania
-              </div>
+              <span className="text-sm text-gray-600 ml-2">4/5 gwiazdek</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="flex">
-          {/* Sidebar */}
-          <div className="w-1/3 bg-gray-50 p-6">
-            <div className="mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <span className="text-white text-2xl">👤</span>
+      {/* Main Layout - Horizontal Split */}
+      <div className="p-6">
+        <div className="grid grid-cols-4 gap-6">
+          
+          {/* Left Column - Analytics */}
+          <div className="col-span-1 space-y-4">
+            
+            {/* Status Badge */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 text-center">
+              <div className="w-12 h-12 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                <span className="text-white text-xl">✓</span>
               </div>
-              <h4 className="text-lg font-bold text-center text-gray-800 mb-2">
-                {cvData.name}
-              </h4>
+              <div className="text-sm font-semibold text-green-700">ZOPTYMALIZOWANE</div>
+              <div className="text-xs text-green-600">Gotowe do wysłania</div>
             </div>
 
-            {/* Kluczowe słowa */}
-            <div className="mb-6">
-              <h5 className="font-semibold text-gray-800 mb-3">📊 Analiza słów kluczowych</h5>
+            {/* Keywords Match */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Słowa kluczowe</h4>
+              
               <div className="mb-3">
-                <p className="text-xs text-green-600 font-medium mb-2">✅ Dopasowane</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-green-600">Znalezione</span>
+                  <span className="text-xs text-green-600 font-medium">8/12</span>
+                </div>
                 <div className="flex flex-wrap gap-1">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">React</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">JavaScript</span>
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">Zespół</span>
+                  {['React', 'JavaScript', 'Teamwork'].map(keyword => (
+                    <span key={keyword} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full border border-green-200">
+                      {keyword}
+                    </span>
+                  ))}
                 </div>
               </div>
+
               <div>
-                <p className="text-xs text-red-600 font-medium mb-2">❌ Brakujące</p>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-orange-600">Do dodania</span>
+                  <span className="text-xs text-orange-600 font-medium">4</span>
+                </div>
                 <div className="flex flex-wrap gap-1">
-                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">AWS</span>
-                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">Docker</span>
+                  {['AWS', 'Docker'].map(keyword => (
+                    <span key={keyword} className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full border border-orange-200">
+                      {keyword}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Umiejętności */}
-            <div>
-              <h5 className="font-semibold text-gray-800 mb-3">💪 Kluczowe umiejętności</h5>
-              <div className="space-y-3">
-                {['JavaScript', 'React', 'Node.js', 'Komunikacja'].map((skill, index) => (
-                  <div key={skill}>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-green-700 font-medium">{skill} ✓</span>
-                      <span className="text-xs text-gray-500">{85 + index * 3}%</span>
+            {/* Skills Radar */}
+            <div className="bg-blue-50 rounded-xl p-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Profil umiejętności</h4>
+              <div className="space-y-2">
+                {[
+                  { skill: 'Techniczne', level: 92, color: 'blue' },
+                  { skill: 'Komunikacja', level: 85, color: 'green' },
+                  { skill: 'Liderstwo', level: 78, color: 'purple' },
+                  { skill: 'Analityczne', level: 88, color: 'indigo' }
+                ].map(item => (
+                  <div key={item.skill}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-600">{item.skill}</span>
+                      <span className="font-medium">{item.level}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-white rounded-full h-1.5 border">
                       <div 
-                        className="h-2 rounded-full bg-green-500"
-                        style={{width: `${85 + index * 3}%`}}
+                        className={`h-full rounded-full bg-${item.color}-500`}
+                        style={{width: `${item.level}%`}}
                       ></div>
                     </div>
                   </div>
@@ -191,24 +248,117 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Main content */}
-          <div className="w-2/3 p-6">
-            <div className="space-y-6">
-              {cvData.sections.slice(0, isDemo ? 2 : cvData.sections.length).map((section, index) => (
-                <div key={index} className="border-l-4 border-blue-500 pl-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h5 className="font-semibold text-gray-800 mb-2 flex items-center">
-                      <span className="mr-2">
-                        {index === 0 ? '📋' : index === 1 ? '💼' : '🎓'}
-                      </span>
-                      {index === 0 ? 'Podsumowanie' : index === 1 ? 'Doświadczenie' : 'Wykształcenie'}
-                    </h5>
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {isDemo ? section.substring(0, 150) + '...' : section}
+          {/* Main Content Area */}
+          <div className="col-span-3">
+            
+            {/* Header Card */}
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-6 mb-6 border border-blue-100">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl font-bold">JK</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">Jan Kowalski</h3>
+                    <p className="text-blue-600 font-medium">Senior Software Developer</p>
+                    <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+                      <span>📍 Warszawa</span>
+                      <span>📧 jan@email.com</span>
+                      <span>📱 +48 123 456 789</span>
                     </div>
                   </div>
                 </div>
-              ))}
+                
+                <div className="text-right">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Aktywny kandydat
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Sections */}
+            <div className="space-y-4">
+              {cvData.sections.slice(0, isDemo ? 2 : cvData.sections.length).map((section, index) => {
+                const icons = ['💡', '💼', '🎓', '🏆', '🛠️'];
+                const bgColors = [
+                  'from-blue-50 to-indigo-50 border-blue-200',
+                  'from-green-50 to-emerald-50 border-green-200', 
+                  'from-purple-50 to-violet-50 border-purple-200',
+                  'from-orange-50 to-amber-50 border-orange-200',
+                  'from-pink-50 to-rose-50 border-pink-200'
+                ];
+                
+                return (
+                  <div key={index} className={`bg-gradient-to-r ${bgColors[index % bgColors.length]} border rounded-xl p-5`}>
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm border">
+                        <span className="text-lg">{icons[index % icons.length]}</span>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-800 mb-2">
+                          {index === 0 ? 'Podsumowanie zawodowe' : 
+                           index === 1 ? 'Doświadczenie zawodowe' :
+                           index === 2 ? 'Wykształcenie' : 
+                           index === 3 ? 'Osiągnięcia' : 'Dodatkowe informacje'}
+                        </h4>
+                        <div className="text-gray-700 text-sm leading-relaxed">
+                          {isDemo ? 
+                            <div>
+                              {section.substring(0, 120)}...
+                              <span className="text-blue-600 font-medium"> [Więcej po zakupie]</span>
+                            </div>
+                            : section
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {isDemo && (
+                <div className="bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span className="text-gray-400 text-2xl">🔒</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-600 mb-2">Więcej zawartości dostępne po zakupie</h4>
+                  <p className="text-gray-500 text-sm">Odblokowaj pełną analizę, dodatkowe sekcje i możliwość pobrania PDF</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Action Bar */}
+        <div className="mt-6 flex items-center justify-between bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border">
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-1">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span>Ostatnia aktualizacja: 2 min temu</span>
+            </div>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <span>📄 Format: PDF gotowy</span>
+            <div className="w-px h-4 bg-gray-300"></div>
+            <span>⚡ Generowanie: 12s</span>
+          </div>
+          
+          <div className="flex space-x-3">
+            <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              👁️ Podgląd
+            </button>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+              📥 Pobierz PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UniqueCVLayout;
               
               {isDemo && (
                 <div className="text-center py-8 bg-gradient-to-t from-gray-100 to-transparent rounded-lg">
@@ -323,7 +473,7 @@ export default function Home() {
                     {currentCV && (
                       <div className="mt-4">
                         <h4 className="font-semibold mb-2">Podgląd wczytanego CV:</h4>
-                        <ProfessionalCVPreview cvText={currentCV} isDemo={true} />
+                        <UniqueCVLayout cvText={currentCV} isDemo={true} />
                       </div>
                     )}
                   </div>
@@ -346,7 +496,7 @@ export default function Home() {
                     <h3 className="text-xl font-semibold mb-4 text-gray-800">
                       Optymalizowane CV (Podgląd - 30%)
                     </h3>
-                    <ProfessionalCVPreview cvText={optimizedCV} isDemo={true} />
+                    <UniqueCVLayout cvText={optimizedCV} isDemo={true} />
                   </div>
 
                   <div>
