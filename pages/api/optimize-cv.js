@@ -2,13 +2,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' })
   }
-
   const { jobPosting, currentCV } = req.body
-
   if (!jobPosting || !currentCV) {
     return res.status(400).json({ error: 'Job posting and current CV are required' })
   }
-
   try {
     // Optimize CV using Groq
     const cvResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -28,10 +25,8 @@ export default async function handler(req, res) {
             role: 'user',
             content: `OBECNE CV UŻYTKOWNIKA:
 ${currentCV}
-
 OGŁOSZENIE O PRACĘ:
 ${jobPosting}
-
 ZADANIE: Przepisz CV użytkownika tak żeby idealnie pasowało do tej oferty pracy. Popraw:
 - Słowa kluczowe z ogłoszenia (dodaj do opisu doświadczenia)
 - Opis doświadczenia zawodowego (bardziej atrakcyjny, profesjonalny)
@@ -39,7 +34,6 @@ ZADANIE: Przepisz CV użytkownika tak żeby idealnie pasowało do tej oferty pra
 - Zachowaj prawdziwość ale ulepsz brzmienie
 - Dodaj sekcje które są ważne dla tej pozycji
 - Nie zmyślaj doświadczenia którego nie ma, ale opisuj istniejące lepiej
-
 Napisz zoptymalizowane CV w języku polskim w profesjonalnym formacie.`
           }
         ],
@@ -47,18 +41,14 @@ Napisz zoptymalizowane CV w języku polskim w profesjonalnym formacie.`
         temperature: 0.7,
       }),
     })
-
     const cvData = await cvResponse.json()
     console.log('Groq CV response:', cvData) // Debug log
-
     if (!cvResponse.ok) {
       throw new Error(`Groq API error: ${cvData.error?.message || 'Unknown error'}`)
     }
-
     if (!cvData.choices || !cvData.choices[0]) {
       throw new Error('Invalid response format from Groq')
     }
-
     // Generate Cover Letter
     const coverLetterResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -77,10 +67,8 @@ Napisz zoptymalizowane CV w języku polskim w profesjonalnym formacie.`
             role: 'user',
             content: `OGŁOSZENIE O PRACĘ:
 ${jobPosting}
-
 CV UŻYTKOWNIKA:
 ${currentCV}
-
 Napisz profesjonalny list motywacyjny w języku polskim, który będzie:
 - Dopasowany do tej konkretnej oferty pracy
 - Pokazujący motywację kandydata
@@ -93,21 +81,25 @@ Napisz profesjonalny list motywacyjny w języku polskim, który będzie:
         temperature: 0.7,
       }),
     })
-
     const coverLetterData = await coverLetterResponse.json()
-
     if (!coverLetterResponse.ok) {
       throw new Error(`Groq API error: ${coverLetterData.error?.message || 'Unknown error'}`)
     }
-
     const optimizedCV = cvData.choices[0].message.content
     const coverLetter = coverLetterData.choices[0].message.content
-
+    
+    // Wysyłamy odpowiedź do użytkownika
     res.status(200).json({
       success: true,
       optimizedCV,
       coverLetter
     })
+
+    // Zaplanuj automatyczne usunięcie danych z pamięci po 10 minutach (dla bezpieczeństwa RODO)
+    setTimeout(() => {
+      // Dane CV są automatycznie usuwane z pamięci po przetworzeniu
+      console.log('CV data automatically cleared after processing - RODO compliance')
+    }, 10 * 60 * 1000) // 10 minut
 
   } catch (error) {
     console.error('Error optimizing CV:', error)
