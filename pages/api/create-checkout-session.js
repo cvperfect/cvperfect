@@ -9,27 +9,27 @@ export default async function handler(req, res) {
   const { priceType, cv, coverLetter } = req.body
 
   try {
-    let priceId;
-    let mode = 'payment';
+    let priceId
+    let mode = 'payment'
 
-    // Mapowanie priceType na konkretne Price ID
+    // Dopasowanie planów cenowych
     switch (priceType) {
       case 'basic':
       case 'onetime':
-        priceId = 'price_1RofCI4FWb3xY5tDYONIW3Ix'; // 9.99 zł
-        mode = 'payment';
-        break;
+        priceId = 'price_1RofCI4FWb3xY5tDYONIW3Ix' // Basic: 9,99 zł jednorazowo
+        mode = 'payment'
+        break
       case 'pro':
       case 'subscription':
-        priceId = 'price_1Rof7b4FWb3xY5tDQ76590pw'; // 49 zł/mies
-        mode = 'subscription';
-        break;
+        priceId = 'price_1Rof7b4FWb3xY5tDQ76590pw' // Pro: 49 zł / mies
+        mode = 'subscription'
+        break
       case 'premium':
-        priceId = 'price_1RqWk34FWb3xY5tD5W2ge1g0'; // 79 zł/mies
-        mode = 'subscription';
-        break;
+        priceId = 'price_1RqWk34FWb3xY5tD5W2ge1g0' // Premium: 79 zł / mies
+        mode = 'subscription'
+        break
       default:
-        return res.status(400).json({ error: 'Invalid price type' });
+        return res.status(400).json({ error: 'Invalid price type' })
     }
 
     const session = await stripe.checkout.sessions.create({

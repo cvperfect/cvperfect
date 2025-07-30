@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import Head from 'next/head'
 
@@ -13,6 +13,19 @@ export default function Home() {
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
   const [showPaywall, setShowPaywall] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check mobile on client side only
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
@@ -70,79 +83,37 @@ export default function Home() {
     <>
       <Head>
         <title>CvPerfect - AI CV Optimizer</title>
-      
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      <div style={{
-        margin: 0,
-        fontFamily: 'Inter, sans-serif',
-        background: 'linear-gradient(135deg, #1e293b, #334155, #475569, #64748b)',
-        minHeight: '100vh',
-        color: 'white'
-      }}>
+      <div className="main-container">
         
         {/* Hero Section */}
         <div style={{ padding: '60px 20px', textAlign: 'center' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             
             {/* Badge */}
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '50px',
-              padding: '8px 20px',
-              marginBottom: '32px',
-              backdropFilter: 'blur(10px)'
-            }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                background: '#10b981',
-                borderRadius: '50%',
-                marginRight: '8px',
-                animation: 'pulse 2s infinite'
-              }}></div>
+            <div className="hero-badge">
+              <div className="status-dot"></div>
               <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.9)' }}>
                 ✨ Teraz z zaawansowaną analizą AI
               </span>
             </div>
 
-            {/* Title */}
-            <h1 style={{
-              fontSize: '56px',
-              fontWeight: '800',
-              marginBottom: '24px',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              lineHeight: '1.1'
-            }}>
+            {/* Title - RESPONSIVE */}
+            <h1 className="hero-title">
               Stwórz <span style={{ color: '#60a5fa' }}>idealne CV</span><br />
               w mniej niż minutę
             </h1>
 
             {/* Subtitle */}
-            <p style={{
-              fontSize: '20px',
-              color: 'rgba(255, 255, 255, 0.8)',
-              maxWidth: '600px',
-              margin: '0 auto 48px auto',
-              lineHeight: '1.6'
-            }}>
+            <p className="hero-subtitle">
               Nasza sztuczna inteligencja analizuje oferty pracy i automatycznie optymalizuje Twoje CV, 
               zwiększając szanse na rozmowę o <span style={{ color: '#60a5fa', fontWeight: '600' }}>300%</span>
             </p>
 
-            {/* Stats */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '48px',
-              marginBottom: '64px',
-              flexWrap: 'wrap'
-            }}>
+            {/* Stats - RESPONSIVE */}
+            <div className="stats-grid">
               {[
                 { number: "50K+", label: "Zoptymalizowanych CV", icon: "📄" },
                 { number: "92%", label: "Więcej rozmów", icon: "📈" },
@@ -150,16 +121,8 @@ export default function Home() {
               ].map((stat, index) => (
                 <div key={index} style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '24px', marginBottom: '8px' }}>{stat.icon}</div>
-                  <div style={{
-                    fontSize: '28px',
-                    fontWeight: '800',
-                    color: 'white',
-                    marginBottom: '4px'
-                  }}>{stat.number}</div>
-                  <div style={{
-                    fontSize: '14px',
-                    color: 'rgba(255, 255, 255, 0.7)'
-                  }}>{stat.label}</div>
+                  <div className="stat-number">{stat.number}</div>
+                  <div className="stat-label">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -170,37 +133,16 @@ export default function Home() {
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
           
           {/* Main Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: '24px',
-            padding: '48px',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-            marginBottom: '48px',
-            color: '#1f2937',
-            border: '1px solid rgba(255, 255, 255, 0.3)'
-          }}>
+          <div className="main-card">
             
             {/* Step 1 */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '20px',
-                fontWeight: 'bold',
-                fontSize: '20px',
-                boxShadow: '0 8px 20px rgba(59, 130, 246, 0.3)'
-              }}>1</div>
+            <div className="step-container">
+              <div className="step-number step-1">1</div>
               <div>
-                <h2 style={{ fontSize: '26px', fontWeight: '700', margin: '0 0 4px 0', color: '#1f2937' }}>
+                <h2 className="step-title">
                   📝 Wklej ogłoszenie o pracę
                 </h2>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '16px' }}>
+                <p className="step-description">
                   AI przeanalizuje wymagania i dopasuje Twoje CV
                 </p>
               </div>
@@ -209,74 +151,29 @@ export default function Home() {
             <textarea
               value={jobPosting}
               onChange={(e) => setJobPosting(e.target.value)}
-              placeholder="Wklej tutaj treść ogłoszenia o pracę do której chcesz aplikować..."
-              style={{
-                width: '100%',
-                height: '140px',
-                padding: '20px',
-                borderRadius: '16px',
-                border: '2px solid #e5e7eb',
-                fontSize: '16px',
-                resize: 'none',
-                marginBottom: '48px',
-                boxSizing: 'border-box',
-                fontFamily: 'Inter, sans-serif',
-                lineHeight: '1.5',
-                background: '#f9fafb',
-                transition: 'all 0.3s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3b82f6'
-                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb'
-                e.target.style.boxShadow = 'none'
-              }}
+              placeholder="Wklej tutaj treść ogłoszenia o pracę..."
+              className="textarea-input"
+              style={{ height: '140px', marginBottom: '48px' }}
             />
 
             {/* Step 2 */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: '20px',
-                fontWeight: 'bold',
-                fontSize: '20px',
-                boxShadow: '0 8px 20px rgba(16, 185, 129, 0.3)'
-              }}>2</div>
+            <div className="step-container">
+              <div className="step-number step-2">2</div>
               <div>
-                <h2 style={{ fontSize: '26px', fontWeight: '700', margin: '0 0 4px 0', color: '#1f2937' }}>
+                <h2 className="step-title">
                   📄 Dodaj swoje CV
                 </h2>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '16px' }}>
+                <p className="step-description">
                   Wybierz najwygodniejszy sposób dodania CV
                 </p>
               </div>
             </div>
 
-            {/* Radio buttons - NAPRAWIONE KOLORY */}
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
+            {/* Radio buttons - RESPONSIVE */}
+            <div className="radio-container">
               <div
                 onClick={() => setUploadMethod('text')}
-                style={{
-                  flex: 1,
-                  padding: '24px',
-                  borderRadius: '16px',
-                  border: uploadMethod === 'text' ? '2px solid #3b82f6' : '2px solid #e5e7eb',
-                  background: uploadMethod === 'text' ? 'rgba(59, 130, 246, 0.05)' : '#ffffff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'all 0.3s ease',
-                  boxShadow: uploadMethod === 'text' ? '0 8px 25px rgba(59, 130, 246, 0.15)' : '0 2px 10px rgba(0, 0, 0, 0.1)'
-                }}
+                className={`radio-option ${uploadMethod === 'text' ? 'active' : ''}`}
               >
                 <input
                   type="radio"
@@ -285,27 +182,16 @@ export default function Home() {
                   style={{ marginRight: '16px', transform: 'scale(1.2)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '18px', marginBottom: '4px' }}>
+                  <div className="radio-title">
                     ✏️ Wklej jako tekst
                   </div>
-                  <div style={{ fontSize: '14px', color: '#6b7280' }}>Szybkie i proste rozwiązanie</div>
+                  <div className="radio-description">Szybkie i proste rozwiązanie</div>
                 </div>
               </div>
 
               <div
                 onClick={() => setUploadMethod('file')}
-                style={{
-                  flex: 1,
-                  padding: '24px',
-                  borderRadius: '16px',
-                  border: uploadMethod === 'file' ? '2px solid #3b82f6' : '2px solid #e5e7eb',
-                  background: uploadMethod === 'file' ? 'rgba(59, 130, 246, 0.05)' : '#ffffff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'all 0.3s ease',
-                  boxShadow: uploadMethod === 'file' ? '0 8px 25px rgba(59, 130, 246, 0.15)' : '0 2px 10px rgba(0, 0, 0, 0.1)'
-                }}
+                className={`radio-option ${uploadMethod === 'file' ? 'active' : ''}`}
               >
                 <input
                   type="radio"
@@ -314,10 +200,10 @@ export default function Home() {
                   style={{ marginRight: '16px', transform: 'scale(1.2)' }}
                 />
                 <div>
-                  <div style={{ fontWeight: '600', color: '#1f2937', fontSize: '18px', marginBottom: '4px' }}>
+                  <div className="radio-title">
                     📎 Upload pliku
                   </div>
-                  <div style={{ fontSize: '14px', color: '#6b7280' }}>PDF, DOCX, DOC, TXT</div>
+                  <div className="radio-description">PDF, DOCX, DOC, TXT</div>
                 </div>
               </div>
             </div>
@@ -327,40 +213,12 @@ export default function Home() {
                 value={currentCV}
                 onChange={(e) => setCurrentCV(e.target.value)}
                 placeholder="Wklej tutaj treść swojego obecnego CV..."
-                style={{
-                  width: '100%',
-                  height: '220px',
-                  padding: '20px',
-                  borderRadius: '16px',
-                  border: '2px solid #e5e7eb',
-                  fontSize: '16px',
-                  resize: 'none',
-                  marginBottom: '40px',
-                  boxSizing: 'border-box',
-                  fontFamily: 'Inter, sans-serif',
-                  lineHeight: '1.5',
-                  background: '#f9fafb',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#3b82f6'
-                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)'
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#e5e7eb'
-                  e.target.style.boxShadow = 'none'
-                }}
+                className="textarea-input"
+                style={{ height: '220px', marginBottom: '40px' }}
               />
             ) : (
               <div style={{ marginBottom: '40px' }}>
-                <div style={{
-                  border: '2px dashed #3b82f6',
-                  borderRadius: '16px',
-                  padding: '48px',
-                  textAlign: 'center',
-                  background: 'rgba(59, 130, 246, 0.02)',
-                  transition: 'all 0.3s ease'
-                }}>
+                <div className="file-upload-zone">
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
                   <input
                     type="file"
@@ -384,48 +242,11 @@ export default function Home() {
             <button
               onClick={optimizeCV}
               disabled={isOptimizing}
-              style={{
-                width: '100%',
-                background: isOptimizing 
-                  ? 'linear-gradient(135deg, #9ca3af, #6b7280)' 
-                  : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                color: 'white',
-                border: 'none',
-                padding: '20px 40px',
-                borderRadius: '16px',
-                fontSize: '18px',
-                fontWeight: '600',
-                cursor: isOptimizing ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: isOptimizing 
-                  ? 'none' 
-                  : '0 8px 25px rgba(59, 130, 246, 0.3)',
-                transform: isOptimizing ? 'none' : 'translateY(-2px)'
-              }}
-              onMouseEnter={(e) => {
-                if (!isOptimizing) {
-                  e.target.style.transform = 'translateY(-4px)'
-                  e.target.style.boxShadow = '0 12px 35px rgba(59, 130, 246, 0.4)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isOptimizing) {
-                  e.target.style.transform = 'translateY(-2px)'
-                  e.target.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.3)'
-                }
-              }}
+              className={`main-button ${isOptimizing ? 'disabled' : ''}`}
             >
               {isOptimizing ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{
-                    width: '20px',
-                    height: '20px',
-                    border: '2px solid rgba(255, 255, 255, 0.3)',
-                    borderTop: '2px solid white',
-                    borderRadius: '50%',
-                    marginRight: '12px',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
+                  <div className="spinner"></div>
                   Optymalizuję CV...
                 </div>
               ) : (
@@ -439,24 +260,9 @@ export default function Home() {
 
           {/* Results */}
           {showDemo && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '24px',
-              padding: '48px',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-              marginBottom: '48px',
-              color: '#1f2937',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
-            }}>
+            <div className="results-card">
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <h3 style={{ 
-                  fontSize: '32px', 
-                  fontWeight: '800',
-                  margin: '0 0 16px 0',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
+                <h3 className="results-title">
                   🎉 Twoje CV zostało zoptymalizowane!
                 </h3>
                 <p style={{ fontSize: '18px', color: '#6b7280', margin: 0 }}>
@@ -464,40 +270,16 @@ export default function Home() {
                 </p>
               </div>
 
-              <div style={{ 
-                background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)', 
-                padding: '32px', 
-                borderRadius: '20px', 
-                marginBottom: '32px',
-                border: '1px solid #bae6fd'
-              }}>
-                <h4 style={{ 
-                  fontSize: '20px', 
-                  fontWeight: '600', 
-                  marginBottom: '16px',
-                  color: '#0c4a6e',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
+              <div className="preview-section">
+                <h4 className="preview-title">
                   <span style={{ marginRight: '8px' }}>📄</span>
                   Podgląd zoptymalizowanego CV (30%)
                 </h4>
-                <div style={{
-                  background: 'white',
-                  padding: '24px',
-                  borderRadius: '12px',
-                  border: '1px solid #e2e8f0'
-                }}>
+                <div className="preview-content">
                   <p style={{ margin: 0, lineHeight: '1.6', color: '#374151' }}>
                     {optimizedCV.substring(0, 300)}...
                   </p>
-                  <div style={{
-                    marginTop: '16px',
-                    padding: '12px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(59, 130, 246, 0.2)'
-                  }}>
+                  <div className="preview-locked">
                     <span style={{ color: '#3b82f6', fontWeight: '500' }}>
                       🔒 Pozostała część dostępna po zakupie
                     </span>
@@ -508,27 +290,7 @@ export default function Home() {
               <div style={{ textAlign: 'center' }}>
                 <button
                   onClick={() => setShowPaywall(true)}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '18px 36px',
-                    borderRadius: '16px',
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.3)',
-                    transition: 'all 0.3s ease',
-                    transform: 'translateY(-2px)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-4px)'
-                    e.target.style.boxShadow = '0 12px 35px rgba(16, 185, 129, 0.4)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(-2px)'
-                    e.target.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)'
-                  }}
+                  className="unlock-button"
                 >
                   <span style={{ marginRight: '8px' }}>🔓</span>
                   Pobierz pełne CV i list motywacyjny
@@ -537,25 +299,11 @@ export default function Home() {
             </div>
           )}
 
-          {/* Pricing */}
+          {/* Pricing - RESPONSIVE */}
           {showPaywall && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '24px',
-              padding: '48px',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
-              color: '#1f2937',
-              marginBottom: '48px'
-            }}>
+            <div className="pricing-card">
               <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-                <h2 style={{ 
-                  fontSize: '36px', 
-                  fontWeight: '800',
-                  margin: '0 0 16px 0',
-                  background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
+                <h2 className="pricing-title">
                   💎 Wybierz idealny plan dla siebie
                 </h2>
                 <p style={{ fontSize: '18px', color: '#6b7280', margin: 0 }}>
@@ -563,449 +311,811 @@ export default function Home() {
                 </p>
               </div>
               
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-                gap: '32px',
-                maxWidth: '900px',
-                margin: '0 auto'
-              }}>
+              <div className="pricing-grid">
                 
                 {/* Basic */}
-                <div style={{
-                  border: '2px solid #3b82f6',
-                  borderRadius: '20px',
-                  padding: '32px',
-                  textAlign: 'center',
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.02))',
-                  transition: 'all 0.3s ease'
-                }}>
+                <div className="pricing-plan basic">
                   <div style={{ fontSize: '40px', marginBottom: '16px' }}>⚡</div>
                   <h3 style={{ color: '#3b82f6', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
                     Basic
                   </h3>
-                  <div style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px', color: '#1f2937' }}>
-                    9,99 zł
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-                    jednorazowo
-                  </div>
-                  <ul style={{ 
-                    textAlign: 'left', 
-                    marginBottom: '32px', 
-                    listStyle: 'none', 
-                    padding: 0,
-                    fontSize: '16px'
-                  }}>
-                    <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                      1 optymalizowane CV
-                    </li>
-                    <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                      List motywacyjny
-                    </li>
-                    <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                      Pobieranie PDF
-                    </li>
-                    <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                      Podstawowa analiza
-                    </li>
+                  <div className="price">9,99 zł</div>
+                  <div className="price-period">jednorazowo</div>
+                  <ul className="feature-list">
+                    <li><span className="check">✓</span>1 optymalizowane CV</li>
+                    <li><span className="check">✓</span>List motywacyjny</li>
+                    <li><span className="check">✓</span>Pobieranie PDF</li>
+                    <li><span className="check">✓</span>Podstawowa analiza</li>
                   </ul>
                   <button 
                     onClick={() => handlePayment('basic')} 
-                    style={{
-                      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '16px 32px',
-                      borderRadius: '12px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      width: '100%',
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease'
-                    }}
+                    className="plan-button basic-button"
                   >
                     Rozpocznij Basic
                   </button>
                 </div>
 
                 {/* Pro */}
-                <div style={{
-                  border: '2px solid #10b981',
-                  borderRadius: '20px',
-                  padding: '32px',
-                  textAlign: 'center',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02))',
-                  transition: 'all 0.3s ease'
-                }}>
+                <div className="pricing-plan pro">
                   <div style={{ fontSize: '40px', marginBottom: '16px' }}>🚀</div>
                   <h3 style={{ color: '#10b981', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
                     Pro
                   </h3>
-                  <div style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px', color: '#1f2937' }}>
-                    49 zł
+                  <div className="price">49 zł</div>
+                  <div className="price-period">miesięcznie</div>
+                  <ul className="feature-list">
+                    <li><span className="check">✓</span>10 CV miesięcznie</li>
+                    <li><span className="check">✓</span>Analiza słów kluczowych</li>
+                    <li><span className="check">✓</span>Wszystkie funkcje Basic</li>
+                    <li><span className="check">✓</span>Priorytetowe wsparcie</li>
+                  </ul>
+                  <button 
+                    onClick={() => handlePayment('pro')} 
+                    className="plan-button pro-button"
+                  >
+                    Rozpocznij Pro
+                  </button>
+                </div>
+
+                {/* Premium */}
+                <div className="pricing-plan premium">
+                  <div className="best-offer-badge">
+                    NAJLEPSZA OFERTA ⭐
                   </div>
-                  <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-                    miesięcznie
+                  <div style={{ fontSize: '40px', marginBottom: '16px', marginTop: '16px' }}>💎</div>
+                  <h3 style={{ color: '#8b5cf6', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
+                    Premium
+                  </h3>
+                  <div className="price">79 zł</div>
+                  <div className="price-period">miesięcznie</div>
+                  <ul className="feature-list">
+                    <li><span className="check">✓</span>25 CV miesięcznie</li>
+                    <li><span className="check">✓</span>Zaawansowana analiza AI</li>
+                    <li><span className="check">✓</span>Match score % dopasowania</li>
+                    <li><span className="check">✓</span>Dedykowane wsparcie VIP</li>
+                  </ul>
+                  <button 
+                    onClick={() => handlePayment('premium')} 
+                    className="plan-button premium-button"
+                  >
+                    Wybierz Premium ⭐
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Testimonials Section */}
+        <div className="testimonials-section">
+          <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+            <h2 className="section-title">
+              🌟 Co mówią nasi użytkownicy
+            </h2>
+            
+            <div className="testimonials-grid">
+              {[
+                {
+                  name: "Michał K.",
+                  role: "Software Developer",
+                  text: "Dzięki CvPerfect dostałem pracę w Google! AI idealnie dopasował moje umiejętności do wymagań.",
+                  rating: 5,
+                  avatar: "👨‍💻"
+                },
+                {
+                  name: "Anna W.",
+                  role: "Marketing Manager",
+                  text: "W 2 tygodnie otrzymałam 8 zaproszeń na rozmowy. To naprawdę działa!",
+                  rating: 5,
+                  avatar: "👩‍💼"
+                },
+                {
+                  name: "Piotr L.",
+                  role: "Data Scientist",
+                  text: "Najlepsze 79zł jakie wydałem na rozwój kariery. Premium plan to strzał w dziesiątkę.",
+                  rating: 5,
+                  avatar: "👨‍🔬"
+                }
+              ].map((testimonial, index) => (
+                <div key={index} className="testimonial-card">
+                  <div style={{ display: 'flex', marginBottom: '16px' }}>
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <span key={i} style={{ color: '#fbbf24', fontSize: '20px' }}>⭐</span>
+                    ))}
                   </div>
-                  <ul style={{ 
-                    textAlign: 'left', 
-                    marginBottom: '32px', 
-                    listStyle: 'none', 
-                    padding: 0,
-                    fontSize: '16px'
-                  }}>
-                    <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                      10 CV miesięcznie
-                    </li>
-                    <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     
+                  <p className="testimonial-text">
+                    "{testimonial.text}"
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div className="testimonial-avatar">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#1f2937' }}>{testimonial.name}</div>
+                      <div style={{ fontSize: '14px', color: '#6b7280' }}>{testimonial.role}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-<span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     Analiza słów kluczowych
-                   </li>
-                   <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     Wszystkie funkcje Basic
-                   </li>
-                   <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     Priorytetowe wsparcie
-                   </li>
-                 </ul>
-                 <button 
-                   onClick={() => handlePayment('pro')} 
-                   style={{
-                     background: 'linear-gradient(135deg, #10b981, #059669)',
-                     color: 'white',
-                     border: 'none',
-                     padding: '16px 32px',
-                     borderRadius: '12px',
-                     fontWeight: '600',
-                     cursor: 'pointer',
-                     width: '100%',
-                     fontSize: '16px',
-                     transition: 'all 0.3s ease'
-                   }}
-                 >
-                   Rozpocznij Pro
-                 </button>
-               </div>
+        {/* Features Section */}
+        <div style={{ padding: '64px 20px' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h2 className="section-title">
+              ⚡ Dlaczego CvPerfect?
+            </h2>
+            
+            <div className="features-grid">
+              {[
+                {
+                  icon: "🎯",
+                  title: "Dopasowane do oferty",
+                  description: "AI analizuje każde ogłoszenie i automatycznie dostosowuje Twoje CV pod konkretne wymagania pracodawcy"
+                },
+                {
+                  icon: "⚡",
+                  title: "Błyskawiczne rezultaty",
+                  description: "Pełna optymalizacja CV w mniej niż minutę. Żadnych godzin spędzonych na formatowaniu"
+                },
+                {
+                  icon: "📈",
+                  title: "Gwarancja rezultatów",
+                  description: "Nasi użytkownicy otrzymują średnio 3x więcej zaproszeń na rozmowy kwalifikacyjne"
+                }
+              ].map((feature, index) => (
+                <div key={index} className="feature-card">
+                  <div className="feature-icon">
+                    {feature.icon}
+                  </div>
+                  <h3 className="feature-title">
+                    {feature.title}
+                  </h3>
+                  <p className="feature-description">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-               {/* Premium */}
-               <div style={{
-                 border: '2px solid #8b5cf6',
-                 borderRadius: '20px',
-                 padding: '32px',
-                 textAlign: 'center',
-                 position: 'relative',
-                 background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.02))',
-                 transition: 'all 0.3s ease'
-               }}>
-                 <div style={{
-                   position: 'absolute',
-                   top: '-16px',
-                   left: '50%',
-                   transform: 'translateX(-50%)',
-                   background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-                   color: 'white',
-                   padding: '8px 24px',
-                   borderRadius: '25px',
-                   fontSize: '12px',
-                   fontWeight: 'bold',
-                   boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)'
-                 }}>
-                   NAJLEPSZA OFERTA ⭐
-                 </div>
-                 <div style={{ fontSize: '40px', marginBottom: '16px', marginTop: '16px' }}>💎</div>
-                 <h3 style={{ color: '#8b5cf6', fontSize: '24px', marginBottom: '8px', fontWeight: '700' }}>
-                   Premium
-                 </h3>
-                 <div style={{ fontSize: '36px', fontWeight: '800', marginBottom: '8px', color: '#1f2937' }}>
-                   79 zł
-                 </div>
-                 <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-                   miesięcznie
-                 </div>
-                 <ul style={{ 
-                   textAlign: 'left', 
-                   marginBottom: '32px', 
-                   listStyle: 'none', 
-                   padding: 0,
-                   fontSize: '16px'
-                 }}>
-                   <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     25 CV miesięcznie
-                   </li>
-                   <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     Zaawansowana analiza AI
-                   </li>
-                   <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     Match score % dopasowania
-                   </li>
-                   <li style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                     <span style={{ color: '#10b981', marginRight: '8px', fontWeight: 'bold' }}>✓</span>
-                     Dedykowane wsparcie VIP
-                   </li>
-                 </ul>
-                 <button 
-                   onClick={() => handlePayment('premium')} 
-                   style={{
-                     background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
-                     color: 'white',
-                     border: 'none',
-                     padding: '16px 32px',
-                     borderRadius: '12px',
-                     fontWeight: '600',
-                     cursor: 'pointer',
-                     width: '100%',
-                     fontSize: '16px',
-                     transition: 'all 0.3s ease',
-                     boxShadow: '0 8px 25px rgba(139, 92, 246, 0.3)'
-                   }}
-                 >
-                   Wybierz Premium ⭐
-                 </button>
-               </div>
-             </div>
-           </div>
-         )}
-       </div>
+        {/* Footer */}
+        <footer className="footer">
+          <div className="footer-content">
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div className="footer-logo">
+                CV
+              </div>
+              <span style={{ color: 'white', fontWeight: '600', fontSize: '18px' }}>Perfect</span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.5)', marginLeft: '16px', fontSize: '14px' }}>
+                © 2025 Wszystkie prawa zastrzeżone
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '32px', color: 'rgba(255, 255, 255, 0.7)' }}>
+              <a href="/regulamin" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Regulamin</a>
+              <a href="/prywatnosc" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Prywatność</a>
+              <a href="/kontakt" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Kontakt</a>
+            </div>
+          </div>
+        </footer>
+      </div>
 
-       {/* Testimonials Section */}
-       <div style={{ 
-         background: 'rgba(255, 255, 255, 0.05)', 
-         backdropFilter: 'blur(10px)',
-         margin: '64px 0',
-         padding: '64px 20px'
-       }}>
-         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-           <h2 style={{
-             fontSize: '36px',
-             fontWeight: '800',
-             marginBottom: '48px',
-             color: 'white'
-           }}>
-             🌟 Co mówią nasi użytkownicy
-           </h2>
-           
-           <div style={{
-             display: 'grid',
-             gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-             gap: '32px'
-           }}>
-             {[
-               {
-                 name: "Michał K.",
-                 role: "Software Developer",
-                 text: "Dzięki CvPerfect dostałem pracę w Google! AI idealnie dopasował moje umiejętności do wymagań.",
-                 rating: 5,
-                 avatar: "👨‍💻"
-               },
-               {
-                 name: "Anna W.",
-                 role: "Marketing Manager",
-                 text: "W 2 tygodnie otrzymałam 8 zaproszeń na rozmowy. To naprawdę działa!",
-                 rating: 5,
-                 avatar: "👩‍💼"
-               },
-               {
-                 name: "Piotr L.",
-                 role: "Data Scientist",
-                 text: "Najlepsze 79zł jakie wydałem na rozwój kariery. Premium plan to strzał w dziesiątkę.",
-                 rating: 5,
-                 avatar: "👨‍🔬"
-               }
-             ].map((testimonial, index) => (
-               <div key={index} style={{
-                 background: 'rgba(255, 255, 255, 0.9)',
-                 padding: '32px',
-                 borderRadius: '20px',
-                 color: '#1f2937',
-                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                 border: '1px solid rgba(255, 255, 255, 0.2)'
-               }}>
-                 <div style={{ display: 'flex', marginBottom: '16px' }}>
-                   {[...Array(testimonial.rating)].map((_, i) => (
-                     <span key={i} style={{ color: '#fbbf24', fontSize: '20px' }}>⭐</span>
-                   ))}
-                 </div>
-                 <p style={{
-                   fontSize: '16px',
-                   lineHeight: '1.6',
-                   marginBottom: '24px',
-                   fontStyle: 'italic',
-                   color: '#374151'
-                 }}>
-                   "{testimonial.text}"
-                 </p>
-                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                   <div style={{
-                     width: '48px',
-                     height: '48px',
-                     borderRadius: '50%',
-                     background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     marginRight: '16px',
-                     fontSize: '20px'
-                   }}>
-                     {testimonial.avatar}
-                   </div>
-                   <div>
-                     <div style={{ fontWeight: '600', color: '#1f2937' }}>{testimonial.name}</div>
-                     <div style={{ fontSize: '14px', color: '#6b7280' }}>{testimonial.role}</div>
-                   </div>
-                 </div>
-               </div>
-             ))}
-           </div>
-         </div>
-       </div>
+      <style jsx>{`
+        .main-container {
+          margin: 0;
+          font-family: 'Inter, sans-serif';
+          background: linear-gradient(135deg, #1e293b, #334155, #475569, #64748b);
+          min-height: 100vh;
+          color: white;
+        }
 
-       {/* Features Section */}
-       <div style={{ padding: '64px 20px' }}>
-         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-           <h2 style={{
-             fontSize: '36px',
-             fontWeight: '800',
-             textAlign: 'center',
-             marginBottom: '48px',
-             color: 'white'
-           }}>
-             ⚡ Dlaczego CvPerfect?
-           </h2>
-           
-           <div style={{
-             display: 'grid',
-             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-             gap: '32px'
-           }}>
-             {[
-               {
-                 icon: "🎯",
-                 title: "Dopasowane do oferty",
-                 description: "AI analizuje każde ogłoszenie i automatycznie dostosowuje Twoje CV pod konkretne wymagania pracodawcy"
-               },
-               {
-                 icon: "⚡",
-                 title: "Błyskawiczne rezultaty",
-                 description: "Pełna optymalizacja CV w mniej niż minutę. Żadnych godzin spędzonych na formatowaniu"
-               },
-               {
-                 icon: "📈",
-                 title: "Gwarancja rezultatów",
-                 description: "Nasi użytkownicy otrzymują średnio 3x więcej zaproszeń na rozmowy kwalifikacyjne"
-               }
-             ].map((feature, index) => (
-               <div key={index} style={{
-                 textAlign: 'center',
-                 padding: '32px',
-                 background: 'rgba(255, 255, 255, 0.05)',
-                 borderRadius: '20px',
-                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                 backdropFilter: 'blur(10px)'
-               }}>
-                 <div style={{
-                   width: '80px',
-                   height: '80px',
-                   background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                   borderRadius: '20px',
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   margin: '0 auto 24px auto',
-                   fontSize: '32px',
-                   boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)'
-                 }}>
-                   {feature.icon}
-                 </div>
-                 <h3 style={{
-                   fontSize: '24px',
-                   fontWeight: '700',
-                   marginBottom: '16px',
-                   color: 'white'
-                 }}>
-                   {feature.title}
-                 </h3>
-                 <p style={{
-                   fontSize: '16px',
-                   lineHeight: '1.6',
-                   color: 'rgba(255, 255, 255, 0.8)'
-                 }}>
-                   {feature.description}
-                 </p>
-               </div>
-             ))}
-           </div>
-         </div>
-       </div>
+        .hero-badge {
+          display: inline-flex;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50px;
+          padding: 8px 20px;
+          margin-bottom: 32px;
+          backdrop-filter: blur(10px);
+        }
 
-       {/* Footer */}
-       <footer style={{
-         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-         padding: '32px 20px',
-         background: 'rgba(0, 0, 0, 0.2)'
-       }}>
-         <div style={{
-           maxWidth: '1200px',
-           margin: '0 auto',
-           display: 'flex',
-           justifyContent: 'space-between',
-           alignItems: 'center',
-           flexWrap: 'wrap',
-           gap: '20px'
-         }}>
-           <div style={{ display: 'flex', alignItems: 'center' }}>
-             <div style={{
-               width: '32px',
-               height: '32px',
-               background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-               borderRadius: '8px',
-               display: 'flex',
-               alignItems: 'center',
-               justifyContent: 'center',
-               marginRight: '12px',
-               color: 'white',
-               fontWeight: 'bold',
-               fontSize: '14px'
-             }}>
-               CV
-             </div>
-             <span style={{ color: 'white', fontWeight: '600', fontSize: '18px' }}>Perfect</span>
-             <span style={{ color: 'rgba(255, 255, 255, 0.5)', marginLeft: '16px', fontSize: '14px' }}>
-               © 2025 Wszystkie prawa zastrzeżone
-             </span>
-           </div>
-           
-           <div style={{ display: 'flex', gap: '32px', color: 'rgba(255, 255, 255, 0.7)' }}>
-  <a href="/regulamin" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Regulamin</a>
-  <a href="/prywatnosc" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Prywatność</a>
-  <a href="/kontakt" style={{ color: 'inherit', textDecoration: 'none', fontSize: '14px' }}>Kontakt</a>
-</div>
-         </div>
-       </footer>
-     </div>
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          background: #10b981;
+          border-radius: 50%;
+          margin-right: 8px;
+          animation: pulse 2s infinite;
+        }
 
-     <style jsx>{`
-       @keyframes spin {
-         0% { transform: rotate(0deg); }
-         100% { transform: rotate(360deg); }
-       }
-       @keyframes pulse {
-         0%, 100% { opacity: 1; }
-         50% { opacity: 0.5; }
-       }
-     `}</style>
-   </>
- )
+        .hero-title {
+          font-size: 56px;
+          font-weight: 800;
+          margin-bottom: 24px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1.1;
+        }
+
+        .hero-subtitle {
+          font-size: 20px;
+          color: rgba(255, 255, 255, 0.8);
+          max-width: 600px;
+          margin: 0 auto 48px auto;
+          line-height: 1.6;
+          padding: 0 16px;
+        }
+
+        .stats-grid {
+          display: flex;
+          justify-content: center;
+          gap: 48px;
+          margin-bottom: 64px;
+          flex-wrap: wrap;
+        }
+
+        .stat-number {
+          font-size: 28px;
+          font-weight: 800;
+          color: white;
+          margin-bottom: 4px;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .main-card {
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 24px;
+          padding: 48px;
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+          margin-bottom: 48px;
+          color: #1f2937;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .step-container {
+          display: flex;
+          align-items: center;
+          margin-bottom: 32px;
+        }
+
+        .step-number {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 20px;
+          font-weight: bold;
+          font-size: 20px;
+        }
+
+        .step-1 {
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .step-2 {
+          background: linear-gradient(135deg, #10b981, #059669);
+          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .step-title {
+          font-size: 26px;
+          font-weight: 700;
+          margin: 0 0 4px 0;
+          color: #1f2937;
+        }
+
+        .step-description {
+          margin: 0;
+          color: #6b7280;
+          font-size: 16px;
+        }
+
+        .textarea-input {
+          width: 100%;
+          padding: 20px;
+          border-radius: 16px;
+          border: 2px solid #e5e7eb;
+          font-size: 16px;
+          resize: none;
+          box-sizing: border-box;
+          font-family: 'Inter, sans-serif';
+          line-height: 1.5;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+          transition: all 0.3s ease;
+        }
+
+        .textarea-input:focus {
+          border-color: #3b82f6 !important;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+          outline: none;
+          background: #ffffff !important;
+          color: #1f2937 !important;
+        }
+
+        .textarea-input::placeholder {
+          color: #9ca3af !important;
+        }
+
+        .textarea-input:focus::placeholder {
+          color: #d1d5db !important;
+        }
+
+        .radio-container {
+          display: flex;
+          gap: 20px;
+          margin-bottom: 32px;
+        }
+
+        .radio-option {
+          flex: 1;
+          padding: 24px;
+          border-radius: 16px;
+          border: 2px solid #e5e7eb;
+          background: #ffffff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .radio-option.active {
+          border-color: #3b82f6;
+          background: rgba(59, 130, 246, 0.05);
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .radio-title {
+          font-weight: 600;
+          color: #1f2937;
+          font-size: 18px;
+          margin-bottom: 4px;
+        }
+
+        .radio-description {
+          font-size: 14px;
+          color: #6b7280;
+        }
+
+        .file-upload-zone {
+          border: 2px dashed #3b82f6;
+          border-radius: 16px;
+          padding: 48px;
+          text-align: center;
+          background: rgba(59, 130, 246, 0.02);
+          transition: all 0.3s ease;
+        }
+
+        .main-button {
+          width: 100%;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          color: white;
+          border: none;
+          padding: 20px 40px;
+          border-radius: 16px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+          transform: translateY(-2px);
+        }
+
+        .main-button.disabled {
+          background: linear-gradient(135deg, #9ca3af, #6b7280);
+          cursor: not-allowed;
+          box-shadow: none;
+          transform: none;
+        }
+
+        .spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top: 2px solid white;
+          border-radius: 50%;
+          margin-right: 12px;
+          animation: spin 1s linear infinite;
+        }
+
+        .results-card {
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 24px;
+          padding: 48px;
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+          margin-bottom: 48px;
+          color: #1f2937;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .results-title {
+          font-size: 32px;
+          font-weight: 800;
+          margin: 0 0 16px 0;
+          background: linear-gradient(135deg, #10b981, #059669);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .preview-section {
+          background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+          padding: 32px;
+          border-radius: 20px;
+          margin-bottom: 32px;
+          border: 1px solid #bae6fd;
+        }
+
+        .preview-title {
+          font-size: 20px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          color: #0c4a6e;
+          display: flex;
+          align-items: center;
+        }
+
+        .preview-content {
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .preview-locked {
+          margin-top: 16px;
+          padding: 12px;
+          background: rgba(59, 130, 246, 0.1);
+          border-radius: 8px;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .unlock-button {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          padding: 18px 36px;
+          border-radius: 16px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+          transition: all 0.3s ease;
+          transform: translateY(-2px);
+        }
+
+        .pricing-card {
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 24px;
+          padding: 48px;
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+          color: #1f2937;
+          margin-bottom: 48px;
+        }
+
+        .pricing-title {
+          font-size: 36px;
+          font-weight: 800;
+          margin: 0 0 16px 0;
+          background: linear-gradient(135deg, #8b5cf6, #ec4899);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .pricing-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 24px;
+          max-width: 900px;
+          margin: 0 auto;
+        }
+
+        .pricing-plan {
+          border-radius: 20px;
+          padding: 32px;
+          text-align: center;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+
+        .pricing-plan.basic {
+          border: 2px solid #3b82f6;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.02));
+        }
+
+        .pricing-plan.pro {
+          border: 2px solid #10b981;
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+        }
+
+        .pricing-plan.premium {
+          border: 2px solid #8b5cf6;
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.02));
+        }
+
+        .best-offer-badge {
+          position: absolute;
+          top: -16px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #8b5cf6, #ec4899);
+          color: white;
+          padding: 8px 24px;
+          border-radius: 25px;
+          font-size: 12px;
+          font-weight: bold;
+          box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .price {
+          font-size: 36px;
+          font-weight: 800;
+          margin-bottom: 8px;
+          color: #1f2937;
+        }
+
+        .price-period {
+          font-size: 14px;
+          color: #6b7280;
+          margin-bottom: 24px;
+        }
+
+        .feature-list {
+          text-align: left;
+          margin-bottom: 32px;
+          list-style: none;
+          padding: 0;
+          font-size: 16px;
+        }
+
+        .feature-list li {
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+        }
+
+        .check {
+          color: #10b981;
+          margin-right: 8px;
+          font-weight: bold;
+        }
+
+        .plan-button {
+          border: none;
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          width: 100%;
+          font-size: 16px;
+          transition: all 0.3s ease;
+        }
+
+        .basic-button {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+        }
+
+        .pro-button {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+        }
+
+        .premium-button {
+          background: linear-gradient(135deg, #8b5cf6, #ec4899);
+          color: white;
+          box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .testimonials-section {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          margin: 64px 0;
+          padding: 64px 20px;
+        }
+
+        .section-title {
+          font-size: 36px;
+          font-weight: 800;
+          text-align: center;
+          margin-bottom: 48px;
+          color: white;
+        }
+
+        .testimonials-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          gap: 32px;
+        }
+
+        .testimonial-card {
+          background: rgba(255, 255, 255, 0.9);
+          padding: 32px;
+          border-radius: 20px;
+          color: #1f2937;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .testimonial-text {
+          font-size: 16px;
+          line-height: 1.6;
+          margin-bottom: 24px;
+          font-style: italic;
+          color: #374151;
+        }
+
+        .testimonial-avatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 16px;
+          font-size: 20px;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 32px;
+        }
+
+        .feature-card {
+          text-align: center;
+          padding: 32px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+        }
+
+        .feature-icon {
+          width: 80px;
+          height: 80px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 24px auto;
+          font-size: 32px;
+          box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+        }
+
+        .feature-title {
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 16px;
+          color: white;
+        }
+
+        .feature-description {
+          font-size: 16px;
+          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .footer {
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 32px 20px;
+          background: rgba(0, 0, 0, 0.2);
+        }
+
+        .footer-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+
+        .footer-logo {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 12px;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+          .hero-title {
+            font-size: 36px;
+          }
+
+          .hero-subtitle {
+            font-size: 16px;
+          }
+
+          .stats-grid {
+            gap: 24px;
+          }
+
+          .stat-number {
+            font-size: 20px;
+          }
+
+          .main-card {
+            padding: 24px;
+          }
+
+          .step-container {
+            flex-direction: column;
+            text-align: center;
+          }
+
+          .step-number {
+            margin-right: 0;
+            margin-bottom: 16px;
+          }
+
+          .radio-container {
+            flex-direction: column;
+          }
+
+          .file-upload-zone {
+            padding: 32px;
+          }
+
+          .results-card {
+            padding: 24px;
+          }
+
+          .results-title {
+            font-size: 24px;
+          }
+
+          .pricing-card {
+            padding: 24px;
+          }
+
+          .pricing-title {
+            font-size: 28px;
+          }
+
+          .pricing-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+    </>
+  )
 }
