@@ -19,7 +19,6 @@ export default function Kontakt() {
         
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           
-          {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
             <Link href="/" style={{ 
               textDecoration: 'none', 
@@ -31,7 +30,6 @@ export default function Kontakt() {
             </Link>
           </div>
 
-          {/* Main Content */}
           <div style={{
             background: 'rgba(255, 255, 255, 0.95)',
             borderRadius: '24px',
