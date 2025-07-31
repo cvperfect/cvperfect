@@ -701,7 +701,7 @@ const handlePayment = async (plan) => {
                 <div className="pricing-header">
                   <h3 className="plan-name">Pro</h3>
                   <div className="plan-price">
-                    <span className="price">29.99 zł</span>
+                    <span className="price">49 zł</span>
                     <span className="price-period">/miesięcznie</span>
                   </div>
                 </div>
@@ -726,7 +726,7 @@ const handlePayment = async (plan) => {
                 <div className="pricing-header">
                   <h3 className="plan-name">Premium</h3>
                   <div className="plan-price">
-                    <span className="price">79.99 zł</span>
+                    <span className="price">79 zł</span>
                     <span className="price-period">/miesięcznie</span>
                   </div>
                 </div>
