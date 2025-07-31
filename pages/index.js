@@ -14,6 +14,7 @@ export default function Home() {
   const [animatedStats, setAnimatedStats] = useState([0, 0, 0])
   const [liveNotifications, setLiveNotifications] = useState([])
   const [isDragOver, setIsDragOver] = useState(false)
+  const [showPricingModal, setShowPricingModal] = useState(false)
 
   // Live notifications data
   const notifications = [
@@ -135,6 +136,8 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
+
+
   const optimizeCV = async () => {
     if (!jobPosting.trim() || !currentCV.trim() || !userEmail.trim()) {
       alert('Proszę wypełnić wszystkie pola (ogłoszenie, CV i email)')
@@ -157,8 +160,12 @@ export default function Home() {
       if (response.ok) {
         setOptimizedResult(data)
       } else {
-        alert(data)
-      }
+  if (data.includes('Musisz wykupić plan')) {
+    setShowPricingModal(true)
+  } else {
+    alert(data)
+  }
+}
     } catch (error) {
       console.error('Błąd:', error)
       alert('Wystąpił błąd. Spróbuj ponownie.')
@@ -215,35 +222,51 @@ export default function Home() {
     setCurrentTestimonial(index)
   }
 
-  const handlePayment = async (plan) => {
-    if (!userEmail.trim() || !userEmail.includes('@')) {
-      alert('Proszę podać prawidłowy adres email przed płatnością')
-      return
-    }
-
-    const prices = {
-      basic: 'price_1QaIjI4FWb3xY5tDzqOzGHmI',
-      pro: 'price_1QaIk54FWb3xY5tDPJXkJKLM', 
-      premium: 'price_1QaIkW4FWb3xY5tDLNMOPQRT'
-    }
-
-    try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          priceId: prices[plan],
-          email: userEmail
-        }),
-      })
-      const { url } = await response.json()
-      window.location.href = url
-    } catch (error) {
-      console.error('Błąd płatności:', error)
-      alert('Wystąpił błąd podczas przetwarzania płatności')
-    }
+const handlePayment = async (plan) => {
+  if (!userEmail.trim() || !userEmail.includes('@')) {
+    alert('Proszę podać prawidłowy adres email przed płatnością')
+    return
   }
 
+  console.log('🚀 Starting payment for plan:', plan)
+  console.log('📧 Email:', userEmail)
+  
+  try {
+    console.log('📡 Sending request to /api/create-checkout-session')
+    
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        plan: plan,        // ✅ ZMIENIONE Z priceId NA plan
+        email: userEmail
+      }),
+    })
+    
+    console.log('📨 Response status:', response.status)
+    console.log('📨 Response ok:', response.ok)
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ API Error:', errorText)
+      alert(`Błąd API: ${response.status} - ${errorText}`)
+      return
+    }
+    
+    const data = await response.json()
+    console.log('✅ Response data:', data)
+    
+    if (data.url) {
+      console.log('🔗 Redirecting to:', data.url)
+      window.location.href = data.url
+    } else {
+      throw new Error('Brak URL płatności w odpowiedzi')
+    }
+  } catch (error) {
+    console.error('❌ Payment error:', error)
+    alert(`Wystąpił błąd: ${error.message}`)
+  }
+}
   return (
     <>
       <Head>
@@ -821,6 +844,93 @@ export default function Home() {
 
         </div>
 
+{/* Pricing Modal */}
+{showPricingModal && (
+  <div className="pricing-modal-overlay" onClick={() => setShowPricingModal(false)}>
+    <div className="pricing-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-header">
+        <h2 className="modal-title">Wybierz swój plan 💎</h2>
+        <button className="modal-close" onClick={() => setShowPricingModal(false)}>✕</button>
+      </div>
+      
+      <div className="modal-pricing-grid">
+        {/* Basic Plan */}
+        <div className="modal-pricing-card">
+          <div className="modal-plan-header">
+            <h3 className="modal-plan-name">Basic</h3>
+            <div className="modal-plan-price">
+              <span className="modal-price">9.99 zł</span>
+              <span className="modal-price-period">/jednorazowo</span>
+            </div>
+          </div>
+          <ul className="modal-plan-features">
+            <li>✅ 1 optymalizacja CV</li>
+            <li>✅ Analiza ATS compatibility</li>
+            <li>✅ Raport z sugestiami</li>
+            <li>✅ Email z wynikami</li>
+          </ul>
+          <button 
+            className="modal-pricing-button basic"
+            onClick={() => { setShowPricingModal(false); handlePayment('basic') }}
+          >
+            Wybierz Basic
+          </button>
+        </div>
+
+        {/* Pro Plan */}
+        <div className="modal-pricing-card popular">
+          <div className="modal-popular-badge">⭐ Najpopularniejszy</div>
+          <div className="modal-plan-header">
+            <h3 className="modal-plan-name">Pro</h3>
+            <div className="modal-plan-price">
+              <span className="modal-price">49 zł</span>
+              <span className="modal-price-period">/miesięcznie</span>
+            </div>
+          </div>
+          <ul className="modal-plan-features">
+            <li>✅ 10 optymalizacji CV</li>
+            <li>✅ Analiza ATS + scoring</li>
+            <li>✅ Szczegółowe raporty</li>
+            <li>✅ Email z wynikami</li>
+            <li>✅ Wsparcie priorytetowe</li>
+          </ul>
+          <button 
+            className="modal-pricing-button pro"
+            onClick={() => { setShowPricingModal(false); handlePayment('pro') }}
+          >
+            Wybierz Pro
+          </button>
+        </div>
+
+        {/* Premium Plan */}
+        <div className="modal-pricing-card premium">
+          <div className="modal-premium-badge">🏆 Premium</div>
+          <div className="modal-plan-header">
+            <h3 className="modal-plan-name">Premium</h3>
+            <div className="modal-plan-price">
+              <span className="modal-price">79 zł</span>
+              <span className="modal-price-period">/miesięcznie</span>
+            </div>
+          </div>
+          <ul className="modal-plan-features">
+            <li>✅ 25 optymalizacji CV</li>
+            <li>✅ Pełna analiza ATS</li>
+            <li>✅ Zaawansowane raporty</li>
+            <li>✅ Email z wynikami</li>
+            <li>✅ Wsparcie VIP 24/7</li>
+            <li>✅ Konsultacje z ekspertem</li>
+          </ul>
+          <button 
+            className="modal-pricing-button premium"
+            onClick={() => { setShowPricingModal(false); handlePayment('premium') }}
+          >
+            Wybierz Premium
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         {/* Footer */}
         <footer className="footer">
           <div className="footer-content">
@@ -2117,7 +2227,240 @@ export default function Home() {
           background-color: #ffffff !important;
         }
 
-        /* Responsive Design */
+/* Pricing Modal */
+.pricing-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pricing-modal {
+  background: white;
+  border-radius: 24px;
+  max-width: 600px;
+  margin: 20px;
+  padding: 30px;
+  position: relative;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.modal-title {
+  font-size: 28px;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+.modal-subtitle {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.modal-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 900px;
+}
+
+.pricing-modal {
+  background: white;
+  border-radius: 24px;
+  max-width: 1000px;
+  margin: 20px;
+  padding: 40px;
+  position: relative;
+}
+
+.modal-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 900px;
+}
+
+.modal-pricing-card {
+  padding: 30px 25px 25px 25px;
+  border: 2px solid #f0f0f0;
+  border-radius: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.modal-pricing-card.popular {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 30%, #fde047 70%, #eab308 100%);
+  border-color: #eab308;
+  box-shadow: 0 10px 30px rgba(234, 179, 8, 0.3);
+}
+.modal-pricing-card.popular .modal-plan-name,
+.modal-pricing-card.popular .modal-price {
+  color: #a16207;
+  text-shadow: 0 1px 2px rgba(161, 98, 7, 0.2);
+}
+
+.modal-pricing-card.premium {
+  background: linear-gradient(135deg, #F8FAFC 0%, #E0E7FF 30%, #C7D2FE 70%, #A5B4FC 100%);
+  border-color: #8B5CF6;
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-pricing-card.premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.modal-pricing-card.premium .modal-plan-name,
+.modal-pricing-card.premium .modal-price {
+  background: linear-gradient(135deg, #4c1d95, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-pricing-card .modal-plan-name,
+.modal-pricing-card .modal-price {
+  color: #475569;
+}
+
+.modal-popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.modal-premium-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.modal-plan-header {
+  margin-bottom: 20px;
+  padding-top: 15px;
+}
+
+.modal-plan-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.modal-plan-price {
+  margin-bottom: 20px;
+}
+
+.modal-price {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1f2937;
+  display: block;
+}
+
+.modal-price-period {
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.modal-plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  text-align: left;
+  flex-grow: 1;
+}
+
+.modal-plan-features li {
+  padding: 4px 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.modal-pricing-button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: auto;
+}
+
+.modal-pricing-button.basic {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+}
+
+.modal-pricing-button.pro {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.modal-pricing-button.premium {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}        /* Responsive Design */
         @media (max-width: 768px) {
           .hero-title {
             font-size: 36px;
