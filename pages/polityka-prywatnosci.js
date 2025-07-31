@@ -1,19 +1,18 @@
 import Head from 'next/head'
 import Link from 'next/link'
 
-export default function Regulamin() {
+export default function PolitykaPrywatnosci() {
   return (
     <>
       <Head>
-        <title>Regulamin - CvPerfect.pl</title>
-        <meta name="description" content="Regulamin serwisu CvPerfect.pl - warunki korzystania z usług optymalizacji CV" />
+        <title>Polityka Prywatności - CvPerfect.pl</title>
+        <meta name="description" content="Polityka prywatności CvPerfect.pl - jak przetwarzamy i chronimy Twoje dane osobowe" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
       <div className="legal-container">
-        {/* Header */}
         <div className="legal-header">
           <div className="header-content">
             <Link href="/" className="logo-link">
@@ -28,118 +27,150 @@ export default function Regulamin() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="legal-content">
           <div className="legal-wrapper">
-            <h1 className="legal-title">Regulamin</h1>
+            <h1 className="legal-title">Polityka Prywatności</h1>
             <p className="legal-subtitle">
-              Regulamin korzystania z serwisu CvPerfect.pl
+              Informacja o przetwarzaniu danych osobowych w serwisie CvPerfect.pl
               <br />
               <span className="legal-date">Ostatnia aktualizacja: 31 stycznia 2025</span>
             </p>
 
             <div className="legal-sections">
               <section className="legal-section">
-                <h2 className="section-title">§ 1. Postanowienia ogólne</h2>
+                <h2 className="section-title">1. Administrator danych osobowych</h2>
                 <div className="section-content">
-                  <p><strong>1.1.</strong> Niniejszy Regulamin określa zasady korzystania z serwisu internetowego CvPerfect.pl (dalej: "Serwis").</p>
-                  <p><strong>1.2.</strong> Administratorem Serwisu jest CvPerfect.pl z siedzibą w Polsce.</p>
-                  <p><strong>1.3.</strong> Serwis świadczy usługi optymalizacji CV przy użyciu technologii sztucznej inteligencji.</p>
-                  <p><strong>1.4.</strong> Korzystanie z Serwisu oznacza akceptację niniejszego Regulaminu.</p>
+                  <p><strong>Administratorem</strong> Twoich danych osobowych jest CvPerfect.pl z siedzibą w Polsce.</p>
+                  <p><strong>Kontakt:</strong> cvperfectai@gmail.com</p>
+                  <p>W sprawach dotyczących ochrony danych osobowych możesz skontaktować się z nami pod powyższym adresem email.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 2. Definicje</h2>
+                <h2 className="section-title">2. Jakie dane zbieramy</h2>
                 <div className="section-content">
-                  <p><strong>2.1. Użytkownik</strong> - osoba fizyczna, prawna lub jednostka organizacyjna nieposiadająca osobowości prawnej, korzystająca z Serwisu.</p>
-                  <p><strong>2.2. Usługa</strong> - optymalizacja CV przy użyciu sztucznej inteligencji oferowana przez Serwis.</p>
-                  <p><strong>2.3. Plan</strong> - pakiet usług (Basic, Pro, Premium) określający liczbę dostępnych optymalizacji.</p>
-                  <p><strong>2.4. CV</strong> - curriculum vitae, dokument zawierający informacje o doświadczeniu zawodowym Użytkownika.</p>
-                </div>
-              </section>
-
-              <section className="legal-section">
-                <h2 className="section-title">§ 3. Zasady korzystania</h2>
-                <div className="section-content">
-                  <p><strong>3.1.</strong> Użytkownik zobowiązuje się do korzystania z Serwisu zgodnie z prawem i dobrymi obyczajami.</p>
-                  <p><strong>3.2.</strong> Zabronione jest wprowadzanie do Serwisu treści:</p>
+                  <p><strong>2.1. Dane kontaktowe:</strong></p>
                   <ul>
-                    <li>Naruszających prawa osób trzecich</li>
-                    <li>Zawierających dane osobowe osób trzecich bez ich zgody</li>
-                    <li>Wulgarnych, obraźliwych lub niezgodnych z prawem</li>
-                    <li>Zawierających wirusy lub inne szkodliwe oprogramowanie</li>
+                    <li>Adres email (wymagany do wysłania wyników optymalizacji)</li>
                   </ul>
-                  <p><strong>3.3.</strong> Użytkownik ponosi pełną odpowiedzialność za treść swojego CV.</p>
+                  
+                  <p><strong>2.2. Dane techniczne:</strong></p>
+                  <ul>
+                    <li>Adres IP</li>
+                    <li>Informacje o przeglądarce i urządzeniu</li>
+                    <li>Dane o korzystaniu z serwisu</li>
+                  </ul>
+
+                  <p><strong>2.3. Dane płatności:</strong></p>
+                  <ul>
+                    <li>Informacje o transakcjach (przetwarzane przez Stripe)</li>
+                    <li>Historia zakupów</li>
+                  </ul>
+
+                  <p><strong>2.4. Treść CV:</strong></p>
+                  <ul>
+                    <li>Tekst CV przesłany do optymalizacji</li>
+                    <li>Treść ogłoszenia o pracę</li>
+                  </ul>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 4. Płatności i plany</h2>
+                <h2 className="section-title">3. Podstawy prawne przetwarzania</h2>
                 <div className="section-content">
-                  <p><strong>4.1. Plan Basic:</strong> Jednorazowa płatność 9,99 zł za 1 optymalizację CV.</p>
-                  <p><strong>4.2. Plan Pro:</strong> Miesięczna subskrypcja 49,99 zł za 10 optymalizacji CV.</p>
-                  <p><strong>4.3. Plan Premium:</strong> Miesięczna subskrypcja 79,99 zł za 25 optymalizacji CV.</p>
-                  <p><strong>4.4.</strong> Płatności są przetwarzane przez Stripe, Inc.</p>
-                  <p><strong>4.5.</strong> Limity planów odnawiają się co miesiąc (Pro/Premium) lub są jednorazowe (Basic).</p>
-                  <p><strong>4.6.</strong> Subskrypcję można anulować w każdym momencie bez dodatkowych opłat.</p>
+                  <p><strong>3.1. Wykonanie umowy</strong> (art. 6 ust. 1 lit. b RODO):</p>
+                  <ul>
+                    <li>Świadczenie usług optymalizacji CV</li>
+                    <li>Obsługa płatności</li>
+                    <li>Komunikacja związana z usługą</li>
+                  </ul>
+
+                  <p><strong>3.2. Prawnie uzasadniony interes</strong> (art. 6 ust. 1 lit. f RODO):</p>
+                  <ul>
+                    <li>Analiza ruchu na stronie</li>
+                    <li>Zapewnienie bezpieczeństwa serwisu</li>
+                    <li>Doskonalenie usług</li>
+                  </ul>
+
+                  <p><strong>3.3. Zgoda</strong> (art. 6 ust. 1 lit. a RODO):</p>
+                  <ul>
+                    <li>Marketing bezpośredni (jeśli wyrazisz zgodę)</li>
+                    <li>Pliki cookies analityczne</li>
+                  </ul>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 5. Świadczenie usług</h2>
+                <h2 className="section-title">4. Cele przetwarzania danych</h2>
                 <div className="section-content">
-                  <p><strong>5.1.</strong> Serwis świadczy usługi optymalizacji CV przy użyciu sztucznej inteligencji.</p>
-                  <p><strong>5.2.</strong> Czas realizacji usługi wynosi zazwyczaj 30-60 sekund.</p>
-                  <p><strong>5.3.</strong> Wyniki optymalizacji są wysyłane na adres email podany przez Użytkownika.</p>
-                  <p><strong>5.4.</strong> Serwis nie gwarantuje uzyskania konkretnej pracy przez Użytkownika.</p>
-                  <p><strong>5.5.</strong> Serwis zastrzega sobie prawo do odmowy świadczenia usługi w przypadku naruszenia Regulaminu.</p>
+                  <p><strong>4.1.</strong> Świadczenie usług optymalizacji CV przy użyciu sztucznej inteligencji</p>
+                  <p><strong>4.2.</strong> Wysyłanie wyników optymalizacji na podany adres email</p>
+                  <p><strong>4.3.</strong> Obsługa płatności i rozliczenia</p>
+                  <p><strong>4.4.</strong> Zapewnienie bezpieczeństwa i stabilności serwisu</p>
+                  <p><strong>4.5.</strong> Analiza jakości usług i ich doskonalenie</p>
+                  <p><strong>4.6.</strong> Obsługa reklamacji i zapytań</p>
+                  <p><strong>4.7.</strong> Wypełnienie obowiązków prawnych (np. podatkowych)</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 6. Ochrona danych</h2>
+                <h2 className="section-title">5. Okres przechowywania danych</h2>
                 <div className="section-content">
-                  <p><strong>6.1.</strong> Serwis przetwarza dane osobowe zgodnie z RODO i Polityką Prywatności.</p>
-                  <p><strong>6.2.</strong> CV Użytkownika nie jest przechowywane po zakończeniu optymalizacji.</p>
-                  <p><strong>6.3.</strong> Dane płatności są przetwarzane przez Stripe zgodnie z najwyższymi standardami bezpieczeństwa.</p>
+                  <p><strong>5.1. Treść CV:</strong> Usuwana natychmiast po zakończeniu optymalizacji (maksymalnie po 24 godzinach)</p>
+                  <p><strong>5.2. Adres email:</strong> Do momentu usunięcia konta lub cofnięcia zgody</p>
+                  <p><strong>5.3. Dane płatności:</strong> 5 lat od ostatniej transakcji (obowiązek prawny)</p>
+                  <p><strong>5.4. Dane techniczne:</strong> 12 miesięcy od ostatniej aktywności</p>
+                  <p><strong>5.5. Logi systemowe:</strong> 30 dni (bezpieczeństwo serwisu)</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 7. Odpowiedzialność</h2>
+                <h2 className="section-title">6. Odbiorcy danych</h2>
                 <div className="section-content">
-                  <p><strong>7.1.</strong> Serwis nie ponosi odpowiedzialności za skutki wykorzystania zoptymalizowanego CV.</p>
-                  <p><strong>7.2.</strong> Odpowiedzialność Serwisu ogranicza się do wysokości zapłaconej przez Użytkownika kwoty.</p>
-                  <p><strong>7.3.</strong> Serwis nie odpowiada za przerwy w działaniu spowodowane siłą wyższą lub czynnikami zewnętrznymi.</p>
+                  <p><strong>6.1. Stripe Inc.</strong> - procesor płatności (przetwarzanie transakcji)</p>
+                  <p><strong>6.2. Groq AI</strong> - dostawca usług AI (optymalizacja CV)</p>
+                  <p><strong>6.3. Vercel Inc.</strong> - hosting serwisu</p>
+                  <p><strong>6.4. Supabase Inc.</strong> - baza danych</p>
+                  <p><strong>6.5. Dostawcy usług email</strong> - wysyłka wyników optymalizacji</p>
+                  <p>Wszyscy odbiorcy są związani umowami zapewniającymi odpowiedni poziom ochrony danych.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 8. Reklamacje</h2>
+                <h2 className="section-title">7. Twoje prawa</h2>
                 <div className="section-content">
-                  <p><strong>8.1.</strong> Reklamacje można składać na adres email: cvperfectai@gmail.com</p>
-                  <p><strong>8.2.</strong> Reklamacja powinna zawierać opis problemu i dane umożliwiające identyfikację Użytkownika.</p>
-                  <p><strong>8.3.</strong> Reklamacje są rozpatrywane w terminie do 14 dni roboczych.</p>
+                  <p><strong>7.1. Prawo dostępu</strong> - możesz uzyskać informację o przetwarzanych danych</p>
+                  <p><strong>7.2. Prawo sprostowania</strong> - możesz poprawić nieprawidłowe dane</p>
+                  <p><strong>7.3. Prawo do usunięcia</strong> - możesz żądać usunięcia swoich danych</p>
+                  <p><strong>7.4. Prawo do ograniczenia</strong> - możesz ograniczyć przetwarzanie</p>
+                  <p><strong>7.5. Prawo do przenoszenia</strong> - możesz otrzymać swoje dane w ustrukturyzowanym formacie</p>
+                  <p><strong>7.6. Prawo sprzeciwu</strong> - możesz sprzeciwić się przetwarzaniu</p>
+                  <p><strong>7.7. Prawo cofnięcia zgody</strong> - w każdym momencie bez wpływu na zgodność z prawem</p>
+                  
+                  <p><strong>Kontakt:</strong> cvperfectai@gmail.com</p>
+                  <p><strong>Prawo skargi:</strong> Możesz złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 9. Postanowienia końcowe</h2>
+                <h2 className="section-title">8. Bezpieczeństwo danych</h2>
                 <div className="section-content">
-                  <p><strong>9.1.</strong> Serwis zastrzega sobie prawo do zmiany Regulaminu z ważnych przyczyn.</p>
-                  <p><strong>9.2.</strong> O zmianach Użytkownicy będą informowani z 7-dniowym wyprzedzeniem.</p>
-                  <p><strong>9.3.</strong> W sprawach nieuregulowanych stosuje się prawo polskie.</p>
-                  <p><strong>9.4.</strong> Ewentualne spory będą rozstrzygane przez sąd właściwy dla siedziby Administratora.</p>
+                  <p><strong>8.1.</strong> Stosujemy szyfrowanie SSL/TLS dla wszystkich połączeń</p>
+                  <p><strong>8.2.</strong> Regularnie aktualizujemy systemy bezpieczeństwa</p>
+                  <p><strong>8.3.</strong> Ograniczamy dostęp do danych tylko do niezbędnego personelu</p>
+                  <p><strong>8.4.</strong> Wykonujemy regularne kopie zapasowe</p>
+                  <p><strong>8.5.</strong> Monitorujemy nietypową aktywność</p>
+                  <p><strong>8.6.</strong> Treść CV jest usuwana natychmiast po optymalizacji</p>
                 </div>
               </section>
             </div>
 
             <div className="legal-footer">
               <div className="contact-info">
-                <h3>Kontakt</h3>
+                <h3>Masz pytania o ochronę danych?</h3>
                 <p>📧 cvperfectai@gmail.com</p>
                 <p>🌐 www.cvperfect.pl</p>
+                <p>🛡️ Chronimy Twoje dane zgodnie z RODO</p>
               </div>
             </div>
           </div>

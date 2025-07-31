@@ -838,30 +838,18 @@ export default function Home() {
             <div className="footer-section">
               <h4 className="footer-title">Kontakt</h4>
               <div className="footer-links">
-                <a href="mailto:kontakt@cvperfect.pl" className="footer-link">
-                  📧 kontakt@cvperfect.pl
+                <a href="mailto:cvperfectai@gmail.com" className="footer-link">
+                  📧 cvperfectai@gmail.com
                 </a>
-                <div className="footer-link">
-                  📞 +48 123 456 789
-                </div>
               </div>
             </div>
 
             <div className="footer-section">
               <h4 className="footer-title">Prawne</h4>
               <div className="footer-links">
-                <a href="#" className="footer-link">Regulamin</a>
-                <a href="#" className="footer-link">Polityka prywatności</a>
-                <a href="#" className="footer-link">RODO</a>
-              </div>
-            </div>
-
-            <div className="footer-section">
-              <h4 className="footer-title">Social Media</h4>
-              <div className="footer-links">
-                <a href="#" className="footer-link">LinkedIn</a>
-                <a href="#" className="footer-link">Facebook</a>
-                <a href="#" className="footer-link">Twitter</a>
+                <a href="/regulamin" className="footer-link">Regulamin</a>
+                <a href="/polityka-prywatnosci" className="footer-link">Polityka prywatności</a>
+                <a href="/rodo" className="footer-link">RODO</a>
               </div>
             </div>
           </div>
@@ -1971,8 +1959,9 @@ export default function Home() {
           margin: 0 auto;
           padding: 0 20px;
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          grid-template-columns: 2fr 1fr 1fr;
           gap: 40px;
+          text-align: center;
         }
 
         .footer-section h4 {
