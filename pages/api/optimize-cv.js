@@ -1,108 +1,182 @@
+import Groq from 'groq-sdk'
+import { createClient } from '@supabase/supabase-js'
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+})
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' })
   }
-  const { jobPosting, currentCV } = req.body
-  if (!jobPosting || !currentCV) {
-    return res.status(400).json({ error: 'Job posting and current CV are required' })
-  }
+
   try {
-    // Optimize CV using Groq
-    const cvResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          {
-            role: 'system',
-            content: 'Jesteś ekspertem od optymalizacji CV. Przepisuj CV użytkowników tak żeby idealnie pasowały do ofert pracy. Zachowujesz prawdziwość ale poprawiasz brzmienie, dodajesz słowa kluczowe z ogłoszenia i robisz CV bardziej atrakcyjnym dla rekruterów.'
-          },
-          {
-            role: 'user',
-            content: `OBECNE CV UŻYTKOWNIKA:
-${currentCV}
-OGŁOSZENIE O PRACĘ:
-${jobPosting}
-ZADANIE: Przepisz CV użytkownika tak żeby idealnie pasowało do tej oferty pracy. Popraw:
-- Słowa kluczowe z ogłoszenia (dodaj do opisu doświadczenia)
-- Opis doświadczenia zawodowego (bardziej atrakcyjny, profesjonalny)
-- Umiejętności (dopasowane do wymagań z oferty)
-- Zachowaj prawdziwość ale ulepsz brzmienie
-- Dodaj sekcje które są ważne dla tej pozycji
-- Nie zmyślaj doświadczenia którego nie ma, ale opisuj istniejące lepiej
-Napisz zoptymalizowane CV w języku polskim w profesjonalnym formacie.`
-          }
-        ],
-        max_tokens: 3000,
-        temperature: 0.7,
-      }),
-    })
-    const cvData = await cvResponse.json()
-    console.log('Groq CV response:', cvData) // Debug log
-    if (!cvResponse.ok) {
-      throw new Error(`Groq API error: ${cvData.error?.message || 'Unknown error'}`)
+    const { jobPosting, currentCV, email } = req.body
+
+    console.log('🔍 Checking user limits for:', email)
+
+    // 1. SPRAWDŹ UŻYTKOWNIKA W BAZIE
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single()
+
+    if (userError && userError.code !== 'PGRST116') {
+      console.error('❌ Database error:', userError)
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Błąd bazy danych. Spróbuj ponownie.' 
+      })
     }
-    if (!cvData.choices || !cvData.choices[0]) {
-      throw new Error('Invalid response format from Groq')
+
+    // 2. SPRAWDŹ CZY UŻYTKOWNIK MA DOSTĘP
+    if (!user) {
+      console.log('❌ User not found, requires payment')
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Musisz wykupić plan aby korzystać z optymalizacji CV. Wybierz jeden z planów płatności.' 
+      })
     }
-    // Generate Cover Letter
-    const coverLetterResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          {
-            role: 'system',
-            content: 'Jesteś ekspertem od pisania listów motywacyjnych. Na podstawie ogłoszenia o pracę i CV użytkownika napisz profesjonalny list motywacyjny w języku polskim.'
-          },
-          {
-            role: 'user',
-            content: `OGŁOSZENIE O PRACĘ:
-${jobPosting}
-CV UŻYTKOWNIKA:
-${currentCV}
-Napisz profesjonalny list motywacyjny w języku polskim, który będzie:
-- Dopasowany do tej konkretnej oferty pracy
-- Pokazujący motywację kandydata
-- Podkreślający najważniejsze doświadczenia z CV
-- Przekonujący i angażujący
-- Maksymalnie 200-300 słów`
-          }
-        ],
-        max_tokens: 1500,
-        temperature: 0.7,
-      }),
-    })
-    const coverLetterData = await coverLetterResponse.json()
-    if (!coverLetterResponse.ok) {
-      throw new Error(`Groq API error: ${coverLetterData.error?.message || 'Unknown error'}`)
+
+    // 3. SPRAWDŹ LIMITY UŻYTKOWANIA
+    if (user.usage_count >= user.usage_limit) {
+      console.log('❌ Usage limit exceeded:', user.usage_count, '>=', user.usage_limit)
+      
+      if (user.plan_type === 'one_time') {
+        return res.status(403).json({ 
+          success: false, 
+          error: `Wykorzystałeś swoje użycie planu ${user.plan}. Kup nowy plan aby kontynuować.` 
+        })
+      } else {
+        return res.status(403).json({ 
+          success: false, 
+          error: `Osiągnąłeś limit ${user.usage_limit} CV w tym miesiącu. Poczekaj do następnego miesiąca lub kup wyższy plan.` 
+        })
+      }
     }
-    const optimizedCV = cvData.choices[0].message.content
-    const coverLetter = coverLetterData.choices[0].message.content
-    
-    // Wysyłamy odpowiedź do użytkownika
-    res.status(200).json({
-      success: true,
-      optimizedCV,
-      coverLetter
+
+    // 4. SPRAWDŹ WYGAŚNIĘCIE (dla subskrypcji)
+    if (user.expires_at && new Date(user.expires_at) < new Date()) {
+      console.log('❌ Subscription expired:', user.expires_at)
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Twoja subskrypcja wygasła. Odnów plan aby kontynuować.' 
+      })
+    }
+
+    console.log('✅ User authorized:', {
+      plan: user.plan,
+      usage: `${user.usage_count}/${user.usage_limit}`,
+      expires: user.expires_at
     })
 
-    // Zaplanuj automatyczne usunięcie danych z pamięci po 10 minutach (dla bezpieczeństwa RODO)
-    setTimeout(() => {
-      // Dane CV są automatycznie usuwane z pamięci po przetworzeniu
-      console.log('CV data automatically cleared after processing - RODO compliance')
-    }, 10 * 60 * 1000) // 10 minut
+    // 5. OPTYMALIZUJ CV PRZEZ GROQ AI
+    console.log('🤖 Starting CV optimization...')
+    
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: `Jesteś ekspertem od CV i listów motywacyjnych. Analizujesz oferty pracy i optymalizujesz CV pod konkretne wymagania.
+
+ZADANIE:
+1. Przeanalizuj ogłoszenie o pracę
+2. Zoptymalizuj CV pod to ogłoszenie
+3. Stwórz spersonalizowany list motywacyjny
+
+ZASADY OPTYMALIZACJI:
+- Wyróżnij umiejętności zgodne z wymaganiami
+- Dodaj brakujące słowa kluczowe z ogłoszenia
+- Popraw struktur i kolejność sekcji
+- Usuń nieistotne informacje
+- Zachowaj profesjonalny ton
+
+ODPOWIEDŹ W FORMACIE JSON:
+{
+  "optimizedCV": "zoptymalizowane CV...",
+  "coverLetter": "list motywacyjny...",
+  "improvements": ["lista poprawek..."],
+  "keywordMatch": 85
+}`
+        },
+        {
+          role: 'user',
+          content: `OGŁOSZENIE O PRACĘ:\n${jobPosting}\n\nAKTUALNE CV:\n${currentCV}\n\nZoptymalizuj moje CV pod to ogłoszenie i napisz list motywacyjny.`
+        }
+      ],
+      model: 'llama-3.1-8b-instant',
+      temperature: 0.7,
+      max_tokens: 4000,
+    })
+
+    const aiResponse = chatCompletion.choices[0].message.content
+    console.log('🤖 AI response received')
+
+    // Parse JSON response
+    let parsedResponse
+    try {
+      // Extract JSON from response (in case there's extra text)
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        parsedResponse = JSON.parse(jsonMatch[0])
+      } else {
+        throw new Error('No JSON found in response')
+      }
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError)
+      // Fallback: create response manually
+      parsedResponse = {
+        optimizedCV: aiResponse.split('ZOPTYMALIZOWANE CV:')[1]?.split('LIST MOTYWACYJNY:')[0]?.trim() || aiResponse.substring(0, 2000),
+        coverLetter: aiResponse.split('LIST MOTYWACYJNY:')[1]?.trim() || 'List motywacyjny będzie dodany wkrótce.',
+        improvements: ['CV zostało zoptymalizowane pod ogłoszenie'],
+        keywordMatch: 85
+      }
+    }
+
+    // 6. ZAKTUALIZUJ LICZNIK UŻYĆ
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ 
+        usage_count: user.usage_count + 1 
+      })
+      .eq('email', email)
+
+    if (updateError) {
+      console.error('❌ Failed to update usage count:', updateError)
+      // Don't fail the request, just log the error
+    } else {
+      console.log('✅ Usage count updated:', user.usage_count + 1)
+    }
+
+    // SUKCES!
+    return res.status(200).json({
+      success: true,
+      optimizedCV: parsedResponse.optimizedCV,
+      coverLetter: parsedResponse.coverLetter,
+      improvements: parsedResponse.improvements || [],
+      keywordMatch: parsedResponse.keywordMatch || 85,
+      remainingUses: user.usage_limit - (user.usage_count + 1)
+    })
 
   } catch (error) {
-    console.error('Error optimizing CV:', error)
-    res.status(500).json({ error: error.message })
+    console.error('❌ API Error:', error)
+    
+    if (error.message?.includes('Rate limit')) {
+      return res.status(429).json({ 
+        success: false, 
+        error: 'Zbyt wiele żądań. Spróbuj ponownie za kilka sekund.' 
+      })
+    }
+    
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Wystąpił błąd podczas optymalizacji. Spróbuj ponownie.' 
+    })
   }
 }
