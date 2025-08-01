@@ -11,12 +11,33 @@ const supabase = createClient(
 )
 
 export default async function handler(req, res) {
+  // DODANE: Obsługa CORS i OPTIONS
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
+    console.log('❌ Method not allowed:', req.method)
+    return res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed. Only POST requests are accepted.' 
+    })
   }
 
   try {
     const { jobPosting, currentCV, email } = req.body
+
+    // Walidacja danych wejściowych
+    if (!jobPosting || !currentCV || !email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Brakuje wymaganych pól: ogłoszenie, CV i email są wymagane.'
+      })
+    }
 
     console.log('🔍 Checking user limits for:', email)
 
