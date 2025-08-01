@@ -17,6 +17,150 @@ export default function Home() {
   const [analysisResult, setAnalysisResult] = useState(null)
   const [showPaywall, setShowPaywall] = useState(false)
 
+
+// Live Preview Analysis Function
+const updateLivePreview = (jobText, cvText) => {
+  if (!jobText || !cvText) return;
+
+  // Extract keywords from job posting
+  const jobKeywords = extractKeywords(jobText);
+  const cvKeywords = extractKeywords(cvText);
+  
+  // Calculate ATS score
+  const atsScore = calculateATSScore(jobKeywords, cvKeywords, cvText);
+  
+  // Update live elements
+  updateLiveScore(atsScore);
+  updateKeywordMatching(jobKeywords, cvKeywords);
+  updateLiveSuggestions(jobKeywords, cvKeywords, cvText);
+  updateCVPreview(cvText);
+};
+
+// Extract keywords from text
+const extractKeywords = (text) => {
+  const commonWords = ['i', 'a', 'the', 'w', 'z', 'na', 'do', 'od', 'po', 'we', 'przy', 'oraz', 'lub', 'że', 'się', 'to', 'jak', 'czy'];
+  const words = text.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !commonWords.includes(word));
+  
+  return [...new Set(words)].slice(0, 20); // Top 20 unique keywords
+};
+
+// Calculate ATS score based on keyword matching
+const calculateATSScore = (jobKeywords, cvKeywords, cvText) => {
+  if (!jobKeywords.length) return 0;
+  
+  const matches = jobKeywords.filter(keyword => 
+    cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
+  );
+  
+  const baseScore = (matches.length / jobKeywords.length) * 70;
+  
+  // Bonus points for CV structure
+  const hasContactInfo = /email|telefon|phone/.test(cvText.toLowerCase()) ? 5 : 0;
+  const hasExperience = /doświadczenie|experience|praca|work/.test(cvText.toLowerCase()) ? 10 : 0;
+  const hasSkills = /umiejętności|skills|technologie/.test(cvText.toLowerCase()) ? 10 : 0;
+  const hasEducation = /wykształcenie|education|studia/.test(cvText.toLowerCase()) ? 5 : 0;
+  
+  return Math.min(100, Math.round(baseScore + hasContactInfo + hasExperience + hasSkills + hasEducation));
+};
+
+// Update live score display
+const updateLiveScore = (score) => {
+  const scoreElement = document.getElementById('liveScore');
+  if (scoreElement) {
+    scoreElement.textContent = score + '%';
+    scoreElement.style.color = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+  }
+};
+
+// Update keyword matching display
+const updateKeywordMatching = (jobKeywords, cvKeywords) => {
+  const matchElement = document.getElementById('keywordsMatch');
+  if (!matchElement) return;
+  
+  const matches = jobKeywords.filter(keyword => 
+    cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
+  );
+  
+  const missing = jobKeywords.filter(keyword => 
+    !cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
+  ).slice(0, 5);
+  
+  matchElement.innerHTML = `
+    <div class="keyword-stats">
+      <div class="keyword-stat good">
+        <span class="stat-number">${matches.length}</span>
+        <span class="stat-label">Dopasowane</span>
+      </div>
+      <div class="keyword-stat bad">
+        <span class="stat-number">${missing.length}</span>
+        <span class="stat-label">Brakujące</span>
+      </div>
+    </div>
+    ${missing.length > 0 ? `
+      <div class="missing-keywords">
+        <strong>Brakujące słowa kluczowe:</strong>
+        ${missing.map(keyword => `<span class="keyword-tag missing">${keyword}</span>`).join('')}
+      </div>
+    ` : '<p class="good-match">✅ Doskonałe dopasowanie słów kluczowych!</p>'}
+  `;
+};
+
+// Update live suggestions
+const updateLiveSuggestions = (jobKeywords, cvKeywords, cvText) => {
+  const suggestionsElement = document.getElementById('liveSuggestions');
+  if (!suggestionsElement) return;
+  
+  const suggestions = [];
+  
+  // Missing keywords suggestions
+  const missing = jobKeywords.filter(keyword => 
+    !cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
+  ).slice(0, 3);
+  
+  if (missing.length > 0) {
+    suggestions.push(`💡 Dodaj słowa kluczowe: ${missing.join(', ')}`);
+  }
+  
+  // Structure suggestions
+  if (!/doświadczenie|experience/i.test(cvText)) {
+    suggestions.push('📋 Dodaj sekcję "Doświadczenie zawodowe"');
+  }
+  
+  if (!/umiejętności|skills/i.test(cvText)) {
+    suggestions.push('🛠️ Dodaj sekcję "Umiejętności techniczne"');
+  }
+  
+  if (cvText.length < 200) {
+    suggestions.push('📝 CV wydaje się za krótkie - dodaj więcej szczegółów');
+  }
+  
+  suggestionsElement.innerHTML = suggestions.length > 0 
+    ? suggestions.map(suggestion => `<div class="suggestion-item">${suggestion}</div>`).join('')
+    : '<p class="no-suggestions">✅ CV wygląda świetnie! Brak dodatkowych sugestii.</p>';
+};
+
+// Update CV preview
+const updateCVPreview = (cvText) => {
+  const previewElement = document.getElementById('cvPreview');
+  if (!previewElement) return;
+  
+  const lines = cvText.split('\n').filter(line => line.trim()).slice(0, 10);
+  
+  previewElement.innerHTML = `
+    <div class="cv-preview-document">
+      <div class="cv-preview-header">📄 Podgląd CV</div>
+      <div class="cv-preview-content">
+        ${lines.map(line => `<div class="cv-preview-line">${line.trim().substring(0, 50)}${line.length > 50 ? '...' : ''}</div>`).join('')}
+        ${cvText.split('\n').length > 10 ? '<div class="cv-preview-more">... i więcej</div>' : ''}
+      </div>
+    </div>
+  `;
+};
+
+
   // NOWA FUNKCJA - DARMOWA ANALIZA
 const handleFreeAnalysis = () => {
   // Sprawdź czy użytkownik dodał CV
@@ -80,19 +224,25 @@ document.body.appendChild(errorDiv);
     }
   }
 
-  const handlePayment = (plan) => {
-    const email = document.getElementById('customerEmail')?.value
-    if (!email || !email.includes('@')) {
-      alert('Proszę podać prawidłowy adres email')
-      return
-    }
-
-    const prices = {
-      premium: 'price_1QVZWJG7z1t9LbfP3fOGqV8A'
-    }
-
-    window.location.href = `/api/create-checkout-session?priceId=${prices[plan]}&email=${encodeURIComponent(email)}`
+ const handlePayment = (plan) => {
+  // Pobierz email z paywall modal lub pricing modal
+  const paywallEmail = document.getElementById('paywallEmail')?.value;
+  const customerEmail = document.getElementById('customerEmail')?.value;
+  const email = paywallEmail || customerEmail;
+  
+  if (!email || !email.includes('@')) {
+    alert('Proszę podać prawidłowy adres email')
+    return
   }
+
+  const prices = {
+  premium: 'price_1RofCI4FWb3xY5tDYONIW3Ix',
+  gold: 'price_1Rof7b4FWb3xY5tDQ76590pw',
+  'premium-monthly': 'price_1RqWk34FWb3xY5tD5W2ge1g0'
+}
+
+ window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}`
+}
 
 // Testimonials data (15 opinii)
   const testimonials = [
@@ -266,10 +416,10 @@ return (
     <>
       <Head>
         <title>CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund</title>
-        <meta name="description" content="Pierwsza AI platforma do optymalizacji CV w Polsce. 95% ATS success rate, 420% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund za 9.99 zł." />
+        <meta name="description" content="Pierwsza AI platforma do optymalizacji CV w Polsce. 95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund za 9.99 zł." />
         <meta name="keywords" content="optymalizacja CV, ATS, sztuczna inteligencja, CV AI, praca, rekrutacja, Polska" />
         <meta property="og:title" content="CvPerfect - #1 AI Optymalizacja CV w Polsce" />
-        <meta property="og:description" content="95% ATS success rate, 420% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund." />
+        <meta property="og:description" content="95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund." />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/favicon.ico" />
@@ -317,7 +467,7 @@ return (
               🏆 #1 AI Platforma CV w Polsce
             </div>
             <h1 className="hero-title">
-              Zwiększ swoje szanse o <span className="highlight">420%</span>
+              Zwiększ swoje szanse o <span className="highlight">410%</span>
               <br />z AI-powered optymalizacją CV
             </h1>
             <p className="hero-subtitle">
@@ -327,7 +477,7 @@ return (
             
             <div className="hero-stats">
               <div className="stat-item">
-                <div className="stat-number">420%</div>
+                <div className="stat-number">410%</div>
                 <div className="stat-text">więcej rozmów</div>
               </div>
               <div className="stat-item">
@@ -443,149 +593,7 @@ return (
           </div>
         </div>
 
-        {/* Main Tool Section */}
-        <div className="tool-section">
-          <div className="tool-header">
-            <h2 className="section-title">🚀 Optymalizuj swoje CV w 30 sekund</h2>
-            <p className="section-subtitle">Wklej treść CV i opis oferty pracy - AI zrobi resztę!</p>
-          </div>
-
-          <div className="tool-container">
-            <div className="input-section">
-              <div className="input-group">
-                <label htmlFor="jobPosting" className="input-label">
-                  📋 Opis oferty pracy / wymagania
-                </label>
-                <textarea
-                  id="jobPosting"
-                  value={jobPosting}
-                  onChange={(e) => setJobPosting(e.target.value)}
-                  placeholder="Wklej tutaj pełny opis oferty pracy lub wymagania pracodawcy...
-
-Przykład:
-- Doświadczenie w React.js min. 2 lata
-- Znajomość TypeScript, Node.js
-- Praca w zespole Agile/Scrum
-- Komunikatywność, kreatywność
-- Mile widziane: AWS, Docker"
-                  className="main-textarea"
-                  rows="6"
-                />
-              </div>
-
-              <div className="upload-section">
-                <div className="upload-tabs">
-                  <button 
-                    className={`tab-button ${uploadMethod === 'paste' ? 'active' : ''}`}
-                    onClick={() => setUploadMethod('paste')}
-                  >
-                    📝 Wklej CV
-                  </button>
-                  <button 
-                    className={`tab-button ${uploadMethod === 'upload' ? 'active' : ''}`}
-                    onClick={() => setUploadMethod('upload')}
-                  >
-                    📁 Upload pliku
-                  </button>
-                </div>
-
-                {uploadMethod === 'paste' ? (
-                  <div className="input-group">
-                    <label htmlFor="currentCV" className="input-label">
-                      📄 Twoje obecne CV
-                    </label>
-                    <textarea
-                      id="currentCV"
-                      value={currentCV}
-                      onChange={(e) => setCurrentCV(e.target.value)}
-                      placeholder="Wklej tutaj treść swojego CV...
-
-Przykład:
-Jan Kowalski
-Frontend Developer
-
-DOŚWIADCZENIE:
-- React Developer - ABC Company (2022-2024)
-- Junior Frontend - XYZ Startup (2021-2022)
-
-UMIEJĘTNOŚCI:
-- JavaScript, React, HTML/CSS
-- Git, Webpack, npm"
-                      className="main-textarea"
-                      rows="8"
-                    />
-                  </div>
-                ) : (
-                  <div className="file-upload-area">
-                    <input
-                      type="file"
-                      id="cvFile"
-                      accept=".pdf,.doc,.docx,.txt"
-                      onChange={handleFileUpload}
-                      className="file-input"
-                    />
-                    <label htmlFor="cvFile" className="file-upload-label">
-                      <div className="upload-icon">📁</div>
-                      <div className="upload-text">
-                        <span className="upload-title">Wybierz plik CV</span>
-                        <span className="upload-subtitle">PDF, DOC, DOCX lub TXT (max 5MB)</span>
-                      </div>
-                    </label>
-                    {uploadedFile && (
-                      <div className="uploaded-file">
-                        <span className="file-name">📄 {uploadedFile.name}</span>
-                        <button onClick={() => {setUploadedFile(null); setCurrentCV('')}} className="remove-file">❌</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="email-section">
-                <label htmlFor="userEmail" className="input-label">
-                  📧 Twój email (do wysłania wyników)
-                </label>
-                <input
-                  type="email"
-                  id="userEmail"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  placeholder="twoj.email@example.com"
-                  className="email-input"
-                />
-              </div>
-
-              <button
-                onClick={optimizeCV}
-                disabled={isOptimizing}
-                className={`main-button ${isOptimizing ? 'disabled' : ''}`}
-              >
-                {isOptimizing ? (
-                  <span className="button-loading">
-                    <span className="spinner"></span>
-                    Optymalizuję CV...
-                  </span>
-                ) : (
-                  '🎯 Darmowa Analiza ATS'
-                )}
-              </button>
-
-              <div className="tool-features">
-                <div className="tool-feature">✅ Analiza ATS w 30 sekund</div>
-                <div className="tool-feature">✅ Dostosowanie do oferty</div>
-                <div className="tool-feature">✅ Optymalizacja słów kluczowych</div>
-                <div className="tool-feature">✅ Polski standard CV</div>
-              </div>
-            </div>
-
-            {optimizedResult && (
-              <div className="result-section">
-                <CVAnalysisDashboard result={optimizedResult} />
-              </div>
-            )}
-          </div>
-        </div>
-
+       
         {/* Battle Section - Chili Piper Style */}
         <div className="battle-section">
           <div className="battle-container">
@@ -719,7 +727,7 @@ UMIEJĘTNOŚCI:
               </div>
               <div className="stat-item">
                 <div className="stat-icon">📈</div>
-                <div className="stat-number">420%</div>
+                <div className="stat-number">410%</div>
                 <div className="stat-label">Więcej rozmów</div>
               </div>
               <div className="stat-item">
@@ -931,6 +939,19 @@ if (file.type === 'text/plain') {
 <div className="paywall-header">
   <h2>🚀 Odblouj pełną optymalizację!</h2>
   <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
+</div>
+
+<div className="job-posting-compact">
+  <details className="job-posting-details">
+    <summary className="job-posting-summary">
+      📋 Opis oferty pracy (opcjonalnie - kliknij aby rozwinąć)
+    </summary>
+    <textarea 
+      className="job-posting-textarea"
+      placeholder="Wklej opis oferty pracy dla lepszej optymalizacji..."
+      rows="4"
+    ></textarea>
+  </details>
 </div>
 
 <div className="paywall-email-section">
@@ -1188,6 +1209,206 @@ if (file.type === 'text/plain') {
           </div>
         )}
 
+
+{/* FAQ Section */}
+        <div className="faq-section">
+          <div className="faq-container">
+            <div className="faq-header">
+              <h2 className="section-title">❓ Często zadawane pytania</h2>
+              <p className="section-subtitle">Wszystko czego potrzebujesz wiedzieć o CvPerfect</p>
+            </div>
+
+            <div className="faq-grid">
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">💰</span>
+                  <h3>Czy naprawdę kosztuje tylko 9.99 zł?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Tak! Plan Basic to jednorazowa płatność 9.99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji. Płacisz raz, dostajesz zoptymalizowane CV.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🤖</span>
+                  <h3>Jak działa AI optymalizacja?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę i dostosowuje treść aby przeszła przez systemy ATS z 95% skutecznością.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">⏱️</span>
+                  <h3>Ile czasu zajmuje optymalizacja?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję gotową do wysłania.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">📄</span>
+                  <h3>Jakie formaty CV obsługujemy?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Akceptujemy pliki PDF, DOC, DOCX oraz zwykły tekst. Po optymalizacji dostajesz CV w formacie PDF i DOCX gotowe do wysłania.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🔒</span>
+                  <h3>Czy moje dane są bezpieczne?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Absolutnie! Twoje CV jest przetwarzane w bezpiecznej infrastrukturze, nie przechowujemy danych dłużej niż potrzeba. Wszystkie płatności obsługuje Stripe (standard bankowy).</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🎯</span>
+                  <h3>Co to jest ATS i dlaczego jest ważne?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>ATS (Applicant Tracking System) to systemy używane przez 95% firm do filtrowania CV. Jeśli Twoje CV nie przejdzie przez ATS, rekruter go nie zobaczy. Nasze AI optymalizuje CV pod ATS.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🚀</span>
+                  <h3>Czy mogę anulować subskrypcję?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Oczywiście! Plany Gold (49 zł/mies) i Premium (79 zł/mies) możesz anulować w każdej chwili. Bez kar, bez pytań. Plan Basic to jednorazowa płatność.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">📞</span>
+                  <h3>Co jeśli potrzebuję pomocy?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Napisz do nas na pomoccvperfect@gmail.com - odpowiadamy w ciągu 24h (użytkownikom Premium jeszcze szybciej !). Jesteśmy tutaj, żeby pomóc!</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="faq-cta">
+              <h3>Nie znalazłeś odpowiedzi?</h3>
+              <button className="faq-button" onClick={() => setShowUploadModal(true)}>
+                Wypróbuj za darmo ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+{/* FAQ Section */}
+        <div className="faq-section">
+          <div className="faq-container">
+            <div className="faq-header">
+              <h2 className="section-title">❓ Często zadawane pytania</h2>
+              <p className="section-subtitle">Wszystko czego potrzebujesz wiedzieć o CvPerfect</p>
+            </div>
+
+            <div className="faq-grid">
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">💰</span>
+                  <h3>Czy naprawdę kosztuje tylko 9.99 zł?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Tak! Plan Basic to jednorazowa płatność 9.99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji. Płacisz raz, dostajesz zoptymalizowane CV.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🤖</span>
+                  <h3>Jak działa AI optymalizacja?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę i dostosowuje treść aby przeszła przez systemy ATS z 95% skutecznością.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">⏱️</span>
+                  <h3>Ile czasu zajmuje optymalizacja?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję gotową do wysłania.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">📄</span>
+                  <h3>Jakie formaty CV obsługujemy?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Akceptujemy pliki PDF, DOC, DOCX oraz zwykły tekst. Po optymalizacji dostajesz CV w formacie PDF i DOCX gotowe do wysłania.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🔒</span>
+                  <h3>Czy moje dane są bezpieczne?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Absolutnie! Twoje CV jest przetwarzane w bezpiecznej infrastrukturze, nie przechowujemy danych dłużej niż potrzeba. Wszystkie płatności obsługuje Stripe (standard bankowy).</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🎯</span>
+                  <h3>Co to jest ATS i dlaczego jest ważne?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>ATS (Applicant Tracking System) to systemy używane przez 95% firm do filtrowania CV. Jeśli Twoje CV nie przejdzie przez ATS, rekruter go nie zobaczy. Nasze AI optymalizuje CV pod ATS.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">🚀</span>
+                  <h3>Czy mogę anulować subskrypcję?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Oczywiście! Plany Gold (49 zł/mies) i Premium (79 zł/mies) możesz anulować w każdej chwili. Bez kar, bez pytań. Plan Basic to jednorazowa płatność.</p>
+                </div>
+              </div>
+
+              <div className="faq-item">
+                <div className="faq-question">
+                  <span className="faq-icon">📞</span>
+                  <h3>Co jeśli potrzebuję pomocy?</h3>
+                </div>
+                <div className="faq-answer">
+                  <p>Napisz do nas na pomoccvperfect@gmail.com - odpowiadamy w ciągu 24h (użytkownicy Premium w ciągu 2h). Jesteśmy tutaj, żeby pomóc!</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="faq-cta">
+              <h3>Nie znalazłeś odpowiedzi?</h3>
+              <button className="faq-button" onClick={() => setShowUploadModal(true)}>
+                Wypróbuj za darmo ⚡
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Footer */}
         <footer className="footer">
           <div className="footer-content">
@@ -1198,7 +1419,7 @@ if (file.type === 'text/plain') {
               </div>
               <p className="footer-description">
                 Pierwsza AI platforma do optymalizacji CV w Polsce. 
-                95% skuteczności ATS, 420% więcej rozmów kwalifikacyjnych.
+                95% skuteczności ATS, 410% więcej rozmów kwalifikacyjnych.
               </p>
             </div>
 
@@ -1742,9 +1963,267 @@ html {
 
         /* Tool Section */
         .tool-section {
-          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          padding: 80px 20px;
-        }
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 80px 20px;
+}
+
+/* New Split Layout */
+.tool-container-split {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.tool-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tool-preview {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  padding: 24px;
+  border: 2px solid #e2e8f0;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.preview-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ats-score-live {
+  display: flex;
+  align-items: center;
+}
+
+.score-circle-small {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.score-circle-small .score-number {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-circle-small .score-label {
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.live-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cv-preview-box {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  min-height: 200px;
+}
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.cv-preview-document {
+  text-align: left;
+}
+
+.cv-preview-header {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.cv-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cv-preview-line {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 2px 0;
+  border-left: 2px solid #e5e7eb;
+  padding-left: 8px;
+}
+
+.cv-preview-more {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.live-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.keywords-section, .suggestions-section {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.keywords-section h4, .suggestions-section h4 {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.keyword-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.keyword-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 60px;
+}
+
+.keyword-stat.good {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.keyword-stat.bad {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.stat-number {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.missing-keywords {
+  margin-top: 8px;
+}
+
+.keyword-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 2px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.keyword-tag.missing {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.good-match {
+  color: #16a34a;
+  font-weight: 500;
+  margin: 0;
+}
+
+.suggestion-item {
+  background: #f0f9ff;
+  border-left: 3px solid #0ea5e9;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: #0c4a6e;
+}
+
+.no-analysis, .no-suggestions {
+  color: #6b7280;
+  font-style: italic;
+  margin: 0;
+  text-align: center;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .tool-container-split {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .preview-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .keyword-stats {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .tool-container-split {
+    padding: 20px;
+  }
+  
+  .live-analysis {
+    gap: 16px;
+  }
+}
 
         .tool-header {
           text-align: center;
@@ -2975,6 +3454,8 @@ color: white !important;
 
 .price-new.green {
   color: #16a34a;
+  font-size: 28px !important;
+  line-height: 1 !important;
 }
 
 .price-new.gold {
@@ -3063,6 +3544,284 @@ color: white !important;
   }
 }
 
+
+/* Paywall Modal Styling */
+.paywall-modal {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  padding: 30px;
+  max-width: 950px;
+  width: 98%;
+}
+
+
+.job-posting-compact {
+  margin-bottom: 20px;
+}
+
+.job-posting-details {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0;
+  margin: 0;
+}
+
+.job-posting-summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #374151;
+  user-select: none;
+}
+
+.job-posting-summary:hover {
+  background: #f1f5f9;
+}
+
+.job-posting-textarea {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  resize: vertical;
+  font-size: 14px;
+  color: #000000 !important;
+  background: white !important;
+  border-top: 1px solid #e5e7eb;
+}
+
+.job-posting-textarea:focus {
+  outline: none;
+}
+
+.paywall-email-section {
+  margin: 30px 0 40px 0;
+  text-align: center;
+}
+
+.paywall-email-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 16px;
+  text-align: center;
+  color: #000000 !important;
+  background-color: white !important;
+  transition: all 0.3s ease;
+}
+
+.paywall-email-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  color: #000000 !important;
+}
+
+.paywall-email-input::placeholder {
+  color: #9ca3af;
+}
+
+.pricing-plans-grid.balanced {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: end;
+}
+
+.pricing-plan.compact {
+  padding: 24px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 420px;
+}
+
+.plan-features-compact {
+  flex-grow: 1;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 140px;
+  height: 140px;
+}
+
+.feature-mini {
+  font-size: 13px;
+  margin-bottom: 8px;
+  text-align: left;
+  padding-left: 8px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.price-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.plan-button.uniform-height {
+  margin-top: auto;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pricing-plan.compact .plan-badge {
+  font-size: 10px;
+  padding: 6px 12px;
+  top: -12px;
+}
+
+.pricing-plan.compact h3 {
+  font-size: 18px;
+  margin: 16px 0 12px 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pricing-plans-grid.balanced {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .paywall-email-input {
+    max-width: 100%;
+  }
+}
+
+/* FAQ Section */
+.faq-section {
+  background: white;
+  padding: 80px 20px;
+}
+
+.faq-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.faq-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 60px;
+}
+
+.faq-item {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.faq-item:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+}
+
+.faq-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.faq-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.faq-question h3 {
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.faq-answer {
+  margin-left: 40px;
+}
+
+.faq-answer p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.faq-cta {
+  text-align: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 40px;
+  border-radius: 20px;
+  border: 2px solid #e2e8f0;
+}
+
+.faq-cta h3 {
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.faq-button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.faq-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .faq-item {
+    padding: 20px;
+  }
+  
+  .faq-question h3 {
+    font-size: 16px;
+  }
+  
+  .faq-answer {
+    margin-left: 32px;
+  }
+  
+  .faq-cta {
+    padding: 30px 20px;
+  }
+}
 
        /* Footer */
        .footer {
