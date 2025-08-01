@@ -927,10 +927,7 @@ if (file.type === 'text/plain') {
           </div>
         </div>
 
-       <div className="paywall-header">
-  <h2>🚀 Odblouj pełną optymalizację!</h2>
-  <p>Wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
-</div>
+ 
 <div className="paywall-header">
   <h2>🚀 Odblouj pełną optymalizację!</h2>
   <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
