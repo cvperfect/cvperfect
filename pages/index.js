@@ -25,69 +25,114 @@ export default function Home() {
     { name: "Ola M.", action: "poleca znajomym", time: "30 min temu", type: "recommend" }
   ]
 
-  // Testimonials data (10 opinii)
+  // Testimonials data (15 opinii)
   const testimonials = [
-    { 
-      name: "Anna Kowalska", 
-      role: "Marketing Manager", 
-      text: "Dzięki CvPerfect dostałam wymarzoną pracę w IT! AI doskonale dopasowało moje CV do oferty.",
-      rating: 5 
-    },
-    { 
-      name: "Michał Nowak", 
-      role: "Software Developer", 
-      text: "Niesamowite narzędzie! Z 0 odpowiedzi na 5 rozmów w tydzień. Polecam każdemu!",
-      rating: 5 
-    },
-    { 
-      name: "Kasia Wiśniewska", 
-      role: "UX Designer", 
-      text: "Profesjonalne podejście do optymalizacji. Moje CV wyróżnia się teraz z tłumu kandydatów.",
-      rating: 5 
-    },
-    { 
-      name: "Tomek Kowalczyk", 
-      role: "Project Manager", 
-      text: "Szybko, skutecznie, profesjonalnie. Warto zainwestować w swoją karierę!",
-      rating: 5 
-    },
-    { 
-      name: "Magdalena Kwiatkowska", 
-      role: "HR Specialist", 
-      text: "Jako HR widzę różnicę - CV z CvPerfect to inny poziom jakości i dopasowania.",
-      rating: 5 
-    },
-    { 
-      name: "Jakub Lewandowski", 
-      role: "Data Analyst", 
-      text: "AI perfekcyjnie zidentyfikowało słowa kluczowe. Przeszedłem przez ATS bez problemu!",
-      rating: 5 
-    },
-    { 
-      name: "Ola Zielińska", 
-      role: "Graphic Designer", 
-      text: "Kreatywne branże też potrzebują dobrego CV. CvPerfect to rozumie doskonale.",
-      rating: 5 
-    },
-    { 
-      name: "Mateusz Dąbrowski", 
-      role: "Sales Representative", 
-      text: "ROI na poziomie 1000%! Jedna optymalizacja = wymarzona praca z wyższą pensją.",
-      rating: 5 
-    },
-    { 
-      name: "Natalia Pawlak", 
-      role: "Content Manager", 
-      text: "CV brzmi teraz jak napisane przez native speakera. Konkretnie i profesjonalnie!",
-      rating: 5 
-    },
-    { 
-      name: "Paweł Jankowski", 
-      role: "DevOps Engineer", 
-      text: "Tech stack idealnie dopasowany do wymagań. 3 oferty pracy w pierwszym tygodniu!",
-      rating: 5 
-    }
-  ]
+  {
+    name: "Michał Nowak",
+    role: "Software Developer - Allegro",
+    text: "Dzięki CvPerfect dostałem 8 rozmów w 2 tygodnie! AI doskonale wyłapało słowa kluczowe.",
+    rating: 5,
+    image: "👨‍💻"
+  },
+  {
+    name: "Katarzyna Wiśniewska", 
+    role: "Marketing Manager - CD Projekt",
+    text: "Moje CV przeszło przez ATS w pierwszej próbie. Wzrost odpowiedzi o 400%!",
+    rating: 5,
+    image: "👩‍💼"
+  },
+  {
+    name: "Tomasz Kowalczyk",
+    role: "Data Analyst - PKO Bank",
+    text: "Po optymalizacji dostaję tylko oferty które mnie interesują. Jakość > ilość!",
+    rating: 5,
+    image: "👨‍💼"
+  },
+  {
+    name: "Agnieszka Lis",
+    role: "UX Designer - Asseco",
+    text: "CvPerfect zmienił moją karierę. W miesiąc znalazłam pracę marzeń w tech!",
+    rating: 5,
+    image: "👩‍🎨"
+  },
+  {
+    name: "Paweł Zieliński",
+    role: "Project Manager - Komputronik",
+    text: "AI wychwycił umiejętności które sam pominąłem. Professjonalne podejście!",
+    rating: 5,
+    image: "👨‍💼"
+  },
+  {
+    name: "Magdalena Nowacka",
+    role: "HR Specialist - LPP",
+    text: "Jako rekruterka widzę różnicę - CV z CvPerfect wyróżniają się pozytywnie!",
+    rating: 5,
+    image: "👩‍💼"
+  },
+  {
+    name: "Łukasz Adamski",
+    role: "DevOps Engineer - ING Bank",
+    text: "Technicznie perfekcyjne CV. Pierwszy raz przeszedłem przez wszystkie etapy!",
+    rating: 5,
+    image: "👨‍💻"
+  },
+  {
+    name: "Joanna Malinowska",
+    role: "Content Manager - Onet",
+    text: "Kreatywny sektor też docenia profesjonalizm. Najlepsza inwestycja w karierę!",
+    rating: 5,
+    image: "👩‍💻"
+  },
+  {
+    name: "Rafał Kowalski",
+    role: "Sales Director - Samsung",
+    text: "W 3 tygodnie 5 ofert pracy! AI wie czego szukają rekruterzy w sprzedaży.",
+    rating: 5,
+    image: "👨‍💼"
+  },
+  {
+    name: "Natalia Wójcik",
+    role: "Financial Analyst - PKN Orlen",
+    text: "Z 0 odpowiedzi do 12 rozmów miesięcznie. Konkretne rezultaty!",
+    rating: 5,
+    image: "👩‍📊"
+  },
+  {
+    name: "Marcin Lewandowski",
+    role: "Frontend Developer - Livechat",
+    text: "Moje portfolio zyskało na znaczeniu. CV teraz idealnie prezentuje moje projekty!",
+    rating: 5,
+    image: "👨‍💻"
+  },
+  {
+    name: "Karolina Mazur",
+    role: "Product Manager - Allegro",
+    text: "AI zrozumiał moją ścieżkę kariery lepiej niż ja. Awans w 2 miesiące!",
+    rating: 5,
+    image: "👩‍💼"
+  },
+  {
+    name: "Jakub Nowicki",
+    role: "Cybersecurity Specialist - Orange",
+    text: "Bezpieczeństwo to moja pasja, a CvPerfect pokazał to idealnie w CV!",
+    rating: 5,
+    image: "👨‍💻"
+  },
+  {
+    name: "Weronika Kubiak",
+    role: "Graphic Designer - Grupa Wirtualna Polska",
+    text: "Kreatywność + AI = idealne CV! Moja praca mówi teraz za siebie.",
+    rating: 5,
+    image: "👩‍🎨"
+  },
+  {
+    name: "Dawid Jankowski",
+    role: "Business Analyst - mBank",
+    text: "Analityczne myślenie przeniesione na CV. Każda sekcja ma sens biznesowy!",
+    rating: 5,
+    image: "👨‍📊"
+  }
+]
 
   // Stats animation
   useEffect(() => {
@@ -431,11 +476,11 @@ const handlePayment = async (plan) => {
                 gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
               },
               { 
-                icon: "🎯", 
-                title: "ATS Compatible", 
-                desc: "Przejdziesz przez systemy rekrutacyjne",
-                gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-              },
+  icon: "ats-score", 
+  title: "95% ATS Score", 
+  desc: "Gwarancja przejścia przez systemy rekrutacyjne",
+  gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+},
               { 
                 icon: "📈", 
                 title: "420% Więcej Rozmów", 
@@ -457,8 +502,15 @@ const handlePayment = async (plan) => {
             ].map((feature, index) => (
               <div key={index} className="feature-card" style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="feature-icon-wrapper" style={{ background: feature.gradient }}>
-                  <span className="feature-icon">{feature.icon}</span>
-                </div>
+  {feature.icon === "ats-score" ? (
+    <div className="ats-score-circle">
+      <div className="ats-percentage">95%</div>
+      <div className="ats-label">ATS</div>
+    </div>
+  ) : (
+    <span className="feature-icon">{feature.icon}</span>
+  )}
+</div>
                 <h3 className="feature-title">{feature.title}</h3>
                 <p className="feature-description">{feature.desc}</p>
               </div>
@@ -758,7 +810,150 @@ const handlePayment = async (plan) => {
             </div>
           </div>
 
-          {/* Testimonials Section */}
+{/* Comparison Section - Chili Piper Style */}
+<div className="battle-section">
+  <div className="battle-container">
+    <div className="battle-header">
+      <h2 className="section-title gradient-text">Dlaczego wybierają CvPerfect? 🚀</h2>
+      <p className="battle-subtitle">Pierwsza AI platforma CV w Polsce vs tradycyjne narzędzia</p>
+    </div>
+
+    <div className="battle-arena">
+      {/* CVPERFECT SIDE */}
+      <div className="battle-card winner">
+        <div className="battle-crown">👑 ZWYCIĘZCA</div>
+        <div className="card-glow"></div>
+        
+        <div className="battle-logo">
+          <div className="logo-circle modern">CV</div>
+          <div className="logo-info">
+            <h3>CvPerfect</h3>
+            <p>AI-Powered Revolution</p>
+          </div>
+        </div>
+
+        <div className="battle-features">
+          <div className="feature-row win">
+            <span className="feature-icon">⚡</span>
+            <span>30 sekund</span>
+            <span className="feature-score">10/10</span>
+          </div>
+          <div className="feature-row win">
+            <span className="feature-icon">🤖</span>
+            <span>GPT-4 AI</span>
+            <span className="feature-score">10/10</span>
+          </div>
+          <div className="feature-row win">
+            <span className="feature-icon">🎯</span>
+            <span>95% ATS</span>
+            <span className="feature-score">10/10</span>
+          </div>
+          <div className="feature-row win">
+            <span className="feature-icon">🇵🇱</span>
+            <span>Polski standard</span>
+            <span className="feature-score">10/10</span>
+          </div>
+          <div className="feature-row win">
+            <span className="feature-icon">💰</span>
+            <span>9.99 zł</span>
+            <span className="feature-score">10/10</span>
+          </div>
+        </div>
+
+        <div className="battle-cta">
+          <button className="battle-btn winner-btn" onClick={() => setShowPricingModal(true)}>
+            Wypróbuj teraz ⚡
+          </button>
+          <div className="battle-price">
+            <span className="old-price">29.99 zł</span>
+            <span className="new-price">9.99 zł</span>
+          </div>
+        </div>
+      </div>
+
+      {/* VS DIVIDER */}
+      <div className="vs-container">
+        <div className="vs-lightning">⚡</div>
+        <div className="vs-badge">VS</div>
+        <div className="vs-lightning">⚡</div>
+      </div>
+
+      {/* COMPETITORS SIDE */}
+      <div className="battle-card loser">
+        <div className="battle-skull">💀 PRZEGRANI</div>
+        
+        <div className="battle-logo">
+          <div className="logo-circle old">?</div>
+          <div className="logo-info">
+            <h3>Inne narzędzia</h3>
+            <p>Stare podejście</p>
+          </div>
+        </div>
+
+        <div className="battle-features">
+          <div className="feature-row lose">
+            <span className="feature-icon">⏰</span>
+            <span>5-15 minut</span>
+            <span className="feature-score">3/10</span>
+          </div>
+          <div className="feature-row lose">
+            <span className="feature-icon">🤷</span>
+            <span>Brak AI</span>
+            <span className="feature-score">0/10</span>
+          </div>
+          <div className="feature-row lose">
+            <span className="feature-icon">📊</span>
+            <span>60% ATS</span>
+            <span className="feature-score">6/10</span>
+          </div>
+          <div className="feature-row lose">
+            <span className="feature-icon">🌍</span>
+            <span>Tylko EN</span>
+            <span className="feature-score">4/10</span>
+          </div>
+          <div className="feature-row lose">
+            <span className="feature-icon">💸</span>
+            <span>$29.95+</span>
+            <span className="feature-score">2/10</span>
+          </div>
+        </div>
+
+        <div className="battle-cta">
+          <button className="battle-btn loser-btn" onClick={() => alert('🤔 Pewien? CvPerfect to lepsza opcja! Sprawdź nasze AI w 30 sekund za jedyne 9.99 zł! 🚀')}>
+            Stare podejście 😴
+          </button>
+          <div className="battle-price">
+            <span className="competitor-price">$29.95+</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* BATTLE STATS */}
+    <div className="battle-stats">
+      <div className="stat-item">
+        <div className="stat-icon">🎯</div>
+        <div className="stat-number">95%</div>
+        <div className="stat-label">ATS Success</div>
+      </div>
+      <div className="stat-item">
+        <div className="stat-icon">⚡</div>
+        <div className="stat-number">30s</div>
+        <div className="stat-label">Optymalizacja</div>
+      </div>
+      <div className="stat-item">
+        <div className="stat-icon">📈</div>
+        <div className="stat-number">420%</div>
+        <div className="stat-label">Więcej rozmów</div>
+      </div>
+      <div className="stat-item">
+        <div className="stat-icon">🇵🇱</div>
+        <div className="stat-number">#1</div>
+        <div className="stat-label">W Polsce</div>
+      </div>
+    </div>
+  </div>
+</div>          {/* Testimonials Section */}
           <div className="testimonials-section">
             <h2 className="section-title">Co mówią nasi klienci? ⭐</h2>
             
@@ -774,11 +969,12 @@ const handlePayment = async (plan) => {
                     "{testimonials[currentTestimonial].text}"
                   </p>
                   <div className="testimonial-author">
-                    <strong>{testimonials[currentTestimonial].name}</strong>
-                    <span className="testimonial-role">
-                      {testimonials[currentTestimonial].role}
-                    </span>
-                  </div>
+  <div className="testimonial-avatar">{testimonials[currentTestimonial].image}</div>
+  <div className="testimonial-info">
+    <strong>{testimonials[currentTestimonial].name}</strong>
+    <span className="testimonial-role">{testimonials[currentTestimonial].role}</span>
+  </div>
+</div>
                 </div>
               </div>
               
@@ -1339,6 +1535,33 @@ const handlePayment = async (plan) => {
           color: #6b7280;
           line-height: 1.6;
         }
+
+/* ATS Score Circle */
+.ats-score-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.ats-percentage {
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+}
+
+.ats-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 2px;
+}
 
         /* How It Works Section */
         .how-it-works-section {
@@ -1918,7 +2141,337 @@ const handlePayment = async (plan) => {
           margin: 0;
         }
 
-        /* Testimonials Section */
+/* Battle Section - Chili Piper Style */
+.battle-section {
+  margin: 80px 0;
+  padding: 80px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.battle-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.battle-subtitle {
+  color: #64748b;
+  font-size: 18px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.battle-arena {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 40px;
+  align-items: center;
+  margin-bottom: 60px;
+}
+
+.battle-card {
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+}
+
+.battle-card.winner {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #22c55e;
+  box-shadow: 0 20px 60px rgba(34, 197, 94, 0.2);
+  transform: scale(1.02);
+}
+
+.battle-card.loser {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #ef4444;
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+.card-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-radius: 26px;
+  z-index: -1;
+  opacity: 0.1;
+}
+
+.battle-crown {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+}
+
+.battle-skull {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+}
+
+.battle-logo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.logo-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: white;
+}
+
+.logo-circle.modern {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.logo-circle.old {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.logo-info h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 5px;
+}
+
+.logo-info p {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.battle-features {
+  margin-bottom: 30px;
+}
+
+.feature-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.feature-row:last-child {
+  border-bottom: none;
+}
+
+.feature-row.win {
+  color: #16a34a;
+}
+
+.feature-row.lose {
+  color: #dc2626;
+}
+
+.feature-score {
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.feature-row.win .feature-score {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.feature-row.lose .feature-score {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.vs-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.vs-lightning {
+  font-size: 24px;
+  animation: lightning 1.5s infinite;
+}
+
+@keyframes lightning {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.vs-badge {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 15px 40px rgba(245, 158, 11, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.battle-cta {
+  text-align: center;
+}
+
+.battle-btn {
+  width: 100%;
+  padding: 16px 32px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.winner-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.winner-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4);
+}
+
+.loser-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.loser-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.battle-price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+.new-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: #22c55e;
+}
+
+.competitor-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.battle-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1f2937;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .battle-arena {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .vs-container {
+    order: -1;
+  }
+  
+  .battle-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 30px 20px;
+  }
+}        /* Testimonials Section */
         .testimonials-section {
           margin: 80px 0;
           text-align: center;
@@ -1960,19 +2513,38 @@ const handlePayment = async (plan) => {
         }
 
         .testimonial-author {
-          text-align: center;
-        }
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
 
-        .testimonial-author strong {
-          display: block;
-          font-size: 18px;
-          margin-bottom: 5px;
-        }
+.testimonial-avatar {
+  font-size: 48px;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-        .testimonial-role {
-          opacity: 0.9;
-          font-size: 14px;
-        }
+.testimonial-info {
+  text-align: left;
+}
+
+.testimonial-author strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.testimonial-role {
+  opacity: 0.9;
+  font-size: 14px;
+}
 
         .testimonial-dots {
           display: flex;
