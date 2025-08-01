@@ -2375,6 +2375,7 @@ const handlePayment = async (plan) => {
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
+  z-index: 10;
 }
 
 .modal-premium-badge {
@@ -2389,6 +2390,7 @@ const handlePayment = async (plan) => {
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
+  z-index: 10;
 }
 
 .modal-plan-header {
