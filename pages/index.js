@@ -237,30 +237,30 @@ document.body.appendChild(errorDiv);
   const [notifications, setNotifications] = useState([])
   
   useEffect(() => {
-    const floatingNotifications = [
-      { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
-      { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
-      { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
-      { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
-      { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
-    ]
+  const floatingNotifications = [
+    { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
+    { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
+    { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
+    { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
+    { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
+  ]
 
-    let currentIndex = 0
-    const showNotification = () => {
-      const notification = floatingNotifications[currentIndex]
-      setNotifications(prev => [...prev, { ...notification, show: true }])
-      
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n.id !== notification.id))
-      }, 4000)
-      
-      currentIndex = (currentIndex + 1) % floatingNotifications.length
-    }
+  let currentIndex = 0
+  const showNotification = () => {
+    const notification = floatingNotifications[currentIndex]
+    setNotifications(prev => [...prev, { ...notification, show: true }])
+    
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== notification.id))
+    }, 6000)
+    
+    currentIndex = (currentIndex + 1) % floatingNotifications.length
+  }
 
-    showNotification()
-    const interval = setInterval(showNotification, 12000)
-    return () => clearInterval(interval)
-  }, [])
+  showNotification()
+  const interval = setInterval(showNotification, 12000)
+  return () => clearInterval(interval)
+}, [])
 
 return (
     <>
@@ -273,21 +273,12 @@ return (
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/favicon.ico" />
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-XXXXXX');
-          `
-        }} />
-      </Head>
+              </Head>
 
       {/* Floating Notifications */}
       <div className="floating-notifications">
-        {notifications.map(notification => (
-          <div key={notification.id} className={`floating-notification ${notification.show ? 'show' : ''}`}>
+        {notifications.map((notification, notifIndex) => (
+  <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
             <div className="notification-content">
               <div className="notification-avatar">{notification.name[0]}</div>
               <div className="notification-text">
@@ -749,7 +740,7 @@ UMIEJĘTNOŚCI:
 
           <div className="testimonials-grid">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="testimonial-card">
+  <div key={`testimonial-card-${index}-${testimonial.name}`} className="testimonial-card">
                 <div className="testimonial-header">
                   <div className="testimonial-avatar">{testimonial.avatar}</div>
                   <div className="testimonial-info">
@@ -763,8 +754,8 @@ UMIEJĘTNOŚCI:
                 </div>
                 <div className="testimonial-rating">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i} className="star">⭐</span>
-                  ))}
+  <span key={`star-${index}-${i}`} className="star">⭐</span>
+))}
                 </div>
                 <p className="testimonial-text">"{testimonial.text}"</p>
                 <div className="testimonial-impact">
@@ -816,12 +807,56 @@ UMIEJĘTNOŚCI:
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
-          const textarea = document.querySelector('.cv-textarea');
-          if (textarea) {
-            textarea.value = event.target.result;
-          }
-        };
-        reader.readAsText(file);
+  const textarea = document.querySelector('.cv-textarea');
+  if (textarea) {
+    // Wyczyść i sformatuj tekst CV
+    const cvText = event.target.result;
+    const cleanText = cvText
+      .replace(/\s+/g, ' ')  // Usuń nadmiarowe spacje
+      .replace(/\n\s*\n/g, '\n\n')  // Zachowaj podwójne enter
+      .trim();
+    
+    textarea.value = cleanText;
+    
+    // Pokaż komunikat sukcesu
+    const successMsg = document.createElement('div');
+    successMsg.innerHTML = '✅ CV zostało pomyślnie wczytane!';
+    successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
+    
+    // Usuń poprzedni komunikat jeśli istnieje
+    const existing = document.querySelector('.success-message');
+    if (existing) existing.remove();
+    
+    successMsg.className = 'success-message';
+    textarea.parentNode.appendChild(successMsg);
+    
+    // Usuń komunikat po 3 sekundach
+    setTimeout(() => successMsg.remove(), 3000);
+  }
+};
+        // Sprawdź typ pliku i obsłuż odpowiednio
+if (file.type === 'text/plain') {
+  reader.readAsText(file);
+} else {
+  // Dla PDF/DOC pokaż tylko informacje o pliku
+  const textarea = document.querySelector('.cv-textarea');
+  if (textarea) {
+    textarea.value = `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nTyp pliku: ${file.type}\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!\n\nUwaga: Treść plików PDF/DOC będzie przeanalizowana automatycznie podczas procesu optymalizacji.`;
+    
+    // Komunikat sukcesu
+    const successMsg = document.createElement('div');
+    successMsg.innerHTML = '✅ Plik CV został pomyślnie wczytany!';
+    successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
+    
+    const existing = document.querySelector('.success-message');
+    if (existing) existing.remove();
+    
+    successMsg.className = 'success-message';
+    textarea.parentNode.appendChild(successMsg);
+    
+    setTimeout(() => successMsg.remove(), 3000);
+  }
+}
       }
     }}
   />
@@ -848,81 +883,177 @@ UMIEJĘTNOŚCI:
           </div>
         )}
 
-        {/* Paywall Modal - Po analizie */}
-        {showPaywall && analysisResult && (
-          <div className="modal-overlay" onClick={() => setShowPaywall(false)}>
-            <div className="modal-content paywall-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowPaywall(false)}>×</button>
-              
-              <div className="analysis-preview">
-                <div className="ats-score-big">
-                  <div className="score-circle">
-                    <span className="score-number">{analysisResult.score}%</span>
-                    <span className="score-label">ATS Score</span>
-                  </div>
-                  <div className="score-status">
-                    {analysisResult.score >= 80 ? (
-                      <span className="status good">✅ Dobre CV</span>
-                    ) : analysisResult.score >= 60 ? (
-                      <span className="status warning">⚠️ Wymaga poprawy</span>
-                    ) : (
-                      <span className="status bad">❌ Wymaga optymalizacji</span>
-                    )}
-                  </div>
-                </div>
+       {/* Paywall Modal - Po analizie */}
+{showPaywall && analysisResult && (
+  <div className="modal-overlay" onClick={() => setShowPaywall(false)}>
+    <div className="modal-content paywall-modal" onClick={(e) => e.stopPropagation()}>
+      <button className="modal-close" onClick={() => setShowPaywall(false)}>×</button>
+      
+      <div className="analysis-preview">
+        <div className="ats-score-big">
+          <div className="score-circle">
+            <span className="score-number">{analysisResult.score}%</span>
+            <span className="score-label">ATS Score</span>
+          </div>
+          <div className="score-status">
+            {analysisResult.score >= 80 ? (
+              <span className="status good">✅ Dobre CV</span>
+            ) : analysisResult.score >= 60 ? (
+              <span className="status warning">⚠️ Wymaga poprawy</span>
+            ) : (
+              <span className="status bad">❌ Wymaga optymalizacji</span>
+            )}
+          </div>
+        </div>
 
-                <div className="problems-preview">
-                  <h3>🔍 Znaleźliśmy {analysisResult.problems} problemów:</h3>
-                  <div className="problem-list">
-                    <div className="problem-item blurred">
-                      <span className="problem-icon">❌</span>
-                      <span>Brak słów kluczowych w opisie...</span>
-                    </div>
-                    <div className="problem-item blurred">
-                      <span className="problem-icon">⚠️</span>
-                      <span>Nieoptymalne formatowanie...</span>
-                    </div>
-                    <div className="problem-item blurred">
-                      <span className="problem-icon">❌</span>
-                      <span>Brakujące umiejętności...</span>
-                    </div>
-                    <div className="more-problems">
-                      <span>+ {analysisResult.problems - 3} więcej problemów</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="paywall-cta">
-                  <div className="paywall-header">
-                    <h2>🚀 Odblouj pełną optymalizację!</h2>
-                    <p>Otrzymaj szczegółową analizę i zoptymalizowane CV</p>
-                  </div>
-
-                  <div className="paywall-pricing">
-                    <div className="price-highlight">
-                      <span className="old-price">29.99 zł</span>
-                      <span className="new-price">9.99 zł</span>
-                      <span className="discount-badge">-67%</span>
-                    </div>
-                    <p className="price-subtitle">Jednorazowa płatność • Bez subskrypcji</p>
-                  </div>
-
-                  <button className="paywall-btn" onClick={() => {
-                    setShowPaywall(false);
-                    setShowPricingModal(true);
-                  }}>
-                    Odblouj za 9.99 zł ⚡
-                  </button>
-
-                  <div className="paywall-guarantee">
-                    <span>💰 30-dni gwarancji zwrotu pieniędzy</span>
-                  </div>
-                </div>
-              </div>
+        <div className="problems-preview">
+          <h3>🔍 Znaleźliśmy {analysisResult.problems} problemów:</h3>
+          <div className="problem-list">
+            <div className="problem-item blurred">
+              <span className="problem-icon">❌</span>
+              <span>Brak słów kluczowych w opisie...</span>
+            </div>
+            <div className="problem-item blurred">
+              <span className="problem-icon">⚠️</span>
+              <span>Nieoptymalne formatowanie...</span>
+            </div>
+            <div className="problem-item blurred">
+              <span className="problem-icon">❌</span>
+              <span>Brakujące umiejętności...</span>
+            </div>
+            <div className="more-problems">
+              <span>+ {analysisResult.problems - 3} więcej problemów</span>
             </div>
           </div>
-        )}
+        </div>
 
+       <div className="paywall-header">
+  <h2>🚀 Odblouj pełną optymalizację!</h2>
+  <p>Wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
+</div>
+<div className="paywall-header">
+  <h2>🚀 Odblouj pełną optymalizację!</h2>
+  <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
+</div>
+
+<div className="paywall-email-section">
+  <input
+    type="email"
+    id="paywallEmail"
+    placeholder="📧 Twój email (potrzebne do płatności)"
+    className="paywall-email-input"
+    style={{color: '#000000 !important', backgroundColor: 'white !important'}}
+    required
+  />
+</div>
+
+<div className="pricing-plans-grid horizontal balanced">
+  {/* PLAN JEDNORAZOWY */}
+  <div className="pricing-plan basic compact">
+    <div className="plan-badge green-badge">💚 BASIC</div>
+    <h3>Jednorazowy</h3>
+    <div className="plan-price">
+      <div className="price-main">
+        <span className="price-old">29.99 zł</span>
+        <span className="price-new green">9.99 zł</span>
+      </div>
+      <span className="price-save">-67%</span>
+    </div>
+    
+    <div className="plan-features-compact">
+      <div className="feature-mini">✅ 1 optymalizacja CV</div>
+      <div className="feature-mini">✅ GPT-3.5 AI Engine</div>
+      <div className="feature-mini">✅ 95% ATS Success Rate</div>
+      <div className="feature-mini">✅ Eksport PDF/DOCX</div>
+    </div>
+    
+    <button 
+      className="plan-button green uniform-height"
+      onClick={() => {
+        const email = document.getElementById('paywallEmail').value;
+        if (!email || !email.includes('@')) {
+          alert('⚠️ Podaj prawidłowy email!');
+          return;
+        }
+        handlePayment('premium');
+      }}
+    >
+      Wybierz 9.99 zł ⚡
+    </button>
+  </div>
+
+  {/* PLAN ZŁOTY */}
+  <div className="pricing-plan gold compact featured">
+    <div className="plan-badge gold-badge">✨ GOLD</div>
+    <h3>Gold</h3>
+    <div className="plan-price">
+      <div className="price-main">
+        <span className="price-old">89 zł</span>
+        <span className="price-new gold">49 zł</span>
+      </div>
+      <span className="price-period">/miesiąc</span>
+    </div>
+    
+    <div className="plan-features-compact">
+      <div className="feature-mini">✅ 10 optymalizacji/mies</div>
+      <div className="feature-mini">✅ GPT-4 AI (najnowszy)</div>
+      <div className="feature-mini">✅ Priorytetowa kolejka</div>
+      <div className="feature-mini">✅ Dostęp do nowych funkcji</div>
+    </div>
+    
+    <button 
+      className="plan-button gold uniform-height"
+      onClick={() => {
+        const email = document.getElementById('paywallEmail').value;
+        if (!email || !email.includes('@')) {
+          alert('⚠️ Podaj prawidłowy email!');
+          return;
+        }
+        handlePayment('gold');
+      }}
+    >
+      Subskrypcja 49 zł/mies ✨
+    </button>
+  </div>
+
+  {/* PLAN PREMIUM */}
+  <div className="pricing-plan premium compact">
+    <div className="plan-badge premium-badge">💎 VIP</div>
+    <h3>Premium</h3>
+    <div className="plan-price">
+      <div className="price-main">
+        <span className="price-old">129 zł</span>
+        <span className="price-new premium">79 zł</span>
+      </div>
+      <span className="price-period">/miesiąc</span>
+    </div>
+    
+    <div className="plan-features-compact">
+      <div className="feature-mini">✅ 25 optymalizacji/mies</div>
+      <div className="feature-mini">✅ GPT-4 VIP (najlepszy)</div>
+      <div className="feature-mini">✅ VIP Support (2h odpowiedź)</div>
+      <div className="feature-mini">✅ Beta tester nowości</div>
+    </div>
+    
+    <button 
+      className="plan-button premium uniform-height"
+      onClick={() => {
+        const email = document.getElementById('paywallEmail').value;
+        if (!email || !email.includes('@')) {
+          alert('⚠️ Podaj prawidłowy email!');
+          return;
+        }
+        handlePayment('premium-monthly');
+      }}
+    >
+      Subskrypcja 79 zł/mies 💎
+    </button>
+  </div>
+</div>
+      </div>
+    </div>
+  </div>
+)}
         {/* Pricing Modal */}
         {showPricingModal && (
           <div className="modal-overlay" onClick={() => setShowPricingModal(false)}>
@@ -934,49 +1065,124 @@ UMIEJĘTNOŚCI:
                 <p>Jednorazowa płatność, bez subskrypcji, pełen dostęp</p>
               </div>
 
-              <div className="pricing-plan featured">
-                <div className="plan-badge">🏆 NAJPOPULARNIEJSZY</div>
-                <div className="plan-header">
-                  <h3>Premium AI</h3>
-                  <div className="plan-price">
-                    <span className="price-old">29.99 zł</span>
-                    <span className="price-new">9.99 zł</span>
-                    <span className="price-save">Oszczędzasz 20 zł!</span>
-                  </div>
-                </div>
+              <div className="pricing-plans-grid">
+  {/* PLAN JEDNORAZOWY - ZIELONY */}
+  <div className="pricing-plan basic">
+    <div className="plan-badge green-badge">💚 BASIC</div>
+    <div className="plan-header">
+      <h3>Jednorazowy</h3>
+      <div className="plan-price">
+        <span className="price-old">29.99 zł</span>
+        <span className="price-new green">9.99 zł</span>
+        <span className="price-save">-67%</span>
+      </div>
+      <p className="plan-subtitle">Jednorazowa płatność</p>
+    </div>
 
-                <div className="plan-features">
-                  <div className="feature-item">✅ Nielimitowana optymalizacja CV</div>
-                  <div className="feature-item">✅ GPT-4 AI Engine</div>
-                  <div className="feature-item">✅ 95% ATS Success Rate</div>
-                  <div className="feature-item">✅ Analiza w czasie rzeczywistym</div>
-                  <div className="feature-item">✅ Dostosowanie do polskiego rynku</div>
-                  <div className="feature-item">✅ Eksport do PDF/DOCX</div>
-                  <div className="feature-item">✅ Email support 24/7</div>
-                  <div className="feature-item">✅ 30-dni gwarancji zwrotu</div>
-                </div>
+    <div className="plan-features">
+      <div className="feature-item">✅ 5 optymalizacji CV</div>
+      <div className="feature-item">✅ GPT-3.5 AI Engine</div>
+      <div className="feature-item">✅ 95% ATS Success Rate</div>
+      <div className="feature-item">✅ Eksport PDF/DOCX</div>
+      <div className="feature-item">✅ Email support</div>
+    </div>
 
-                <div className="plan-email">
-                  <input
-                    type="email"
-                    id="customerEmail"
-                    placeholder="Twój email do faktury"
-                    className="email-input-modal"
-                  />
-                </div>
+    <div className="plan-email">
+      <input
+        type="email"
+        id="customerEmailBasic"
+        placeholder="Twój email do faktury"
+        className="email-input-modal"
+      />
+    </div>
 
-                <button 
-                  className="plan-button premium"
-                  onClick={() => handlePayment('premium')}
-                >
-                  Kup za 9.99 zł ⚡
-                </button>
+    <button 
+      className="plan-button green"
+      onClick={() => handlePayment('premium')}
+    >
+      Kup za 9.99 zł ⚡
+    </button>
+  </div>
 
-                <div className="plan-guarantee">
-                  <span>🔒 Bezpieczne płatności Stripe</span>
-                  <span>💰 30-dni gwarancji zwrotu</span>
-                </div>
-              </div>
+  {/* PLAN ZŁOTY - MIESIĘCZNY */}
+  <div className="pricing-plan gold featured">
+    <div className="plan-badge gold-badge">✨ GOLD</div>
+    <div className="plan-header">
+      <h3>Gold Monthly</h3>
+      <div className="plan-price">
+        <span className="price-new gold">49 zł</span>
+        <span className="price-period">/miesiąc</span>
+      </div>
+      <p className="plan-subtitle">Miesięczna subskrypcja</p>
+    </div>
+
+    <div className="plan-features">
+      <div className="feature-item">✅ 10 optymalizacji miesięcznie</div>
+      <div className="feature-item">✅ GPT-4 AI Engine (lepszy AI)</div>
+      <div className="feature-item">✅ Wszystko z Basic +</div>
+      <div className="feature-item">✅ Priorytetowa kolejka</div>
+      <div className="feature-item">✅ Email support priorytetowy</div>
+      <div className="feature-item">✅ Anuluj w każdej chwili</div>
+      <div className="feature-item">✅ Dostęp do nowych funkcji pierwszym</div>
+    </div>
+
+    <div className="plan-email">
+      <input
+        type="email"
+        id="customerEmailGold"
+        placeholder="Twój email do faktury"
+        className="email-input-modal"
+      />
+    </div>
+
+    <button 
+      className="plan-button gold"
+      onClick={() => handlePayment('gold')}
+    >
+      Subskrybuj za 49 zł/mies ✨
+    </button>
+  </div>
+
+  {/* PLAN PREMIUM - MIESIĘCZNY */}
+  <div className="pricing-plan premium">
+    <div className="plan-badge premium-badge">💎 PREMIUM</div>
+    <div className="plan-header">
+      <h3>Premium Monthly</h3>
+      <div className="plan-price">
+        <span className="price-new premium">79 zł</span>
+        <span className="price-period">/miesiąc</span>
+      </div>
+      <p className="plan-subtitle">Najlepszy plan</p>
+    </div>
+
+    <div className="plan-features">
+      <div className="feature-item">✅ 25 optymalizacji miesięcznie</div>
+      <div className="feature-item">✅ GPT-4 AI Engine (najlepszy AI)</div>
+      <div className="feature-item">✅ Wszystko z Gold +</div>
+      <div className="feature-item">✅ VIP Support (najwyższy priorytet)</div>
+      <div className="feature-item">✅ Najszybsza analiza</div>
+      <div className="feature-item">✅ Testuj nowości jako pierwszy</div>
+      <div className="feature-item">✅ Anuluj w każdej chwili</div>
+      <div className="feature-item">✅ Dedykowane wsparcie</div>
+    </div>
+
+    <div className="plan-email">
+      <input
+        type="email"
+        id="customerEmailPremium"
+        placeholder="Twój email do faktury"
+        className="email-input-modal"
+      />
+    </div>
+
+    <button 
+      className="plan-button premium"
+      onClick={() => handlePayment('premium-monthly')}
+    >
+      Subskrybuj za 79 zł/mies 💎
+    </button>
+  </div>
+</div>
 
               <div className="pricing-testimonial">
                 <p>"Najlepsze 9.99 zł jakie wydałem na swoją karierę!" - Michał, Frontend Developer</p>
@@ -2252,15 +2458,15 @@ color: white !important;
        }
 
        .modal-content {
-         background: white;
-         border-radius: 24px;
-         max-width: 600px;
-         width: 90%;
-         max-height: 90vh;
-         overflow-y: auto;
-         position: relative;
-         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-       }
+  background: white;
+  border-radius: 24px;
+  max-width: 900px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
 
        .modal-close {
          position: absolute;
@@ -2331,16 +2537,18 @@ color: white !important;
        }
 
        .cv-textarea {
-         width: 100%;
-         padding: 16px;
-         border: 2px solid #e5e7eb;
-         border-radius: 12px;
-         font-size: 14px;
-         line-height: 1.6;
-         resize: vertical;
-         margin-bottom: 24px;
-         font-family: 'Inter', sans-serif;
-       }
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  margin-bottom: 24px;
+  font-family: 'Inter', sans-serif;
+  color: #1f2937 !important;
+  background-color: white !important;
+}
 
        .cv-textarea:focus {
          outline: none;
@@ -2396,8 +2604,10 @@ color: white !important;
 
        /* Paywall Modal */
        .paywall-modal {
-         padding: 40px;
-       }
+  padding: 30px;
+  max-width: 950px;
+  width: 98%;
+}
 
        .analysis-preview {
          text-align: center;
@@ -2730,6 +2940,132 @@ color: white !important;
          font-style: italic;
          color: #6b7280;
        }
+
+/* Pricing Plans Grid */
+.pricing-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.pricing-plan.basic {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #22c55e;
+}
+
+.pricing-plan.gold {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #f59e0b;
+}
+
+.pricing-plan.premium {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 2px solid #8b5cf6;
+}
+
+.green-badge {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.gold-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.premium-badge {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.price-new.green {
+  color: #16a34a;
+}
+
+.price-new.gold {
+  color: #d97706;
+}
+
+.price-new.premium {
+  color: #7c3aed;
+}
+
+.price-period {
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.plan-button.green {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.plan-button.gold {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.plan-button.premium {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.plan-button.green:hover {
+  box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4);
+}
+
+.plan-button.gold:hover {
+  box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+}
+
+.plan-button.premium:hover {
+  box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+}
+
+
+.pricing-plans-grid.horizontal {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 100%;
+}
+
+.pricing-plan.compact {
+  padding: 20px;
+  text-align: center;
+  min-height: auto;
+}
+
+.pricing-plan.compact h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.pricing-plan.compact .plan-price {
+  margin-bottom: 16px;
+}
+
+.pricing-plan.compact .plan-button {
+  padding: 12px 16px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.pricing-plan.compact .plan-badge {
+  font-size: 10px;
+  padding: 6px 12px;
+  top: -12px;
+}
+
+.price-period {
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .pricing-plans-grid.horizontal {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 
        /* Footer */
        .footer {
