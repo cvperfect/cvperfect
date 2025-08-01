@@ -17,191 +17,47 @@ export default function Home() {
   const [analysisResult, setAnalysisResult] = useState(null)
   const [showPaywall, setShowPaywall] = useState(false)
 
-
-// Live Preview Analysis Function
-const updateLivePreview = (jobText, cvText) => {
-  if (!jobText || !cvText) return;
-
-  // Extract keywords from job posting
-  const jobKeywords = extractKeywords(jobText);
-  const cvKeywords = extractKeywords(cvText);
-  
-  // Calculate ATS score
-  const atsScore = calculateATSScore(jobKeywords, cvKeywords, cvText);
-  
-  // Update live elements
-  updateLiveScore(atsScore);
-  updateKeywordMatching(jobKeywords, cvKeywords);
-  updateLiveSuggestions(jobKeywords, cvKeywords, cvText);
-  updateCVPreview(cvText);
-};
-
-// Extract keywords from text
-const extractKeywords = (text) => {
-  const commonWords = ['i', 'a', 'the', 'w', 'z', 'na', 'do', 'od', 'po', 'we', 'przy', 'oraz', 'lub', 'że', 'się', 'to', 'jak', 'czy'];
-  const words = text.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 2 && !commonWords.includes(word));
-  
-  return [...new Set(words)].slice(0, 20); // Top 20 unique keywords
-};
-
-// Calculate ATS score based on keyword matching
-const calculateATSScore = (jobKeywords, cvKeywords, cvText) => {
-  if (!jobKeywords.length) return 0;
-  
-  const matches = jobKeywords.filter(keyword => 
-    cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
-  );
-  
-  const baseScore = (matches.length / jobKeywords.length) * 70;
-  
-  // Bonus points for CV structure
-  const hasContactInfo = /email|telefon|phone/.test(cvText.toLowerCase()) ? 5 : 0;
-  const hasExperience = /doświadczenie|experience|praca|work/.test(cvText.toLowerCase()) ? 10 : 0;
-  const hasSkills = /umiejętności|skills|technologie/.test(cvText.toLowerCase()) ? 10 : 0;
-  const hasEducation = /wykształcenie|education|studia/.test(cvText.toLowerCase()) ? 5 : 0;
-  
-  return Math.min(100, Math.round(baseScore + hasContactInfo + hasExperience + hasSkills + hasEducation));
-};
-
-// Update live score display
-const updateLiveScore = (score) => {
-  const scoreElement = document.getElementById('liveScore');
-  if (scoreElement) {
-    scoreElement.textContent = score + '%';
-    scoreElement.style.color = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
-  }
-};
-
-// Update keyword matching display
-const updateKeywordMatching = (jobKeywords, cvKeywords) => {
-  const matchElement = document.getElementById('keywordsMatch');
-  if (!matchElement) return;
-  
-  const matches = jobKeywords.filter(keyword => 
-    cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
-  );
-  
-  const missing = jobKeywords.filter(keyword => 
-    !cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
-  ).slice(0, 5);
-  
-  matchElement.innerHTML = `
-    <div class="keyword-stats">
-      <div class="keyword-stat good">
-        <span class="stat-number">${matches.length}</span>
-        <span class="stat-label">Dopasowane</span>
-      </div>
-      <div class="keyword-stat bad">
-        <span class="stat-number">${missing.length}</span>
-        <span class="stat-label">Brakujące</span>
-      </div>
-    </div>
-    ${missing.length > 0 ? `
-      <div class="missing-keywords">
-        <strong>Brakujące słowa kluczowe:</strong>
-        ${missing.map(keyword => `<span class="keyword-tag missing">${keyword}</span>`).join('')}
-      </div>
-    ` : '<p class="good-match">✅ Doskonałe dopasowanie słów kluczowych!</p>'}
-  `;
-};
-
-// Update live suggestions
-const updateLiveSuggestions = (jobKeywords, cvKeywords, cvText) => {
-  const suggestionsElement = document.getElementById('liveSuggestions');
-  if (!suggestionsElement) return;
-  
-  const suggestions = [];
-  
-  // Missing keywords suggestions
-  const missing = jobKeywords.filter(keyword => 
-    !cvKeywords.some(cvKeyword => cvKeyword.includes(keyword) || keyword.includes(cvKeyword))
-  ).slice(0, 3);
-  
-  if (missing.length > 0) {
-    suggestions.push(`💡 Dodaj słowa kluczowe: ${missing.join(', ')}`);
-  }
-  
-  // Structure suggestions
-  if (!/doświadczenie|experience/i.test(cvText)) {
-    suggestions.push('📋 Dodaj sekcję "Doświadczenie zawodowe"');
-  }
-  
-  if (!/umiejętności|skills/i.test(cvText)) {
-    suggestions.push('🛠️ Dodaj sekcję "Umiejętności techniczne"');
-  }
-  
-  if (cvText.length < 200) {
-    suggestions.push('📝 CV wydaje się za krótkie - dodaj więcej szczegółów');
-  }
-  
-  suggestionsElement.innerHTML = suggestions.length > 0 
-    ? suggestions.map(suggestion => `<div class="suggestion-item">${suggestion}</div>`).join('')
-    : '<p class="no-suggestions">✅ CV wygląda świetnie! Brak dodatkowych sugestii.</p>';
-};
-
-// Update CV preview
-const updateCVPreview = (cvText) => {
-  const previewElement = document.getElementById('cvPreview');
-  if (!previewElement) return;
-  
-  const lines = cvText.split('\n').filter(line => line.trim()).slice(0, 10);
-  
-  previewElement.innerHTML = `
-    <div class="cv-preview-document">
-      <div class="cv-preview-header">📄 Podgląd CV</div>
-      <div class="cv-preview-content">
-        ${lines.map(line => `<div class="cv-preview-line">${line.trim().substring(0, 50)}${line.length > 50 ? '...' : ''}</div>`).join('')}
-        ${cvText.split('\n').length > 10 ? '<div class="cv-preview-more">... i więcej</div>' : ''}
-      </div>
-    </div>
-  `;
-};
-
-
   // NOWA FUNKCJA - DARMOWA ANALIZA
-const handleFreeAnalysis = () => {
-  // Sprawdź czy użytkownik dodał CV
-  const cvText = document.querySelector('.cv-textarea')?.value;
-  
-  if (!cvText || cvText.trim().length < 50) {
-    // Pokaż ładny komunikat
-const errorDiv = document.createElement('div');
-errorDiv.innerHTML = `
-  <div style="
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: white; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    z-index: 10000; text-align: center; max-width: 400px;
-  ">
-    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-    <h3 style="color: #1f2937; margin-bottom: 12px;">Brakuje CV!</h3>
-    <p style="color: #6b7280; margin-bottom: 20px;">Najpierw wklej treść swojego CV lub wybierz plik do analizy.</p>
-    <button onclick="this.parentElement.parentElement.remove()" style="
-      background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
-      padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600;
-    ">OK, rozumiem</button>
-  </div>
-`;
-document.body.appendChild(errorDiv);
-    return;
-  }
-  
-  // Simulate analysis with random but realistic results
-  const fakeResult = {
-    score: Math.floor(Math.random() * 40) + 45, // 45-85% random
-    problems: Math.floor(Math.random() * 8) + 5  // 5-12 problems
+  const handleFreeAnalysis = () => {
+    // Sprawdź czy użytkownik dodał CV
+    const cvText = document.querySelector('.cv-textarea')?.value;
+    
+    if (!cvText || cvText.trim().length < 50) {
+      // Pokaż ładny komunikat
+      const errorDiv = document.createElement('div');
+      errorDiv.innerHTML = `
+        <div style="
+          position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+          background: white; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          z-index: 10000; text-align: center; max-width: 400px;
+        ">
+          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+          <h3 style="color: #1f2937; margin-bottom: 12px;">Brakuje CV!</h3>
+          <p style="color: #6b7280; margin-bottom: 20px;">Najpierw wklej treść swojego CV lub wybierz plik do analizy.</p>
+          <button onclick="this.parentElement.parentElement.remove()" style="
+            background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
+            padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600;
+          ">OK, rozumiem</button>
+        </div>
+      `;
+      document.body.appendChild(errorDiv);
+      return;
+    }
+    
+    // Simulate analysis with random but realistic results
+    const fakeResult = {
+      score: Math.floor(Math.random() * 40) + 45, // 45-85% random
+      problems: Math.floor(Math.random() * 8) + 5  // 5-12 problems
+    };
+    
+    setAnalysisResult(fakeResult);
+    setShowUploadModal(false);
+    
+    // Show paywall after 2 seconds (simulate loading)
+    setTimeout(() => {
+      setShowPaywall(true);
+    }, 2000);
   };
-  
-  setAnalysisResult(fakeResult);
-  setShowUploadModal(false);
-  
-  // Show paywall after 2 seconds (simulate loading)
-  setTimeout(() => {
-    setShowPaywall(true);
-  }, 2000);
-};
 
   // UPROSZCZONA FUNKCJA optimizeCV
   const optimizeCV = () => {
@@ -224,25 +80,25 @@ document.body.appendChild(errorDiv);
     }
   }
 
- const handlePayment = (plan) => {
-  // Pobierz email z paywall modal lub pricing modal
-  const paywallEmail = document.getElementById('paywallEmail')?.value;
-  const customerEmail = document.getElementById('customerEmail')?.value;
-  const email = paywallEmail || customerEmail;
-  
-  if (!email || !email.includes('@')) {
-    alert('Proszę podać prawidłowy adres email')
-    return
+  const handlePayment = (plan) => {
+    // Pobierz email z paywall modal lub pricing modal
+    const paywallEmail = document.getElementById('paywallEmail')?.value;
+    const customerEmail = document.getElementById('customerEmail')?.value;
+    const email = paywallEmail || customerEmail;
+    
+    if (!email || !email.includes('@')) {
+      alert('Proszę podać prawidłowy adres email')
+      return
+    }
+
+    const prices = {
+      premium: 'price_1RofCI4FWb3xY5tDYONIW3Ix',
+      gold: 'price_1Rof7b4FWb3xY5tDQ76590pw',
+      'premium-monthly': 'price_1RqWk34FWb3xY5tD5W2ge1g0'
+    }
+
+    window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}`
   }
-
-  const prices = {
-  premium: 'price_1RofCI4FWb3xY5tDYONIW3Ix',
-  gold: 'price_1Rof7b4FWb3xY5tDQ76590pw',
-  'premium-monthly': 'price_1RqWk34FWb3xY5tD5W2ge1g0'
-}
-
- window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}`
-}
 
 // Testimonials data (15 opinii)
   const testimonials = [
@@ -387,32 +243,32 @@ document.body.appendChild(errorDiv);
   const [notifications, setNotifications] = useState([])
   
   useEffect(() => {
-  const floatingNotifications = [
-    { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
-    { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
-    { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
-    { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
-    { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
-  ]
+    const floatingNotifications = [
+      { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
+      { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
+      { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
+      { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
+      { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
+    ]
 
-  let currentIndex = 0
-  const showNotification = () => {
-    const notification = floatingNotifications[currentIndex]
-    setNotifications(prev => [...prev, { ...notification, show: true }])
-    
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== notification.id))
-    }, 6000)
-    
-    currentIndex = (currentIndex + 1) % floatingNotifications.length
-  }
+    let currentIndex = 0
+    const showNotification = () => {
+      const notification = floatingNotifications[currentIndex]
+      setNotifications(prev => [...prev, { ...notification, show: true }])
+      
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== notification.id))
+      }, 6000)
+      
+      currentIndex = (currentIndex + 1) % floatingNotifications.length
+    }
 
-  showNotification()
-  const interval = setInterval(showNotification, 12000)
-  return () => clearInterval(interval)
-}, [])
+    showNotification()
+    const interval = setInterval(showNotification, 12000)
+    return () => clearInterval(interval)
+  }, [])
 
-return (
+  return (
     <>
       <Head>
         <title>CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund</title>
@@ -423,12 +279,13 @@ return (
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/favicon.ico" />
-              </Head>
+      </Head>
 
-      {/* Floating Notifications */}
+	
+{/* Floating Notifications */}
       <div className="floating-notifications">
         {notifications.map((notification, notifIndex) => (
-  <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
+          <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
             <div className="notification-content">
               <div className="notification-avatar">{notification.name[0]}</div>
               <div className="notification-text">
@@ -535,7 +392,6 @@ return (
           </div>
         </div>
 
-
 {/* Features Section */}
         <div className="features-section" id="features">
           <div className="features-header">
@@ -593,8 +449,7 @@ return (
           </div>
         </div>
 
-       
-        {/* Battle Section - Chili Piper Style */}
+{/* Battle Section - Chili Piper Style */}
         <div className="battle-section">
           <div className="battle-container">
             <div className="battle-header">
@@ -748,7 +603,7 @@ return (
 
           <div className="testimonials-grid">
             {testimonials.map((testimonial, index) => (
-  <div key={`testimonial-card-${index}-${testimonial.name}`} className="testimonial-card">
+              <div key={`testimonial-card-${index}-${testimonial.name}`} className="testimonial-card">
                 <div className="testimonial-header">
                   <div className="testimonial-avatar">{testimonial.avatar}</div>
                   <div className="testimonial-info">
@@ -762,8 +617,8 @@ return (
                 </div>
                 <div className="testimonial-rating">
                   {[...Array(testimonial.rating)].map((_, i) => (
-  <span key={`star-${index}-${i}`} className="star">⭐</span>
-))}
+                    <span key={`star-${index}-${i}`} className="star">⭐</span>
+                  ))}
                 </div>
                 <p className="testimonial-text">"{testimonial.text}"</p>
                 <div className="testimonial-impact">
@@ -781,7 +636,7 @@ return (
           </div>
         </div>
 
-        {/* Upload Modal - Darmowa Analiza */}
+{/* Upload Modal - Darmowa Analiza */}
         {showUploadModal && (
           <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
             <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
@@ -804,81 +659,52 @@ return (
                     rows="8"
                   ></textarea>
                   
-                 <div className="upload-buttons">
-  <input
-    type="file"
-    id="modalFileInput"
-    accept=".pdf,.doc,.docx,.txt"
-    style={{display: 'none'}}
-    onChange={(e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-  const textarea = document.querySelector('.cv-textarea');
-  if (textarea) {
-    // Wyczyść i sformatuj tekst CV
-    const cvText = event.target.result;
-    const cleanText = cvText
-      .replace(/\s+/g, ' ')  // Usuń nadmiarowe spacje
-      .replace(/\n\s*\n/g, '\n\n')  // Zachowaj podwójne enter
-      .trim();
-    
-    textarea.value = cleanText;
-    
-    // Pokaż komunikat sukcesu
-    const successMsg = document.createElement('div');
-    successMsg.innerHTML = '✅ CV zostało pomyślnie wczytane!';
-    successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
-    
-    // Usuń poprzedni komunikat jeśli istnieje
-    const existing = document.querySelector('.success-message');
-    if (existing) existing.remove();
-    
-    successMsg.className = 'success-message';
-    textarea.parentNode.appendChild(successMsg);
-    
-    // Usuń komunikat po 3 sekundach
-    setTimeout(() => successMsg.remove(), 3000);
-  }
-};
-        // Sprawdź typ pliku i obsłuż odpowiednio
-if (file.type === 'text/plain') {
-  reader.readAsText(file);
-} else {
-  // Dla PDF/DOC pokaż tylko informacje o pliku
-  const textarea = document.querySelector('.cv-textarea');
-  if (textarea) {
-    textarea.value = `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nTyp pliku: ${file.type}\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!\n\nUwaga: Treść plików PDF/DOC będzie przeanalizowana automatycznie podczas procesu optymalizacji.`;
-    
-    // Komunikat sukcesu
-    const successMsg = document.createElement('div');
-    successMsg.innerHTML = '✅ Plik CV został pomyślnie wczytany!';
-    successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
-    
-    const existing = document.querySelector('.success-message');
-    if (existing) existing.remove();
-    
-    successMsg.className = 'success-message';
-    textarea.parentNode.appendChild(successMsg);
-    
-    setTimeout(() => successMsg.remove(), 3000);
-  }
-}
-      }
-    }}
-  />
-  <button 
-    className="upload-btn secondary"
-    onClick={() => document.getElementById('modalFileInput').click()}
-  >
-    📁 Wybierz plik
-  </button>
-  <button className="upload-btn primary" onClick={handleFreeAnalysis}>
-    🔍 Analizuj teraz
-  </button>
-</div>
-</div>
+                  <div className="upload-buttons">
+                    <input
+                      type="file"
+                      id="modalFileInput"
+                      accept=".pdf,.doc,.docx,.txt"
+                      style={{display: 'none'}}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const textarea = document.querySelector('.cv-textarea');
+                            if (textarea) {
+                              if (file.type === 'text/plain') {
+                                const cvText = event.target.result;
+                                const cleanText = cvText.replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n\n').trim();
+                                textarea.value = cleanText;
+                              } else {
+                                textarea.value = `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!`;
+                              }
+                              
+                              const successMsg = document.createElement('div');
+                              successMsg.innerHTML = '✅ CV zostało pomyślnie wczytane!';
+                              successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
+                              successMsg.className = 'success-message';
+                              const existing = document.querySelector('.success-message');
+                              if (existing) existing.remove();
+                              textarea.parentNode.appendChild(successMsg);
+                              setTimeout(() => successMsg.remove(), 3000);
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }}
+                    />
+                    <button 
+                      className="upload-btn secondary"
+                      onClick={() => document.getElementById('modalFileInput').click()}
+                    >
+                      📁 Wybierz plik
+                    </button>
+                    <button className="upload-btn primary" onClick={handleFreeAnalysis}>
+                      🔍 Analizuj teraz
+                    </button>
+                  </div>
+                </div>
 
                 <div className="upload-features">
                   <div className="feature-check">✅ Analiza ATS w 30 sekund</div>
@@ -891,333 +717,176 @@ if (file.type === 'text/plain') {
           </div>
         )}
 
-       {/* Paywall Modal - Po analizie */}
-{showPaywall && analysisResult && (
-  <div className="modal-overlay" onClick={() => setShowPaywall(false)}>
-    <div className="modal-content paywall-modal" onClick={(e) => e.stopPropagation()}>
-      <button className="modal-close" onClick={() => setShowPaywall(false)}>×</button>
-      
-      <div className="analysis-preview">
-        <div className="ats-score-big">
-          <div className="score-circle">
-            <span className="score-number">{analysisResult.score}%</span>
-            <span className="score-label">ATS Score</span>
-          </div>
-          <div className="score-status">
-            {analysisResult.score >= 80 ? (
-              <span className="status good">✅ Dobre CV</span>
-            ) : analysisResult.score >= 60 ? (
-              <span className="status warning">⚠️ Wymaga poprawy</span>
-            ) : (
-              <span className="status bad">❌ Wymaga optymalizacji</span>
-            )}
-          </div>
-        </div>
-
-        <div className="problems-preview">
-          <h3>🔍 Znaleźliśmy {analysisResult.problems} problemów:</h3>
-          <div className="problem-list">
-            <div className="problem-item blurred">
-              <span className="problem-icon">❌</span>
-              <span>Brak słów kluczowych w opisie...</span>
-            </div>
-            <div className="problem-item blurred">
-              <span className="problem-icon">⚠️</span>
-              <span>Nieoptymalne formatowanie...</span>
-            </div>
-            <div className="problem-item blurred">
-              <span className="problem-icon">❌</span>
-              <span>Brakujące umiejętności...</span>
-            </div>
-            <div className="more-problems">
-              <span>+ {analysisResult.problems - 3} więcej problemów</span>
-            </div>
-          </div>
-        </div>
-
- 
-<div className="paywall-header">
-  <h2>🚀 Odblouj pełną optymalizację!</h2>
-  <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
-</div>
-
-<div className="job-posting-compact">
-  <details className="job-posting-details">
-    <summary className="job-posting-summary">
-      📋 Opis oferty pracy (opcjonalnie - kliknij aby rozwinąć)
-    </summary>
-    <textarea 
-      className="job-posting-textarea"
-      placeholder="Wklej opis oferty pracy dla lepszej optymalizacji..."
-      rows="4"
-    ></textarea>
-  </details>
-</div>
-
-<div className="paywall-email-section">
-  <input
-    type="email"
-    id="paywallEmail"
-    placeholder="📧 Twój email (potrzebne do płatności)"
-    className="paywall-email-input"
-    style={{color: '#000000 !important', backgroundColor: 'white !important'}}
-    required
-  />
-</div>
-
-<div className="pricing-plans-grid horizontal balanced">
-  {/* PLAN JEDNORAZOWY */}
-  <div className="pricing-plan basic compact">
-    <div className="plan-badge green-badge">💚 BASIC</div>
-    <h3>Jednorazowy</h3>
-    <div className="plan-price">
-      <div className="price-main">
-        <span className="price-old">29.99 zł</span>
-        <span className="price-new green">9.99 zł</span>
-      </div>
-      <span className="price-save">-67%</span>
-    </div>
-    
-    <div className="plan-features-compact">
-      <div className="feature-mini">✅ 1 optymalizacja CV</div>
-      <div className="feature-mini">✅ GPT-3.5 AI Engine</div>
-      <div className="feature-mini">✅ 95% ATS Success Rate</div>
-      <div className="feature-mini">✅ Eksport PDF/DOCX</div>
-    </div>
-    
-    <button 
-      className="plan-button green uniform-height"
-      onClick={() => {
-        const email = document.getElementById('paywallEmail').value;
-        if (!email || !email.includes('@')) {
-          alert('⚠️ Podaj prawidłowy email!');
-          return;
-        }
-        handlePayment('premium');
-      }}
-    >
-      Wybierz 9.99 zł ⚡
-    </button>
-  </div>
-
-  {/* PLAN ZŁOTY */}
-  <div className="pricing-plan gold compact featured">
-    <div className="plan-badge gold-badge">✨ GOLD</div>
-    <h3>Gold</h3>
-    <div className="plan-price">
-      <div className="price-main">
-        <span className="price-old">89 zł</span>
-        <span className="price-new gold">49 zł</span>
-      </div>
-      <span className="price-period">/miesiąc</span>
-    </div>
-    
-    <div className="plan-features-compact">
-      <div className="feature-mini">✅ 10 optymalizacji/mies</div>
-      <div className="feature-mini">✅ GPT-4 AI (najnowszy)</div>
-      <div className="feature-mini">✅ Priorytetowa kolejka</div>
-      <div className="feature-mini">✅ Dostęp do nowych funkcji</div>
-    </div>
-    
-    <button 
-      className="plan-button gold uniform-height"
-      onClick={() => {
-        const email = document.getElementById('paywallEmail').value;
-        if (!email || !email.includes('@')) {
-          alert('⚠️ Podaj prawidłowy email!');
-          return;
-        }
-        handlePayment('gold');
-      }}
-    >
-      Subskrypcja 49 zł/mies ✨
-    </button>
-  </div>
-
-  {/* PLAN PREMIUM */}
-  <div className="pricing-plan premium compact">
-    <div className="plan-badge premium-badge">💎 VIP</div>
-    <h3>Premium</h3>
-    <div className="plan-price">
-      <div className="price-main">
-        <span className="price-old">129 zł</span>
-        <span className="price-new premium">79 zł</span>
-      </div>
-      <span className="price-period">/miesiąc</span>
-    </div>
-    
-    <div className="plan-features-compact">
-      <div className="feature-mini">✅ 25 optymalizacji/mies</div>
-      <div className="feature-mini">✅ GPT-4 VIP (najlepszy)</div>
-      <div className="feature-mini">✅ VIP Support (2h odpowiedź)</div>
-      <div className="feature-mini">✅ Beta tester nowości</div>
-    </div>
-    
-    <button 
-      className="plan-button premium uniform-height"
-      onClick={() => {
-        const email = document.getElementById('paywallEmail').value;
-        if (!email || !email.includes('@')) {
-          alert('⚠️ Podaj prawidłowy email!');
-          return;
-        }
-        handlePayment('premium-monthly');
-      }}
-    >
-      Subskrypcja 79 zł/mies 💎
-    </button>
-  </div>
-</div>
-      </div>
-    </div>
-  </div>
-)}
-        {/* Pricing Modal */}
-        {showPricingModal && (
-          <div className="modal-overlay" onClick={() => setShowPricingModal(false)}>
-            <div className="modal-content pricing-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowPricingModal(false)}>×</button>
+        {/* Paywall Modal - Po analizie */}
+        {showPaywall && analysisResult && (
+          <div className="modal-overlay" onClick={() => setShowPaywall(false)}>
+            <div className="modal-content paywall-modal" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowPaywall(false)}>×</button>
               
-              <div className="pricing-header">
-                <h2>🚀 Wybierz swój plan</h2>
-                <p>Jednorazowa płatność, bez subskrypcji, pełen dostęp</p>
-              </div>
+              <div className="analysis-preview">
+                <div className="ats-score-big">
+                  <div className="score-circle">
+                    <span className="score-number">{analysisResult.score}%</span>
+                    <span className="score-label">ATS Score</span>
+                  </div>
+                  <div className="score-status">
+                    {analysisResult.score >= 80 ? (
+                      <span className="status good">✅ Dobre CV</span>
+                    ) : analysisResult.score >= 60 ? (
+                      <span className="status warning">⚠️ Wymaga poprawy</span>
+                    ) : (
+                      <span className="status bad">❌ Wymaga optymalizacji</span>
+                    )}
+                  </div>
+                </div>
 
-              <div className="pricing-plans-grid">
-  {/* PLAN JEDNORAZOWY - ZIELONY */}
-  <div className="pricing-plan basic">
-    <div className="plan-badge green-badge">💚 BASIC</div>
-    <div className="plan-header">
-      <h3>Jednorazowy</h3>
-      <div className="plan-price">
-        <span className="price-old">29.99 zł</span>
-        <span className="price-new green">9.99 zł</span>
-        <span className="price-save">-67%</span>
-      </div>
-      <p className="plan-subtitle">Jednorazowa płatność</p>
-    </div>
+                <div className="problems-preview">
+                  <h3>🔍 Znaleźliśmy {analysisResult.problems} problemów:</h3>
+                  <div className="problem-list">
+                    <div className="problem-item blurred">
+                      <span className="problem-icon">❌</span>
+                      <span>Brak słów kluczowych w opisie...</span>
+                    </div>
+                    <div className="problem-item blurred">
+                      <span className="problem-icon">⚠️</span>
+                      <span>Nieoptymalne formatowanie...</span>
+                    </div>
+                    <div className="problem-item blurred">
+                      <span className="problem-icon">❌</span>
+                      <span>Brakujące umiejętności...</span>
+                    </div>
+                    <div className="more-problems">
+                      <span>+ {analysisResult.problems - 3} więcej problemów</span>
+                    </div>
+                  </div>
+                </div>
 
-    <div className="plan-features">
-      <div className="feature-item">✅ 5 optymalizacji CV</div>
-      <div className="feature-item">✅ GPT-3.5 AI Engine</div>
-      <div className="feature-item">✅ 95% ATS Success Rate</div>
-      <div className="feature-item">✅ Eksport PDF/DOCX</div>
-      <div className="feature-item">✅ Email support</div>
-    </div>
+<div className="paywall-header">
+                  <h2>🚀 Odblouj pełną optymalizację!</h2>
+                  <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
+                </div>
 
-    <div className="plan-email">
-      <input
-        type="email"
-        id="customerEmailBasic"
-        placeholder="Twój email do faktury"
-        className="email-input-modal"
-      />
-    </div>
+                <div className="job-posting-section">
+                  <h4>📋 Optymalizacja CV</h4>
+                  <div className="optimization-options">
+                    <label className="option-radio">
+                      <input type="radio" name="optimizationType" value="specific" defaultChecked 
+                        onChange={(e) => {
+                          const details = document.querySelector('.job-posting-details');
+                          if (details) details.style.display = e.target.checked ? 'block' : 'none';
+                        }} />
+                      <span className="radio-custom"></span>
+                      <div className="option-content">
+                        <strong>🎯 Pod konkretną ofertę pracy</strong>
+                        <p>Najlepsza optymalizacja - dostosowane do wymagań pracodawcy</p>
+                      </div>
+                    </label>
+                    <label className="option-radio">
+                      <input type="radio" name="optimizationType" value="general"
+                        onChange={(e) => {
+                          const details = document.querySelector('.job-posting-details');
+                          if (details) details.style.display = e.target.checked ? 'none' : 'block';
+                        }} />
+                      <span className="radio-custom"></span>
+                      <div className="option-content">
+                        <strong>🌟 Ogólna optymalizacja</strong>
+                        <p>Uniwersalne CV gotowe na różne oferty w Twojej branży</p>
+                      </div>
+                    </label>
+                  </div>
+                  <details className="job-posting-details" open>
+                    <summary className="job-posting-summary">📋 Opis oferty pracy (dla lepszej optymalizacji)</summary>
+                    <textarea className="job-posting-textarea" placeholder="Wklej pełny opis oferty pracy..." rows="4"></textarea>
+                  </details>
+                </div>
 
-    <button 
-      className="plan-button green"
-      onClick={() => handlePayment('premium')}
-    >
-      Kup za 9.99 zł ⚡
-    </button>
-  </div>
+                <div className="paywall-email-section">
+                  <input type="email" id="paywallEmail" placeholder="📧 Twój email (potrzebne do płatności)" className="paywall-email-input" required />
+                </div>
 
-  {/* PLAN ZŁOTY - MIESIĘCZNY */}
-  <div className="pricing-plan gold featured">
-    <div className="plan-badge gold-badge">✨ GOLD</div>
-    <div className="plan-header">
-      <h3>Gold Monthly</h3>
-      <div className="plan-price">
-        <span className="price-new gold">49 zł</span>
-        <span className="price-period">/miesiąc</span>
-      </div>
-      <p className="plan-subtitle">Miesięczna subskrypcja</p>
-    </div>
-
-    <div className="plan-features">
-      <div className="feature-item">✅ 10 optymalizacji miesięcznie</div>
-      <div className="feature-item">✅ GPT-4 AI Engine (lepszy AI)</div>
-      <div className="feature-item">✅ Wszystko z Basic +</div>
-      <div className="feature-item">✅ Priorytetowa kolejka</div>
-      <div className="feature-item">✅ Email support priorytetowy</div>
-      <div className="feature-item">✅ Anuluj w każdej chwili</div>
-      <div className="feature-item">✅ Dostęp do nowych funkcji pierwszym</div>
-    </div>
-
-    <div className="plan-email">
-      <input
-        type="email"
-        id="customerEmailGold"
-        placeholder="Twój email do faktury"
-        className="email-input-modal"
-      />
-    </div>
-
-    <button 
-      className="plan-button gold"
-      onClick={() => handlePayment('gold')}
-    >
-      Subskrybuj za 49 zł/mies ✨
-    </button>
-  </div>
-
-  {/* PLAN PREMIUM - MIESIĘCZNY */}
-  <div className="pricing-plan premium">
-    <div className="plan-badge premium-badge">💎 PREMIUM</div>
-    <div className="plan-header">
-      <h3>Premium Monthly</h3>
-      <div className="plan-price">
-        <span className="price-new premium">79 zł</span>
-        <span className="price-period">/miesiąc</span>
-      </div>
-      <p className="plan-subtitle">Najlepszy plan</p>
-    </div>
-
-    <div className="plan-features">
-      <div className="feature-item">✅ 25 optymalizacji miesięcznie</div>
-      <div className="feature-item">✅ GPT-4 AI Engine (najlepszy AI)</div>
-      <div className="feature-item">✅ Wszystko z Gold +</div>
-      <div className="feature-item">✅ VIP Support (najwyższy priorytet)</div>
-      <div className="feature-item">✅ Najszybsza analiza</div>
-      <div className="feature-item">✅ Testuj nowości jako pierwszy</div>
-      <div className="feature-item">✅ Anuluj w każdej chwili</div>
-      <div className="feature-item">✅ Dedykowane wsparcie</div>
-    </div>
-
-    <div className="plan-email">
-      <input
-        type="email"
-        id="customerEmailPremium"
-        placeholder="Twój email do faktury"
-        className="email-input-modal"
-      />
-    </div>
-
-    <button 
-      className="plan-button premium"
-      onClick={() => handlePayment('premium-monthly')}
-    >
-      Subskrybuj za 79 zł/mies 💎
-    </button>
-  </div>
-</div>
-
-              <div className="pricing-testimonial">
-                <p>"Najlepsze 9.99 zł jakie wydałem na swoją karierę!" - Michał, Frontend Developer</p>
+                <div className="pricing-plans-grid horizontal balanced">
+                  <div className="pricing-plan basic compact">
+                    <div className="plan-badge green-badge">💚 BASIC</div>
+                    <h3>Jednorazowy</h3>
+                    <div className="plan-price">
+                      <span className="price-old">29.99 zł</span>
+                      <span className="price-new green">9.99 zł</span>
+                      <span className="price-save">-67%</span>
+                    </div>
+                    <div className="plan-features-compact">
+                      <div className="feature-mini">✅ 1 optymalizacja CV</div>
+                      <div className="feature-mini">✅ GPT-3.5 AI Engine</div>
+                      <div className="feature-mini">✅ 95% ATS Success Rate</div>
+                      <div className="feature-mini">✅ Eksport PDF/DOCX</div>
+                    </div>
+                    <button className="plan-button green uniform-height" onClick={() => {
+                      const email = document.getElementById('paywallEmail').value;
+                      if (!email || !email.includes('@')) {
+                        alert('⚠️ Podaj prawidłowy email!');
+                        return;
+                      }
+                      handlePayment('premium');
+                    }}>Wybierz 9.99 zł ⚡</button>
+                  </div>
+                  <div className="pricing-plan gold compact featured">
+                    <div className="plan-badge gold-badge">✨ GOLD</div>
+                    <h3>Gold</h3>
+                    <div className="plan-price">
+                      <span className="price-old">89 zł</span>
+                      <span className="price-new gold">49 zł</span>
+                      <span className="price-period">/miesiąc</span>
+                    </div>
+                    <div className="plan-features-compact">
+                      <div className="feature-mini">✅ 10 optymalizacji/mies</div>
+                      <div className="feature-mini">✅ GPT-4 AI (najnowszy)</div>
+                      <div className="feature-mini">✅ Priorytetowa kolejka</div>
+                      <div className="feature-mini">✅ Dostęp do nowych funkcji</div>
+                    </div>
+                    <button className="plan-button gold uniform-height" onClick={() => {
+                      const email = document.getElementById('paywallEmail').value;
+                      if (!email || !email.includes('@')) {
+                        alert('⚠️ Podaj prawidłowy email!');
+                        return;
+                      }
+                      handlePayment('gold');
+                    }}>Subskrypcja 49 zł/mies ✨</button>
+                  </div>
+                  <div className="pricing-plan premium compact">
+                    <div className="plan-badge premium-badge">💎 VIP</div>
+                    <h3>Premium</h3>
+                    <div className="plan-price">
+                      <span className="price-old">129 zł</span>
+                      <span className="price-new premium">79 zł</span>
+                      <span className="price-period">/miesiąc</span>
+                    </div>
+                    <div className="plan-features-compact">
+                      <div className="feature-mini">✅ 25 optymalizacji/mies</div>
+                      <div className="feature-mini">✅ GPT-4 VIP (najlepszy)</div>
+                      <div className="feature-mini">✅ VIP Support (2h odpowiedź)</div>
+                      <div className="feature-mini">✅ Beta tester nowości</div>
+                    </div>
+                    <button className="plan-button premium uniform-height" onClick={() => {
+                      const email = document.getElementById('paywallEmail').value;
+                      if (!email || !email.includes('@')) {
+                        alert('⚠️ Podaj prawidłowy email!');
+                        return;
+                      }
+                      handlePayment('premium-monthly');
+                    }}>Subskrypcja 79 zł/mies 💎</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-
-{/* FAQ Section */}
+        {/* FAQ Section */}
         <div className="faq-section">
           <div className="faq-container">
             <div className="faq-header">
               <h2 className="section-title">❓ Często zadawane pytania</h2>
               <p className="section-subtitle">Wszystko czego potrzebujesz wiedzieć o CvPerfect</p>
             </div>
-
             <div className="faq-grid">
               <div className="faq-item">
                 <div className="faq-question">
@@ -1225,186 +894,40 @@ if (file.type === 'text/plain') {
                   <h3>Czy naprawdę kosztuje tylko 9.99 zł?</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Tak! Plan Basic to jednorazowa płatność 9.99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji. Płacisz raz, dostajesz zoptymalizowane CV.</p>
+                  <p>Tak! Plan Basic to jednorazowa płatność 9.99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji.</p>
                 </div>
               </div>
-
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">🤖</span>
                   <h3>Jak działa AI optymalizacja?</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę i dostosowuje treść aby przeszła przez systemy ATS z 95% skutecznością.</p>
+                  <p>Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę.</p>
                 </div>
               </div>
-
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">⏱️</span>
                   <h3>Ile czasu zajmuje optymalizacja?</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję gotową do wysłania.</p>
+                  <p>Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję.</p>
                 </div>
               </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">📄</span>
-                  <h3>Jakie formaty CV obsługujemy?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Akceptujemy pliki PDF, DOC, DOCX oraz zwykły tekst. Po optymalizacji dostajesz CV w formacie PDF i DOCX gotowe do wysłania.</p>
-                </div>
-              </div>
-
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">🔒</span>
                   <h3>Czy moje dane są bezpieczne?</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Absolutnie! Twoje CV jest przetwarzane w bezpiecznej infrastrukturze, nie przechowujemy danych dłużej niż potrzeba. Wszystkie płatności obsługuje Stripe (standard bankowy).</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">🎯</span>
-                  <h3>Co to jest ATS i dlaczego jest ważne?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>ATS (Applicant Tracking System) to systemy używane przez 95% firm do filtrowania CV. Jeśli Twoje CV nie przejdzie przez ATS, rekruter go nie zobaczy. Nasze AI optymalizuje CV pod ATS.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">🚀</span>
-                  <h3>Czy mogę anulować subskrypcję?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Oczywiście! Plany Gold (49 zł/mies) i Premium (79 zł/mies) możesz anulować w każdej chwili. Bez kar, bez pytań. Plan Basic to jednorazowa płatność.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">📞</span>
-                  <h3>Co jeśli potrzebuję pomocy?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Napisz do nas na pomoccvperfect@gmail.com - odpowiadamy w ciągu 24h (użytkownikom Premium jeszcze szybciej !). Jesteśmy tutaj, żeby pomóc!</p>
+                  <p>Absolutnie! Twoje CV jest przetwarzane bezpiecznie, nie przechowujemy danych. Płatności przez Stripe.</p>
                 </div>
               </div>
             </div>
-
             <div className="faq-cta">
               <h3>Nie znalazłeś odpowiedzi?</h3>
-              <button className="faq-button" onClick={() => setShowUploadModal(true)}>
-                Wypróbuj za darmo ⚡
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-{/* FAQ Section */}
-        <div className="faq-section">
-          <div className="faq-container">
-            <div className="faq-header">
-              <h2 className="section-title">❓ Często zadawane pytania</h2>
-              <p className="section-subtitle">Wszystko czego potrzebujesz wiedzieć o CvPerfect</p>
-            </div>
-
-            <div className="faq-grid">
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">💰</span>
-                  <h3>Czy naprawdę kosztuje tylko 9.99 zł?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Tak! Plan Basic to jednorazowa płatność 9.99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji. Płacisz raz, dostajesz zoptymalizowane CV.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">🤖</span>
-                  <h3>Jak działa AI optymalizacja?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę i dostosowuje treść aby przeszła przez systemy ATS z 95% skutecznością.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">⏱️</span>
-                  <h3>Ile czasu zajmuje optymalizacja?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję gotową do wysłania.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">📄</span>
-                  <h3>Jakie formaty CV obsługujemy?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Akceptujemy pliki PDF, DOC, DOCX oraz zwykły tekst. Po optymalizacji dostajesz CV w formacie PDF i DOCX gotowe do wysłania.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">🔒</span>
-                  <h3>Czy moje dane są bezpieczne?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Absolutnie! Twoje CV jest przetwarzane w bezpiecznej infrastrukturze, nie przechowujemy danych dłużej niż potrzeba. Wszystkie płatności obsługuje Stripe (standard bankowy).</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">🎯</span>
-                  <h3>Co to jest ATS i dlaczego jest ważne?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>ATS (Applicant Tracking System) to systemy używane przez 95% firm do filtrowania CV. Jeśli Twoje CV nie przejdzie przez ATS, rekruter go nie zobaczy. Nasze AI optymalizuje CV pod ATS.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">🚀</span>
-                  <h3>Czy mogę anulować subskrypcję?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Oczywiście! Plany Gold (49 zł/mies) i Premium (79 zł/mies) możesz anulować w każdej chwili. Bez kar, bez pytań. Plan Basic to jednorazowa płatność.</p>
-                </div>
-              </div>
-
-              <div className="faq-item">
-                <div className="faq-question">
-                  <span className="faq-icon">📞</span>
-                  <h3>Co jeśli potrzebuję pomocy?</h3>
-                </div>
-                <div className="faq-answer">
-                  <p>Napisz do nas na pomoccvperfect@gmail.com - odpowiadamy w ciągu 24h (użytkownicy Premium w ciągu 2h). Jesteśmy tutaj, żeby pomóc!</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="faq-cta">
-              <h3>Nie znalazłeś odpowiedzi?</h3>
-              <button className="faq-button" onClick={() => setShowUploadModal(true)}>
-                Wypróbuj za darmo ⚡
-              </button>
+              <button className="faq-button" onClick={() => setShowUploadModal(true)}>Wypróbuj za darmo ⚡</button>
             </div>
           </div>
         </div>
@@ -1417,100 +940,67 @@ if (file.type === 'text/plain') {
                 <span className="logo-text">CvPerfect</span>
                 <span className="logo-badge">AI</span>
               </div>
-              <p className="footer-description">
-                Pierwsza AI platforma do optymalizacji CV w Polsce. 
-                95% skuteczności ATS, 410% więcej rozmów kwalifikacyjnych.
-              </p>
+              <p className="footer-description">Pierwsza AI platforma do optymalizacji CV w Polsce. 95% skuteczności ATS, 410% więcej rozmów kwalifikacyjnych.</p>
             </div>
-
             <div className="footer-section">
               <h4>Produkty</h4>
               <ul className="footer-links">
                 <li><a href="#features">Optymalizacja AI</a></li>
                 <li><a href="#testimonials">Opinie użytkowników</a></li>
-                <li><a href="#pricing">Cennik</a></li>
-              </ul>
-            </div>
-
-            <div className="footer-section">
-              <h4>Pomoc</h4>
-              <ul className="footer-links">
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="mailto:pomoc@cvperfect.pl">Kontakt</a></li>
-                <li><a href="#privacy">Polityka prywatności</a></li>
-                <li><a href="#terms">Regulamin</a></li>
-              </ul>
-            </div>
-
-            <div className="footer-section">
-              <h4>Statystyki</h4>
-              <ul className="footer-stats">
-                <li>📊 15,000+ optymalizacji</li>
-                <li>🎯 95% ATS Success Rate</li>
-                <li>⚡ 30 sekund średnio</li>
-                <li>🇵🇱 #1 w Polsce</li>
               </ul>
             </div>
           </div>
-
           <div className="footer-bottom">
             <p>&copy; 2024 CvPerfect. Wszystkie prawa zastrzeżone.</p>
-            <div className="footer-badges">
-              <span className="badge">🔒 SSL Secured</span>
-              <span className="badge">💳 Stripe Payments</span>
-              <span className="badge">🇵🇱 Made in Poland</span>
-            </div>
           </div>
         </footer>
       </div>
-
-<style jsx>{`
+      <style jsx>{`
         /* Global Styles */
+        body {
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden;
+        }
+        html {
+          overflow-x: hidden;
+        }        
+        .container {
+          min-height: 100vh;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          line-height: 1.6;
+          color: #1f2937;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 0;
+          margin: 0 auto;
+          max-width: 100vw;
+          width: 100%;
+        }
 
-body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-
-html {
-  overflow-x: hidden;
-}        
-
-.container {
-  min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  line-height: 1.6;
-  color: #1f2937;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 0;
-  margin: 0 auto;
-  max-width: 100vw;
-  width: 100%;
-}
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 12px;
-}
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 6px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a6fd8, #6a4190);
-}
-
-        /* Floating Notifications */
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+          width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #5a6fd8, #6a4190);
+        }
+      
+  
+/* Floating Notifications */
         .floating-notifications {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  z-index: 1000;
-  pointer-events: none;
-}
+          position: fixed;
+          top: 80px;
+          right: 20px;
+          z-index: 1000;
+          pointer-events: none;
+        }
 
         .floating-notification {
           background: linear-gradient(135deg, #10b981, #059669);
@@ -1639,17 +1129,17 @@ html {
 
         /* Hero Section */
         .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 80px 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: center;
-  max-width: 100vw;
-  margin: 0 auto;
-  overflow: hidden;
-}
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 80px 20px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 60px;
+          align-items: center;
+          max-width: 100vw;
+          margin: 0 auto;
+          overflow: hidden;
+        }
 
         .hero-badge {
           background: rgba(255, 255, 255, 0.15);
@@ -1697,6 +1187,7 @@ html {
           padding: 20px;
           border-radius: 16px;
           backdrop-filter: blur(10px);
+          color: white !important;
         }
 
         .stat-number {
@@ -1704,11 +1195,13 @@ html {
           font-weight: 800;
           display: block;
           margin-bottom: 8px;
+          color: white !important;
         }
 
         .stat-text {
           font-size: 14px;
-          opacity: 0.8;
+          opacity: 1;
+          color: white !important;
         }
 
         .hero-cta {
@@ -1769,18 +1262,18 @@ html {
           text-align: center;
         }
 
-       .cv-score {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  margin: 0 auto 20px;
-  color: white;
-  font-size: 11px;
-}
+        .cv-score {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 800;
+          margin: 0 auto 20px;
+          color: white;
+          font-size: 11px;
+        }
 
         .cv-score.bad {
           background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -1828,7 +1321,9 @@ html {
           font-weight: bold;
         }
 
-        /* Features Section */
+
+
+/* Features Section */
         .features-section {
           background: white;
           padding: 80px 20px;
@@ -1961,497 +1456,7 @@ html {
           font-weight: 700;
         }
 
-        /* Tool Section */
-        .tool-section {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 80px 20px;
-}
-
-/* New Split Layout */
-.tool-container-split {
-  max-width: 1400px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 24px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-}
-
-.tool-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.tool-preview {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 16px;
-  padding: 24px;
-  border: 2px solid #e2e8f0;
-}
-
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.preview-header h3 {
-  margin: 0;
-  color: #1f2937;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.ats-score-live {
-  display: flex;
-  align-items: center;
-}
-
-.score-circle-small {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: all 0.3s ease;
-}
-
-.score-circle-small .score-number {
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.score-circle-small .score-label {
-  font-size: 10px;
-  opacity: 0.9;
-}
-
-.live-preview-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.cv-preview-box {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  min-height: 200px;
-}
-
-.preview-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 180px;
-  color: #6b7280;
-  text-align: center;
-}
-
-.placeholder-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.cv-preview-document {
-  text-align: left;
-}
-
-.cv-preview-header {
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.cv-preview-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cv-preview-line {
-  font-size: 12px;
-  color: #6b7280;
-  padding: 2px 0;
-  border-left: 2px solid #e5e7eb;
-  padding-left: 8px;
-}
-
-.cv-preview-more {
-  font-size: 12px;
-  color: #9ca3af;
-  font-style: italic;
-  margin-top: 8px;
-}
-
-.live-analysis {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.keywords-section, .suggestions-section {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-}
-
-.keywords-section h4, .suggestions-section h4 {
-  margin: 0 0 12px 0;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.keyword-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.keyword-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 8px;
-  min-width: 60px;
-}
-
-.keyword-stat.good {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.keyword-stat.bad {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.stat-number {
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 10px;
-  margin-top: 2px;
-}
-
-.missing-keywords {
-  margin-top: 8px;
-}
-
-.keyword-tag {
-  display: inline-block;
-  padding: 4px 8px;
-  margin: 2px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.keyword-tag.missing {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.good-match {
-  color: #16a34a;
-  font-weight: 500;
-  margin: 0;
-}
-
-.suggestion-item {
-  background: #f0f9ff;
-  border-left: 3px solid #0ea5e9;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-  border-radius: 0 6px 6px 0;
-  font-size: 13px;
-  color: #0c4a6e;
-}
-
-.no-analysis, .no-suggestions {
-  color: #6b7280;
-  font-style: italic;
-  margin: 0;
-  text-align: center;
-}
-
-/* Mobile Responsive */
-@media (max-width: 1024px) {
-  .tool-container-split {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
-  
-  .preview-header {
-    flex-direction: column;
-    gap: 16px;
-    text-align: center;
-  }
-  
-  .keyword-stats {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .tool-container-split {
-    padding: 20px;
-  }
-  
-  .live-analysis {
-    gap: 16px;
-  }
-}
-
-        .tool-header {
-          text-align: center;
-          margin-bottom: 60px;
-        }
-
-        .tool-container {
-          max-width: 1000px;
-          margin: 0 auto;
-          background: white;
-          border-radius: 24px;
-          padding: 40px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        }
-
-        .input-section {
-          margin-bottom: 40px;
-        }
-
-        .input-group {
-          margin-bottom: 32px;
-        }
-
-        .input-label {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 12px;
-          color: #374151;
-          font-size: 16px;
-        }
-
-        .main-textarea {
-  width: 100%;
-  padding: 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: vertical;
-  transition: all 0.3s ease;
-  font-family: 'Inter', sans-serif;
-  color: #000000 !important;
-  background-color: white !important;
-}
-
-        .main-textarea:focus {
-          outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .upload-section {
-          margin-bottom: 32px;
-        }
-
-        .upload-tabs {
-          display: flex;
-          margin-bottom: 20px;
-          background: #f3f4f6;
-          border-radius: 12px;
-          padding: 4px;
-        }
-
-        .tab-button {
-          flex: 1;
-          padding: 12px 24px;
-          border: none;
-          background: transparent;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          color: #6b7280;
-        }
-
-        .tab-button.active {
-          background: white;
-          color: #667eea;
-          font-weight: 600;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .file-upload-area {
-          position: relative;
-        }
-
-        .file-input {
-          display: none;
-        }
-
-        .file-upload-label {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 32px;
-          border: 2px dashed #d1d5db;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          background: #f9fafb;
-        }
-
-        .file-upload-label:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        .upload-icon {
-          font-size: 32px;
-        }
-
-        .upload-text {
-          flex: 1;
-        }
-
-        .upload-title {
-          display: block;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 4px;
-        }
-
-        .upload-subtitle {
-          display: block;
-          color: #6b7280;
-          font-size: 14px;
-        }
-
-        .uploaded-file {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: #f0fdf4;
-          border: 1px solid #bbf7d0;
-          border-radius: 8px;
-          padding: 12px 16px;
-          margin-top: 12px;
-        }
-
-        .file-name {
-          color: #166534;
-          font-weight: 500;
-        }
-
-        .remove-file {
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 16px;
-        }
-
-        .email-section {
-          margin-bottom: 32px;
-        }
-
-        .email-input {
-          width: 100%;
-          padding: 16px;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          font-size: 16px;
-          transition: all 0.3s ease;
-        }
-
-        .email-input:focus {
-          outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .main-button {
-          width: 100%;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          padding: 20px 32px;
-          border-radius: 16px;
-          font-size: 18px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          margin-bottom: 24px;
-        }
-
-        .main-button:hover:not(.disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-        }
-
-        .main-button.disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-
-        .button-loading {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-        }
-
-        .spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .tool-features {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-        }
-
-        .tool-feature {
-          color: #059669;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        /* Battle Section - Chili Piper Style */
+        /* Battle Section */
         .battle-section {
           margin: 80px 0;
           padding: 80px 20px;
@@ -2713,18 +1718,6 @@ html {
           gap: 10px;
         }
 
-        .old-price {
-          text-decoration: line-through;
-          color: #9ca3af;
-          font-size: 16px;
-        }
-
-        .new-price {
-          font-size: 24px;
-          font-weight: 800;
-          color: #22c55e;
-        }
-
         .competitor-price {
           font-size: 20px;
           font-weight: 700;
@@ -2741,23 +1734,10 @@ html {
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .stat-item {
-          text-align: center;
-        }
-
         .stat-icon {
           font-size: 32px;
           margin-bottom: 10px;
           display: block;
-        }
-
-        .stat-number {
-          font-size: 28px;
-          font-weight: 800;
-          color: #1f2937;
-          display: block;
-          margin-bottom: 8px;
-color: white !important;
         }
 
         .stat-label {
@@ -2842,1150 +1822,1190 @@ color: white !important;
         }
 
         .testimonial-company {
-         color: #6b7280;
-         font-size: 13px;
-       }
-
-       .testimonial-verified {
-         flex-shrink: 0;
-       }
-
-       .verified-badge {
-         background: #dcfce7;
-         color: #16a34a;
-         padding: 4px 8px;
-         border-radius: 8px;
-         font-size: 11px;
-         font-weight: 600;
-       }
-
-       .testimonial-rating {
-         margin-bottom: 16px;
-       }
-
-       .star {
-         font-size: 18px;
-         margin-right: 2px;
-       }
-
-       .testimonial-text {
-         color: #374151;
-         line-height: 1.6;
-         margin-bottom: 20px;
-         font-style: italic;
-       }
-
-       .testimonial-impact {
-         text-align: center;
-       }
-
-       .impact-badge {
-         background: linear-gradient(135deg, #10b981, #059669);
-         color: white;
-         padding: 8px 16px;
-         border-radius: 12px;
-         font-size: 12px;
-         font-weight: 600;
-         display: inline-block;
-       }
-
-       .testimonials-cta {
-         text-align: center;
-         margin-top: 60px;
-       }
-
-       .testimonials-cta h3 {
-         font-size: 28px;
-         font-weight: 700;
-         color: #1f2937;
-         margin-bottom: 24px;
-       }
-
-       .testimonials-button {
-         background: linear-gradient(135deg, #667eea, #764ba2);
-         color: white;
-         border: none;
-         padding: 20px 40px;
-         border-radius: 16px;
-         font-size: 18px;
-         font-weight: 700;
-         cursor: pointer;
-         transition: all 0.3s ease;
-       }
-
-       .testimonials-button:hover {
-         transform: translateY(-3px);
-         box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-       }
-
-       /* Modal Styles */
-       .modal-overlay {
-         position: fixed;
-         top: 0;
-         left: 0;
-         right: 0;
-         bottom: 0;
-         background: rgba(0, 0, 0, 0.6);
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         z-index: 1000;
-         backdrop-filter: blur(4px);
-       }
-
-       .modal-content {
-  background: white;
-  border-radius: 24px;
-  max-width: 900px;
-  width: 95%;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-}
-
-       .modal-close {
-         position: absolute;
-         top: 20px;
-         right: 20px;
-         background: #f3f4f6;
-         border: none;
-         width: 40px;
-         height: 40px;
-         border-radius: 50%;
-         font-size: 20px;
-         cursor: pointer;
-         z-index: 10;
-         transition: all 0.3s ease;
-       }
-
-       .modal-close:hover {
-         background: #e5e7eb;
-       }
-
-       /* Upload Modal */
-       .upload-modal {
-         padding: 40px;
-       }
-
-       .upload-header {
-         text-align: center;
-         margin-bottom: 40px;
-       }
-
-       .upload-header h2 {
-         font-size: 32px;
-         font-weight: 800;
-         color: #1f2937;
-         margin-bottom: 12px;
-       }
-
-       .upload-header p {
-         color: #6b7280;
-         font-size: 16px;
-       }
-
-       .upload-area {
-         display: grid;
-         gap: 32px;
-       }
-
-       .upload-zone {
-         text-align: center;
-       }
-
-       .upload-icon {
-         font-size: 64px;
-         margin-bottom: 20px;
-         display: block;
-       }
-
-       .upload-zone h3 {
-         font-size: 20px;
-         font-weight: 700;
-         color: #1f2937;
-         margin-bottom: 8px;
-       }
-
-       .upload-zone p {
-         color: #6b7280;
-         margin-bottom: 24px;
-       }
-
-       .cv-textarea {
-  width: 100%;
-  padding: 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: vertical;
-  margin-bottom: 24px;
-  font-family: 'Inter', sans-serif;
-  color: #1f2937 !important;
-  background-color: white !important;
-}
-
-       .cv-textarea:focus {
-         outline: none;
-         border-color: #667eea;
-         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-       }
-
-       .upload-buttons {
-         display: flex;
-         gap: 16px;
-         justify-content: center;
-       }
-
-       .upload-btn {
-         padding: 12px 24px;
-         border-radius: 12px;
-         font-weight: 600;
-         cursor: pointer;
-         transition: all 0.3s ease;
-         border: none;
-       }
-
-       .upload-btn.secondary {
-         background: #f3f4f6;
-         color: #374151;
-       }
-
-       .upload-btn.secondary:hover {
-         background: #e5e7eb;
-       }
-
-       .upload-btn.primary {
-         background: linear-gradient(135deg, #667eea, #764ba2);
-         color: white;
-       }
-
-       .upload-btn.primary:hover {
-         transform: translateY(-2px);
-         box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-       }
-
-       .upload-features {
-         display: grid;
-         grid-template-columns: repeat(2, 1fr);
-         gap: 16px;
-       }
-
-       .feature-check {
-         color: #059669;
-         font-size: 14px;
-         font-weight: 500;
-       }
-
-       /* Paywall Modal */
-       .paywall-modal {
-  padding: 30px;
-  max-width: 950px;
-  width: 98%;
-}
-
-       .analysis-preview {
-         text-align: center;
-       }
-
-       .ats-score-big {
-         margin-bottom: 40px;
-       }
-
-       .score-circle {
-         width: 120px;
-         height: 120px;
-         border-radius: 50%;
-         background: linear-gradient(135deg, #ef4444, #dc2626);
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-         justify-content: center;
-         margin: 0 auto 20px;
-         color: white;
-       }
-
-       .score-number {
-         font-size: 32px;
-         font-weight: 800;
-       }
-
-       .score-label {
-         font-size: 14px;
-         opacity: 0.9;
-       }
-
-       .score-status {
-         margin-bottom: 40px;
-       }
-
-       .status {
-         padding: 8px 16px;
-         border-radius: 12px;
-         font-weight: 600;
-         font-size: 14px;
-       }
-
-       .status.good {
-         background: #dcfce7;
-         color: #16a34a;
-       }
-
-       .status.warning {
-         background: #fef3c7;
-         color: #d97706;
-       }
-
-       .status.bad {
-         background: #fee2e2;
-         color: #dc2626;
-       }
-
-       .problems-preview h3 {
-         font-size: 20px;
-         font-weight: 700;
-         color: #1f2937;
-         margin-bottom: 20px;
-       }
-
-       .problem-list {
-         text-align: left;
-         margin-bottom: 40px;
-       }
-
-       .problem-item {
-         display: flex;
-         align-items: center;
-         gap: 12px;
-         padding: 12px;
-         background: #f9fafb;
-         border-radius: 8px;
-         margin-bottom: 8px;
-         filter: blur(2px);
-         opacity: 0.7;
-       }
-
-       .problem-item.blurred {
-         position: relative;
-       }
-
-       .problem-icon {
-         font-size: 16px;
-       }
-
-       .more-problems {
-         text-align: center;
-         color: #6b7280;
-         font-style: italic;
-         margin-top: 16px;
-       }
-
-       .paywall-cta {
-         text-align: center;
-       }
-
-       .paywall-header h2 {
-         font-size: 28px;
-         font-weight: 800;
-         color: #1f2937;
-         margin-bottom: 8px;
-       }
-
-       .paywall-header p {
-         color: #6b7280;
-         margin-bottom: 32px;
-       }
-
-       .paywall-pricing {
-         margin-bottom: 32px;
-       }
-
-       .price-highlight {
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         gap: 16px;
-         margin-bottom: 8px;
-       }
-
-       .old-price {
-         text-decoration: line-through;
-         color: #9ca3af;
-         font-size: 18px;
-       }
-
-       .new-price {
-         font-size: 32px;
-         font-weight: 800;
-         color: #10b981;
-       }
-
-       .discount-badge {
-         background: #fbbf24;
-         color: white;
-         padding: 4px 8px;
-         border-radius: 8px;
-         font-size: 12px;
-         font-weight: 700;
-       }
-
-       .price-subtitle {
-         color: #6b7280;
-         font-size: 14px;
-       }
-
-       .paywall-btn {
-         width: 100%;
-         background: linear-gradient(135deg, #10b981, #059669);
-         color: white;
-         border: none;
-         padding: 20px 32px;
-         border-radius: 16px;
-         font-size: 18px;
-         font-weight: 700;
-         cursor: pointer;
-         transition: all 0.3s ease;
-         margin-bottom: 20px;
-       }
-
-       .paywall-btn:hover {
-         transform: translateY(-2px);
-         box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
-       }
-
-       .paywall-guarantee {
-         color: #6b7280;
-         font-size: 14px;
-       }
-
-       /* Pricing Modal */
-       .pricing-modal {
-         padding: 40px;
-       }
-
-       .pricing-header {
-         text-align: center;
-         margin-bottom: 40px;
-       }
-
-       .pricing-header h2 {
-         font-size: 32px;
-         font-weight: 800;
-         color: #1f2937;
-         margin-bottom: 12px;
-       }
-
-       .pricing-header p {
-         color: #6b7280;
-         font-size: 16px;
-       }
-
-       .pricing-plan {
-         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-         border: 3px solid #22c55e;
-         border-radius: 20px;
-         padding: 32px;
-         position: relative;
-         margin-bottom: 24px;
-       }
-
-       .plan-badge {
-         position: absolute;
-         top: -15px;
-         left: 50%;
-         transform: translateX(-50%);
-         background: linear-gradient(135deg, #f59e0b, #d97706);
-         color: white;
-         padding: 8px 20px;
-         border-radius: 20px;
-         font-size: 12px;
-         font-weight: 700;
-       }
-
-       .plan-header {
-         text-align: center;
-         margin-bottom: 32px;
-       }
-
-       .plan-header h3 {
-         font-size: 24px;
-         font-weight: 800;
-         color: #1f2937;
-         margin-bottom: 16px;
-       }
-
-       .plan-price {
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         gap: 12px;
-         margin-bottom: 8px;
-       }
-
-       .price-old {
-         text-decoration: line-through;
-         color: #9ca3af;
-         font-size: 18px;
-       }
-
-       .price-new {
-         font-size: 36px;
-         font-weight: 800;
-         color: #10b981;
-       }
-
-       .price-save {
-         background: #fbbf24;
-         color: white;
-         padding: 4px 8px;
-         border-radius: 8px;
-         font-size: 12px;
-         font-weight: 700;
-       }
-
-       .plan-features {
-         margin-bottom: 32px;
-       }
-
-       .feature-item {
-         display: flex;
-         align-items: center;
-         gap: 8px;
-         padding: 8px 0;
-         color: #374151;
-         font-weight: 500;
-       }
-
-       .plan-email {
-         margin-bottom: 24px;
-       }
-
-       .email-input-modal {
-         width: 100%;
-         padding: 16px;
-         border: 2px solid #e5e7eb;
-         border-radius: 12px;
-         font-size: 16px;
-         transition: all 0.3s ease;
-       }
-
-       .email-input-modal:focus {
-         outline: none;
-         border-color: #10b981;
-         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-       }
-
-       .plan-button {
-         width: 100%;
-         padding: 20px 32px;
-         border-radius: 16px;
-         font-size: 18px;
-         font-weight: 700;
-         border: none;
-         cursor: pointer;
-         transition: all 0.3s ease;
-         margin-bottom: 20px;
-       }
-
-       .plan-button.premium {
-         background: linear-gradient(135deg, #10b981, #059669);
-         color: white;
-       }
-
-       .plan-button.premium:hover {
-         transform: translateY(-2px);
-         box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
-       }
-
-       .plan-guarantee {
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         gap: 16px;
-         color: #6b7280;
-         font-size: 14px;
-         text-align: center;
-       }
-
-       .pricing-testimonial {
-         background: #f8fafc;
-         border-radius: 12px;
-         padding: 20px;
-         text-align: center;
-         font-style: italic;
-         color: #6b7280;
-       }
-
-/* Pricing Plans Grid */
-.pricing-plans-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
-.pricing-plan.basic {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 2px solid #22c55e;
-}
-
-.pricing-plan.gold {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 2px solid #f59e0b;
-}
-
-.pricing-plan.premium {
-  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-  border: 2px solid #8b5cf6;
-}
-
-.green-badge {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-}
-
-.gold-badge {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.premium-badge {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-}
-
-.price-new.green {
-  color: #16a34a;
-  font-size: 28px !important;
-  line-height: 1 !important;
-}
-
-.price-new.gold {
-  color: #d97706;
-}
-
-.price-new.premium {
-  color: #7c3aed;
-}
-
-.price-period {
-  font-size: 16px;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.plan-button.green {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-}
-
-.plan-button.gold {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.plan-button.premium {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-}
-
-.plan-button.green:hover {
-  box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4);
-}
-
-.plan-button.gold:hover {
-  box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
-}
-
-.plan-button.premium:hover {
-  box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
-}
-
-
-.pricing-plans-grid.horizontal {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  max-width: 100%;
-}
-
-.pricing-plan.compact {
-  padding: 20px;
-  text-align: center;
-  min-height: auto;
-}
-
-.pricing-plan.compact h3 {
-  font-size: 18px;
-  margin-bottom: 12px;
-}
-
-.pricing-plan.compact .plan-price {
-  margin-bottom: 16px;
-}
-
-.pricing-plan.compact .plan-button {
-  padding: 12px 16px;
-  font-size: 14px;
-  width: 100%;
-}
-
-.pricing-plan.compact .plan-badge {
-  font-size: 10px;
-  padding: 6px 12px;
-  top: -12px;
-}
-
-.price-period {
-  font-size: 12px;
-  color: #6b7280;
-  margin-left: 4px;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .pricing-plans-grid.horizontal {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-}
-
-
-/* Paywall Modal Styling */
-.paywall-modal {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
-  padding: 30px;
-  max-width: 950px;
-  width: 98%;
-}
-
-
-.job-posting-compact {
-  margin-bottom: 20px;
-}
-
-.job-posting-details {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 0;
-  margin: 0;
-}
-
-.job-posting-summary {
-  padding: 12px 16px;
-  cursor: pointer;
-  background: #f8fafc;
-  border-radius: 8px;
-  font-weight: 500;
-  color: #374151;
-  user-select: none;
-}
-
-.job-posting-summary:hover {
-  background: #f1f5f9;
-}
-
-.job-posting-textarea {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  resize: vertical;
-  font-size: 14px;
-  color: #000000 !important;
-  background: white !important;
-  border-top: 1px solid #e5e7eb;
-}
-
-.job-posting-textarea:focus {
-  outline: none;
-}
-
-.paywall-email-section {
-  margin: 30px 0 40px 0;
-  text-align: center;
-}
-
-.paywall-email-input {
-  width: 100%;
-  max-width: 400px;
-  padding: 16px 20px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 16px;
-  text-align: center;
-  color: #000000 !important;
-  background-color: white !important;
-  transition: all 0.3s ease;
-}
-
-.paywall-email-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  color: #000000 !important;
-}
-
-.paywall-email-input::placeholder {
-  color: #9ca3af;
-}
-
-.pricing-plans-grid.balanced {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  align-items: end;
-}
-
-.pricing-plan.compact {
-  padding: 24px 20px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 420px;
-}
-
-.plan-features-compact {
-  flex-grow: 1;
-  margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-height: 140px;
-  height: 140px;
-}
-
-.feature-mini {
-  font-size: 13px;
-  margin-bottom: 8px;
-  text-align: left;
-  padding-left: 8px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-}
-
-.price-main {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.plan-button.uniform-height {
-  margin-top: auto;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pricing-plan.compact .plan-badge {
-  font-size: 10px;
-  padding: 6px 12px;
-  top: -12px;
-}
-
-.pricing-plan.compact h3 {
-  font-size: 18px;
-  margin: 16px 0 12px 0;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .pricing-plans-grid.balanced {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .paywall-email-input {
-    max-width: 100%;
-  }
-}
+          color: #6b7280;
+          font-size: 13px;
+        }
+
+        .testimonial-verified {
+          flex-shrink: 0;
+        }
+
+        .verified-badge {
+          background: #dcfce7;
+          color: #16a34a;
+          padding: 4px 8px;
+          border-radius: 8px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        .testimonial-rating {
+          margin-bottom: 16px;
+        }
+
+        .star {
+          font-size: 18px;
+          margin-right: 2px;
+        }
+
+        .testimonial-text {
+          color: #374151;
+          line-height: 1.6;
+          margin-bottom: 20px;
+          font-style: italic;
+        }
+
+        .testimonial-impact {
+          text-align: center;
+        }
+
+        .impact-badge {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          display: inline-block;
+        }
+
+        .testimonials-cta {
+          text-align: center;
+          margin-top: 60px;
+        }
+
+        .testimonials-cta h3 {
+          font-size: 28px;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 24px;
+        }
+
+        .testimonials-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 20px 40px;
+          border-radius: 16px;
+          font-size: 18px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .testimonials-button:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+/* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 24px;
+          max-width: 900px;
+          width: 95%;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+          box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: #f3f4f6;
+          border: none;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          font-size: 20px;
+          cursor: pointer;
+          z-index: 10;
+          transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+          background: #e5e7eb;
+        }
+
+        /* Upload Modal */
+        .upload-modal {
+          padding: 40px;
+        }
+
+        .upload-header {
+          text-align: center;
+          margin-bottom: 40px;
+        }
+
+        .upload-header h2 {
+          font-size: 32px;
+          font-weight: 800;
+          color: #1f2937;
+          margin-bottom: 12px;
+        }
+
+        .upload-header p {
+          color: #6b7280;
+          font-size: 16px;
+        }
+
+        .upload-area {
+          display: grid;
+          gap: 32px;
+        }
+
+        .upload-zone {
+          text-align: center;
+        }
+
+        .upload-icon {
+          font-size: 64px;
+          margin-bottom: 20px;
+          display: block;
+        }
+
+        .upload-zone h3 {
+          font-size: 20px;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 8px;
+        }
+
+        .upload-zone p {
+          color: #6b7280;
+          margin-bottom: 24px;
+        }
+
+        .cv-textarea {
+          width: 100%;
+          padding: 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          font-size: 14px;
+          line-height: 1.6;
+          resize: vertical;
+          margin-bottom: 24px;
+          font-family: 'Inter', sans-serif;
+          color: #1f2937 !important;
+          background-color: white !important;
+        }
+
+        .cv-textarea:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-buttons {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+        }
+
+        .upload-btn {
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: none;
+        }
+
+        .upload-btn.secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .upload-btn.secondary:hover {
+          background: #e5e7eb;
+        }
+
+        .upload-btn.primary {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+        }
+
+        .upload-btn.primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-features {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+
+        .feature-check {
+          color: #059669;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        /* Paywall Modal */
+        .paywall-modal {
+          padding: 30px;
+          max-width: 950px;
+          width: 98%;
+        }
+
+        .analysis-preview {
+          text-align: center;
+        }
+
+        .ats-score-big {
+          margin-bottom: 40px;
+        }
+
+        .score-circle {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 20px;
+          color: white;
+        }
+
+        .score-number {
+          font-size: 32px;
+          font-weight: 800;
+        }
+
+        .score-label {
+          font-size: 14px;
+          opacity: 0.9;
+        }
+
+        .score-status {
+          margin-bottom: 40px;
+        }
+
+        .status {
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .status.good {
+          background: #dcfce7;
+          color: #16a34a;
+        }
+
+        .status.warning {
+          background: #fef3c7;
+          color: #d97706;
+        }
+
+        .status.bad {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+
+        .problems-preview h3 {
+          font-size: 20px;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 20px;
+        }
+
+        .problem-list {
+          text-align: left;
+          margin-bottom: 40px;
+        }
+
+        .problem-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          background: #f9fafb;
+          border-radius: 8px;
+          margin-bottom: 8px;
+          filter: blur(2px);
+          opacity: 0.7;
+        }
+
+        .problem-item.blurred {
+          position: relative;
+        }
+
+        .problem-icon {
+          font-size: 16px;
+        }
+
+        .more-problems {
+          text-align: center;
+          color: #6b7280;
+          font-style: italic;
+          margin-top: 16px;
+        }
+
+        .paywall-header h2 {
+          font-size: 28px;
+          font-weight: 800;
+          color: #1f2937;
+          margin-bottom: 8px;
+        }
+
+        .paywall-header p {
+          color: #6b7280;
+          margin-bottom: 32px;
+        }
+
+        .job-posting-section {
+          margin-bottom: 20px;
+        }
+
+        .job-posting-section h4 {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1f2937;
+          margin-bottom: 16px;
+        }
+
+        .optimization-options {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .option-radio {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .option-radio:hover {
+          border-color: #667eea;
+          background: #f8fafc;
+        }
+
+        .option-radio input[type="radio"] {
+          display: none;
+        }
+
+        .option-radio input[type="radio"]:checked + .radio-custom {
+          background: #667eea;
+          border-color: #667eea;
+        }
+
+        .option-radio input[type="radio"]:checked + .radio-custom::after {
+          opacity: 1;
+        }
+
+        .radio-custom {
+          width: 20px;
+          height: 20px;
+          border: 2px solid #d1d5db;
+          border-radius: 50%;
+          position: relative;
+          transition: all 0.3s ease;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .radio-custom::after {
+          content: '';
+          width: 10px;
+          height: 10px;
+          background: white;
+          border-radius: 50%;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .option-content {
+          flex: 1;
+        }
+
+        .option-content strong {
+          display: block;
+          color: #1f2937;
+          font-size: 14px;
+          margin-bottom: 4px;
+        }
+
+        .option-content p {
+          color: #6b7280;
+          font-size: 13px;
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .job-posting-details {
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 0;
+          margin: 0;
+        }
+
+        .job-posting-summary {
+          padding: 12px 16px;
+          cursor: pointer;
+          background: #f8fafc;
+          border-radius: 8px;
+          font-weight: 500;
+          color: #374151;
+          user-select: none;
+          font-size: 14px;
+        }
+
+        .job-posting-summary:hover {
+          background: #f1f5f9;
+        }
+
+        .job-posting-textarea {
+          width: 100%;
+          padding: 12px;
+          border: none;
+          resize: vertical;
+          font-size: 14px;
+          color: #000000 !important;
+          background: white !important;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .job-posting-textarea:focus {
+          outline: none;
+        }
+
+        .paywall-email-section {
+          margin: 30px 0 40px 0;
+          text-align: center;
+        }
+
+        .paywall-email-input {
+          width: 100%;
+          max-width: 400px;
+          padding: 16px 20px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          font-size: 16px;
+          text-align: center;
+          color: #000000 !important;
+          background-color: white !important;
+          transition: all 0.3s ease;
+        }
+
+        .paywall-email-input:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          color: #000000 !important;
+        }
+
+        .paywall-email-input::placeholder {
+          color: #9ca3af;
+        }
+
+        /* Pricing Plans Grid */
+        .pricing-plans-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 24px;
+          margin-bottom: 32px;
+        }
+
+        .pricing-plans-grid.horizontal {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+          max-width: 100%;
+        }
+
+        .pricing-plans-grid.balanced {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          align-items: end;
+        }
+
+        .pricing-plan {
+          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+          border: 3px solid #22c55e;
+          border-radius: 20px;
+          padding: 32px;
+          position: relative;
+          margin-bottom: 24px;
+        }
+
+        .pricing-plan.compact {
+          padding: 24px 20px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          min-height: 420px;
+        }
+
+        .pricing-plan.basic {
+          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+          border: 2px solid #22c55e;
+        }
+
+        .pricing-plan.gold {
+          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+          border: 2px solid #f59e0b;
+        }
+
+        .pricing-plan.premium {
+          background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+          border: 2px solid #8b5cf6;
+        }
+
+        .pricing-plan.featured {
+          transform: scale(1.05);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan-badge {
+          position: absolute;
+          top: -15px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          color: white;
+          padding: 8px 20px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .green-badge {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+
+        .gold-badge {
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .premium-badge {
+          background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .plan-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+
+        .plan-header h3 {
+          font-size: 24px;
+          font-weight: 800;
+          color: #1f2937;
+          margin-bottom: 16px;
+        }
+
+        .pricing-plan.compact h3 {
+          font-size: 18px;
+          margin: 16px 0 12px 0;
+        }
+
+        .plan-price {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .price-main {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 4px;
+        }
+
+        .price-old {
+          text-decoration: line-through;
+          color: #9ca3af;
+          font-size: 18px;
+        }
+
+        .price-new {
+          font-size: 36px;
+          font-weight: 800;
+          color: #10b981;
+        }
+
+        .price-new.green {
+          color: #16a34a;
+          font-size: 28px !important;
+          line-height: 1 !important;
+        }
+
+        .price-new.gold {
+          color: #d97706;
+        }
+
+        .price-new.premium {
+          color: #7c3aed;
+        }
+
+        .price-save {
+          background: #fbbf24;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .price-period {
+          font-size: 16px;
+          color: #6b7280;
+          font-weight: 500;
+        }
+
+        .plan-subtitle {
+          color: #6b7280;
+          font-size: 14px;
+        }
+
+        .plan-features {
+          margin-bottom: 32px;
+        }
+
+        .plan-features-compact {
+          flex-grow: 1;
+          margin: 20px 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          min-height: 140px;
+          height: 140px;
+        }
+
+        .feature-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 0;
+          color: #374151;
+          font-weight: 500;
+        }
+
+        .feature-mini {
+          font-size: 13px;
+          margin-bottom: 8px;
+          text-align: left;
+          padding-left: 8px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+        }
+
+        .plan-email {
+          margin-bottom: 24px;
+        }
+
+        .email-input-modal {
+          width: 100%;
+          padding: 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          font-size: 16px;
+          transition: all 0.3s ease;
+        }
+
+        .email-input-modal:focus {
+          outline: none;
+          border-color: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .plan-button {
+          width: 100%;
+          padding: 20px 32px;
+          border-radius: 16px;
+          font-size: 18px;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-bottom: 20px;
+        }
+
+        .plan-button.uniform-height {
+          margin-top: auto;
+          height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 12px 16px;
+          font-size: 14px;
+        }
+
+        .plan-button.green {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          color: white;
+        }
+
+        .plan-button.gold {
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          color: white;
+        }
+
+        .plan-button.premium {
+          background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+          color: white;
+        }
+
+        .plan-button.green:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4);
+        }
+
+        .plan-button.gold:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 35px rgba(245, 158, 11, 0.4);
+        }
+
+        .plan-button.premium:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
+        }
 
 /* FAQ Section */
-.faq-section {
-  background: white;
-  padding: 80px 20px;
-}
+        .faq-section {
+          background: white;
+          padding: 80px 20px;
+        }
 
-.faq-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+        .faq-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
 
-.faq-header {
-  text-align: center;
-  margin-bottom: 60px;
-}
+        .faq-header {
+          text-align: center;
+          margin-bottom: 60px;
+        }
 
-.faq-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 24px;
-  margin-bottom: 60px;
-}
+        .faq-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          gap: 24px;
+          margin-bottom: 60px;
+        }
 
-.faq-item {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 24px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
+        .faq-item {
+          background: #f8fafc;
+          border: 2px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 24px;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
 
-.faq-item:hover {
-  border-color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
-}
+        .faq-item:hover {
+          border-color: #667eea;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+        }
 
-.faq-question {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 16px;
-}
+        .faq-question {
+          display: flex;
+          align-items: flex-start;
+          gap: 16px;
+          margin-bottom: 16px;
+        }
 
-.faq-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
+        .faq-icon {
+          font-size: 24px;
+          flex-shrink: 0;
+          margin-top: 4px;
+        }
 
-.faq-question h3 {
-  color: #1f2937;
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.4;
-}
+        .faq-question h3 {
+          color: #1f2937;
+          font-size: 18px;
+          font-weight: 700;
+          margin: 0;
+          line-height: 1.4;
+        }
 
-.faq-answer {
-  margin-left: 40px;
-}
+        .faq-answer {
+          margin-left: 40px;
+        }
 
-.faq-answer p {
-  color: #6b7280;
-  line-height: 1.6;
-  margin: 0;
-}
+        .faq-answer p {
+          color: #6b7280;
+          line-height: 1.6;
+          margin: 0;
+        }
 
-.faq-cta {
-  text-align: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 40px;
-  border-radius: 20px;
-  border: 2px solid #e2e8f0;
-}
+        .faq-cta {
+          text-align: center;
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+          padding: 40px;
+          border-radius: 20px;
+          border: 2px solid #e2e8f0;
+        }
 
-.faq-cta h3 {
-  color: #1f2937;
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 20px;
-}
+        .faq-cta h3 {
+          color: #1f2937;
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 20px;
+        }
 
-.faq-button {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border: none;
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
+        .faq-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
 
-.faq-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-}
+        .faq-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .faq-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .faq-item {
-    padding: 20px;
-  }
-  
-  .faq-question h3 {
-    font-size: 16px;
-  }
-  
-  .faq-answer {
-    margin-left: 32px;
-  }
-  
-  .faq-cta {
-    padding: 30px 20px;
-  }
-}
+        /* Footer */
+        .footer {
+          background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+          color: white;
+          padding: 60px 20px 20px;
+        }
 
-       /* Footer */
-       .footer {
-         background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-         color: white;
-         padding: 60px 20px 20px;
-       }
+        .footer-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 40px;
+          margin-bottom: 40px;
+        }
 
-       .footer-content {
-         max-width: 1200px;
-         margin: 0 auto;
-         display: grid;
-         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-         gap: 40px;
-         margin-bottom: 40px;
-       }
+        .footer-section h4 {
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 20px;
+          color: white;
+        }
 
-       .footer-section h4 {
-         font-size: 18px;
-         font-weight: 700;
-         margin-bottom: 20px;
-         color: white;
-       }
+        .footer-description {
+          color: #9ca3af;
+          line-height: 1.6;
+          margin-bottom: 20px;
+        }
 
-       .footer-description {
-         color: #9ca3af;
-         line-height: 1.6;
-         margin-bottom: 20px;
-       }
+        .footer-links {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
 
-       .footer-links {
-         list-style: none;
-         padding: 0;
-         margin: 0;
-       }
+        .footer-links li {
+          margin-bottom: 12px;
+        }
 
-       .footer-links li {
-         margin-bottom: 12px;
-       }
+        .footer-links a {
+          color: #9ca3af;
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
 
-       .footer-links a {
-         color: #9ca3af;
-         text-decoration: none;
-         transition: color 0.3s ease;
-       }
+        .footer-links a:hover {
+          color: white;
+        }
 
-       .footer-links a:hover {
-         color: white;
-       }
+        .footer-stats {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
 
-       .footer-stats {
-         list-style: none;
-         padding: 0;
-         margin: 0;
-       }
+        .footer-stats li {
+          margin-bottom: 12px;
+          color: #9ca3af;
+          font-size: 14px;
+        }
 
-       .footer-stats li {
-         margin-bottom: 12px;
-         color: #9ca3af;
-         font-size: 14px;
-       }
+        .footer-bottom {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding-top: 40px;
+          border-top: 1px solid #374151;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
 
-       .footer-bottom {
-         max-width: 1200px;
-         margin: 0 auto;
-         padding-top: 40px;
-         border-top: 1px solid #374151;
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         flex-wrap: wrap;
-         gap: 20px;
-       }
+        .footer-badges {
+          display: flex;
+          gap: 16px;
+        }
 
-       .footer-badges {
-         display: flex;
-         gap: 16px;
-       }
+        .badge {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          color: #9ca3af;
+        }
 
-       .badge {
-         background: rgba(255, 255, 255, 0.1);
-         padding: 6px 12px;
-         border-radius: 8px;
-         font-size: 12px;
-         color: #9ca3af;
-       }
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+          .container {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            padding: 0;
+            margin: 0;
+          }
 
-       /* Mobile Responsive */
-       @media (max-width: 768px) {
-         .hero-section {
-           grid-template-columns: 1fr;
-           gap: 40px;
-           padding: 60px 20px;
-         }
+          .hero-section {
+            grid-template-columns: 1fr;
+            gap: 40px;
+            padding: 60px 15px;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
 
-         .hero-title {
-           font-size: 36px;
-         }
+          .hero-title {
+            font-size: 28px;
+            line-height: 1.2;
+          }
 
-         .hero-stats {
-           grid-template-columns: repeat(3, 1fr);
-           gap: 16px;
-         }
+          .nav-content {
+            padding: 16px 15px;
+          }
 
-         .features-grid {
-           grid-template-columns: 1fr;
-           gap: 24px;
-         }
+          .nav-links {
+            display: none;
+          }
 
-         .battle-arena {
-           grid-template-columns: 1fr;
-           gap: 20px;
-         }
-         
-         .vs-container {
-           order: -1;
-         }
-         
-         .battle-stats {
-           grid-template-columns: repeat(2, 1fr);
-           gap: 20px;
-           padding: 30px 20px;
-         }
+          .features-section,
+          .battle-section,
+          .testimonials-section,
+          .faq-section {
+            padding: 60px 15px;
+          }
 
-         .testimonials-grid {
-           grid-template-columns: 1fr;
-         }
+          .hero-stats {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+          }
 
-         .tool-features {
-           grid-template-columns: 1fr;
-         }
+          .stat-item {
+            padding: 16px 8px;
+          }
 
-         .upload-features {
-           grid-template-columns: 1fr;
-         }
+          .features-grid {
+            grid-template-columns: 1fr;
+          }
 
-         .upload-buttons {
-           flex-direction: column;
-         }
+          .battle-arena {
+            grid-template-columns: 1fr;
+          }
 
-         .plan-guarantee {
-           flex-direction: column;
-           gap: 8px;
-         }
+          .vs-container {
+            order: -1;
+          }
 
-         .footer-bottom {
-           flex-direction: column;
-           text-align: center;
-         }
+          .battle-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 30px 20px;
+          }
 
-         .nav-links {
-           display: none;
-         }
+          .testimonials-grid {
+            grid-template-columns: 1fr;
+          }
 
-         .cv-preview {
-           flex-direction: column;
-           gap: 16px;
-         }
+          .upload-features {
+            grid-template-columns: 1fr;
+          }
 
-         .cv-arrow {
-           transform: rotate(90deg);
-         }
-       }
-     `}</style>
-   </>
- )
+          .upload-buttons {
+            flex-direction: column;
+          }
+
+          .footer-bottom {
+            flex-direction: column;
+            text-align: center;
+          }
+
+          .cv-preview {
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .cv-arrow {
+            transform: rotate(90deg);
+          }
+
+          .faq-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+
+          .faq-item {
+            padding: 20px;
+          }
+
+          .faq-question h3 {
+            font-size: 16px;
+          }
+
+          .faq-answer {
+            margin-left: 32px;
+          }
+
+          .faq-cta {
+            padding: 30px 20px;
+          }
+
+          .pricing-plans-grid.horizontal {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+
+          .pricing-plans-grid.balanced {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+
+          .paywall-email-input {
+            max-width: 100%;
+          }
+
+          .modal-content {
+            width: 95%;
+            max-height: 95vh;
+          }
+
+          .upload-modal {
+            padding: 20px;
+          }
+
+          .paywall-modal {
+            padding: 20px;
+          }
+
+          .optimization-options {
+            gap: 8px;
+          }
+
+          .option-radio {
+            padding: 12px;
+          }
+
+          .option-content strong {
+            font-size: 13px;
+          }
+
+          .option-content p {
+            font-size: 12px;
+          }
+
+          .pricing-plan.compact {
+            min-height: auto;
+            padding: 16px;
+          }
+
+          .plan-features-compact {
+            min-height: auto;
+            height: auto;
+          }
+
+          .feature-mini {
+            font-size: 12px;
+            height: auto;
+          }
+        }
+
+        /* Dodatki dla lepszej prezentacji */
+        .main-textarea {
+          width: 100%;
+          padding: 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          font-size: 14px;
+          line-height: 1.6;
+          resize: vertical;
+          transition: all 0.3s ease;
+          font-family: 'Inter', sans-serif;
+          color: #000000 !important;
+          background-color: white !important;
+        }
+
+        .main-textarea:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Spinner animation */
+        .spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top: 2px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        /* Smooth scrolling */
+        html {
+          scroll-behavior: smooth;
+        }
+
+        /* Selection color */
+        ::selection {
+          background: rgba(102, 126, 234, 0.2);
+          color: #1f2937;
+        }
+
+        ::-moz-selection {
+          background: rgba(102, 126, 234, 0.2);
+          color: #1f2937;
+        }
+	`}</style>
+    </>
+  )
 }
