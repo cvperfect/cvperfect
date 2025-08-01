@@ -2330,19 +2330,20 @@ const handlePayment = async (plan) => {
   border-color: #8B5CF6;
   box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .modal-pricing-card.premium::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: 30px;
   left: 0;
   right: 0;
   bottom: 0;
   background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
   animation: shimmer 3s infinite;
   pointer-events: none;
+  z-index: 1;
 }
 
 @keyframes shimmer {
@@ -2375,7 +2376,7 @@ const handlePayment = async (plan) => {
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
-  z-index: 10;
+  z-index: 1000;
 }
 
 .modal-premium-badge {
@@ -2390,7 +2391,7 @@ const handlePayment = async (plan) => {
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
-  z-index: 10;
+  z-index: 9999;
 }
 
 .modal-plan-header {
