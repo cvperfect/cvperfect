@@ -722,7 +722,7 @@ const handlePayment = async (plan) => {
 
               {/* Premium Plan */}
               <div className="pricing-card premium">
-                <div className="premium-badge">👑 Premium</div>
+                <div className="premium-badge">💎 Najlepsza wartość</div>
                 <div className="pricing-header">
                   <h3 className="plan-name">Premium</h3>
                   <div className="plan-price">
