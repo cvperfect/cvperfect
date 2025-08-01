@@ -18,21 +18,46 @@ export default function Home() {
   const [showPaywall, setShowPaywall] = useState(false)
 
   // NOWA FUNKCJA - DARMOWA ANALIZA
-  const handleFreeAnalysis = () => {
-    // Simulate analysis with random but realistic results
-    const fakeResult = {
-      score: Math.floor(Math.random() * 40) + 45, // 45-85% random
-      problems: Math.floor(Math.random() * 8) + 5  // 5-12 problems
-    };
-    
-    setAnalysisResult(fakeResult);
-    setShowUploadModal(false);
-    
-    // Show paywall after 2 seconds (simulate loading)
-    setTimeout(() => {
-      setShowPaywall(true);
-    }, 2000);
+const handleFreeAnalysis = () => {
+  // Sprawdź czy użytkownik dodał CV
+  const cvText = document.querySelector('.cv-textarea')?.value;
+  
+  if (!cvText || cvText.trim().length < 50) {
+    // Pokaż ładny komunikat
+const errorDiv = document.createElement('div');
+errorDiv.innerHTML = `
+  <div style="
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: white; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    z-index: 10000; text-align: center; max-width: 400px;
+  ">
+    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+    <h3 style="color: #1f2937; margin-bottom: 12px;">Brakuje CV!</h3>
+    <p style="color: #6b7280; margin-bottom: 20px;">Najpierw wklej treść swojego CV lub wybierz plik do analizy.</p>
+    <button onclick="this.parentElement.parentElement.remove()" style="
+      background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
+      padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600;
+    ">OK, rozumiem</button>
+  </div>
+`;
+document.body.appendChild(errorDiv);
+    return;
+  }
+  
+  // Simulate analysis with random but realistic results
+  const fakeResult = {
+    score: Math.floor(Math.random() * 40) + 45, // 45-85% random
+    problems: Math.floor(Math.random() * 8) + 5  // 5-12 problems
   };
+  
+  setAnalysisResult(fakeResult);
+  setShowUploadModal(false);
+  
+  // Show paywall after 2 seconds (simulate loading)
+  setTimeout(() => {
+    setShowPaywall(true);
+  }, 2000);
+};
 
   // UPROSZCZONA FUNKCJA optimizeCV
   const optimizeCV = () => {
@@ -780,15 +805,37 @@ UMIEJĘTNOŚCI:
                     rows="8"
                   ></textarea>
                   
-                  <div className="upload-buttons">
-                    <button className="upload-btn secondary">
-                      📁 Wybierz plik
-                    </button>
-                    <button className="upload-btn primary" onClick={handleFreeAnalysis}>
-                      🔍 Analizuj teraz
-                    </button>
-                  </div>
-                </div>
+                 <div className="upload-buttons">
+  <input
+    type="file"
+    id="modalFileInput"
+    accept=".pdf,.doc,.docx,.txt"
+    style={{display: 'none'}}
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const textarea = document.querySelector('.cv-textarea');
+          if (textarea) {
+            textarea.value = event.target.result;
+          }
+        };
+        reader.readAsText(file);
+      }
+    }}
+  />
+  <button 
+    className="upload-btn secondary"
+    onClick={() => document.getElementById('modalFileInput').click()}
+  >
+    📁 Wybierz plik
+  </button>
+  <button className="upload-btn primary" onClick={handleFreeAnalysis}>
+    🔍 Analizuj teraz
+  </button>
+</div>
+</div>
 
                 <div className="upload-features">
                   <div className="feature-check">✅ Analiza ATS w 30 sekund</div>
