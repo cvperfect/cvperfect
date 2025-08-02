@@ -311,7 +311,7 @@ export default function Home() {
               <a href="#testimonials" className="nav-link">Opinie</a>
               <a href="#pricing" className="nav-link">Cennik</a>
               <button className="nav-cta" onClick={() => setShowUploadModal(true)}>
-                Wypróbuj AI ⚡
+                🎯 Zoptymalizuj CV teraz ⚡
               </button>
             </div>
           </div>
@@ -349,7 +349,7 @@ export default function Home() {
 
             <div className="hero-cta">
               <button className="hero-button primary" onClick={() => setShowUploadModal(true)}>
-                🎯 Darmowa Analiza ATS
+                🔍 Sprawdź swoje CV
               </button>
               <div className="hero-guarantee">
                 <span>✅ Bez rejestracji • 💰 30-dni gwarancji</span>
@@ -449,150 +449,6 @@ export default function Home() {
           </div>
         </div>
 
-{/* Battle Section - Chili Piper Style */}
-        <div className="battle-section">
-          <div className="battle-container">
-            <div className="battle-header">
-              <h2 className="section-title gradient-text">Dlaczego wybierają CvPerfect? 🚀</h2>
-              <p className="battle-subtitle">Pierwsza AI platforma CV w Polsce vs tradycyjne narzędzia</p>
-            </div>
-
-            <div className="battle-arena">
-              {/* CVPERFECT SIDE */}
-              <div className="battle-card winner">
-                <div className="battle-crown">👑 ZWYCIĘZCA</div>
-                <div className="card-glow"></div>
-                
-                <div className="battle-logo">
-                  <div className="logo-circle modern">CV</div>
-                  <div className="logo-info">
-                    <h3>CvPerfect</h3>
-                    <p>AI-Powered Revolution</p>
-                  </div>
-                </div>
-
-                <div className="battle-features">
-                  <div className="feature-row win">
-                    <span className="feature-icon">⚡</span>
-                    <span>30 sekund</span>
-                    <span className="feature-score">10/10</span>
-                  </div>
-                  <div className="feature-row win">
-                    <span className="feature-icon">🤖</span>
-                    <span>GPT-4 AI</span>
-                    <span className="feature-score">10/10</span>
-                  </div>
-                  <div className="feature-row win">
-                    <span className="feature-icon">🎯</span>
-                    <span>95% ATS</span>
-                    <span className="feature-score">10/10</span>
-                  </div>
-                  <div className="feature-row win">
-                    <span className="feature-icon">🇵🇱</span>
-                    <span>Polski standard</span>
-                    <span className="feature-score">10/10</span>
-                  </div>
-                  <div className="feature-row win">
-                    <span className="feature-icon">💰</span>
-                    <span>9.99 zł</span>
-                    <span className="feature-score">10/10</span>
-                  </div>
-                </div>
-
-                <div className="battle-cta">
-                  <button className="battle-btn winner-btn" onClick={() => setShowUploadModal(true)}>
-                    Wypróbuj teraz ⚡
-                  </button>
-                  <div className="battle-price">
-                    <span className="old-price">29.99 zł</span>
-                    <span className="new-price">9.99 zł</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* VS DIVIDER */}
-              <div className="vs-container">
-                <div className="vs-lightning">⚡</div>
-                <div className="vs-badge">VS</div>
-                <div className="vs-lightning">⚡</div>
-              </div>
-
-              {/* COMPETITORS SIDE */}
-              <div className="battle-card loser">
-                <div className="battle-skull">💀 PRZEGRANI</div>
-                
-                <div className="battle-logo">
-                  <div className="logo-circle old">?</div>
-                  <div className="logo-info">
-                    <h3>Inne narzędzia</h3>
-                    <p>Stare podejście</p>
-                  </div>
-                </div>
-
-                <div className="battle-features">
-                  <div className="feature-row lose">
-                    <span className="feature-icon">⏰</span>
-                    <span>5-15 minut</span>
-                    <span className="feature-score">3/10</span>
-                  </div>
-                  <div className="feature-row lose">
-                    <span className="feature-icon">🤷</span>
-                    <span>Brak AI</span>
-                    <span className="feature-score">0/10</span>
-                  </div>
-                  <div className="feature-row lose">
-                    <span className="feature-icon">📊</span>
-                    <span>60% ATS</span>
-                    <span className="feature-score">6/10</span>
-                  </div>
-                  <div className="feature-row lose">
-                    <span className="feature-icon">🌍</span>
-                    <span>Tylko EN</span>
-                    <span className="feature-score">4/10</span>
-                  </div>
-                  <div className="feature-row lose">
-                    <span className="feature-icon">💸</span>
-                    <span>$29.95+</span>
-                    <span className="feature-score">2/10</span>
-                  </div>
-                </div>
-
-                <div className="battle-cta">
-                  <button className="battle-btn loser-btn" onClick={() => alert('🤔 Pewien? CvPerfect to lepsza opcja! Sprawdź nasze AI w 30 sekund za jedyne 9.99 zł! 🚀')}>
-                    Stare podejście 😴
-                  </button>
-                  <div className="battle-price">
-                    <span className="competitor-price">$29.95+</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* BATTLE STATS */}
-            <div className="battle-stats">
-              <div className="stat-item">
-                <div className="stat-icon">🎯</div>
-                <div className="stat-number">95%</div>
-                <div className="stat-label">ATS Success</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-icon">⚡</div>
-                <div className="stat-number">30s</div>
-                <div className="stat-label">Optymalizacja</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-icon">📈</div>
-                <div className="stat-number">410%</div>
-                <div className="stat-label">Więcej rozmów</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-icon">🇵🇱</div>
-                <div className="stat-number">#1</div>
-                <div className="stat-label">W Polsce</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
 {/* Testimonials Section */}
         <div className="testimonials-section" id="testimonials">
@@ -631,7 +487,7 @@ export default function Home() {
           <div className="testimonials-cta">
             <h3>Dołącz do 15,000+ zadowolonych użytkowników!</h3>
             <button className="testimonials-button" onClick={() => setShowUploadModal(true)}>
-              Zacznij za darmo ⚡
+               Zwiększ swoje szanse 🚀
             </button>
           </div>
         </div>
@@ -949,21 +805,36 @@ export default function Home() {
                 <li><a href="#testimonials">Opinie użytkowników</a></li>
               </ul>
             </div>
+
+<div className="footer-section">
+              <h4>Pomoc</h4>
+              <ul className="footer-links">
+		<li><a href="/regulamin">Regulamin</a></li>
+                <li><a href="/kontakt">Kontakt</a></li>
+                <li><a href="/polityka-prywatnosci">Polityka prywatności</a></li>
+                <li><a href="/rodo">RODO</a></li>
+                
+              </ul>
+            </div>
+
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2024 CvPerfect. Wszystkie prawa zastrzeżone.</p>
+            <p>&copy; 2025 CvPerfect. Wszystkie prawa zastrzeżone.</p>
           </div>
         </footer>
       </div>
       <style jsx>{`
         /* Global Styles */
         body {
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-        }
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  min-height: 150vh;
+}
         html {
           overflow-x: hidden;
+	  overflow-y: scroll !important;
         }        
         .container {
           min-height: 100vh;
@@ -978,20 +849,68 @@ export default function Home() {
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-          width: 12px;
-        }
-        ::-webkit-scrollbar-track {
-          background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 6px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(135deg, #5a6fd8, #6a4190);
-        }
-      
+        /* Enhanced Custom Scrollbar */
+/* MEGA VISIBLE SCROLLBAR */
+::-webkit-scrollbar {
+  width: 20px !important;
+  background: #333333 !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 0 !important;
+  border: 2px solid #333 !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff0000 !important; /* CZERWONY - SUPER WIDOCZNY */
+  border-radius: 0 !important;
+  border: 3px solid #000000 !important;
+  min-height: 50px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ff00 !important; /* ZIELONY NA HOVER */
+}
+
+/* For Firefox */
+html {
+  scrollbar-width: auto;
+  scrollbar-color: #667eea rgba(255,255,255,0.1);
+}
+    
+/* SCROLLBAR FOR ALL BROWSERS */
+::-webkit-scrollbar {
+  width: 20px !important;
+  background: #333333 !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border: 2px solid #333 !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ff0000 !important;
+  border: 3px solid #000000 !important;
+}
+
+/* For Edge and other browsers */
+html {
+  scrollbar-width: thick;
+  scrollbar-color: #ff0000 #f1f1f1;
+}
+
+body {
+  scrollbar-width: thick;
+  scrollbar-color: #ff0000 #f1f1f1;
+}
+
+/* Force scrollbar visibility */
+:root {
+  scrollbar-width: auto !important;
+  overflow-y: scroll !important;
+}
   
 /* Floating Notifications */
         .floating-notifications {
@@ -1325,7 +1244,8 @@ export default function Home() {
 
 /* Features Section */
         .features-section {
-          background: white;
+          background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.85) 100%);
+backdrop-filter: blur(10px);
           padding: 80px 20px;
           max-width: 1200px;
           margin: 0 auto;
@@ -1342,6 +1262,8 @@ export default function Home() {
           color: #1f2937;
           margin-bottom: 16px;
         }
+
+	
 
         .section-subtitle {
           font-size: 18px;
@@ -1748,7 +1670,8 @@ export default function Home() {
 
         /* Testimonials Section */
         .testimonials-section {
-          background: white;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(15px);
           padding: 80px 20px;
         }
 
@@ -1760,6 +1683,17 @@ export default function Home() {
           margin-right: auto;
         }
 
+	
+	.testimonials-header .section-title {
+  color: white;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+}
+
+.testimonials-header .section-subtitle {
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 10px rgba(0,0,0,0.1);
+}
+	
         .testimonials-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -1877,12 +1811,15 @@ export default function Home() {
         .testimonials-cta h3 {
           font-size: 28px;
           font-weight: 700;
-          color: #1f2937;
+          color: white;
+text-shadow: 0 2px 20px rgba(0,0,0,0.2);
           margin-bottom: 24px;
         }
 
         .testimonials-button {
-          background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
           color: white;
           border: none;
           padding: 20px 40px;
@@ -2598,7 +2535,8 @@ export default function Home() {
 
 /* FAQ Section */
         .faq-section {
-          background: white;
+          background: linear-gradient(135deg, rgba(248,250,252,0.9) 0%, rgba(241,245,249,0.85) 100%);
+backdrop-filter: blur(10px);
           padding: 80px 20px;
         }
 

@@ -35,111 +35,173 @@ export default function Regulamin() {
             <p className="legal-subtitle">
               Regulamin korzystania z serwisu CvPerfect.pl
               <br />
-              <span className="legal-date">Ostatnia aktualizacja: 31 stycznia 2025</span>
+              <span className="legal-date">Ostatnia aktualizacja: 2 sierpnia 2025</span>
             </p>
 
             <div className="legal-sections">
               <section className="legal-section">
                 <h2 className="section-title">§ 1. Postanowienia ogólne</h2>
                 <div className="section-content">
-                  <p><strong>1.1.</strong> Niniejszy Regulamin określa zasady korzystania z serwisu internetowego CvPerfect.pl (dalej: "Serwis").</p>
-                  <p><strong>1.2.</strong> Administratorem Serwisu jest CvPerfect.pl z siedzibą w Polsce.</p>
-                  <p><strong>1.3.</strong> Serwis świadczy usługi optymalizacji CV przy użyciu technologii sztucznej inteligencji.</p>
-                  <p><strong>1.4.</strong> Korzystanie z Serwisu oznacza akceptację niniejszego Regulaminu.</p>
+                  <p><strong>1.1.</strong> Niniejszy Regulamin określa zasady świadczenia usług drogą elektroniczną przez serwis internetowy dostępny pod adresem CvPerfect.pl (dalej: „Serwis") oraz zasady zawierania i wykonywania umów o świadczenie usług.</p>
+                  <p><strong>1.2.</strong> Usługodawcą jest CvPerfect sp. z o.o. z siedzibą w Polsce (dalej: „Usługodawca").</p>
+                  <p><strong>1.3.</strong> Serwis świadczy usługi optymalizacji dokumentów CV przy użyciu zaawansowanych technologii sztucznej inteligencji.</p>
+                  <p><strong>1.4.</strong> Korzystanie z Serwisu oznacza zapoznanie się z niniejszym Regulaminem i jego akceptację w pełnym zakresie.</p>
+                  <p><strong>1.5.</strong> Regulamin jest dostępny na stronie internetowej Serwisu w sposób umożliwiający zapoznanie się z jego treścią, pozyskanie, odtwarzanie i utrwalanie jego treści poprzez wydrukowanie lub zapisanie na trwałym nośniku.</p>
                 </div>
               </section>
 
               <section className="legal-section">
                 <h2 className="section-title">§ 2. Definicje</h2>
                 <div className="section-content">
-                  <p><strong>2.1. Użytkownik</strong> - osoba fizyczna, prawna lub jednostka organizacyjna nieposiadająca osobowości prawnej, korzystająca z Serwisu.</p>
-                  <p><strong>2.2. Usługa</strong> - optymalizacja CV przy użyciu sztucznej inteligencji oferowana przez Serwis.</p>
-                  <p><strong>2.3. Plan</strong> - pakiet usług (Basic, Pro, Premium) określający liczbę dostępnych optymalizacji.</p>
-                  <p><strong>2.4. CV</strong> - curriculum vitae, dokument zawierający informacje o doświadczeniu zawodowym Użytkownika.</p>
+                  <p><strong>2.1. Użytkownik</strong> - osoba fizyczna posiadająca pełną zdolność do czynności prawnych, osoba prawna albo jednostka organizacyjna nieposiadająca osobowości prawnej, której ustawa przyznaje zdolność prawną, korzystająca z usług świadczonych przez Serwis.</p>
+                  <p><strong>2.2. Klient</strong> - Użytkownik, który zawarł z Usługodawcą umowę o świadczenie płatnych usług.</p>
+                  <p><strong>2.3. Usługa</strong> - usługa optymalizacji CV przy użyciu sztucznej inteligencji, świadczona elektronicznie przez Serwis.</p>
+                  <p><strong>2.4. Plan/Pakiet</strong> - określony zakres usług (Basic, Gold, Premium) wraz z liczbą dostępnych optymalizacji i dodatkowymi funkcjonalnościami.</p>
+                  <p><strong>2.5. CV</strong> - dokument zawierający informacje o kwalifikacjach, doświadczeniu zawodowym i wykształceniu Użytkownika.</p>
+                  <p><strong>2.6. ATS</strong> - Applicant Tracking System, system informatyczny służący do zarządzania procesem rekrutacji.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 3. Zasady korzystania</h2>
+                <h2 className="section-title">§ 3. Warunki korzystania z Serwisu</h2>
                 <div className="section-content">
-                  <p><strong>3.1.</strong> Użytkownik zobowiązuje się do korzystania z Serwisu zgodnie z prawem i dobrymi obyczajami.</p>
-                  <p><strong>3.2.</strong> Zabronione jest wprowadzanie do Serwisu treści:</p>
+                  <p><strong>3.1.</strong> Korzystanie z Serwisu wymaga spełnienia łącznie następujących warunków technicznych:</p>
                   <ul>
-                    <li>Naruszających prawa osób trzecich</li>
-                    <li>Zawierających dane osobowe osób trzecich bez ich zgody</li>
-                    <li>Wulgarnych, obraźliwych lub niezgodnych z prawem</li>
+                    <li>Posiadanie urządzenia końcowego z dostępem do sieci Internet</li>
+                    <li>Posiadanie aktywnego konta poczty elektronicznej</li>
+                    <li>Włączenie obsługi JavaScript w przeglądarce internetowej</li>
+                    <li>Akceptacja plików cookies</li>
+                  </ul>
+                  <p><strong>3.2.</strong> Użytkownik zobowiązuje się do:</p>
+                  <ul>
+                    <li>Korzystania z Serwisu zgodnie z prawem, niniejszym Regulaminem oraz dobrymi obyczajami</li>
+                    <li>Niepodejmowania działań mogących zakłócić funkcjonowanie Serwisu</li>
+                    <li>Nieudostępniania osobom trzecim danych dostępowych do swojego konta</li>
+                    <li>Niezwłocznego poinformowania Usługodawcy o wszelkich przypadkach naruszenia bezpieczeństwa</li>
+                  </ul>
+                  <p><strong>3.3.</strong> Zabronione jest wprowadzanie do Serwisu treści:</p>
+                  <ul>
+                    <li>Naruszających dobra osobiste, prawa autorskie lub inne prawa osób trzecich</li>
+                    <li>Zawierających dane osobowe osób trzecich bez ich wyraźnej zgody</li>
+                    <li>Obraźliwych, wulgarnych, rasistowskich lub w inny sposób naruszających godność ludzką</li>
+                    <li>Niezgodnych z prawem, dobrymi obyczajami lub społecznie szkodliwych</li>
                     <li>Zawierających wirusy lub inne szkodliwe oprogramowanie</li>
                   </ul>
-                  <p><strong>3.3.</strong> Użytkownik ponosi pełną odpowiedzialność za treść swojego CV.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 4. Płatności i plany</h2>
+                <h2 className="section-title">§ 4. Usługi i cennik</h2>
                 <div className="section-content">
-                  <p><strong>4.1. Plan Basic:</strong> Jednorazowa płatność 9,99 zł za 1 optymalizację CV.</p>
-                  <p><strong>4.2. Plan Pro:</strong> Miesięczna subskrypcja 49,99 zł za 10 optymalizacji CV.</p>
-                  <p><strong>4.3. Plan Premium:</strong> Miesięczna subskrypcja 79,99 zł za 25 optymalizacji CV.</p>
-                  <p><strong>4.4.</strong> Płatności są przetwarzane przez Stripe, Inc.</p>
-                  <p><strong>4.5.</strong> Limity planów odnawiają się co miesiąc (Pro/Premium) lub są jednorazowe (Basic).</p>
-                  <p><strong>4.6.</strong> Subskrypcję można anulować w każdym momencie bez dodatkowych opłat.</p>
+                  <p><strong>4.1.</strong> Serwis oferuje następujące pakiety usług:</p>
+                  <ul>
+                    <li><strong>Plan Basic:</strong> Jednorazowa płatność 9,99 zł za 1 optymalizację CV z wykorzystaniem technologii GPT-3.5</li>
+                    <li><strong>Plan Gold:</strong> Abonament miesięczny 49,00 zł za 10 optymalizacji CV miesięcznie z technologią GPT-4 i priorytetową obsługą</li>
+                    <li><strong>Plan Premium:</strong> Abonament miesięczny 79,00 zł za 25 optymalizacji CV miesięcznie z najnowszą technologią GPT-4 i dedykowanym wsparciem</li>
+                  </ul>
+                  <p><strong>4.2.</strong> Wszystkie ceny są cenami końcowymi i zawierają podatek VAT.</p>
+                  <p><strong>4.3.</strong> Płatności są przetwarzane przez renomowanego dostawcę usług płatniczych Stripe, Inc.</p>
+                  <p><strong>4.4.</strong> Limity optymalizacji w planach abonamentowych odnawiają się automatycznie co miesiąc kalendarzowy.</p>
+                  <p><strong>4.5.</strong> Niewykorzystane optymalizacje z danego miesiąca przepadają i nie przechodzą na kolejny okres rozliczeniowy.</p>
+                  <p><strong>4.6.</strong> Usługodawca zastrzega sobie prawo do zmiany cennika z 30-dniowym wyprzedzeniem.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 5. Świadczenie usług</h2>
+                <h2 className="section-title">§ 5. Zawarcie umowy i wykonanie usługi</h2>
                 <div className="section-content">
-                  <p><strong>5.1.</strong> Serwis świadczy usługi optymalizacji CV przy użyciu sztucznej inteligencji.</p>
-                  <p><strong>5.2.</strong> Czas realizacji usługi wynosi zazwyczaj 30-60 sekund.</p>
-                  <p><strong>5.3.</strong> Wyniki optymalizacji są wysyłane na adres email podany przez Użytkownika.</p>
-                  <p><strong>5.4.</strong> Serwis nie gwarantuje uzyskania konkretnej pracy przez Użytkownika.</p>
-                  <p><strong>5.5.</strong> Serwis zastrzega sobie prawo do odmowy świadczenia usługi w przypadku naruszenia Regulaminu.</p>
+                  <p><strong>5.1.</strong> Umowa zostaje zawarta w momencie dokonania płatności przez Klienta i otrzymania potwierdzenia od systemu płatniczego.</p>
+                  <p><strong>5.2.</strong> Usługa optymalizacji CV jest świadczona w czasie rzeczywistym, zazwyczaj w ciągu 30-90 sekund od zlecenia.</p>
+                  <p><strong>5.3.</strong> Wynik optymalizacji jest dostarczany na adres e-mail podany przez Klienta podczas składania zlecenia.</p>
+                  <p><strong>5.4.</strong> Usługodawca dokłada wszelkich starań w celu zapewnienia wysokiej jakości usług, jednak nie gwarantuje uzyskania przez Klienta konkretnej pracy ani pozytywnych wyników procesu rekrutacyjnego.</p>
+                  <p><strong>5.5.</strong> W przypadku problemów technicznych Usługodawca zobowiązuje się do bezzwłocznego przywrócenia pełnej funkcjonalności Serwisu.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 6. Ochrona danych</h2>
+                <h2 className="section-title">§ 6. Abonament i rezygnacja</h2>
                 <div className="section-content">
-                  <p><strong>6.1.</strong> Serwis przetwarza dane osobowe zgodnie z RODO i Polityką Prywatności.</p>
-                  <p><strong>6.2.</strong> CV Użytkownika nie jest przechowywane po zakończeniu optymalizacji.</p>
-                  <p><strong>6.3.</strong> Dane płatności są przetwarzane przez Stripe zgodnie z najwyższymi standardami bezpieczeństwa.</p>
+                  <p><strong>6.1.</strong> Abonament (plany Gold i Premium) jest automatycznie odnawiany co miesiąc, chyba że Klient dokona jego anulowania.</p>
+                  <p><strong>6.2.</strong> Klient może anulować abonament w każdym momencie bez ponoszenia dodatkowych kosztów.</p>
+                  <p><strong>6.3.</strong> Anulowanie abonamentu nie powoduje utraty dostępu do usług do końca okresu, za który została wniesiona opłata.</p>
+                  <p><strong>6.4.</strong> Zwrot środków za niewykorzystany okres abonamentu następuje wyłącznie w przypadkach przewidzianych prawem.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 7. Odpowiedzialność</h2>
+                <h2 className="section-title">§ 7. Ochrona danych osobowych</h2>
                 <div className="section-content">
-                  <p><strong>7.1.</strong> Serwis nie ponosi odpowiedzialności za skutki wykorzystania zoptymalizowanego CV.</p>
-                  <p><strong>7.2.</strong> Odpowiedzialność Serwisu ogranicza się do wysokości zapłaconej przez Użytkownika kwoty.</p>
-                  <p><strong>7.3.</strong> Serwis nie odpowiada za przerwy w działaniu spowodowane siłą wyższą lub czynnikami zewnętrznymi.</p>
+                  <p><strong>7.1.</strong> Administratorem danych osobowych jest CvPerfect sp. z o.o.</p>
+                  <p><strong>7.2.</strong> Szczegółowe informacje o przetwarzaniu danych osobowych znajdują się w Polityce Prywatności stanowiącej integralną część niniejszego Regulaminu.</p>
+                  <p><strong>7.3.</strong> Treść CV przekazana do optymalizacji nie jest przechowywana w systemach Usługodawcy po zakończeniu procesu optymalizacji.</p>
+                  <p><strong>7.4.</strong> Dane płatności są przetwarzane wyłącznie przez Stripe, Inc. zgodnie z najwyższymi standardami bezpieczeństwa PCI DSS.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 8. Reklamacje</h2>
+                <h2 className="section-title">§ 8. Odpowiedzialność</h2>
                 <div className="section-content">
-                  <p><strong>8.1.</strong> Reklamacje można składać na adres email: cvperfectai@gmail.com</p>
-                  <p><strong>8.2.</strong> Reklamacja powinna zawierać opis problemu i dane umożliwiające identyfikację Użytkownika.</p>
-                  <p><strong>8.3.</strong> Reklamacje są rozpatrywane w terminie do 14 dni roboczych.</p>
+                  <p><strong>8.1.</strong> Usługodawca ponosi odpowiedzialność za niewykonanie lub nienależyte wykonanie usługi na zasadach ogólnych przewidzianych w Kodeksie cywilnym.</p>
+                  <p><strong>8.2.</strong> Usługodawca nie ponosi odpowiedzialności za skutki wykorzystania zoptymalizowanego CV przez Klienta, w tym za wyniki procesów rekrutacyjnych.</p>
+                  <p><strong>8.3.</strong> Odpowiedzialność odszkodowawcza Usługodawcy wobec Klienta ograniczona jest do wysokości dwukrotności kwoty zapłaconej przez Klienta za usługę w ostatnim miesiącu.</p>
+                  <p><strong>8.4.</strong> Usługodawca nie odpowiada za przerwy w świadczeniu usług spowodowane siłą wyższą, działaniami osób trzecich lub przyczynami leżącymi po stronie Klienta.</p>
                 </div>
               </section>
 
               <section className="legal-section">
-                <h2 className="section-title">§ 9. Postanowienia końcowe</h2>
+                <h2 className="section-title">§ 9. Reklamacje</h2>
                 <div className="section-content">
-                  <p><strong>9.1.</strong> Serwis zastrzega sobie prawo do zmiany Regulaminu z ważnych przyczyn.</p>
-                  <p><strong>9.2.</strong> O zmianach Użytkownicy będą informowani z 7-dniowym wyprzedzeniem.</p>
-                  <p><strong>9.3.</strong> W sprawach nieuregulowanych stosuje się prawo polskie.</p>
-                  <p><strong>9.4.</strong> Ewentualne spory będą rozstrzygane przez sąd właściwy dla siedziby Administratora.</p>
+                  <p><strong>9.1.</strong> Klient ma prawo złożyć reklamację dotyczącą świadczonej usługi.</p>
+                  <p><strong>9.2.</strong> Reklamacje należy składać na adres e-mail: pomoccvperfect@gmail.com lub pisemnie na adres siedziby Usługodawcy.</p>
+                  <p><strong>9.3.</strong> Reklamacja powinna zawierać:</p>
+                  <ul>
+                    <li>Imię i nazwisko lub nazwę Klienta</li>
+                    <li>Adres e-mail użyty przy składaniu zamówienia</li>
+                    <li>Dokładny opis problemu będącego przedmiotem reklamacji</li>
+                    <li>Oczekiwany sposób rozpatrzenia reklamacji</li>
+                  </ul>
+                  <p><strong>9.4.</strong> Usługodawca rozpatruje reklamacje w terminie do 14 dni roboczych od dnia jej otrzymania.</p>
+                  <p><strong>9.5.</strong> Odpowiedź na reklamację zostanie przesłana na adres e-mail Klienta lub w inny sposób wskazany w reklamacji.</p>
+                </div>
+              </section>
+
+              <section className="legal-section">
+                <h2 className="section-title">§ 10. Prawo odstąpienia od umowy</h2>
+                <div className="section-content">
+                  <p><strong>10.1.</strong> Zgodnie z art. 38 pkt 13 ustawy o prawach konsumenta, prawo odstąpienia od umowy nie przysługuje w przypadku umów o świadczenie usług, jeżeli wykonanie świadczenia rozpoczęło się za wyraźną zgodą konsumenta przed upływem terminu do odstąpienia od umowy.</p>
+                  <p><strong>10.2.</strong> Składając zlecenie optymalizacji CV, Klient wyraża zgodę na natychmiastowe rozpoczęcie świadczenia usługi.</p>
+                  <p><strong>10.3.</strong> W przypadku planów abonamentowych, Klient może odstąpić od umowy w terminie 14 dni od zawarcia umowy, pod warunkiem niewykorzystania żadnej optymalizacji.</p>
+                </div>
+              </section>
+
+              <section className="legal-section">
+                <h2 className="section-title">§ 11. Postanowienia końcowe</h2>
+                <div className="section-content">
+                  <p><strong>11.1.</strong> Usługodawca zastrzega sobie prawo do wprowadzania zmian w Regulaminie z ważnych przyczyn, takich jak:</p>
+                  <ul>
+                    <li>Zmiana przepisów prawa</li>
+                    <li>Wprowadzenie nowych funkcjonalności Serwisu</li>
+                    <li>Względy bezpieczeństwa</li>
+                    <li>Zmiany w zakresie świadczonych usług</li>
+                  </ul>
+                  <p><strong>11.2.</strong> O zmianach w Regulaminie Klienci zostaną poinformowani z co najmniej 7-dniowym wyprzedzeniem poprzez publikację informacji na stronie internetowej oraz przesłanie powiadomienia na adres e-mail.</p>
+                  <p><strong>11.3.</strong> W przypadku braku akceptacji zmian w Regulaminie, Klient ma prawo do rozwiązania umowy ze skutkiem natychmiastowym.</p>
+                  <p><strong>11.4.</strong> We wszystkich sprawach nieuregulowanych niniejszym Regulaminem mają zastosowanie przepisy prawa polskiego, w szczególności Kodeksu cywilnego i ustawy o świadczeniu usług drogą elektroniczną.</p>
+                  <p><strong>11.5.</strong> Wszelkie spory związane z usługami świadczonymi przez Serwis będą rozstrzygane przez sąd powszechny właściwy dla siedziby Usługodawcy.</p>
+                  <p><strong>11.6.</strong> Klienci będący konsumentami mogą skorzystać z pozasądowych sposobów rozpatrywania reklamacji i dochodzenia roszczeń. Szczegółowe informacje dostępne są na stronie internetowej http://ec.europa.eu/odr/.</p>
                 </div>
               </section>
             </div>
 
             <div className="legal-footer">
               <div className="contact-info">
-                <h3>Kontakt</h3>
-                <p>📧 cvperfectai@gmail.com</p>
+                <h3>Kontakt w sprawie Regulaminu</h3>
+                <p>📧 pomoccvperfect@gmail.com@gmail.com</p>
                 <p>🌐 www.cvperfect.pl</p>
+                <p>📍 CvPerfect , Polska</p>
+                <div className="legal-note">
+                  <p><small>Niniejszy Regulamin wchodzi w życie z dniem 2 sierpnia 2025 roku i zastępuje wszystkie wcześniejsze wersje regulaminów serwisu CvPerfect.pl</small></p>
+                </div>
               </div>
             </div>
           </div>
@@ -151,11 +213,12 @@ export default function Regulamin() {
           min-height: 100vh;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           font-family: 'Inter', sans-serif;
+          line-height: 1.6;
         }
 
         .legal-header {
           background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
+          backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(255, 255, 255, 0.2);
           padding: 20px 0;
           position: sticky;
@@ -185,37 +248,44 @@ export default function Regulamin() {
         .logo-text {
           font-size: 28px;
           font-weight: 800;
-          color: white;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+          background: linear-gradient(135deg, #ffffff, #f8fafc);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .logo-badge {
-          background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+          background: linear-gradient(135deg, #f59e0b, #d97706);
           color: white;
           padding: 4px 8px;
           border-radius: 8px;
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
+          box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
         }
 
         .back-link {
           color: white;
           text-decoration: none;
-          background: rgba(255, 255, 255, 0.1);
-          padding: 10px 20px;
+          background: rgba(255, 255, 255, 0.15);
+          padding: 12px 24px;
           border-radius: 12px;
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
+          font-weight: 500;
         }
 
         .back-link:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.25);
           transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         .legal-content {
-          background: white;
+          background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
+          backdrop-filter: blur(20px);
           margin-top: -20px;
           border-radius: 30px 30px 0 0;
           min-height: calc(100vh - 100px);
@@ -224,13 +294,13 @@ export default function Regulamin() {
         }
 
         .legal-wrapper {
-          max-width: 800px;
+          max-width: 900px;
           margin: 0 auto;
           padding: 60px 20px;
         }
 
         .legal-title {
-          font-size: 48px;
+          font-size: 52px;
           font-weight: 800;
           color: #1f2937;
           text-align: center;
@@ -239,11 +309,12 @@ export default function Regulamin() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+          text-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
         }
 
         .legal-subtitle {
           text-align: center;
-          font-size: 18px;
+          font-size: 20px;
           color: #6b7280;
           margin-bottom: 50px;
           line-height: 1.6;
@@ -252,61 +323,89 @@ export default function Regulamin() {
         .legal-date {
           font-size: 16px;
           color: #9ca3af;
-          font-weight: 500;
+          font-weight: 600;
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
         .legal-sections {
           display: flex;
           flex-direction: column;
-          gap: 40px;
+          gap: 30px;
         }
 
         .legal-section {
-          background: #f9fafb;
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(10px);
           border-radius: 20px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid rgba(255, 255, 255, 0.3);
           overflow: hidden;
           transition: all 0.3s ease;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
         .legal-section:hover {
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-          transform: translateY(-2px);
+          box-shadow: 0 15px 45px rgba(102, 126, 234, 0.1);
+          transform: translateY(-3px);
+          border-color: rgba(102, 126, 234, 0.2);
         }
 
         .section-title {
           background: linear-gradient(135deg, #667eea, #764ba2);
           color: white;
-          padding: 20px 30px;
+          padding: 24px 30px;
           margin: 0;
-          font-size: 24px;
+          font-size: 22px;
           font-weight: 700;
+          position: relative;
+        }
+
+        .section-title::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #10b981, #059669);
         }
 
         .section-content {
           padding: 30px;
+          background: rgba(255, 255, 255, 0.6);
         }
 
         .section-content p {
-          margin-bottom: 15px;
-          line-height: 1.7;
+          margin-bottom: 16px;
+          line-height: 1.8;
           color: #374151;
+          font-size: 15px;
         }
 
         .section-content p strong {
           color: #1f2937;
-          font-weight: 600;
+          font-weight: 700;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
         .section-content ul {
-          margin: 15px 0;
+          margin: 20px 0;
           padding-left: 25px;
         }
 
         .section-content li {
-          margin-bottom: 8px;
-          line-height: 1.6;
+          margin-bottom: 10px;
+          line-height: 1.7;
           color: #4b5563;
+          position: relative;
+        }
+
+        .section-content li::marker {
+          color: #667eea;
+          font-weight: bold;
         }
 
         .legal-footer {
@@ -316,18 +415,31 @@ export default function Regulamin() {
           border-radius: 20px;
           text-align: center;
           color: white;
+          box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
         }
 
         .contact-info h3 {
           font-size: 24px;
           font-weight: 700;
           margin-bottom: 20px;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .contact-info p {
           font-size: 16px;
-          margin-bottom: 10px;
+          margin-bottom: 12px;
           opacity: 0.9;
+        }
+
+        .legal-note {
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .legal-note p {
+          opacity: 0.8;
+          font-style: italic;
         }
 
         @media (max-width: 768px) {
@@ -342,7 +454,7 @@ export default function Regulamin() {
 
           .back-link {
             font-size: 14px;
-            padding: 8px 16px;
+            padding: 10px 20px;
           }
 
           .legal-wrapper {
@@ -350,16 +462,20 @@ export default function Regulamin() {
           }
 
           .section-title {
-            font-size: 20px;
-            padding: 15px 20px;
+            font-size: 18px;
+            padding: 20px 20px;
           }
 
           .section-content {
-            padding: 20px;
+            padding: 25px 20px;
           }
 
           .legal-footer {
             padding: 30px 20px;
+          }
+
+          .legal-subtitle {
+            font-size: 18px;
           }
         }
       `}</style>
