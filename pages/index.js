@@ -460,11 +460,10 @@ const typingPhrases = [
   'dopasowaniem słów kluczowych',
   'zwiększeniem szans na pracę',
   'profesjonalnym CV',
-  'optymalizacją ATS',
   'personalizacją treści',
-  'zwiększeniem widoczności'
-]
-
+  'zwiększeniem widoczności',
+  'sztuczną inteligencją'
+];
 
 // Typing animation effect
 useEffect(() => {
@@ -1672,12 +1671,12 @@ const createConfetti = () => {
       </div>
       <style jsx>{`
         /* Global Styles */
-        body {
+       body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  overflow-y: auto !important;
-  min-height: 150vh;
+  overflow-y: auto;
+  min-height: 100vh;
 }
         html {
           overflow-x: hidden;
@@ -2711,6 +2710,8 @@ html {
 
 
 /* Features Section */
+
+
 .features-section {
   background: transparent;
   padding: 120px 40px;
@@ -2751,33 +2752,8 @@ html {
   margin: 0 auto;
   line-height: 1.6;
 }
-        .feature-card {
-          background: white;
-          border: 2px solid #f3f4f6;
-          border-radius: 20px;
-          padding: 32px;
-          text-align: center;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-
-        .feature-card:hover {
-          border-color: #667eea;
-          transform: translateY(-5px);
-          box-shadow: 0 20px 40px rgba(102, 126, 234, 0.1);
-        }
-
-        .feature-card.spotlight {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border-color: transparent;
-        }
-
-        .feature-icon {
-          font-size: 48px;
-          margin-bottom: 20px;
-          display: block;
-        }
+       
+       
 
         .feature-card h3 {
           font-size: 24px;
@@ -4898,6 +4874,13 @@ html {
   align-items: stretch;
 }
 
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 400px; /* Minimalna wysokość */
+}
+
 .plan-card {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(20px);
@@ -6066,12 +6049,27 @@ html {
             padding: 16px 8px;
           }
 
-         .features-grid {
+        .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 32px;
   max-width: 1400px;
   margin: 0 auto;
+  align-items: stretch; /* Równa wysokość kart */
+}
+
+@media (max-width: 1200px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 0 20px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -6083,9 +6081,9 @@ html {
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02); !important;
+  backdrop-filter: blur(25px); !important;
+  border: 1px solid rgba(255, 255, 255, 0.08); !important
   border-radius: 32px;
   padding: 48px;
   text-align: center;
@@ -6093,7 +6091,7 @@ html {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  color: white;
+  color: white; !important
   transform-origin: center;
 }
 
