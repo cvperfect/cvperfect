@@ -82,41 +82,11 @@ export default function Home() {
       }
     };
 
-    // Increment every 3-5 minutes for realistic growth
+   // Increment every 3-5 minutes for realistic growth
 const interval = setInterval(incrementStats, (180 + Math.random() * 120) * 1000);
     return () => clearInterval(interval);
-	
+  }, []);
 
-// Typing animation effect
-useEffect(() => {
-  const handleTyping = () => {
-    const currentPhrase = typingPhrases[loopNum % typingPhrases.length]
-    
-    if (!isDeleting) {
-      setTypingText(currentPhrase.substring(0, typingIndex + 1))
-      setTypingIndex(typingIndex + 1)
-      
-      if (typingIndex + 1 === currentPhrase.length) {
-        setTimeout(() => setIsDeleting(true), 1500)
-        setTypingSpeed(50)
-      } else {
-        setTypingSpeed(150)
-      }
-    } else {
-      setTypingText(currentPhrase.substring(0, typingIndex - 1))
-      setTypingIndex(typingIndex - 1)
-      
-      if (typingIndex === 0) {
-        setIsDeleting(false)
-        setLoopNum(loopNum + 1)
-        setTypingSpeed(150)
-      }
-    }
-  }
-  
-  const timer = setTimeout(handleTyping, typingSpeed)
-  return () => clearTimeout(timer)
-}, [typingIndex, isDeleting, loopNum, typingSpeed])
 
 
 // Scroll indicator logic
@@ -224,6 +194,11 @@ const getParticleCount = () => {
   return 40;
 };
 const particleCount = getParticleCount();
+const particles = [];
+
+for (let i = 0; i < particleCount; i++) {
+  particles.push(new Particle(canvas, ctx));
+}
   
   // Connect particles
   const connectParticles = () => {
@@ -328,10 +303,7 @@ useEffect(() => {
     timelineObserver.observe(timelineSection)
   }
   
-  return () => timelineObserver.disconnect()
-}, [])
-
-  }, []);
+ }, []);
 
 // Magnetic buttons effect
 useEffect(() => {
@@ -484,11 +456,39 @@ const [typingSpeed, setTypingSpeed] = useState(150)
 
 const typingPhrases = [
   'optymalizacją CV',
-  'analizą ATS',
+  'analizą ATS', 
   'dopasowaniem słów kluczowych',
   'zwiększeniem szans na pracę',
-  'profesjonalnym CV'
+  'profesjonalnym CV',
+  'optymalizacją ATS',
+  'personalizacją treści',
+  'zwiększeniem widoczności'
 ]
+
+
+// Typing animation effect
+useEffect(() => {
+  const handleType = () => {
+    const current = loopNum % typingPhrases.length;
+    const fullText = typingPhrases[current];
+
+    setTypingText(isDeleting ? fullText.substring(0, typingIndex - 1) : fullText.substring(0, typingIndex + 1));
+
+    setTypingSpeed(isDeleting ? 30 : 100);
+
+    if (!isDeleting && typingIndex === fullText.length) {
+      setTimeout(() => setIsDeleting(true), 1500);
+    } else if (isDeleting && typingIndex === 0) {
+      setIsDeleting(false);
+      setLoopNum(loopNum + 1);
+    }
+
+    setTypingIndex(isDeleting ? typingIndex - 1 : typingIndex + 1);
+  };
+
+  const timer = setTimeout(handleType, typingSpeed);
+  return () => clearTimeout(timer);
+}, [typingText, typingIndex, isDeleting, loopNum, typingSpeed, typingPhrases]);
 
 // Progress and tooltips state
 const [currentStep, setCurrentStep] = useState(1)
@@ -514,8 +514,16 @@ const updateProgress = (step) => {
   
   if (progressBar) {
     progressBar.style.width = `${(step / 4) * 100}%`
+    progressBar.style.transition = 'width 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
   }
   
+ 
+  
+  // Premium success animation
+  if (step === 4) {
+    createConfetti();
+    showToast('🎉 Gratulacje! Twoje CV jest gotowe!', 'success');
+  }  
   steps.forEach((stepEl, index) => {
     if (index < step) {
       stepEl.classList.add('active')
@@ -528,16 +536,42 @@ const updateProgress = (step) => {
 
   // NOWA FUNKCJA - DARMOWA ANALIZA
   const handleFreeAnalysis = () => {
-  const cvText = document.querySelector('.cv-textarea')?.value;
+  const cvTextarea = document.querySelector('.cv-textarea');
+  const cvText = cvTextarea?.value || '';
   
   if (!cvText || cvText.trim().length < 50) {
     showToast('⚠️ Najpierw wklej treść swojego CV!', 'warning')
+    if (cvTextarea) {
+      cvTextarea.focus();
+      cvTextarea.style.borderColor = '#ef4444';
+      setTimeout(() => cvTextarea.style.borderColor = '', 2000);
+    }
     return;
   }
   
-  // Update progress
+  // Premium loading animation
+  setIsOptimizing(true);
+  const loadingMessages = [
+    '🔍 Analizuję strukturę CV...',
+    '🤖 GPT-4 sprawdza zgodność z ATS...',
+    '⚡ Optymalizuję słowa kluczowe...',
+    '📊 Obliczam compatibility score...'
+  ];
+  
+  let messageIndex = 0;
+  const messageInterval = setInterval(() => {
+    if (messageIndex < loadingMessages.length) {
+      showToast(loadingMessages[messageIndex], 'info');
+      messageIndex++;
+    }
+  }, 800);
+  
   updateProgress(2)
-  showToast('🔍 Analizuję Twoje CV...', 'info')
+  
+  setTimeout(() => {
+    clearInterval(messageInterval);
+    setIsOptimizing(false);
+  }, 3000);
   
   // Simulate analysis
   const fakeResult = {
@@ -547,6 +581,19 @@ const updateProgress = (step) => {
   
   setAnalysisResult(fakeResult);
   setShowUploadModal(false);
+// Ustaw CSS custom property dla score circle
+setTimeout(() => {
+  const scoreCircle = document.querySelector('.score-circle');
+  if (scoreCircle) {
+    scoreCircle.style.setProperty('--score', fakeResult.score);
+    scoreCircle.style.background = `conic-gradient(
+      from 0deg,
+      #00ff88 0%,
+      #00cc70 ${fakeResult.score}%,
+      rgba(255, 255, 255, 0.1) ${fakeResult.score}%
+    )`;
+  }
+}, 100);
   
   // Show success and update progress
   setTimeout(() => {
@@ -557,17 +604,22 @@ const updateProgress = (step) => {
 };
 
   // UPROSZCZONA FUNKCJA optimizeCV
-  const optimizeCV = () => {
-  // Trigger upload modal for free analysis
-  setShowUploadModal(true);
+ const optimizeCV = () => {
+  // First check if CV is provided
+  const cvTextarea = document.querySelector('.cv-textarea');
+  const cvText = cvTextarea?.value || '';
   
-  // Confetti effect
-  createConfetti();
+  if (!cvText || cvText.trim().length < 50) {
+    showToast('⚠️ Najpierw wklej treść swojego CV!', 'warning');
+    setShowUploadModal(true);
+    return;
+  }
+  
+  // Start analysis
+  handleFreeAnalysis();
 }
 
 const createConfetti = () => {
-
-
   const confettiCount = 50;
   const confettiColors = ['#7850ff', '#ff5080', '#50b4ff', '#00ff88', '#ffd700'];
   
@@ -900,28 +952,6 @@ const createConfetti = () => {
   </div>
 </div>
 
-{/* Progress Bar */}
-<div className="progress-bar-container" style={{display: 'none'}}>
-      <div className="progress-bar"></div>
-      <div className="progress-steps">
-        <div className="progress-step active" data-step="1">
-          <span className="step-dot"></span>
-          <span className="step-label">Start</span>
-        </div>
-        <div className="progress-step" data-step="2">
-          <span className="step-dot"></span>
-          <span className="step-label">Analiza</span>
-        </div>
-        <div className="progress-step" data-step="3">
-          <span className="step-dot"></span>
-          <span className="step-label">Płatność</span>
-        </div>
-        <div className="progress-step" data-step="4">
-          <span className="step-dot"></span>
-          <span className="step-label">Gotowe!</span>
-        </div>
-      </div>
-    </div>
     
     {/* Navigation */}
         <nav className="navigation">
@@ -979,7 +1009,7 @@ const createConfetti = () => {
                 🔍 Sprawdź swoje CV
               </button>
               <div className="hero-guarantee">
-  <span>✅ Bez rejestracji • 💰 30-dni gwarancji</span>
+  <span>✅ Bez rejestracji </span>
 </div>
             </div>
           </div>
@@ -2395,6 +2425,22 @@ html {
 .hero-button:active {
   transform: translateY(-2px) scale(1.01);
 }
+
+
+.hero-guarantee {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.hero-guarantee span {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
        /* Hero Visual - ENHANCED */
 .hero-visual {
   display: flex;
@@ -3063,6 +3109,21 @@ html {
   50% { transform: translateY(-50%) translateX(-50px); }
 }
 
+@keyframes iconFloat {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg); 
+  }
+  25% { 
+    transform: translateY(-10px) rotate(2deg); 
+  }
+  50% { 
+    transform: translateY(-5px) rotate(-1deg); 
+  }
+  75% { 
+    transform: translateY(-15px) rotate(1deg); 
+  }
+}
+
 .timeline-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -3221,6 +3282,11 @@ html {
 .timeline-step[data-step="2"] .step-icon { animation-delay: 0.5s; }
 .timeline-step[data-step="3"] .step-icon { animation-delay: 1s; }
 .timeline-step[data-step="4"] .step-icon { animation-delay: 1.5s; }
+.testimonial-card:nth-child(1) { animation-delay: 0s; }
+.testimonial-card:nth-child(2) { animation-delay: 0.1s; }
+.testimonial-card:nth-child(3) { animation-delay: 0.2s; }
+.testimonial-card:nth-child(4) { animation-delay: 0.3s; }
+.testimonial-card:nth-child(5) { animation-delay: 0.4s; }
 
 .step-content h3 {
   font-size: 24px;
@@ -3741,6 +3807,97 @@ html {
   transform: scale(1) rotate(0deg);
 }
 
+.testimonial-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.testimonial-avatar {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.testimonial-info {
+  flex: 1;
+}
+
+.testimonial-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.testimonial-position {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2px;
+}
+
+.testimonial-company {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+}
+
+.testimonial-verified {
+  flex-shrink: 0;
+}
+
+.verified-badge {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  padding: 4px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.testimonial-rating {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.star {
+  font-size: 16px;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+}
+
+.testimonial-text {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-style: italic;
+}
+
+.testimonial-impact {
+  text-align: center;
+}
+
+.impact-badge {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -3760,6 +3917,24 @@ html {
 @keyframes modalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  0% { 
+    opacity: 0; 
+    transform: translateY(50px) scale(0.95);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(20px) scale(0.98);
+    filter: blur(5px);
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
 }
 
 .modal-content {
@@ -3964,6 +4139,73 @@ html {
 }
 
 
+.upload-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 10px 20px rgba(120, 80, 255, 0.2));
+}
+
+
+.upload-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.upload-btn {
+  padding: 14px 28px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.upload-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.upload-btn.primary {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+
+.upload-btn.primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+}
+
+.upload-features {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.feature-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+
 /* Enhanced Textarea Styles */
 .cv-textarea {
   width: 100%;
@@ -4156,9 +4398,18 @@ html {
   background: conic-gradient(
     from 0deg,
     #00ff88 0%,
-    #00cc70 calc(var(--score, 67) * 1%),
-    rgba(255, 255, 255, 0.1) calc(var(--score, 67) * 1%)
+    #00cc70 67%,
+    rgba(255, 255, 255, 0.1) 67%
   );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
+  animation: scoreRotate 20s linear infinite;
+
+}
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4233,6 +4484,119 @@ html {
 .email-section,
 .pricing-section {
   margin-bottom: 48px;
+}
+
+.default-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.option-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.option-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.option-info {
+  flex: 1;
+}
+
+.option-info h4 {
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.option-info p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  margin: 0;
+}
+
+.selected-badge {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.job-upgrade-section {
+  margin-top: 24px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.trust-section {
+  margin-top: 40px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trust-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+
+.trust-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trust-stats .stat-number {
+  font-size: 28px;
+  font-weight: 900;
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.trust-stats .stat-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.upgrade-header h4 {
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.upgrade-header p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  margin: 0 0 16px 0;
+}
+
+.upgrade-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.note-icon {
+  font-size: 16px;
 }
 
 .modal-content-inner h3 {
@@ -5702,10 +6066,20 @@ html {
             padding: 16px 8px;
           }
 
-          .features-grid {
+         .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 0 20px;
+  }
 }
 
 .feature-card {
@@ -5748,12 +6122,14 @@ html {
 }
 
 .feature-card:hover {
-  transform: translateY(-15px) scale(1.03);
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(120, 80, 255, 0.3);
+  transform: translateY(-20px) scale(1.05) rotateX(5deg);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(120, 80, 255, 0.05));
+  border-color: rgba(120, 80, 255, 0.4);
   box-shadow: 
-    0 40px 80px rgba(0, 0, 0, 0.3),
-    0 0 60px rgba(120, 80, 255, 0.2);
+    0 50px 100px rgba(0, 0, 0, 0.4),
+    0 0 80px rgba(120, 80, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(30px) saturate(200%);
 }
 
 .feature-card:hover::before {
@@ -6137,7 +6513,7 @@ button:focus {
 
 .progress-bar {
   height: 100%;
-  width: 25%;
+  width: 0%;
   background: linear-gradient(90deg, #7850ff, #ff5080, #50b4ff);
   transition: width 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
@@ -6541,6 +6917,53 @@ button:focus {
   }
 }
 
+
+/* Premium Reveal Animations */
+.reveal-element {
+  opacity: 0;
+  transform: translateY(50px) scale(0.95);
+  transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.reveal-element.reveal-animate {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.reveal-child {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.reveal-child.reveal-animate {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.glow-on-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-on-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.4), 
+    transparent
+  );
+  transition: left 0.8s ease;
+}
+
+.glow-on-hover:hover::before {
+  left: 100%;
+}
 
 	`}</style>
     </>
