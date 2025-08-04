@@ -834,11 +834,34 @@ const createConfetti = () => {
           </div>
         ))}
       </div>
-{/* Floating Notifications */}
-<div className="container">
+	<div className="container">
   {/* Particles Background */}
   <div className="particles-container" id="particles"></div>   
-{/* Scroll Indicator */}
+  
+  {/* Progress Bar */}
+  <div className="progress-bar-container">
+    <div className="progress-bar"></div>
+    <div className="progress-steps">
+      <div className="progress-step active" data-step="1">
+        <span className="step-dot"></span>
+        <span className="step-label">Start</span>
+      </div>
+      <div className="progress-step" data-step="2">
+        <span className="step-dot"></span>
+        <span className="step-label">Analiza</span>
+      </div>
+      <div className="progress-step" data-step="3">
+        <span className="step-dot"></span>
+        <span className="step-label">Płatność</span>
+      </div>
+      <div className="progress-step" data-step="4">
+        <span className="step-dot"></span>
+        <span className="step-label">Gotowe!</span>
+      </div>
+    </div>
+  </div>
+  
+  {/* Scroll Indicator */}
 <div className="scroll-indicator">
   <div className="scroll-progress"></div>
   <div className="scroll-sections">
@@ -866,8 +889,8 @@ const createConfetti = () => {
   </div>
 </div>
 
- {/* Progress Bar */}
-    <div className="progress-bar-container">
+{/* Progress Bar */}
+<div className="progress-bar-container" style={{display: 'none'}}>
       <div className="progress-bar"></div>
       <div className="progress-steps">
         <div className="progress-step active" data-step="1">
@@ -945,7 +968,8 @@ const createConfetti = () => {
                 🔍 Sprawdź swoje CV
               </button>
               <div className="hero-guarantee">
-              </div>
+  <span>✅ Bez rejestracji • 💰 30-dni gwarancji</span>
+</div>
             </div>
           </div>
 
