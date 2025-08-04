@@ -11,6 +11,7 @@ export default function Home() {
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [optimizedResult, setOptimizedResult] = useState('')
   const [showPricingModal, setShowPricingModal] = useState(false)
+
   // Stats counter animation
   useEffect(() => {
     const observerCallback = (entries) => {
@@ -116,6 +117,173 @@ useEffect(() => {
   return () => clearTimeout(timer)
 }, [typingIndex, isDeleting, loopNum, typingSpeed])
 
+
+// Scroll indicator logic
+useEffect(() => {
+  const handleScroll = () => {
+    // Update scroll progress
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+    const scrollProgress = (window.scrollY / scrollHeight) * 100
+    const progressBar = document.querySelector('.scroll-progress')
+    if (progressBar) {
+      progressBar.style.height = `${scrollProgress}%`
+    }
+    
+    // Update active section
+    const sections = document.querySelectorAll('div[id]')
+    const scrollDots = document.querySelectorAll('.scroll-dot')
+    
+    let currentSection = ''
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect()
+      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+        currentSection = section.id
+      }
+    })
+    
+    scrollDots.forEach(dot => {
+      if (dot.getAttribute('data-section') === currentSection) {
+        dot.classList.add('active')
+      } else {
+        dot.classList.remove('active')
+      }
+    })
+  }
+  
+  window.addEventListener('scroll', handleScroll)
+  handleScroll() // Initial call
+  
+  return () => window.removeEventListener('scroll', handleScroll)
+}, [])
+
+// Particles background
+useEffect(() => {
+ if (typeof window === 'undefined') return;
+  class Particle {
+    constructor(canvas, ctx) {
+      this.canvas = canvas
+      this.ctx = ctx
+      this.x = Math.random() * canvas.width
+      this.y = Math.random() * canvas.height
+      this.size = Math.random() * 2 + 0.5
+      this.speedX = Math.random() * 0.5 - 0.25
+      this.speedY = Math.random() * 0.5 - 0.25
+      this.opacity = Math.random() * 0.5 + 0.2
+      this.color = Math.random() > 0.5 ? '#7850ff' : '#ff5080'
+    }
+    
+    update() {
+      this.x += this.speedX
+      this.y += this.speedY
+      
+      if (this.x > this.canvas.width) this.x = 0
+      else if (this.x < 0) this.x = this.canvas.width
+      
+      if (this.y > this.canvas.height) this.y = 0
+      else if (this.y < 0) this.y = this.canvas.height
+    }
+    
+    draw() {
+      this.ctx.fillStyle = this.color
+      this.ctx.globalAlpha = this.opacity
+      this.ctx.beginPath()
+      this.ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+      this.ctx.fill()
+    }
+  }
+  
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  const particlesContainer = document.getElementById('particles')
+  
+  if (!particlesContainer) return
+  
+  particlesContainer.appendChild(canvas)
+  
+  const resizeCanvas = () => {
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+  }
+  
+  resizeCanvas()
+  window.addEventListener('resize', resizeCanvas)
+  
+  // Create particles
+  const particleCount = window.innerWidth < 768 ? 30 : 50
+  const particles = []
+  
+  for (let i = 0; i < particleCount; i++) {
+    particles.push(new Particle(canvas, ctx))
+  }
+  
+  // Connect particles
+  const connectParticles = () => {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x
+        const dy = particles[i].y - particles[j].y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        
+        if (distance < 150) {
+          ctx.strokeStyle = particles[i].color
+          ctx.globalAlpha = (150 - distance) / 150 * 0.2
+          ctx.lineWidth = 0.5
+          ctx.beginPath()
+          ctx.moveTo(particles[i].x, particles[i].y)
+          ctx.lineTo(particles[j].x, particles[j].y)
+          ctx.stroke()
+        }
+      }
+    }
+  }
+  
+  // Animation loop
+  let animationId
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    
+    particles.forEach(particle => {
+      particle.update()
+      particle.draw()
+    })
+    
+    connectParticles()
+    
+    animationId = requestAnimationFrame(animate)
+  }
+  
+  animate()
+  
+  // Mouse interaction
+  const handleMouseMove = (e) => {
+    const mouseX = e.clientX
+    const mouseY = e.clientY
+    
+    particles.forEach(particle => {
+      const dx = mouseX - particle.x
+      const dy = mouseY - particle.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      
+      if (distance < 100) {
+        const force = (100 - distance) / 100
+        particle.x -= (dx / distance) * force * 2
+        particle.y -= (dy / distance) * force * 2
+      }
+    })
+  }
+  
+  window.addEventListener('mousemove', handleMouseMove)
+  
+  return () => {
+    cancelAnimationFrame(animationId)
+    window.removeEventListener('resize', resizeCanvas)
+    window.removeEventListener('mousemove', handleMouseMove)
+    if (canvas.parentNode) {
+      canvas.parentNode.removeChild(canvas)
+    }
+  }
+}, [])
+
 // Timeline animation on scroll
 useEffect(() => {
   const observerOptions = {
@@ -154,7 +322,141 @@ useEffect(() => {
 
   }, []);
 
+// Magnetic buttons effect
+useEffect(() => {
+  const buttons = document.querySelectorAll('.hero-button, .nav-cta, .testimonials-button, .timeline-button, .faq-button, .upload-btn.primary, .plan-button')
+  
+  buttons.forEach(button => {
+    let boundingRect = button.getBoundingClientRect()
+    
+    const handleMouseMove = (e) => {
+      const mousePosX = e.clientX - boundingRect.left
+      const mousePosY = e.clientY - boundingRect.top
+      const centerX = boundingRect.width / 2
+      const centerY = boundingRect.height / 2
+      
+      const percentX = (mousePosX - centerX) / centerX
+      const percentY = (mousePosY - centerY) / centerY
+      
+      const maxMove = 10
+      const moveX = percentX * maxMove
+      const moveY = percentY * maxMove
+      
+      button.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.02)`
+    }
+    
+    const handleMouseEnter = () => {
+      boundingRect = button.getBoundingClientRect()
+      button.style.transition = 'transform 0.2s ease'
+    }
+    
+    const handleMouseLeave = () => {
+      button.style.transform = 'translate(0, 0) scale(1)'
+      button.style.transition = 'transform 0.5s ease'
+    }
+    
+    button.addEventListener('mousemove', handleMouseMove)
+    button.addEventListener('mouseenter', handleMouseEnter)
+    button.addEventListener('mouseleave', handleMouseLeave)
+    
+    // Ripple effect on click
+    button.addEventListener('click', function(e) {
+      const ripple = document.createElement('span')
+      ripple.classList.add('ripple')
+      
+      const rect = this.getBoundingClientRect()
+      const size = Math.max(rect.width, rect.height)
+      const x = e.clientX - rect.left - size / 2
+      const y = e.clientY - rect.top - size / 2
+      
+      ripple.style.width = ripple.style.height = size + 'px'
+      ripple.style.left = x + 'px'
+      ripple.style.top = y + 'px'
+      
+      this.appendChild(ripple)
+      
+      setTimeout(() => ripple.remove(), 600)
+    })
+  })
 
+const showSmartTooltip = (text, rect, element) => {
+  const tooltip = document.createElement('div')
+  tooltip.className = 'smart-tooltip'
+  tooltip.innerHTML = `
+    <div class="tooltip-arrow"></div>
+    <div class="tooltip-content">${text}</div>
+  `
+  
+  // Position tooltip
+  tooltip.style.position = 'fixed'
+  tooltip.style.top = `${rect.top - 60}px`
+  tooltip.style.left = `${rect.left + rect.width / 2}px`
+  tooltip.style.transform = 'translateX(-50%)'
+  
+  document.body.appendChild(tooltip)
+  
+  // Animate in
+  setTimeout(() => tooltip.classList.add('show'), 10)
+  
+  // Remove on click anywhere or after 5s
+  const removeTooltip = () => {
+    tooltip.classList.remove('show')
+    setTimeout(() => tooltip.remove(), 300)
+  }
+  
+  setTimeout(removeTooltip, 5000)
+  document.addEventListener('click', removeTooltip, { once: true })
+  element.addEventListener('mouseenter', removeTooltip, { once: true })
+}
+
+// Smart Tooltips
+const tooltipTargets = [
+  {
+    selector: '.hero-button',
+    text: '👆 Kliknij aby rozpocząć darmową analizę',
+    delay: 3000
+  },
+  {
+    selector: '.plan-card.gold',
+    text: '💡 Najpopularniejszy wybór - oszczędź 45%!',
+    delay: 5000,
+    condition: () => showPaywall
+  },
+  {
+    selector: '.nav-cta',
+    text: '🚀 Zacznij tutaj!',
+    delay: 10000
+  }
+]
+
+tooltipTargets.forEach(target => {
+  if (target.condition && !target.condition()) return
+  
+  setTimeout(() => {
+    const element = document.querySelector(target.selector)
+    if (element && !element.hasAttribute('data-tooltip-shown')) {
+      const rect = element.getBoundingClientRect()
+      showSmartTooltip(target.text, rect, element)
+      element.setAttribute('data-tooltip-shown', 'true')
+    }
+  }, target.delay)
+})
+
+// Pulse effect on important elements
+const pulseElements = document.querySelectorAll('.hero-button, .nav-cta')
+pulseElements.forEach(el => {
+  el.classList.add('pulse-effect')
+})
+  
+  return () => {
+    buttons.forEach(button => {
+      button.removeEventListener('mousemove', () => {})
+      button.removeEventListener('mouseenter', () => {})
+      button.removeEventListener('mouseleave', () => {})
+      button.removeEventListener('click', () => {})
+    })
+  }
+}, [])
 
 
   
@@ -177,53 +479,99 @@ const typingPhrases = [
   'profesjonalnym CV'
 ]
 
+// Progress and tooltips state
+const [currentStep, setCurrentStep] = useState(1)
+const [tooltips, setTooltips] = useState([])
+const [toasts, setToasts] = useState([])
+
+// Show toast notification
+const showToast = (message, type = 'info') => {
+  const id = Date.now()
+  const newToast = { id, message, type }
+  setToasts(prev => [...prev, newToast])
+  
+  setTimeout(() => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }, 4000)
+}
+
+// Update progress
+const updateProgress = (step) => {
+  setCurrentStep(step)
+  const progressBar = document.querySelector('.progress-bar')
+  const steps = document.querySelectorAll('.progress-step')
+  
+  if (progressBar) {
+    progressBar.style.width = `${(step / 4) * 100}%`
+  }
+  
+  steps.forEach((stepEl, index) => {
+    if (index < step) {
+      stepEl.classList.add('active')
+    } else {
+      stepEl.classList.remove('active')
+    }
+  })
+}
+
+
   // NOWA FUNKCJA - DARMOWA ANALIZA
   const handleFreeAnalysis = () => {
-    // Sprawdź czy użytkownik dodał CV
-    const cvText = document.querySelector('.cv-textarea')?.value;
-    
-    if (!cvText || cvText.trim().length < 50) {
-      // Pokaż ładny komunikat
-      const errorDiv = document.createElement('div');
-      errorDiv.innerHTML = `
-        <div style="
-          position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-          background: white; padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-          z-index: 10000; text-align: center; max-width: 400px;
-        ">
-          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-          <h3 style="color: #1f2937; margin-bottom: 12px;">Brakuje CV!</h3>
-          <p style="color: #6b7280; margin-bottom: 20px;">Najpierw wklej treść swojego CV lub wybierz plik do analizy.</p>
-          <button onclick="this.parentElement.parentElement.remove()" style="
-            background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
-            padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600;
-          ">OK, rozumiem</button>
-        </div>
-      `;
-      document.body.appendChild(errorDiv);
-      return;
-    }
-    
-    // Simulate analysis with random but realistic results
-    const fakeResult = {
-      score: Math.floor(Math.random() * 40) + 45, // 45-85% random
-      problems: Math.floor(Math.random() * 8) + 5  // 5-12 problems
-    };
-    
-    setAnalysisResult(fakeResult);
-    setShowUploadModal(false);
-    
-    // Show paywall after 2 seconds (simulate loading)
-    setTimeout(() => {
-      setShowPaywall(true);
-    }, 2000);
+  const cvText = document.querySelector('.cv-textarea')?.value;
+  
+  if (!cvText || cvText.trim().length < 50) {
+    showToast('⚠️ Najpierw wklej treść swojego CV!', 'warning')
+    return;
+  }
+  
+  // Update progress
+  updateProgress(2)
+  showToast('🔍 Analizuję Twoje CV...', 'info')
+  
+  // Simulate analysis
+  const fakeResult = {
+    score: Math.floor(Math.random() * 40) + 45,
+    problems: Math.floor(Math.random() * 8) + 5
   };
+  
+  setAnalysisResult(fakeResult);
+  setShowUploadModal(false);
+  
+  // Show success and update progress
+  setTimeout(() => {
+    showToast('✅ Analiza zakończona!', 'success')
+    updateProgress(3)
+    setShowPaywall(true);
+  }, 1500);
+};
 
   // UPROSZCZONA FUNKCJA optimizeCV
   const optimizeCV = () => {
-    // Trigger upload modal for free analysis
-    setShowUploadModal(true);
+  // Trigger upload modal for free analysis
+  setShowUploadModal(true);
+  
+  // Confetti effect
+  createConfetti();
+}
+
+const createConfetti = () => {
+
+
+  const confettiCount = 50;
+  const confettiColors = ['#7850ff', '#ff5080', '#50b4ff', '#00ff88', '#ffd700'];
+  
+  for (let i = 0; i < confettiCount; i++) {
+    const confetti = document.createElement('div');
+    confetti.classList.add('confetti');
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+    confetti.style.animationDelay = Math.random() * 3 + 's';
+    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+    document.body.appendChild(confetti);
+    
+    setTimeout(() => confetti.remove(), 5000);
   }
+}
 
   // POZOSTAŁE FUNKCJE (bez zmian)
   const handleFileUpload = (e) => {
@@ -457,7 +805,17 @@ const typingPhrases = [
       </Head>
 
 	
-{/* Floating Notifications */}
+{/* Toast Notifications */}
+<div className="toast-container" id="toastContainer">
+  {toasts.map(toast => (
+    <div key={toast.id} className={`toast ${toast.type}`}>
+      {toast.message}
+    </div>
+  ))}
+</div>
+
+{/* Smart Tooltips */}
+<div className="tooltip-container" id="tooltipContainer"></div>
       <div className="floating-notifications">
         {notifications.map((notification, notifIndex) => (
           <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
@@ -469,12 +827,69 @@ const typingPhrases = [
               </div>
               <div className="notification-icon">✅</div>
             </div>
+
+
+
+
           </div>
         ))}
       </div>
+{/* Floating Notifications */}
+<div className="container">
+  {/* Particles Background */}
+  <div className="particles-container" id="particles"></div>   
+{/* Scroll Indicator */}
+<div className="scroll-indicator">
+  <div className="scroll-progress"></div>
+  <div className="scroll-sections">
+    <a href="#hero" className="scroll-dot active" data-section="hero">
+      <span className="dot-tooltip">Start</span>
+    </a>
+    <a href="#stats" className="scroll-dot" data-section="stats">
+      <span className="dot-tooltip">Statystyki</span>
+    </a>
+    <a href="#features" className="scroll-dot" data-section="features">
+      <span className="dot-tooltip">Funkcje</span>
+    </a>
+    <a href="#capabilities" className="scroll-dot" data-section="capabilities">
+      <span className="dot-tooltip">Możliwości</span>
+    </a>
+    <a href="#timeline" className="scroll-dot" data-section="timeline">
+      <span className="dot-tooltip">Jak to działa</span>
+    </a>
+    <a href="#testimonials" className="scroll-dot" data-section="testimonials">
+      <span className="dot-tooltip">Opinie</span>
+    </a>
+    <a href="#faq" className="scroll-dot" data-section="faq">
+      <span className="dot-tooltip">FAQ</span>
+    </a>
+  </div>
+</div>
 
-      <div className="container">
-        {/* Navigation */}
+ {/* Progress Bar */}
+    <div className="progress-bar-container">
+      <div className="progress-bar"></div>
+      <div className="progress-steps">
+        <div className="progress-step active" data-step="1">
+          <span className="step-dot"></span>
+          <span className="step-label">Start</span>
+        </div>
+        <div className="progress-step" data-step="2">
+          <span className="step-dot"></span>
+          <span className="step-label">Analiza</span>
+        </div>
+        <div className="progress-step" data-step="3">
+          <span className="step-dot"></span>
+          <span className="step-label">Płatność</span>
+        </div>
+        <div className="progress-step" data-step="4">
+          <span className="step-dot"></span>
+          <span className="step-label">Gotowe!</span>
+        </div>
+      </div>
+    </div>
+    
+    {/* Navigation */}
         <nav className="navigation">
           <div className="nav-content">
             <div className="logo">
@@ -493,7 +908,7 @@ const typingPhrases = [
         </nav>
 
         {/* Hero Section */}
-        <div className="hero-section">
+        <div className="hero-section" id="hero">
           <div className="hero-content">
             <div className="hero-badge">
               🏆 #1 AI Platforma CV w Polsce
@@ -571,7 +986,7 @@ const typingPhrases = [
 
 
 {/* Capabilities Section */}
-<div className="capabilities-section">
+<div className="capabilities-section" id="capabilities">
   <div className="capabilities-container">
     <div className="capabilities-header">
   <div className="header-badge">
@@ -615,7 +1030,7 @@ const typingPhrases = [
 </div>
 
 {/* Stats Counter Section */}
-<div className="stats-counter-section">
+<div className="stats-counter-section" id="stats">
   <div className="stats-container">
     <div className="stats-header">
       <div className="stats-badge">📊 Live Statistics</div>
@@ -716,7 +1131,7 @@ const typingPhrases = [
 
 
 {/* How It Works Timeline */}
-<div className="timeline-section">
+<div className="timeline-section" id="timeline">
   <div className="timeline-container">
     <div className="timeline-header">
       <div className="timeline-badge">
@@ -1104,7 +1519,7 @@ const typingPhrases = [
         )}
 
         {/* FAQ Section */}
-        <div className="faq-section">
+        <div className="faq-section" id="faq">
           <div className="faq-container">
             <div className="faq-header">
               <h2 className="section-title">❓ Często zadawane pytania</h2>
@@ -1215,6 +1630,43 @@ const typingPhrases = [
   max-width: 100vw;
   width: 100%;
   overflow: hidden;
+}
+
+/* Particles Background */
+.particles-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.particles-container canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure content is above particles */
+.container > *:not(.particles-container) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Performance optimization for mobile */
+@media (max-width: 768px) {
+  .particles-container {
+    opacity: 0.3;
+  }
+}
+
+/* Disable particles on very small devices for performance */
+@media (max-width: 480px) {
+  .particles-container {
+    display: none;
+  }
 }
 
 .container::before {
@@ -4877,6 +5329,42 @@ html {
             margin: 0;
           }
 
+/* Mobile typography */
+  h1 { font-size: 32px !important; }
+  h2 { font-size: 28px !important; }
+  h3 { font-size: 20px !important; }
+  p { font-size: 16px; }
+  
+  /* Mobile spacing */
+  section { padding: 60px 20px !important; }
+  
+  /* Mobile cards */
+  .feature-card,
+  .testimonial-card,
+  .faq-item,
+  .capability-card {
+    padding: 24px !important;
+    margin-bottom: 16px;
+  }
+  
+  /* Mobile buttons */
+  button {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  /* Fix horizontal scroll */
+  * {
+    max-width: 100vw !important;
+  }
+  
+  .modal-content {
+    border-radius: 20px;
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+
           .hero-section {
             grid-template-columns: 1fr;
             gap: 40px;
@@ -4894,9 +5382,40 @@ html {
             padding: 16px 15px;
           }
 
-          .nav-links {
-            display: none;
-          }
+         .nav-links {
+  display: none;
+}
+
+.navigation {
+  padding: 16px 20px;
+}
+
+.nav-cta {
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.logo-text {
+  font-size: 22px;
+}
+
+/* Mobile menu button */
+@media (max-width: 768px) {
+  .nav-content {
+    padding: 16px 20px;
+  }
+  
+  .navigation::after {
+    content: '☰';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+  }
+}
 
           .features-section,
           .battle-section,
@@ -5293,6 +5812,421 @@ button:focus {
 ::-moz-selection {
   background: rgba(120, 80, 255, 0.3);
   color: white;
+}
+
+/* Magnetic Buttons Enhancement */
+.hero-button,
+.nav-cta,
+.testimonials-button,
+.timeline-button,
+.faq-button,
+.upload-btn.primary,
+.plan-button {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  will-change: transform;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 10001;
+  backdrop-filter: blur(10px);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 25%;
+  background: linear-gradient(90deg, #7850ff, #ff5080, #50b4ff);
+  transition: width 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
+}
+
+.progress-steps {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 100px;
+  z-index: 10002;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(20px);
+  padding: 12px 24px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active {
+  opacity: 1;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.progress-step.active .step-dot {
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
+}
+
+.step-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.progress-step.active .step-label {
+  color: white;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toast {
+  background: rgba(20, 20, 20, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 24px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 300px;
+  animation: toastSlideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast.success {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.toast.warning {
+  border-color: rgba(255, 193, 7, 0.3);
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.toast.info {
+  border-color: rgba(80, 180, 255, 0.3);
+  background: rgba(80, 180, 255, 0.1);
+}
+
+/* Smart Tooltips */
+.smart-tooltip {
+  position: fixed;
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 10px 30px rgba(120, 80, 255, 0.4);
+  pointer-events: none;
+}
+
+.smart-tooltip.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-arrow {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #ff5080;
+}
+
+.tooltip-content {
+  white-space: nowrap;
+}
+
+/* Pulse Effect */
+.pulse-effect {
+  position: relative;
+}
+
+.pulse-effect::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: inherit;
+  opacity: 0.5;
+  animation: pulse-ring 2s ease infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .progress-steps {
+    gap: 50px;
+    padding: 8px 16px;
+    font-size: 10px;
+  }
+  
+  .step-dot {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .toast-container {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+  }
+  
+  .toast {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .smart-tooltip {
+    max-width: 200px;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-steps {
+    gap: 30px;
+  }
+  
+  .step-label {
+    display: none;
+  }
+}
+
+
+/* Scroll Indicator */
+.scroll-indicator {
+  position: fixed;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+}
+
+.scroll-progress {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 0%;
+  background: linear-gradient(180deg, #7850ff, #ff5080);
+  transform: translateX(-50%);
+  transition: height 0.1s ease;
+  box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
+}
+
+.scroll-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  position: relative;
+}
+
+.scroll-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: block;
+}
+
+.scroll-dot:hover,
+.scroll-dot.active {
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  border-color: transparent;
+  transform: scale(1.5);
+  box-shadow: 0 0 20px rgba(120, 80, 255, 0.5);
+}
+
+.dot-tooltip {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(20, 20, 20, 0.9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.scroll-dot:hover .dot-tooltip {
+  opacity: 1;
+  right: 30px;
+}
+
+@media (max-width: 1200px) {
+  .scroll-indicator {
+    right: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .scroll-indicator {
+    display: none;
+  }
+}
+
+/* Ripple Effect */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(0);
+  animation: ripple-animation 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Confetti */
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: -10px;
+  z-index: 9999;
+  animation: confetti-fall linear;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+/* Enhanced button hover states */
+.hero-button:hover,
+.testimonials-button:hover,
+.timeline-button:hover {
+  box-shadow: 
+    0 15px 35px rgba(0, 255, 136, 0.4),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.nav-cta:hover,
+.faq-button:hover {
+  box-shadow: 
+    0 15px 35px rgba(120, 80, 255, 0.4),
+    inset 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+/* Cursor proximity glow */
+@media (hover: hover) {
+  .hero-button::after,
+  .nav-cta::after,
+  .testimonials-button::after,
+  .timeline-button::after,
+  .faq-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .hero-button:hover::after,
+  .nav-cta:hover::after,
+  .testimonials-button:hover::after,
+  .timeline-button:hover::after,
+  .faq-button:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Disable magnetic effect on mobile */
+@media (max-width: 768px) {
+  .hero-button,
+  .nav-cta,
+  .testimonials-button,
+  .timeline-button,
+  .faq-button,
+  .upload-btn.primary,
+  .plan-button {
+    transform: none !important;
+  }
 }
 
 
