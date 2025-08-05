@@ -109,12 +109,12 @@ useEffect(() => {
     const scrollDots = document.querySelectorAll('.scroll-dot')
     
     let currentSection = ''
-    sections.forEach(section => {
-      const rect = section.getBoundingClientRect()
-      if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-        currentSection = section.id
-      }
-    })
+   sections.forEach(section => {
+  const rect = section.getBoundingClientRect()
+  if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
+    currentSection = section.id
+  }
+})
     
     scrollDots.forEach(dot => {
       if (dot.getAttribute('data-section') === currentSection) {
@@ -136,9 +136,10 @@ useEffect(() => {
   if (typeof window === 'undefined') return;
   
   // PERFORMANCE CHECK - Disable on weak devices
-  if (window.innerWidth < 768 || 
-      navigator.hardwareConcurrency < 4 || 
-      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+if (typeof window === 'undefined' || 
+    window.innerWidth < 768 || 
+    (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) || 
+    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
     return;
   }
   
@@ -304,7 +305,15 @@ useEffect(() => {
   
   const timelineSection = document.querySelector('.timeline-wrapper')
   if (timelineSection) {
-    timelineObserver.observe(timelineSection)
+if (timelineSection) {
+  timelineObserver.observe(timelineSection)
+}
+
+return () => {
+  if (timelineSection) {
+    timelineObserver.unobserve(timelineSection)
+  }
+}
   }
   
  }, []);
@@ -344,8 +353,12 @@ useEffect(() => {
     }
     
     const handleClick = function(e) {
-      const ripple = document.createElement('span')
-      ripple.classList.add('ripple')
+  // Prevent multiple ripples
+  const existingRipple = this.querySelector('.ripple')
+  if (existingRipple) existingRipple.remove()
+  
+  const ripple = document.createElement('span')
+  ripple.classList.add('ripple')
       
       const rect = this.getBoundingClientRect()
       const size = Math.max(rect.width, rect.height)
@@ -445,7 +458,7 @@ const [toasts, setToasts] = useState([])
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
-  const id = Date.now()
+  const id = Date.now() + Math.random() // Ensure unique ID
   const newToast = { id, message, type }
   setToasts(prev => [...prev, newToast])
   
@@ -453,7 +466,6 @@ const showToast = (message, type = 'info') => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }, 4000)
 }
-
 // Update progress
 const updateProgress = (step) => {
   setCurrentStep(step)
@@ -6128,6 +6140,18 @@ html {
 
 .mobile-menu-btn {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex !important;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+    position: relative;
+  }
 }
 
 @media (max-width: 768px) {
