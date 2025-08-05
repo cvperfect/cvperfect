@@ -796,10 +796,31 @@ const createConfetti = () => {
       currentIndex = (currentIndex + 1) % floatingNotifications.length
     }
 
-    showNotification()
+   showNotification()
     const interval = setInterval(showNotification, 12000)
     return () => clearInterval(interval)
   }, [])
+
+  // Mobile menu functions
+  const toggleMobileMenu = () => {
+    const nav = document.getElementById('mobileNav');
+    const btn = document.getElementById('mobileMenuBtn');
+    
+    if (nav && btn) {
+      nav.classList.toggle('show');
+      btn.classList.toggle('active');
+    }
+  };
+
+  const closeMobileMenu = () => {
+    const nav = document.getElementById('mobileNav');
+    const btn = document.getElementById('mobileMenuBtn');
+    
+    if (nav && btn) {
+      nav.classList.remove('show');
+      btn.classList.remove('active');
+    }
+  };
 
   return (
     <>
@@ -904,14 +925,19 @@ const createConfetti = () => {
               <span className="logo-text">CvPerfect</span>
               <span className="logo-badge">AI</span>
             </div>
-            <div className="nav-links">
-<a href="#timeline" className="nav-link">Jak to działa</a>
-              <a href="#testimonials" className="nav-link">Opinie</a>
-              <a href="#pricing" className="nav-link">Cennik</a>
-              <button className="nav-cta" onClick={() => setShowUploadModal(true)}>
-                🎯 Zoptymalizuj CV teraz ⚡
-              </button>
-            </div>
+           <div className="nav-links" id="mobileNav">
+  <a href="#timeline" className="nav-link" onClick={closeMobileMenu}>Jak to działa</a>
+  <a href="#testimonials" className="nav-link" onClick={closeMobileMenu}>Opinie</a>
+  <a href="#pricing" className="nav-link" onClick={closeMobileMenu}>Cennik</a>
+  <button className="nav-cta" onClick={() => {setShowUploadModal(true); closeMobileMenu();}}>
+    🎯 Zoptymalizuj CV teraz ⚡
+  </button>
+</div>
+<div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
           </div>
         </nav>
 
@@ -1767,15 +1793,14 @@ html {
   backdrop-filter: blur(30px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 1200px;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   z-index: 1000;
   transition: all 0.3s ease;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-  border-radius: 25px;
+  border-radius: 0;
 }
 
 .navigation::before {
@@ -1939,71 +1964,7 @@ html {
   left: 100%;
 }
 
-        .nav-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px 20px;
-        }
-
-        .logo {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .logo-text {
-          font-size: 24px;
-          font-weight: 800;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .logo-badge {
-          background: linear-gradient(135deg, #f59e0b, #d97706);
-          color: white;
-          padding: 4px 8px;
-          border-radius: 8px;
-          font-size: 10px;
-          font-weight: 700;
-        }
-
-        .nav-links {
-          display: flex;
-          align-items: center;
-          gap: 32px;
-        }
-
-        .nav-link {
-          color: #6b7280;
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-          color: #667eea;
-        }
-
-        .nav-cta {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .nav-cta:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
+       
         /* Hero Section */
 .hero-section {
   background: transparent;
@@ -3645,13 +3606,13 @@ html {
 }
 
 .testimonial-card::after {
-  content: '⭐';
+  content: '';
   position: absolute;
   top: 20px;
   right: 20px;
   font-size: 20px;
   opacity: 0;
-  transform: scale(0) rotate(-180deg);
+  transform: scale(0);
   transition: all 0.4s ease;
 }
 
@@ -3670,8 +3631,8 @@ html {
 }
 
 .testimonial-card:hover::after {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
+  opacity: 0;
+  transform: scale(0);
 }
 
 .testimonial-header {
@@ -5905,22 +5866,135 @@ html {
 
 /* Mobile menu button */
 @media (max-width: 768px) {
-  .nav-content {
-    padding: 16px 20px;
+  .navigation {
+    width: calc(100% - 20px);
+    top: 10px;
   }
   
-  .navigation::after {
-    content: '☰';
-    position: absolute;
+  .nav-content {
+    padding: 16px 20px;
+    position: relative;
+  }
+  
+  .nav-links {
+    position: fixed;
+    top: 80px;
+    left: 20px;
     right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 24px;
-    color: white;
+    background: rgba(8, 8, 8, 0.95);
+    backdrop-filter: blur(30px);
+    border-radius: 20px;
+    padding: 30px 20px;
+    flex-direction: column;
+    gap: 25px;
+    transform: translateY(-200%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 1000;
+  }
+  
+  .nav-links.show {
+    display: flex !important;
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .nav-link {
+    padding: 15px 0;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 18px;
+  }
+  
+  .nav-link:last-of-type {
+    border-bottom: none;
+  }
+  
+  .nav-cta {
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+  
+  .mobile-menu-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+    position: relative;
+  }
+  
+  .mobile-menu-btn span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+  
+  .mobile-menu-btn.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+  }
+  
+  .mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+  }
+  
+  .mobile-menu-btn.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
   }
 }
 
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+    position: relative;
+  }
+  
+  .mobile-menu-btn span {
+    width: 25px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+  
+  .mobile-menu-btn.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+  }
+  
+  .mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+  }
+  
+  .mobile-menu-btn.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+  }
+  
+  .nav-links.show {
+    display: flex !important;
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
           .features-section,
           .battle-section,
           .testimonials-section,
