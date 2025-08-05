@@ -61,24 +61,28 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  // Auto increment stats
+// Auto increment stats
   useEffect(() => {
     const incrementStats = () => {
       const cvCounter = document.querySelector('[data-target="15234"]');
       const jobCounter = document.querySelector('[data-target="7846"]');
       
-      if (cvCounter && cvCounter.textContent) {
+      if (cvCounter && cvCounter.textContent && !isNaN(parseInt(cvCounter.textContent.replace(/\s/g, '')))) {
         const currentCV = parseInt(cvCounter.textContent.replace(/\s/g, ''));
-        const newCV = currentCV + Math.floor(Math.random() * 2) + 1; // 1-2 instead of 1-3
-        cvCounter.setAttribute('data-target', newCV);
-        cvCounter.textContent = newCV.toLocaleString('pl-PL');
+        if (!isNaN(currentCV)) {
+          const newCV = currentCV + Math.floor(Math.random() * 2) + 1;
+          cvCounter.setAttribute('data-target', newCV.toString());
+          cvCounter.textContent = newCV.toLocaleString('pl-PL');
+        }
       }
       
-      if (jobCounter && jobCounter.textContent) {
+      if (jobCounter && jobCounter.textContent && !isNaN(parseInt(jobCounter.textContent.replace(/\s/g, '')))) {
         const currentJob = parseInt(jobCounter.textContent.replace(/\s/g, ''));
-        const newJob = currentJob + Math.floor(Math.random() * 2);
-        jobCounter.setAttribute('data-target', newJob);
-        jobCounter.textContent = newJob.toLocaleString('pl-PL');
+        if (!isNaN(currentJob)) {
+          const newJob = currentJob + Math.floor(Math.random() * 2);
+          jobCounter.setAttribute('data-target', newJob.toString());
+          jobCounter.textContent = newJob.toLocaleString('pl-PL');
+        }
       }
     };
 
@@ -308,6 +312,7 @@ useEffect(() => {
 // Magnetic buttons effect
 useEffect(() => {
   const buttons = document.querySelectorAll('.hero-button, .nav-cta, .testimonials-button, .timeline-button, .faq-button, .upload-btn.primary, .plan-button')
+  const buttonHandlers = new Map()
   
   buttons.forEach(button => {
     let boundingRect = button.getBoundingClientRect()
@@ -338,12 +343,7 @@ useEffect(() => {
       button.style.transition = 'transform 0.5s ease'
     }
     
-    button.addEventListener('mousemove', handleMouseMove)
-    button.addEventListener('mouseenter', handleMouseEnter)
-    button.addEventListener('mouseleave', handleMouseLeave)
-    
-    // Ripple effect on click
-    button.addEventListener('click', function(e) {
+    const handleClick = function(e) {
       const ripple = document.createElement('span')
       ripple.classList.add('ripple')
       
@@ -359,87 +359,36 @@ useEffect(() => {
       this.appendChild(ripple)
       
       setTimeout(() => ripple.remove(), 600)
+    }
+    
+    // Store handlers for cleanup
+    buttonHandlers.set(button, {
+      mousemove: handleMouseMove,
+      mouseenter: handleMouseEnter,
+      mouseleave: handleMouseLeave,
+      click: handleClick
     })
+    
+    button.addEventListener('mousemove', handleMouseMove)
+    button.addEventListener('mouseenter', handleMouseEnter)
+    button.addEventListener('mouseleave', handleMouseLeave)
+    button.addEventListener('click', handleClick)
   })
 
-const showSmartTooltip = (text, rect, element) => {
-  const tooltip = document.createElement('div')
-  tooltip.className = 'smart-tooltip'
-  tooltip.innerHTML = `
-    <div class="tooltip-arrow"></div>
-    <div class="tooltip-content">${text}</div>
-  `
-  
-  // Position tooltip
-  tooltip.style.position = 'fixed'
-  tooltip.style.top = `${rect.top - 60}px`
-  tooltip.style.left = `${rect.left + rect.width / 2}px`
-  tooltip.style.transform = 'translateX(-50%)'
-  
-  document.body.appendChild(tooltip)
-  
-  // Animate in
-  setTimeout(() => tooltip.classList.add('show'), 10)
-  
-  // Remove on click anywhere or after 5s
-  const removeTooltip = () => {
-    tooltip.classList.remove('show')
-    setTimeout(() => tooltip.remove(), 300)
-  }
-  
-  setTimeout(removeTooltip, 5000)
-  document.addEventListener('click', removeTooltip, { once: true })
-  element.addEventListener('mouseenter', removeTooltip, { once: true })
-}
-
-// Smart Tooltips
-const tooltipTargets = [
-  {
-    selector: '.hero-button',
-    text: '👆 Kliknij aby rozpocząć darmową analizę',
-    delay: 3000
-  },
-  {
-    selector: '.plan-card.gold',
-    text: '💡 Najpopularniejszy wybór - oszczędź 45%!',
-    delay: 5000,
-    condition: () => showPaywall
-  },
-  {
-    selector: '.nav-cta',
-    text: '🚀 Zacznij tutaj!',
-    delay: 10000
-  }
-]
-
-tooltipTargets.forEach(target => {
-  if (target.condition && !target.condition()) return
-  
-  setTimeout(() => {
-    const element = document.querySelector(target.selector)
-    if (element && !element.hasAttribute('data-tooltip-shown')) {
-      const rect = element.getBoundingClientRect()
-      showSmartTooltip(target.text, rect, element)
-      element.setAttribute('data-tooltip-shown', 'true')
-    }
-  }, target.delay)
-})
-
-// Pulse effect on important elements
-const pulseElements = document.querySelectorAll('.hero-button, .nav-cta')
-pulseElements.forEach(el => {
-  el.classList.add('pulse-effect')
-})
-  
   return () => {
     buttons.forEach(button => {
-      button.removeEventListener('mousemove', () => {})
-      button.removeEventListener('mouseenter', () => {})
-      button.removeEventListener('mouseleave', () => {})
-      button.removeEventListener('click', () => {})
+      const handlers = buttonHandlers.get(button)
+      if (handlers) {
+        button.removeEventListener('mousemove', handlers.mousemove)
+        button.removeEventListener('mouseenter', handlers.mouseenter)
+        button.removeEventListener('mouseleave', handlers.mouseleave)
+        button.removeEventListener('click', handlers.click)
+      }
     })
+    buttonHandlers.clear()
   }
 }, [])
+
 
 
   
@@ -534,7 +483,9 @@ const updateProgress = (step) => {
 
 
   // NOWA FUNKCJA - DARMOWA ANALIZA
-  const handleFreeAnalysis = () => {
+ const handleFreeAnalysis = () => {
+  if (isOptimizing) return; // Prevent multiple calls
+  
   const cvTextarea = document.querySelector('.cv-textarea');
   const cvText = cvTextarea?.value || '';
   
@@ -603,8 +554,7 @@ setTimeout(() => {
 };
 
   // UPROSZCZONA FUNKCJA optimizeCV
- const optimizeCV = () => {
-  // First check if CV is provided
+const optimizeCV = () => {
   const cvTextarea = document.querySelector('.cv-textarea');
   const cvText = cvTextarea?.value || '';
   
@@ -614,10 +564,8 @@ setTimeout(() => {
     return;
   }
   
-  // Start analysis
   handleFreeAnalysis();
 }
-
 const createConfetti = () => {
   const confettiCount = 50;
   const confettiColors = ['#7850ff', '#ff5080', '#50b4ff', '#00ff88', '#ffd700'];
@@ -933,9 +881,6 @@ const createConfetti = () => {
     <a href="#stats" className="scroll-dot" data-section="stats">
       <span className="dot-tooltip">Statystyki</span>
     </a>
-    <a href="#features" className="scroll-dot" data-section="features">
-      <span className="dot-tooltip">Funkcje</span>
-    </a>
     <a href="#capabilities" className="scroll-dot" data-section="capabilities">
       <span className="dot-tooltip">Możliwości</span>
     </a>
@@ -960,7 +905,7 @@ const createConfetti = () => {
               <span className="logo-badge">AI</span>
             </div>
             <div className="nav-links">
-              <a href="#features" className="nav-link">Funkcje</a>
+<a href="#timeline" className="nav-link">Jak to działa</a>
               <a href="#testimonials" className="nav-link">Opinie</a>
               <a href="#pricing" className="nav-link">Cennik</a>
               <button className="nav-cta" onClick={() => setShowUploadModal(true)}>
@@ -1136,62 +1081,6 @@ const createConfetti = () => {
   </div>
 </div>
 
-{/* Features Section */}
-        <div className="features-section" id="features">
-          <div className="features-header">
-            <h2 className="section-title">Dlaczego CvPerfect to najlepszy wybór? 🚀</h2>
-            <p className="section-subtitle">Jedyna AI platforma CV w Polsce z 95% ATS success rate</p>
-          </div>
-          
-          <div className="features-grid">
-            <div className="feature-card spotlight">
-              <div className="feature-icon">🤖</div>
-              <h3>GPT-4 AI Engine</h3>
-              <p>Najnowsza sztuczna inteligencja analizuje Twoje CV i dostosowuje je idealnie pod wymagania pracodawcy w czasie rzeczywistym.</p>
-              <div className="feature-highlight">Pierwsza taka technologia w Polsce!</div>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">⚡</div>
-              <h3>30 sekund optymalizacji</h3>
-              <p>Błyskawiczna analiza i optymalizacja. Wklej CV i opis stanowiska - AI zrobi resztę w rekordowym czasie.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">🎯</div>
-              <h3>95% ATS Success Rate</h3>
-              <p>Najwyższa skuteczność przejścia przez systemy ATS w Polsce. Twoje CV dotrze do rekrutera, gwarantowane.</p>
-              <div className="ats-visual">
-                <div className="ats-circle">
-                  <span className="ats-percentage">95%</span>
-                  <span className="ats-label">ATS Pass</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">🇵🇱</div>
-              <h3>Polski standard</h3>
-              <p>Dostosowane do polskiego rynku pracy, lokalnych wymagań pracodawców i specyfiki rekrutacji w Polsce.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">📊</div>
-              <h3>Analiza w czasie rzeczywistym</h3>
-              <p>Live feedback, sugestie poprawek, analiza słów kluczowych i compatybilność z najpopularniejszymi systemami ATS.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">💰</div>
-              <h3>Tylko 9.99 zł</h3>
-              <p>Najlepsza jakość w najniższej cenie. Jednorazowa płatność, bez subskrypcji, bez ukrytych kosztów.</p>
-              <div className="price-comparison">
-                <span className="old-price">Konkurencja: $29.95+</span>
-                <span className="new-price">CvPerfect: 9.99 zł</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
 
 {/* How It Works Timeline */}
@@ -1265,7 +1154,7 @@ const createConfetti = () => {
 
           <div className="testimonials-grid">
             {testimonials.map((testimonial, index) => (
-              <div key={`testimonial-card-${index}-${testimonial.name}`} className="testimonial-card">
+  <div key={`testimonial-${index}-${Date.now()}`} className="testimonial-card">
                 <div className="testimonial-header">
                   <div className="testimonial-avatar">{testimonial.avatar}</div>
                   <div className="testimonial-info">
@@ -1874,16 +1763,19 @@ html {
 
   /* Navigation */
 .navigation {
-  background: rgba(8, 8, 8, 0.95);
+  background: rgba(8, 8, 8, 0.9);
   backdrop-filter: blur(30px) saturate(200%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 1200px;
   z-index: 1000;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 25px;
 }
 
 .navigation::before {
@@ -2116,7 +2008,7 @@ html {
 .hero-section {
   background: transparent;
   color: white;
-  padding: 140px 40px 100px;
+  padding: 100px 40px 80px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
@@ -2125,7 +2017,6 @@ html {
   margin: 0 auto;
   position: relative;
 }
-
 .hero-section::before {
   content: '';
   position: absolute;
@@ -6002,9 +5893,6 @@ html {
   display: none;
 }
 
-.navigation {
-  padding: 16px 20px;
-}
 
 .nav-cta {
   padding: 12px 20px;
@@ -6375,7 +6263,7 @@ html {
 /* Responsive Adjustments for Premium Design */
 @media (max-width: 768px) {
   .hero-section {
-    padding: 100px 20px 60px;
+    padding: 60px 20px 60px;
     gap: 40px;
   }
   
