@@ -3606,16 +3606,42 @@ html {
 }
 
 .testimonial-card::after {
-  content: '';
+  content: '⭐';
   position: absolute;
   top: 20px;
   right: 20px;
   font-size: 20px;
   opacity: 0;
-  transform: scale(0);
+  transform: scale(0) rotate(-180deg);
   transition: all 0.4s ease;
+  animation: testimonialGlow 3s ease infinite;
 }
 
+.testimonial-card:hover::after {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  animation: testimonialPulse 1.5s ease infinite;
+}
+
+@keyframes testimonialGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3));
+  }
+  50% { 
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+  }
+}
+
+@keyframes testimonialPulse {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+  }
+  50% { 
+    transform: scale(1.2) rotate(10deg);
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1));
+  }
+}
 .testimonial-card:hover {
   transform: translateY(-12px) scale(1.02);
   background: rgba(255, 255, 255, 0.05);
@@ -3630,9 +3656,18 @@ html {
   transform: rotate(180deg);
 }
 
-.testimonial-card:hover::after {
-  opacity: 0;
-  transform: scale(0);
+.testimonial-card:hover .testimonial-avatar {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(120, 80, 255, 0.4);
+}
+
+.testimonial-card:hover .testimonial-text {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.testimonial-card:hover .impact-badge {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
 }
 
 .testimonial-header {
@@ -3654,6 +3689,7 @@ html {
   font-size: 18px;
   color: white;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 .testimonial-info {
@@ -5959,6 +5995,67 @@ html {
 }
 
 @media (max-width: 768px) {
+  .navigation {
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+  }
+  
+  .nav-content {
+    padding: 16px 20px;
+    position: relative;
+  }
+  
+  .nav-links {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    right: 20px;
+    background: rgba(8, 8, 8, 0.95);
+    backdrop-filter: blur(30px);
+    border-radius: 20px;
+    padding: 30px 20px;
+    flex-direction: column;
+    gap: 25px;
+    transform: translateY(-200%);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 1000;
+    display: none;
+  }
+  
+  .nav-links.show {
+    display: flex !important;
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .nav-link {
+    padding: 15px 0;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 18px;
+  }
+  
+  .nav-link:last-of-type {
+    border-bottom: none;
+  }
+  
+  .nav-cta {
+    margin-top: 20px;
+    padding: 15px 25px;
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+  
   .mobile-menu-btn {
     display: flex;
     flex-direction: column;
@@ -5988,14 +6085,7 @@ html {
   .mobile-menu-btn.active span:nth-child(3) {
     transform: rotate(-45deg) translate(6px, -6px);
   }
-  
-  .nav-links.show {
-    display: flex !important;
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-          .features-section,
+}          .features-section,
           .battle-section,
           .testimonials-section,
           .faq-section {
@@ -6337,7 +6427,7 @@ html {
 /* Responsive Adjustments for Premium Design */
 @media (max-width: 768px) {
   .hero-section {
-    padding: 60px 20px 60px;
+    padding: 120px 20px 60px;
     gap: 40px;
   }
   
@@ -6426,6 +6516,29 @@ html {
   }
 }
 
+.testimonials-cta {
+  text-align: center;
+  margin-top: 80px;
+}
+
+.testimonials-button {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  border: none;
+  padding: 20px 48px;
+  border-radius: 100px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+}
+
+.testimonials-button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 255, 136, 0.4);
+}
+
 /* Focus States */
 input:focus,
 textarea:focus,
@@ -6467,10 +6580,10 @@ button:focus {
   right: 0;
   height: 4px;
   background: rgba(255, 255, 255, 0.1);
-  z-index: 10001;
+  z-index: 9999;
   backdrop-filter: blur(10px);
+  pointer-events: none;
 }
-
 .progress-bar {
   height: 100%;
   width: 0%;
