@@ -508,7 +508,6 @@ const updateProgress = (step) => {
   })
 }
 
-
   // NOWA FUNKCJA - DARMOWA ANALIZA
  const handleFreeAnalysis = () => {
   if (isOptimizing) return; // Prevent multiple calls
@@ -525,6 +524,7 @@ const updateProgress = (step) => {
     }
     return;
   }
+
   
   // Premium loading animation
   setIsOptimizing(true);
@@ -4680,6 +4680,8 @@ html {
         }
 
        /* Upload Modal */
+
+
 .upload-modal {
   padding: 0;
   background: rgba(20, 20, 20, 0.95);
@@ -4732,21 +4734,39 @@ html {
 }
 
 .upload-area {
-  padding: 48px;
+  padding: 40px;
 }
 
+.upload-zone h3 {
+  color: white !important;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  opacity: 1 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.upload-zone p {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 16px;
+  margin-bottom: 24px;
+  opacity: 1 !important;
+  font-weight: 500;
+}
+
+/* Fix dla przerywanej linii w upload-zone */
 .upload-zone {
   text-align: center;
-  background: rgba(255, 255, 255, 0.02);
-  border: 2px dashed rgba(255, 255, 255, 0.15);
-  border-radius: 28px;
-  padding: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  padding: 30px 40px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
-  cursor: pointer;
+  margin: 0 auto;
+  width: 100%;
 }
-
 .upload-zone::before {
   content: '';
   position: absolute;
@@ -4773,12 +4793,11 @@ html {
 }
 
 .upload-zone:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(120, 80, 255, 0.4);
-  transform: scale(1.02);
-  box-shadow: 0 20px 60px rgba(120, 80, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(120, 80, 255, 0.5);
+  transform: scale(1.01);
+  box-shadow: 0 20px 60px rgba(120, 80, 255, 0.15);
 }
-
 .upload-zone:hover::before {
   opacity: 1;
   transform: rotate(180deg);
@@ -4850,6 +4869,10 @@ html {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .feature-check {
@@ -4865,22 +4888,21 @@ html {
 /* Enhanced Textarea Styles */
 .cv-textarea {
   width: 100%;
-  padding: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   font-size: 16px;
-  line-height: 1.7;
+  line-height: 1.6;
   resize: vertical;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   font-family: 'Inter', sans-serif;
   color: white !important;
-  background: rgba(255, 255, 255, 0.03) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(15px);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  min-height: 220px;
-  position: relative;
+  min-height: 160px;
+  max-height: 200px;
 }
-
 .cv-textarea:focus {
   outline: none;
   border-color: rgba(120, 80, 255, 0.6);
