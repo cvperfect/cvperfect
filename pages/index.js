@@ -458,7 +458,7 @@ const [toasts, setToasts] = useState([])
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
-  const id = Date.now() + Math.random() // Ensure unique ID
+ const id = `toast-${Date.now()}-${Math.floor(Math.random() * 10000)}`
   const newToast = { id, message, type }
   setToasts(prev => [...prev, newToast])
   
@@ -466,6 +466,14 @@ const showToast = (message, type = 'info') => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }, 4000)
 }
+
+// Cleanup toasts on component unmount
+useEffect(() => {
+  return () => {
+    setToasts([])
+  }
+}, [])
+
 // Update progress
 const updateProgress = (step) => {
   setCurrentStep(step)
@@ -934,8 +942,8 @@ const createConfetti = () => {
         <nav className="navigation">
           <div className="nav-content">
             <div className="logo">
-              <span className="logo-text">CvPerfect</span>
               <span className="logo-badge">AI</span>
+              <span className="logo-text">CvPerfect</span>
             </div>
            <div className="nav-links" id="mobileNav">
   <a href="#timeline" className="nav-link" onClick={closeMobileMenu}>Jak to działa</a>
@@ -1121,63 +1129,171 @@ const createConfetti = () => {
 
 
 
-{/* How It Works Timeline */}
+{/* How It Works Timeline - PREMIUM VERSION */}
 <div className="timeline-section" id="timeline">
   <div className="timeline-container">
     <div className="timeline-header">
-      <div className="timeline-badge">
-        <span className="badge-icon">🎯</span>
-        <span className="badge-text">Proces</span>
+      <div className="timeline-badge premium-badge">
+        <span className="badge-icon">⚡</span>
+        <span className="badge-text">Proces 30 sekund</span>
       </div>
-      <h2>Jak to działa?</h2>
-      <p>4 proste kroki do wymarzonej pracy</p>
+      <h2>Jak zoptymalizować CV w <span className="gradient-text">30 sekund?</span></h2>
+      <p>Przewodnik krok po kroku - zobacz jak łatwo to zrobić</p>
     </div>
     
-    <div className="timeline-wrapper">
-      <div className="timeline-line"></div>
-      
-      <div className="timeline-step" data-step="1">
-        <div className="step-icon">📄</div>
-        <div className="step-content">
-          <h3>Wklej swoje CV</h3>
-          <p>Skopiuj treść CV lub załaduj plik PDF/DOC</p>
-        </div>
-        <div className="step-number">01</div>
+    <div className="timeline-wrapper premium">
+      {/* Animated Progress Line */}
+      <div className="timeline-progress-track">
+        <div className="timeline-progress-line"></div>
+        <div className="timeline-progress-glow"></div>
       </div>
       
-      <div className="timeline-step" data-step="2">
-        <div className="step-icon">🤖</div>
-        <div className="step-content">
-          <h3>AI analizuje</h3>
-          <p>GPT-4 skanuje i optymalizuje pod ATS</p>
+      {/* Step 1 - Upload */}
+      <div className="timeline-step premium-step" data-step="1">
+        <div className="step-card">
+          <div className="step-icon-wrapper">
+            <div className="step-icon-bg"></div>
+            <div className="step-icon">📄</div>
+            <div className="step-icon-pulse"></div>
+          </div>
+          <div className="step-content">
+            <div className="step-label">KROK 1</div>
+            <h3>Wklej lub załaduj CV</h3>
+            <p>Skopiuj treść CV lub przeciągnij plik PDF/DOC</p>
+            <div className="step-details">
+              <span className="detail-item">✅ PDF, DOC, DOCX</span>
+              <span className="detail-item">✅ Lub wklej tekst</span>
+              <span className="detail-item">✅ Max 5MB</span>
+            </div>
+            <div className="step-time">
+              <span className="time-icon">⏱️</span>
+              <span>5 sekund</span>
+            </div>
+          </div>
+          <div className="step-visual">
+            <div className="upload-animation">
+              <div className="file-icon">📎</div>
+              <div className="upload-progress"></div>
+            </div>
+          </div>
         </div>
-        <div className="step-number">02</div>
       </div>
       
-      <div className="timeline-step" data-step="3">
-        <div className="step-icon">📊</div>
-        <div className="step-content">
-          <h3>Otrzymujesz raport</h3>
-          <p>Szczegółowa analiza + zoptymalizowane CV</p>
+      {/* Step 2 - AI Analysis */}
+      <div className="timeline-step premium-step" data-step="2">
+        <div className="step-card">
+          <div className="step-icon-wrapper">
+            <div className="step-icon-bg"></div>
+            <div className="step-icon">🤖</div>
+            <div className="step-icon-pulse"></div>
+          </div>
+          <div className="step-content">
+            <div className="step-label">KROK 2</div>
+            <h3>AI analizuje i optymalizuje</h3>
+            <p>GPT-4 skanuje CV pod kątem ATS i słów kluczowych</p>
+            <div className="step-details">
+              <span className="detail-item">🔍 Analiza ATS</span>
+              <span className="detail-item">🎯 Słowa kluczowe</span>
+              <span className="detail-item">📊 Score obliczenie</span>
+            </div>
+            <div className="step-time">
+              <span className="time-icon">⏱️</span>
+              <span>15 sekund</span>
+            </div>
+          </div>
+          <div className="step-visual">
+            <div className="ai-scanning">
+              <div className="scan-line"></div>
+              <div className="scan-particles"></div>
+            </div>
+          </div>
         </div>
-        <div className="step-number">03</div>
       </div>
       
-      <div className="timeline-step" data-step="4">
-        <div className="step-icon">💼</div>
-        <div className="step-content">
-          <h3>Dostajesz pracę!</h3>
-          <p>95% skuteczność przejścia przez ATS</p>
+      {/* Step 3 - Payment */}
+      <div className="timeline-step premium-step" data-step="3">
+        <div className="step-card">
+          <div className="step-icon-wrapper">
+            <div className="step-icon-bg"></div>
+            <div className="step-icon">💳</div>
+            <div className="step-icon-pulse"></div>
+          </div>
+          <div className="step-content">
+            <div className="step-label">KROK 3</div>
+            <h3>Szybka płatność</h3>
+            <p>Bezpieczna transakcja przez Stripe</p>
+            <div className="step-details">
+              <span className="detail-item">🔒 SSL Secure</span>
+              <span className="detail-item">💰 Tylko 9.99 zł</span>
+              <span className="detail-item">⚡ Instant</span>
+            </div>
+            <div className="step-time">
+              <span className="time-icon">⏱️</span>
+              <span>5 sekund</span>
+            </div>
+          </div>
+          <div className="step-visual">
+            <div className="payment-animation">
+              <div className="card-icon">💳</div>
+              <div className="checkmark">✓</div>
+            </div>
+          </div>
         </div>
-        <div className="step-number">04</div>
+      </div>
+      
+      {/* Step 4 - Download */}
+      <div className="timeline-step premium-step" data-step="4">
+        <div className="step-card success-card">
+          <div className="step-icon-wrapper">
+            <div className="step-icon-bg"></div>
+            <div className="step-icon">🎉</div>
+            <div className="step-icon-pulse"></div>
+          </div>
+          <div className="step-content">
+            <div className="step-label">FINAŁ</div>
+            <h3>Pobierz zoptymalizowane CV!</h3>
+            <p>Twoje CV jest gotowe z 95% ATS score</p>
+            <div className="step-details">
+              <span className="detail-item">📈 95% ATS</span>
+              <span className="detail-item">✨ PDF & DOCX</span>
+              <span className="detail-item">🚀 Gotowe!</span>
+            </div>
+            <div className="step-time">
+              <span className="time-icon">⏱️</span>
+              <span>5 sekund</span>
+            </div>
+          </div>
+          <div className="step-visual">
+            <div className="success-animation">
+              <div className="confetti-burst"></div>
+              <div className="download-icon">⬇️</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     
-    <div className="timeline-cta">
-      <button className="timeline-button" onClick={() => setShowUploadModal(true)}>
-        Rozpocznij teraz 🚀
+    {/* Interactive Demo Button */}
+    <div className="timeline-cta premium-cta">
+      <button className="timeline-button premium-button" onClick={() => setShowUploadModal(true)}>
+        <span className="button-text">Rozpocznij teraz</span>
+        <span className="button-icon">🚀</span>
+        <div className="button-glow"></div>
       </button>
-      <p className="timeline-note">Dołącz do 15,000+ zadowolonych użytkowników</p>
+      <div className="cta-stats">
+        <div className="stat-item">
+          <span className="stat-icon">⚡</span>
+          <span className="stat-text">30 sekund</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-icon">💎</span>
+          <span className="stat-text">9.99 zł</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-icon">🎯</span>
+          <span className="stat-text">95% ATS</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1191,8 +1307,8 @@ const createConfetti = () => {
           </div>
 
           <div className="testimonials-grid">
-            {testimonials.map((testimonial, index) => (
-  <div key={`testimonial-${index}-${Date.now()}`} className="testimonial-card">
+           {testimonials.map((testimonial, index) => (
+  <div key={`testimonial-${testimonial.name}-${index}`} className="testimonial-card">
                 <div className="testimonial-header">
                   <div className="testimonial-avatar">{testimonial.avatar}</div>
                   <div className="testimonial-info">
@@ -1205,9 +1321,9 @@ const createConfetti = () => {
                   </div>
                 </div>
                 <div className="testimonial-rating">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={`star-${index}-${i}`} className="star">⭐</span>
-                  ))}
+                 {[...Array(testimonial.rating)].map((_, i) => (
+  <span key={`star-${i}`} className="star">⭐</span>
+))}
                 </div>
                 <p className="testimonial-text">"{testimonial.text}"</p>
                 <div className="testimonial-impact">
@@ -2885,24 +3001,19 @@ html {
 /* Desktop testimonials - slower animations */
 @media (min-width: 1024px) {
   .testimonial-card {
-  transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    will-change: transform;
   }
-  
+
   .testimonial-card:hover {
-    transform: translateY(-6px) scale(1.005);
-    transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
   }
-  
-  .testimonial-card::before {
-    transition: all 1.5s ease;
-  }
-  
-  .testimonial-card::after {
-    transition: all 1s ease;
-  }
-  
+
+  .testimonial-card::before,
+  .testimonial-card::after,
   .testimonial-card:hover .testimonial-avatar {
-    transition: all 0.8s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
 }
 
@@ -2914,24 +3025,33 @@ html {
   backface-visibility: hidden;
 }
 
-.testimonial-card:nth-child(odd) {
-  animation: floatUp 6s ease-in-out infinite;
-  animation-delay: 0s;
+/* Animacja tylko dla pierwszych 6 kart */
+.testimonial-card:nth-child(1),
+.testimonial-card:nth-child(3),
+.testimonial-card:nth-child(5) {
+  animation: floatUp 12s ease-in-out infinite;
 }
 
-.testimonial-card:nth-child(even) {
-  animation: floatDown 6s ease-in-out infinite;
-  animation-delay: 3s;
+.testimonial-card:nth-child(2),
+.testimonial-card:nth-child(4),
+.testimonial-card:nth-child(6) {
+  animation: floatDown 12s ease-in-out infinite;
+  animation-delay: 6s;
+}
+
+/* Pozostałe karty bez animacji */
+.testimonial-card:nth-child(n+7) {
+  animation: none;
 }
 
 @keyframes floatUp {
   0%, 100% { transform: perspective(1000px) translateY(0px) rotateX(0deg); }
-  50% { transform: perspective(1000px) translateY(-8px) rotateX(1deg); }
+  50% { transform: perspective(1000px) translateY(-4px) rotateX(0.5deg); }
 }
 
 @keyframes floatDown {
   0%, 100% { transform: perspective(1000px) translateY(0px) rotateX(0deg); }
-  50% { transform: perspective(1000px) translateY(8px) rotateX(-1deg); }
+  50% { transform: perspective(1000px) translateY(4px) rotateX(-0.5deg); }
 }
 
 /* PREMIUM GLOW EFFECTS */
@@ -3027,41 +3147,557 @@ html {
 }
 
 
-/* Timeline Section */
-.timeline-section {
-  padding: 120px 40px;
+/* Premium Timeline Styles */
+.timeline-wrapper.premium {
   position: relative;
+  padding: 60px 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+}
+
+.timeline-progress-track {
+  position: absolute;
+  left: 50px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  z-index: 0;
+}
+
+.timeline-progress-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(180deg, #00ff88, #00cc70, #00aa5c);
+  border-radius: 2px;
+  animation: progressGrow 3s ease forwards;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+@keyframes progressGrow {
+  to { height: 100%; }
+}
+
+.timeline-progress-glow {
+  position: absolute;
+  top: 0;
+  left: -10px;
+  right: -10px;
+  height: 50px;
+  background: radial-gradient(circle, rgba(0, 255, 136, 0.4) 0%, transparent 70%);
+  animation: glowMove 3s ease infinite;
+}
+
+@keyframes glowMove {
+  0%, 100% { top: 0; }
+  50% { top: calc(100% - 50px); }
+}
+
+.premium-step {
+  opacity: 0;
+  animation: stepReveal 0.8s ease forwards;
+}
+
+.premium-step[data-step="1"] { animation-delay: 0.2s; }
+.premium-step[data-step="2"] { animation-delay: 0.6s; }
+.premium-step[data-step="3"] { animation-delay: 1s; }
+.premium-step[data-step="4"] { animation-delay: 1.4s; }
+
+@keyframes stepReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.step-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  padding: 48px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 40px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00ff88, #00cc70);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s ease;
+}
+
+.step-card:hover::before {
+  transform: scaleX(1);
+}
+
+.step-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 255, 136, 0.3);
+  box-shadow: 
+    0 30px 80px rgba(0, 255, 136, 0.2),
+    0 0 60px rgba(0, 255, 136, 0.1);
+}
+
+.step-icon-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.step-icon-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 204, 112, 0.2));
+  border-radius: 50%;
+  animation: iconRotate 20s linear infinite;
+}
+
+@keyframes iconRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.step-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  z-index: 2;
+  filter: drop-shadow(0 10px 20px rgba(0, 255, 136, 0.3));
+  animation: iconBounce 3s ease infinite;
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.step-icon-pulse {
+  position: absolute;
+  inset: -20px;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+
+.step-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #00ff88;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.step-content h3 {
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.step-content p {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.step-details {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+}
+
+.detail-item:hover {
+  background: rgba(0, 255, 136, 0.2);
+  transform: translateY(-2px);
+}
+
+.step-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #00ff88;
+  font-weight: 700;
+}
+
+.step-visual {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Upload Animation */
+.upload-animation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-icon {
+  font-size: 48px;
+  animation: fileFloat 3s ease infinite;
+}
+
+@keyframes fileFloat {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.upload-progress {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
   overflow: hidden;
 }
 
-.timeline-section::before {
+.upload-progress::after {
   content: '';
   position: absolute;
-  top: 50%;
-  right: -200px;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(255, 80, 150, 0.1) 0%, transparent 50%);
-  animation: float 20s ease infinite;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 60%;
+  background: linear-gradient(90deg, #00ff88, #00cc70);
+  animation: uploadProgress 2s ease infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(-50%) translateX(0); }
-  50% { transform: translateY(-50%) translateX(-50px); }
+@keyframes uploadProgress {
+  0% { width: 0%; }
+  100% { width: 100%; }
 }
 
-@keyframes iconFloat {
-  0%, 100% { 
-    transform: translateY(0) rotate(0deg); 
+/* AI Scanning Animation */
+.ai-scanning {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff88, transparent);
+  animation: scanMove 2s ease infinite;
+}
+
+@keyframes scanMove {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+.scan-particles {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, #00ff88 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: particleFloat 20s linear infinite;
+}
+
+@keyframes particleFloat {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1.1); }
+}
+
+/* Payment Animation */
+.payment-animation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-icon {
+  font-size: 48px;
+  animation: cardFlip 3s ease infinite;
+}
+
+@keyframes cardFlip {
+  0%, 100% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+}
+
+.checkmark {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  background: #00ff88;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+  animation: checkPop 2s ease infinite;
+}
+
+@keyframes checkPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Success Animation */
+.success-animation {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confetti-burst {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 50%);
+  animation: burst 3s ease infinite;
+}
+
+@keyframes burst {
+  0%, 100% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.5); opacity: 1; }
+}
+
+.download-icon {
+  font-size: 48px;
+  animation: downloadBounce 2s ease infinite;
+}
+
+@keyframes downloadBounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-10px); }
+  75% { transform: translateY(10px); }
+}
+
+.success-card {
+  border: 2px solid rgba(0, 255, 136, 0.4);
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 204, 112, 0.05));
+}
+
+/* Premium CTA */
+.timeline-cta.premium-cta {
+  text-align: center;
+  margin-top: 80px;
+}
+
+.timeline-button.premium-button {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  border: none;
+  padding: 24px 60px;
+  border-radius: 100px;
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 15px 50px rgba(0, 255, 136, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.button-glow {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  border-radius: 100px;
+  filter: blur(15px);
+  opacity: 0.5;
+  z-index: -1;
+  animation: glowPulse 2s ease infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+.premium-button:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 20px 60px rgba(0, 255, 136, 0.5);
+}
+
+.button-icon {
+  font-size: 24px;
+  animation: rocketLaunch 2s ease infinite;
+}
+
+@keyframes rocketLaunch {
+  0%, 100% { transform: translateY(0) rotate(-45deg); }
+  50% { transform: translateY(-5px) rotate(-45deg); }
+}
+
+.cta-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 32px;
+}
+
+.cta-stats .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.cta-stats .stat-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.5));
+}
+
+/* Mobile Responsive */
+@media (max-width: 968px) {
+  .step-card {
+    grid-template-columns: 1fr;
+    padding: 32px;
+    text-align: center;
   }
-  25% { 
-    transform: translateY(-10px) rotate(2deg); 
+  
+  .step-icon-wrapper {
+    margin: 0 auto;
   }
-  50% { 
-    transform: translateY(-5px) rotate(-1deg); 
+  
+  .step-visual {
+    display: none;
   }
-  75% { 
-    transform: translateY(-15px) rotate(1deg); 
+  
+  .timeline-progress-track {
+    left: 20px;
+  }
+  
+  .step-details {
+    justify-content: center;
+  }
+  
+  .cta-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .premium-step {
+    animation: none;
+    opacity: 1;
+  }
+  
+  .step-icon {
+    animation: none;
+  }
+  
+  .timeline-progress-line {
+    animation: none;
+    height: 100%;
+  }
+  
+  .timeline-wrapper.premium {
+    gap: 24px;
+    padding: 40px 0;
+  }
+  
+  .step-card {
+    padding: 24px;
+  }
+  
+  .step-content h3 {
+    font-size: 22px;
+  }
+  
+  .timeline-button.premium-button {
+    padding: 18px 40px;
+    font-size: 16px;
+  }
+}
+
+/* Gradient text helper */
+.gradient-text {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+}
+
+.premium-badge {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 204, 112, 0.2));
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+  animation: badgeGlow 2s ease infinite;
+}
+
+@keyframes badgeGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+}}
+
+@media (max-width: 768px) {
+  @keyframes iconFloat {
+    0%, 100% { 
+      transform: none;
+    }
   }
 }
 
@@ -3217,17 +3853,23 @@ html {
   margin-bottom: 24px;
   display: block;
   filter: drop-shadow(0 10px 20px rgba(120, 80, 255, 0.3));
-  animation: iconFloat 3s ease infinite;
+  animation: iconFloat 6s ease infinite;
 }
 
-.timeline-step[data-step="2"] .step-icon { animation-delay: 0.5s; }
-.timeline-step[data-step="3"] .step-icon { animation-delay: 1s; }
-.timeline-step[data-step="4"] .step-icon { animation-delay: 1.5s; }
+.timeline-step[data-step="2"] .step-icon { animation-delay: 1s; }
+.timeline-step[data-step="3"] .step-icon { animation-delay: 2s; }
+.timeline-step[data-step="4"] .step-icon { animation-delay: 3s; }
+
+@media (max-width: 768px) {
+  .step-icon {
+    animation: none;
+  }
+}
 .testimonial-card:nth-child(1) { animation-delay: 0s; }
-.testimonial-card:nth-child(2) { animation-delay: 0.1s; }
-.testimonial-card:nth-child(3) { animation-delay: 0.2s; }
-.testimonial-card:nth-child(4) { animation-delay: 0.3s; }
-.testimonial-card:nth-child(5) { animation-delay: 0.4s; }
+.testimonial-card:nth-child(2) { animation-delay: 0.5s; }
+.testimonial-card:nth-child(3) { animation-delay: 1s; }
+.testimonial-card:nth-child(4) { animation-delay: 1.5s; }
+.testimonial-card:nth-child(5) { animation-delay: 2s; }
 
 .step-content h3 {
   font-size: 24px;
@@ -3644,6 +4286,7 @@ html {
         }
 
       /* Testimonials Section */
+/* Testimonials Section */
 .testimonials-section {
   background: transparent;
   padding: 120px 40px;
@@ -3694,146 +4337,64 @@ html {
 
 .testimonial-card {
   background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(25px);
+  backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
+  border-radius: 24px;
   padding: 40px;
-  transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  transform-origin: center;
-  will-change: transform, box-shadow, background;
-  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0);
 }
+
 .testimonial-card::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(120, 80, 255, 0.1) 0%, transparent 50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(180deg, rgba(120, 80, 255, 0.1) 0%, transparent 100%);
   opacity: 0;
-  transition: all 1.2s ease;
-  transform: rotate(0deg);
-}
-.testimonial-card::after {
-  content: '✨';
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 28px;
-  opacity: 0;
-  transform: scale(0) rotate(-360deg) translateZ(-50px);
-  transition: all 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
-  text-shadow: 
-    0 0 10px rgba(255, 215, 0, 1),
-    0 0 20px rgba(255, 215, 0, 0.8),
-    0 0 30px rgba(255, 215, 0, 0.6);
-}
-.testimonial-card:hover::after {
-  opacity: 1;
-  transform: scale(1.3) rotate(360deg) translateZ(0);
-  filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1));
-  animation: starPulse 2s ease infinite;
-}
-
-@keyframes starPulse {
-  0%, 100% { 
-    transform: scale(1.3) rotate(360deg) translateZ(0); 
-    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1));
-  }
-  50% { 
-    transform: scale(1.5) rotate(390deg) translateZ(10px); 
-    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1));
-  }
+  transition: opacity 0.4s ease;
 }
 
 .testimonial-card:hover {
-  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-15px) translateZ(20px) scale(1.03);
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.06), 
-    rgba(120, 80, 255, 0.02),
-    rgba(255, 80, 150, 0.02)
-  );
-  border-color: rgba(120, 80, 255, 0.4);
-  box-shadow: 
-    0 40px 80px rgba(0, 0, 0, 0.3),
-    0 15px 60px rgba(120, 80, 255, 0.2),
-    0 0 60px rgba(120, 80, 255, 0.15);
-  backdrop-filter: blur(30px) saturate(150%);
-  transition: all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform: translateY(-10px) scale(1.02);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(120, 80, 255, 0.2);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
 }
+
 .testimonial-card:hover::before {
   opacity: 1;
-  transform: rotate(180deg) scale(1.2);
-  filter: blur(30px);
-  animation-duration: 8s;
-}
-
-.testimonial-card:hover .testimonial-avatar {
-  transform: scale(1.2) rotateY(15deg) translateZ(20px);
-  box-shadow: 
-    0 15px 40px rgba(120, 80, 255, 0.6),
-    0 0 30px rgba(120, 80, 255, 0.4),
-    inset 0 2px 0 rgba(255, 255, 255, 0.3);
-  background: linear-gradient(135deg, #7850ff, #ff5080, #50b4ff);
-  background-size: 300% 300%;
-  animation: avatarGradient 3s ease infinite;
-}
-
-@keyframes avatarGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.testimonial-card:hover .testimonial-text {
-  color: rgba(255, 255, 255, 0.98);
-  text-shadow: 
-    0 0 10px rgba(255, 255, 255, 0.5),
-    0 1px 2px rgba(0, 0, 0, 0.3);
-  transform: translateY(-2px);
-  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-.testimonial-card:hover .impact-badge {
-  transform: scale(1.1) translateY(-3px) rotateX(5deg);
-  box-shadow: 
-    0 10px 30px rgba(0, 255, 136, 0.6),
-    0 0 40px rgba(0, 255, 136, 0.3),
-    inset 0 2px 0 rgba(255, 255, 255, 0.2);
-  background: linear-gradient(135deg, #00ff88, #00cc70, #00aa5c);
-  background-size: 200% 200%;
-  animation: badgeShine 2s ease infinite;
-}
-
-@keyframes badgeShine {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
 }
 
 .testimonial-header {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 20px;
   margin-bottom: 20px;
 }
 
 .testimonial-avatar {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   background: linear-gradient(135deg, #7850ff, #ff5080);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 18px;
   color: white;
+  font-weight: 800;
+  font-size: 20px;
   flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(120, 80, 255, 0.3);
   transition: all 0.3s ease;
+}
+
+.testimonial-card:hover .testimonial-avatar {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .testimonial-info {
@@ -3841,22 +4402,22 @@ html {
 }
 
 .testimonial-name {
-  font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   color: white;
   margin-bottom: 4px;
+  font-size: 18px;
 }
 
 .testimonial-position {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #7850ff;
+  font-weight: 600;
+  font-size: 15px;
   margin-bottom: 2px;
 }
 
 .testimonial-company {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
 }
 
 .testimonial-verified {
@@ -3864,36 +4425,48 @@ html {
 }
 
 .verified-badge {
-  background: rgba(0, 255, 136, 0.2);
-  color: #00ff88;
-  padding: 4px 8px;
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 600;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 204, 112, 0.2));
   border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .testimonial-rating {
+  margin-bottom: 20px;
   display: flex;
   gap: 4px;
-  margin-bottom: 16px;
 }
 
 .star {
-  font-size: 16px;
-  transition: all 0.3s ease;
+  font-size: 20px;
+  margin-right: 2px;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3));
+  animation: starTwinkle 2s ease infinite;
 }
 
-.testimonial-card:hover .star {
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+.star:nth-child(2) { animation-delay: 0.2s; }
+.star:nth-child(3) { animation-delay: 0.4s; }
+.star:nth-child(4) { animation-delay: 0.6s; }
+.star:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.95); }
 }
 
 .testimonial-text {
   color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
-  margin-bottom: 20px;
-  font-size: 15px;
-  font-style: italic;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
 }
 
 .testimonial-impact {
@@ -3903,13 +4476,70 @@ html {
 .impact-badge {
   background: linear-gradient(135deg, #00ff88, #00cc70);
   color: #000;
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: 100px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   display: inline-block;
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+  transition: all 0.3s ease;
 }
 
+.testimonial-card:hover .impact-badge {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+}
+
+.testimonials-cta {
+  text-align: center;
+  margin-top: 80px;
+}
+
+.testimonials-cta h3 {
+  font-size: 36px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 32px;
+  letter-spacing: -0.5px;
+}
+
+.testimonials-button {
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  border: none;
+  padding: 20px 48px;
+  border-radius: 100px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.testimonials-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.testimonials-button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 255, 136, 0.4);
+}
+
+.testimonials-button:hover::before {
+  width: 400px;
+  height: 400px;
+}
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -5917,15 +6547,15 @@ html {
 }
 
         /* Mobile Responsive */
-        @media (max-width: 768px) {
+       @media (max-width: 768px) {
   /* PERFORMANCE FIRST - Disable heavy animations */
   .particles-container {
     display: none !important;
   }
   
   * {
-    animation-duration: 0.2s !important;
-    transition-duration: 0.2s !important;
+    animation-duration: 0.6s !important;
+    transition-duration: 0.4s !important;
   }
   
   .container {
