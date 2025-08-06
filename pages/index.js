@@ -3,6 +3,8 @@ import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
 
 export default function Home() {
+  // GŁÓWNE STATE VARIABLES - NA SAMEJ GÓRZE
+  const [showUploadModal, setShowUploadModal] = useState(false)
   const [jobPosting, setJobPosting] = useState('')
   const [currentCV, setCurrentCV] = useState('')
   const [uploadMethod, setUploadMethod] = useState('upload')
@@ -11,6 +13,8 @@ export default function Home() {
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [optimizedResult, setOptimizedResult] = useState('')
   const [showPricingModal, setShowPricingModal] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
+  const [showPaywall, setShowPaywall] = useState(false)
 
   // Stats counter animation
   useEffect(() => {
@@ -405,10 +409,13 @@ useEffect(() => {
 
 
   
-  // NOWE STATE VARIABLES DLA FREEMIUM FLOW
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState(null)
-  const [showPaywall, setShowPaywall] = useState(false)
+
+// Debug function
+const openUploadModal = () => {
+  console.log('Opening upload modal...');
+  setShowUploadModal(true);
+}
+  
   // Typing animation states
 const [typingText, setTypingText] = useState('')
 const [typingIndex, setTypingIndex] = useState(0)
@@ -949,9 +956,12 @@ const createConfetti = () => {
   <a href="#timeline" className="nav-link" onClick={closeMobileMenu}>Jak to działa</a>
   <a href="#testimonials" className="nav-link" onClick={closeMobileMenu}>Opinie</a>
   <a href="#pricing" className="nav-link" onClick={closeMobileMenu}>Cennik</a>
-  <button className="nav-cta" onClick={() => {setShowUploadModal(true); closeMobileMenu();}}>
-    🎯 Zoptymalizuj CV teraz ⚡
-  </button>
+ <button className="nav-cta" onClick={() => {
+  console.log('Nav button clicked');
+  setShowUploadModal(true);
+}}>
+  🎯 Zoptymalizuj CV teraz ⚡
+</button>
 </div>
 <div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
   <span></span>
@@ -995,9 +1005,9 @@ const createConfetti = () => {
             </div>
 
             <div className="hero-cta">
-              <button className="hero-button primary" onClick={() => setShowUploadModal(true)}>
-                🔍 Sprawdź swoje CV
-              </button>
+              <button className="hero-button primary" onClick={openUploadModal}>
+  🔍 Sprawdź swoje CV
+</button>
               <div className="hero-guarantee">
   <span>✅ Bez rejestracji </span>
 </div>
@@ -1275,7 +1285,7 @@ const createConfetti = () => {
     
     {/* Interactive Demo Button */}
     <div className="timeline-cta premium-cta">
-      <button className="timeline-button premium-button" onClick={() => setShowUploadModal(true)}>
+      <button className="timeline-button premium-button" onClick={openUploadModal}>
         <span className="button-text">Rozpocznij teraz</span>
         <span className="button-icon">🚀</span>
         <div className="button-glow"></div>
@@ -1335,9 +1345,9 @@ const createConfetti = () => {
 
           <div className="testimonials-cta">
             <h3>Dołącz do 15,000+ zadowolonych użytkowników!</h3>
-            <button className="testimonials-button" onClick={() => setShowUploadModal(true)}>
-               Zwiększ swoje szanse 🚀
-            </button>
+            <button className="testimonials-button" onClick={openUploadModal}>
+  Zwiększ swoje szanse 🚀
+</button>
           </div>
         </div>
 
@@ -1672,7 +1682,9 @@ const createConfetti = () => {
             </div>
             <div className="faq-cta">
               <h3>Nie znalazłeś odpowiedzi?</h3>
-              <button className="faq-button" onClick={() => setShowUploadModal(true)}>Wypróbuj za darmo ⚡</button>
+              <button className="faq-button" onClick={openUploadModal}>
+  Wypróbuj za darmo ⚡
+</button>
             </div>
           </div>
         </div>
@@ -1917,7 +1929,7 @@ html {
 
   /* Navigation */
 .navigation {
-  background: rgba(8, 8, 8, 0.9);
+  background: rgba(8, 8, 8, 0.95);
   backdrop-filter: blur(30px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   position: fixed;
@@ -1925,7 +1937,7 @@ html {
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 10000;
   transition: all 0.3s ease;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
   border-radius: 0;
@@ -2097,7 +2109,7 @@ html {
 .hero-section {
   background: transparent;
   color: white;
-  padding: 100px 40px 80px;
+  padding: 140px 40px 80px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
@@ -3151,9 +3163,11 @@ html {
 .timeline-wrapper.premium {
   position: relative;
   padding: 60px 0;
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 40px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .timeline-progress-track {
@@ -3225,13 +3239,13 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 32px;
   padding: 48px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 40px;
+  display: flex;
   align-items: center;
+  gap: 40px;
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 100%;
 }
 
 .step-card::before {
@@ -7827,6 +7841,55 @@ button:focus {
 .glow-on-hover:hover::before {
   left: 100%;
 }
+
+/* Fix for broken layout */
+@media (max-width: 1200px) {
+  .step-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 32px;
+  }
+  
+  .step-visual {
+    display: none;
+  }
+}
+
+/* Fix navigation z-index */
+.navigation {
+  z-index: 99999 !important;
+}
+
+/* Fix button hover states */
+.hero-button,
+.testimonials-button,
+.timeline-button,
+.faq-button,
+.nav-cta {
+  cursor: pointer !important;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure modals are above navigation */
+.modal-overlay {
+  z-index: 100000 !important;
+}
+
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
 
 	`}</style>
     </>
