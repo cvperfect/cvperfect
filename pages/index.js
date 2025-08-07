@@ -120,7 +120,7 @@ useEffect(() => {
         const scrollProgress = (window.scrollY / scrollHeight) * 100
         const progressBar = document.querySelector('.scroll-progress')
         if (progressBar) {
-          progressBar.style.height = `${scrollProgress}%`
+          progressBar.style.height = `${Math.min(scrollProgress, 100)}%`
         }
         
         // Update active section
@@ -996,8 +996,10 @@ const createConfetti = () => {
             </div>
 <h1 className="hero-title">
   <span>Zwiększ swoje szanse o <span className="highlight">410%</span></span>
-  <span className="typing-line">z AI-powered <span className="typing-container">
+  <span className="typing-line">z AI-powered
+ <span className="typing-container">
     <span className="typing-text">{typingText}</span>
+<span className="typing-placeholder">sztuczną inteligencją</span>
     <span className="typing-cursor">|</span>
   </span></span>
 </h1>
@@ -2191,7 +2193,7 @@ html {
   line-height: 1.2;
   margin-bottom: 32px;
   letter-spacing: -2px;
-  animation: fadeInUp 0.6s ease 0.1s both;
+  opacity: 1;
   min-height: 180px;
   display: block; /* Zmień z flex na block */
   min-height: 180px;
@@ -2240,6 +2242,8 @@ html {
   text-align: left;
   position: relative; 
   vertical-align: bottom;
+  contain: layout style; /* ✅ izoluje layout */
+
 
 }
 
@@ -2253,6 +2257,9 @@ html {
   display: inline-block;
   min-width: 1px; /* Zapobiega kolapsowi gdy pusty */
   line-height: 1.2em; /* ✅ dodane dla stabilności tekstu */
+  min-height: 1.2em; /* ✅ rezerwuje wysokość */
+
+
 }
 
 .typing-cursor {
@@ -2263,6 +2270,15 @@ html {
   font-weight: 300;
   font-size: 1.1em;
   animation: cursorBlink 1s ease infinite;
+}
+
+.typing-placeholder {
+  visibility: hidden;
+  position: absolute;
+  white-space: nowrap;
+  font-weight: 900;
+  font-size: inherit;
+  line-height: 1.2em;
 }
 
 @keyframes cursorBlink {
@@ -7225,7 +7241,8 @@ html {
 
         /* Smooth scrolling */
         html {
-          scroll-behavior: smooth;
+ 	scroll-behavior: auto !important;
+
         }
 
         /* Selection color */
@@ -7772,7 +7789,8 @@ button:focus {
 
 /* Confetti */
 .confetti {
-  position: fixed;
+  position: fixed !important;
+  pointer-events: none !important;
   width: 10px;
   height: 10px;
   top: -10px;
