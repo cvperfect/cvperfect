@@ -453,28 +453,6 @@ const typingPhrases = [
   'sztuczną inteligencją'
 ];
 
-// Znajdź najdłuższy tekst do ustalenia szerokości
-const longestPhrase = typingPhrases.reduce((a, b) => a.length > b.length ? a : b);
-
-// Ustaw szerokość kontenera na podstawie najdłuższego tekstu
-useEffect(() => {
-  const container = document.querySelector('.typing-container');
-  if (container) {
-    // Tymczasowo ustaw najdłuższy tekst aby zmierzyć szerokość
-    const tempSpan = document.createElement('span');
-    tempSpan.style.visibility = 'hidden';
-    tempSpan.style.position = 'absolute';
-    tempSpan.style.whiteSpace = 'nowrap';
-    tempSpan.className = 'typing-text';
-    tempSpan.textContent = longestPhrase;
-    container.appendChild(tempSpan);
-    
-    const width = tempSpan.offsetWidth;
-    container.style.width = `${width + 20}px`; // +20px na kursor
-    
-    tempSpan.remove();
-  }
-}, []);
 
 // Typing animation effect
 useEffect(() => {
@@ -1016,7 +994,7 @@ const createConfetti = () => {
             <div className="hero-badge">
               🏆 #1 AI Platforma CV w Polsce
             </div>
-          <h1 className="hero-title">
+<h1 className="hero-title">
   <span>Zwiększ swoje szanse o <span className="highlight">410%</span></span>
   <span className="typing-line">z AI-powered <span className="typing-container">
     <span className="typing-text">{typingText}</span>
@@ -1774,8 +1752,9 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100vh;
-  scroll-behavior: smooth;
+  scroll-behavior: auto !important; /* ✅ zmienione */
   overscroll-behavior: none;
+  overflow-anchor: none;
 }
 html {
   overflow-x: hidden;
@@ -2202,23 +2181,31 @@ html {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px) translateZ(0); }
-  to { opacity: 1; transform: translateY(0) translateZ(0); }
+  from { opacity: 0; transform: translate3d(0, 20px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 .hero-title {
   font-size: 72px;
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.2;
   margin-bottom: 32px;
   letter-spacing: -2px;
   animation: fadeInUp 0.6s ease 0.1s both;
-  min-height: 160px; /* Rezerwuj wysokość dla 2 linii tekstu */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  min-height: 180px;
+  display: block; /* Zmień z flex na block */
+  min-height: 180px;
+  display: block;
 }
 
+.hero-title > div {
+  display: block;
+  line-height: 1.1;
+}
+
+.hero-title > div:first-child {
+  margin-bottom: 10px;
+}
 .highlight {
   background: linear-gradient(135deg, #ffd700, #ffed4e);
   -webkit-background-clip: text;
@@ -2249,17 +2236,13 @@ html {
 /* Typing Animation */
 .typing-container {
   display: inline-block;
-  width: 400px; /* Stała szerokość zamiast min-width */
+  width: 450px;
   text-align: left;
-  position: relative;
-  vertical-align: bottom; /* Wyrównanie do dołu */
+  position: relative; 
+  vertical-align: bottom;
+
 }
-.typing-line {
-  display: block;
-  min-height: 80px; /* Rezerwuj wysokość dla linii z animacją */
-  display: flex;
-  align-items: center;
-}
+
 
 .typing-text {
   background: linear-gradient(135deg, #7850ff, #ff5080);
@@ -2269,6 +2252,7 @@ html {
   will-change: content;
   display: inline-block;
   min-width: 1px; /* Zapobiega kolapsowi gdy pusty */
+  line-height: 1.2em; /* ✅ dodane dla stabilności tekstu */
 }
 
 .typing-cursor {
@@ -2295,12 +2279,15 @@ html {
     margin-top: 10px;
   }
   
-  .typing-line {
-    min-height: 60px;
-  }
+ 
   
   .hero-title {
     min-height: 120px;
+  }
+}
+  
+  .hero-title {
+    line-height: 1.3;
   }
 }
 
@@ -2312,6 +2299,10 @@ html {
   .typing-text {
     font-size: 0.9em;
   }
+.typing-line {
+  display: block;
+  min-height: 60px; /* ✅ zmieniona wysokość */
+}
 }
 
         .hero-subtitle {
@@ -2377,7 +2368,7 @@ html {
 }
 
 .stat-item:hover {
-  transform: translateY(-8px) scale(1.05);
+  transform: translate3d(0, -8px, 0) scale(1.05);
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(120, 80, 255, 0.3);
   box-shadow: 
@@ -2465,7 +2456,7 @@ html {
 }
 
 .hero-button:hover {
-  transform: translateY(-4px) scale(1.03);
+  transform: translate3d(0, -4px, 0) scale(1.03);
   box-shadow: 
     0 20px 60px rgba(0, 255, 136, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -3819,9 +3810,6 @@ html {
   transform: translateY(30px);
   min-height: 200px; /* Rezerwuj miejsce */
   will-change: transform, opacity;
-  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  cursor: pointer;
-  overflow: hidden;
 }
 
 .timeline-step::before {
@@ -3858,9 +3846,8 @@ html {
 
 .timeline-step.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
-
 .timeline-step:nth-child(even) {
   margin-top: 120px;
 }
@@ -4389,6 +4376,8 @@ html {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   min-height: 320px; /* Rezerwuj miejsce */
   contain: layout style paint;
+  min-height: 320px; /* Rezerwuj miejsce */
+  contain: layout style paint;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -4411,7 +4400,7 @@ html {
 
 /* Efekt hover dla wszystkich kart */
 .testimonial-card:hover {
-  transform: translateY(-10px) scale(1.02);
+  transform: translate3d(0, -10px, 0) scale(1.02);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.06), 
     rgba(120, 80, 255, 0.02),
@@ -4623,7 +4612,7 @@ html {
 @keyframes modalSlideIn {
   0% { 
     opacity: 0; 
-    transform: translateY(50px) scale(0.95);
+    transform: translate3d(0, 50px, 0) scale(0.95);
     filter: blur(10px);
   }
   50% {
@@ -5137,14 +5126,7 @@ html {
   box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
   animation: scoreRotate 20s linear infinite;
 
-}
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
-  animation: scoreRotate 20s linear infinite;
+
 }
 
 @keyframes scoreRotate {
@@ -6099,7 +6081,7 @@ html {
 }
 
 .capability-card:hover {
-  transform: translateY(-15px) scale(1.05);
+  transform: translate3d(0, -15px, 0) scale(1.05);
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(120, 80, 255, 0.3);
   box-shadow: 
@@ -6304,7 +6286,7 @@ html {
 }
 
 .faq-item:hover {
-  transform: translateY(-12px) scale(1.03);
+  transform: translate3d(0, -12px, 0) scale(1.03);
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(120, 80, 255, 0.4);
   box-shadow: 
