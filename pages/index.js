@@ -15,6 +15,15 @@ export default function Home() {
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [analysisResult, setAnalysisResult] = useState(null)
   const [showPaywall, setShowPaywall] = useState(false)
+  const [typingText, setTypingText] = useState('')
+  const [typingIndex, setTypingIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [loopNum, setLoopNum] = useState(0)
+  const [typingSpeed, setTypingSpeed] = useState(150)
+  const [currentStep, setCurrentStep] = useState(1)
+  const [tooltips, setTooltips] = useState([])
+  const [toasts, setToasts] = useState([])
+  const [notifications, setNotifications] = useState([])
 
   // Stats counter animation
   useEffect(() => {
@@ -417,11 +426,7 @@ const openUploadModal = () => {
 }
   
   // Typing animation states
-const [typingText, setTypingText] = useState('')
-const [typingIndex, setTypingIndex] = useState(0)
-const [isDeleting, setIsDeleting] = useState(false)
-const [loopNum, setLoopNum] = useState(0)
-const [typingSpeed, setTypingSpeed] = useState(150)
+
 
 const typingPhrases = [
   'optymalizacją CV',
@@ -458,10 +463,7 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [typingText, typingIndex, isDeleting, loopNum, typingSpeed, typingPhrases]);
 
-// Progress and tooltips state
-const [currentStep, setCurrentStep] = useState(1)
-const [tooltips, setTooltips] = useState([])
-const [toasts, setToasts] = useState([])
+
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
@@ -800,7 +802,7 @@ const createConfetti = () => {
   ]
 
   // Floating notifications
-  const [notifications, setNotifications] = useState([])
+  
   
   useEffect(() => {
     const floatingNotifications = [
@@ -3012,10 +3014,11 @@ html {
 
 /* Desktop testimonials - slower animations */
 @media (min-width: 1024px) {
-  .testimonial-card {
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-    will-change: transform;
-  }
+.testimonial-card {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.6s ease forwards;
+}
 
   .testimonial-card:hover {
     transform: translateY(-6px) scale(1.03);
@@ -3037,80 +3040,25 @@ html {
   backface-visibility: hidden;
 }
 
-/* Animacja tylko dla pierwszych 6 kart */
-.testimonial-card:nth-child(1),
-.testimonial-card:nth-child(3),
-.testimonial-card:nth-child(5) {
-  animation: floatUp 12s ease-in-out infinite;
-}
 
-.testimonial-card:nth-child(2),
-.testimonial-card:nth-child(4),
-.testimonial-card:nth-child(6) {
-  animation: floatDown 12s ease-in-out infinite;
-  animation-delay: 6s;
-}
-
-/* Pozostałe karty bez animacji */
-.testimonial-card:nth-child(n+7) {
-  animation: none;
-}
-
-@keyframes floatUp {
-  0%, 100% { transform: perspective(1000px) translateY(0px) rotateX(0deg); }
-  50% { transform: perspective(1000px) translateY(-4px) rotateX(0.5deg); }
-}
-
-@keyframes floatDown {
-  0%, 100% { transform: perspective(1000px) translateY(0px) rotateX(0deg); }
-  50% { transform: perspective(1000px) translateY(4px) rotateX(-0.5deg); }
-}
 
 /* PREMIUM GLOW EFFECTS */
 .testimonials-section {
   position: relative;
 }
 
-.testimonials-section::after {
-  content: '';
-  position: absolute;
-  top: 20%;
-  left: 10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(120, 80, 255, 0.1) 0%, transparent 70%);
-  animation: premiumFloat 15s ease infinite;
-  pointer-events: none;
-}
-
-@keyframes premiumFloat {
-  0%, 100% { 
-    transform: translate(0, 0) rotate(0deg);
-    opacity: 0.3;
-  }
-  33% { 
-    transform: translate(200px, -100px) rotate(120deg);
-    opacity: 0.6;
-  }
-  66% { 
-    transform: translate(-100px, 200px) rotate(240deg);
-    opacity: 0.4;
-  }
 }
 
 /* DISABLE ON MOBILE FOR PERFORMANCE */
 @media (max-width: 768px) {
-  .testimonial-card:nth-child(odd),
-  .testimonial-card:nth-child(even) {
-    animation: none;
-  }
+  
   
   .testimonials-section::after {
     display: none;
   }
   
   .testimonial-card:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-5px) scale(1.01);
   }
 }
 
@@ -3879,11 +3827,22 @@ html {
     animation: none;
   }
 }
-.testimonial-card:nth-child(1) { animation-delay: 0s; }
-.testimonial-card:nth-child(2) { animation-delay: 0.5s; }
-.testimonial-card:nth-child(3) { animation-delay: 1s; }
-.testimonial-card:nth-child(4) { animation-delay: 1.5s; }
-.testimonial-card:nth-child(5) { animation-delay: 2s; }
+.testimonial-card:nth-child(1) { animation-delay: 0.1s; }
+.testimonial-card:nth-child(2) { animation-delay: 0.2s; }
+.testimonial-card:nth-child(3) { animation-delay: 0.3s; }
+.testimonial-card:nth-child(4) { animation-delay: 0.4s; }
+.testimonial-card:nth-child(5) { animation-delay: 0.5s; }
+.testimonial-card:nth-child(6) { animation-delay: 0.6s; }
+.testimonial-card:nth-child(7) { animation-delay: 0.7s; }
+.testimonial-card:nth-child(8) { animation-delay: 0.8s; }
+.testimonial-card:nth-child(9) { animation-delay: 0.9s; }
+.testimonial-card:nth-child(10) { animation-delay: 1.0s; }
+.testimonial-card:nth-child(11) { animation-delay: 1.1s; }
+.testimonial-card:nth-child(12) { animation-delay: 1.2s; }
+.testimonial-card:nth-child(13) { animation-delay: 1.3s; }
+.testimonial-card:nth-child(14) { animation-delay: 1.4s; }
+.testimonial-card:nth-child(15) { animation-delay: 1.5s; }
+
 
 .step-content h3 {
   font-size: 24px;
@@ -4349,16 +4308,20 @@ html {
   margin: 0 auto;
 }
 
+/* Jednolita animacja dla wszystkich testimonials */
 .testimonial-card {
   background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(25px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
+  border-radius: 28px;
   padding: 40px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  transform-origin: center;
+  will-change: transform, box-shadow;
+  /* BEZ ANIMACJI - tylko hover */
 }
 
 .testimonial-card::before {
@@ -4373,11 +4336,20 @@ html {
   transition: opacity 0.4s ease;
 }
 
+/* Efekt hover dla wszystkich kart */
 .testimonial-card:hover {
   transform: translateY(-10px) scale(1.02);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(120, 80, 255, 0.2);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.06), 
+    rgba(120, 80, 255, 0.02),
+    rgba(255, 80, 150, 0.02)
+  );
+  border-color: rgba(120, 80, 255, 0.4);
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.2),
+    0 15px 40px rgba(120, 80, 255, 0.15),
+    0 0 40px rgba(120, 80, 255, 0.1);
+  backdrop-filter: blur(30px) saturate(150%);
 }
 
 .testimonial-card:hover::before {
@@ -4780,16 +4752,21 @@ html {
   transform: rotate(0deg);
 }
 
-.upload-zone::after {
-  content: '💡 Przeciągnij plik tutaj lub kliknij';
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
-  opacity: 0;
+.upload-hint {
+  margin: 20px 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
   transition: all 0.3s ease;
+}
+
+.upload-zone:hover .upload-hint {
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
+
+.upload-zone::after {
+  display: none;
 }
 
 .upload-zone:hover {
@@ -7215,10 +7192,6 @@ html {
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
   to {
     opacity: 1;
     transform: translateY(0);
@@ -7803,16 +7776,12 @@ button:focus {
   }
 }
 
-/* Disable magnetic effect on mobile */
+/* Wyłącz ciągłe animacje na mobile */
 @media (max-width: 768px) {
-  .hero-button,
-  .nav-cta,
-  .testimonials-button,
-  .timeline-button,
-  .faq-button,
-  .upload-btn.primary,
-  .plan-button {
-    transform: none !important;
+  .testimonial-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 
