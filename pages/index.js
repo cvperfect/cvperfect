@@ -26,13 +26,15 @@ export default function Home() {
   const [notifications, setNotifications] = useState([])
 
   // Stats counter animation
-  useEffect(() => {
+ useEffect(() => {
     const observerCallback = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const counters = entry.target.querySelectorAll('.stat-value');
           
+          // Rezerwuj miejsce przed animacją
           counters.forEach(counter => {
+            counter.style.minHeight = counter.offsetHeight + 'px';
             const target = parseFloat(counter.getAttribute('data-target'));
             const isDecimal = target % 1 !== 0;
             const duration = 2000;
@@ -108,34 +110,43 @@ const interval = setInterval(incrementStats, (180 + Math.random() * 120) * 1000)
 
 // Scroll indicator logic
 useEffect(() => {
+  let ticking = false;
+  
   const handleScroll = () => {
-    // Update scroll progress
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-    const scrollProgress = (window.scrollY / scrollHeight) * 100
-    const progressBar = document.querySelector('.scroll-progress')
-    if (progressBar) {
-      progressBar.style.height = `${scrollProgress}%`
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        // Update scroll progress
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+        const scrollProgress = (window.scrollY / scrollHeight) * 100
+        const progressBar = document.querySelector('.scroll-progress')
+        if (progressBar) {
+          progressBar.style.height = `${scrollProgress}%`
+        }
+        
+        // Update active section
+        const sections = document.querySelectorAll('div[id]')
+        const scrollDots = document.querySelectorAll('.scroll-dot')
+        
+        let currentSection = ''
+        sections.forEach(section => {
+          const rect = section.getBoundingClientRect()
+          if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
+            currentSection = section.id
+          }
+        })
+        
+        scrollDots.forEach(dot => {
+          if (dot.getAttribute('data-section') === currentSection) {
+            dot.classList.add('active')
+          } else {
+            dot.classList.remove('active')
+          }
+        })
+        
+        ticking = false;
+      });
+      ticking = true;
     }
-    
-    // Update active section
-    const sections = document.querySelectorAll('div[id]')
-    const scrollDots = document.querySelectorAll('.scroll-dot')
-    
-    let currentSection = ''
-   sections.forEach(section => {
-  const rect = section.getBoundingClientRect()
-  if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
-    currentSection = section.id
-  }
-})
-    
-    scrollDots.forEach(dot => {
-      if (dot.getAttribute('data-section') === currentSection) {
-        dot.classList.add('active')
-      } else {
-        dot.classList.remove('active')
-      }
-    })
   }
   
   window.addEventListener('scroll', handleScroll)
@@ -143,7 +154,6 @@ useEffect(() => {
   
   return () => window.removeEventListener('scroll', handleScroll)
 }, [])
-
 // Particles background - OPTIMIZED
 useEffect(() => {
   if (typeof window === 'undefined') return;
@@ -167,6 +177,9 @@ if (typeof window === 'undefined' ||
       this.speedY = Math.random() * 0.5 - 0.25
       this.opacity = Math.random() * 0.5 + 0.2
       this.color = Math.random() > 0.5 ? '#7850ff' : '#ff5080'
+      this.canvas.style.position = 'fixed';
+      this.canvas.style.pointerEvents = 'none';
+      this.canvas.style.willChange = 'transform';
     }
     
     update() {
@@ -422,6 +435,7 @@ useEffect(() => {
 // Debug function
 const openUploadModal = () => {
   console.log('Opening upload modal...');
+  document.body.style.overflow = 'hidden';
   setShowUploadModal(true);
 }
   
@@ -438,6 +452,29 @@ const typingPhrases = [
   'zwiększeniem widoczności',
   'sztuczną inteligencją'
 ];
+
+// Znajdź najdłuższy tekst do ustalenia szerokości
+const longestPhrase = typingPhrases.reduce((a, b) => a.length > b.length ? a : b);
+
+// Ustaw szerokość kontenera na podstawie najdłuższego tekstu
+useEffect(() => {
+  const container = document.querySelector('.typing-container');
+  if (container) {
+    // Tymczasowo ustaw najdłuższy tekst aby zmierzyć szerokość
+    const tempSpan = document.createElement('span');
+    tempSpan.style.visibility = 'hidden';
+    tempSpan.style.position = 'absolute';
+    tempSpan.style.whiteSpace = 'nowrap';
+    tempSpan.className = 'typing-text';
+    tempSpan.textContent = longestPhrase;
+    container.appendChild(tempSpan);
+    
+    const width = tempSpan.offsetWidth;
+    container.style.width = `${width + 20}px`; // +20px na kursor
+    
+    tempSpan.remove();
+  }
+}, []);
 
 // Typing animation effect
 useEffect(() => {
@@ -979,12 +1016,12 @@ const createConfetti = () => {
             <div className="hero-badge">
               🏆 #1 AI Platforma CV w Polsce
             </div>
-           <h1 className="hero-title">
-  Zwiększ swoje szanse o <span className="highlight">410%</span>
-  <br />z AI-powered <span className="typing-container">
+          <h1 className="hero-title">
+  <span>Zwiększ swoje szanse o <span className="highlight">410%</span></span>
+  <span className="typing-line">z AI-powered <span className="typing-container">
     <span className="typing-text">{typingText}</span>
     <span className="typing-cursor">|</span>
-  </span>
+  </span></span>
 </h1>
             <p className="hero-subtitle">
               Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy. 
@@ -1357,7 +1394,10 @@ const createConfetti = () => {
         {showUploadModal && (
           <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
             <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
+              <button className="modal-close" onClick={() => {
+  document.body.style.overflow = '';
+  setShowUploadModal(false);
+}}>×</button>
               
               <div className="upload-header">
                 <h2>Darmowa Analiza ATS</h2>
@@ -1728,17 +1768,21 @@ const createConfetti = () => {
       </div>
       <style jsx>{`
         /* Global Styles */
-       body {
+body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100vh;
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
 }
-        html {
-          overflow-x: hidden;
-	  overflow-y: scroll !important;
-        }        
+html {
+  overflow-x: hidden;
+  overflow-y: scroll !important;
+  scroll-behavior: smooth;
+  height: 100%;
+}       
         .container {
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1851,6 +1895,8 @@ html {
   z-index: 1000;
   pointer-events: none;
   max-width: 350px;
+  width: 350px; /* Stała szerokość */
+  contain: layout;
 }
 
 .floating-notification {
@@ -2111,6 +2157,7 @@ html {
 .hero-section {
   background: transparent;
   color: white;
+  will-change: transform;
   padding: 140px 40px 80px;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2155,17 +2202,21 @@ html {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) translateZ(0); }
+  to { opacity: 1; transform: translateY(0) translateZ(0); }
 }
 
-        .hero-title {
+.hero-title {
   font-size: 72px;
   font-weight: 900;
   line-height: 1.1;
   margin-bottom: 32px;
   letter-spacing: -2px;
   animation: fadeInUp 0.6s ease 0.1s both;
+  min-height: 160px; /* Rezerwuj wysokość dla 2 linii tekstu */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .highlight {
@@ -2198,9 +2249,16 @@ html {
 /* Typing Animation */
 .typing-container {
   display: inline-block;
-  min-width: 350px;
+  width: 400px; /* Stała szerokość zamiast min-width */
   text-align: left;
   position: relative;
+  vertical-align: bottom; /* Wyrównanie do dołu */
+}
+.typing-line {
+  display: block;
+  min-height: 80px; /* Rezerwuj wysokość dla linii z animacją */
+  display: flex;
+  align-items: center;
 }
 
 .typing-text {
@@ -2208,6 +2266,9 @@ html {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 900;
+  will-change: content;
+  display: inline-block;
+  min-width: 1px; /* Zapobiega kolapsowi gdy pusty */
 }
 
 .typing-cursor {
@@ -2228,13 +2289,18 @@ html {
 /* Mobile fix for typing */
 @media (max-width: 768px) {
   .typing-container {
-    min-width: 250px;
-    display: block;
+    width: 100%;
+    max-width: 300px;
+    display: inline-block;
     margin-top: 10px;
   }
   
+  .typing-line {
+    min-height: 60px;
+  }
+  
   .hero-title {
-    line-height: 1.3;
+    min-height: 120px;
   }
 }
 
@@ -2449,6 +2515,9 @@ html {
   perspective: 1200px;
   animation: fadeInUp 0.8s ease 0.5s both;
   transform-style: preserve-3d;
+  will-change: transform;
+  contain: layout;
+  min-height: 400px; /* Rezerwuj miejsce */
 }
 
 .cv-before, .cv-after {
@@ -3748,6 +3817,8 @@ html {
   margin-bottom: 60px;
   opacity: 0;
   transform: translateY(30px);
+  min-height: 200px; /* Rezerwuj miejsce */
+  will-change: transform, opacity;
   transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   cursor: pointer;
   overflow: hidden;
@@ -4316,6 +4387,8 @@ html {
   border-radius: 28px;
   padding: 40px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-height: 320px; /* Rezerwuj miejsce */
+  contain: layout style paint;
   position: relative;
   overflow: hidden;
   cursor: pointer;
