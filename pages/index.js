@@ -429,12 +429,12 @@ const openUploadModal = () => {
 
 
 const typingPhrases = [
-  'optymalizacją CV',
-  'analizą ATS', 
-  'dopasowaniem słów kluczowych',
+  'optymalizacją CV', 
+  'analizą słów kluczowych',
   'zwiększeniem szans na pracę',
   'profesjonalnym CV',
   'personalizacją treści',
+  'analizą ATS',
   'zwiększeniem widoczności',
   'sztuczną inteligencją'
 ];
@@ -979,13 +979,16 @@ const createConfetti = () => {
             <div className="hero-badge">
               🏆 #1 AI Platforma CV w Polsce
             </div>
-           <h1 className="hero-title">
+<h1 className="hero-title">
   Zwiększ swoje szanse o <span className="highlight">410%</span>
-  <br />z AI-powered <span className="typing-container">
+  <br />
+  z AI-powered
+  <div className="typing-safe-zone">
     <span className="typing-text">{typingText}</span>
     <span className="typing-cursor">|</span>
-  </span>
+  </div>
 </h1>
+
             <p className="hero-subtitle">
               Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy. 
               <strong> 95% skuteczności ATS, 30 sekund optymalizacji, tylko 9.99 zł.</strong>
@@ -2120,6 +2123,18 @@ html {
   margin: 0 auto;
   position: relative;
 }
+
+.hero-subtitle-animated {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: white;
+  min-height: 1.2em; /* rezerwuje miejsce na tekst */
+  height: 90px;       /* stała wysokość, dopasuj do swojego fontu */
+  display: flex;
+  align-items: center;
+}
+
 .hero-section::before {
   content: '';
   position: absolute;
@@ -2578,12 +2593,7 @@ html {
 }
 
 .cv-score.good::before {
-  content: '';
-  position: absolute;
-  inset: 10px;
-  background: #1a1a1a;
-  border-radius: 50%;
-  z-index: 1;
+  display: none; /* ta nakładka zasłaniała napis */
 }
 
 .cv-score.good::after {
@@ -3152,8 +3162,10 @@ html {
   width: 4px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
-  z-index: 0;
+  z-index: 10;             /* było 0 → ma być nad .timeline-step (2) */
+  pointer-events: none;    /* żeby linia nie łapała hoverów/klików */
 }
+
 
 .timeline-progress-line {
   position: absolute;
@@ -3732,7 +3744,6 @@ html {
 
 .timeline-wrapper {
   position: relative;
-  padding: 40px 0;
 }
 
 .timeline-line {
@@ -3743,8 +3754,12 @@ html {
   height: 4px;
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-50%);
-  z-index: 0;
+  z-index: 10; /* większe niż .timeline-step (2) */
+  pointer-events: none; /* nie blokuje kliknięć */
 }
+
+
+
 
 .timeline-line::after {
   content: '';
@@ -3758,6 +3773,8 @@ html {
   border-radius: 2px;
   box-shadow: 0 0 20px rgba(120, 80, 255, 0.5);
 }
+
+
 
 .timeline-line.animate::after {
   width: 100%;
@@ -3776,7 +3793,7 @@ html {
   transform: translateY(30px);
   transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   cursor: pointer;
-  overflow: hidden;
+  overflow: hidden; /* zmienione z hidden na visible */
 }
 
 .timeline-step::before {
@@ -3795,8 +3812,8 @@ html {
 .timeline-step::after {
   content: attr(data-step);
   position: absolute;
-  top: -15px;
-  left: 30px;
+  top: 8px; /* było -15px, podnosimy do wnętrza */
+  left: 8px; /* było 30px, odsuwamy bliżej krawędzi */
   background: linear-gradient(135deg, #ff5080, #7850ff);
   color: white;
   width: 40px;
@@ -3811,13 +3828,14 @@ html {
   transition: all 0.3s ease;
 }
 
+
 .timeline-step.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.timeline-step:nth-child(even) {
-  margin-top: 120px;
+.timeline-wrapper .timeline-step:nth-child(even) {
+  margin-top: 0 !important;
 }
 
 .timeline-step:hover {
@@ -7906,6 +7924,116 @@ button:focus {
   z-index: 999999 !important;
   backdrop-filter: blur(10px) !important;
 }
+
+.typing-safe-zone {
+  min-height: 3em; /* zarezerwuj miejsce na tekst */
+  line-height: 1.4;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-align: left; /* lub center jeśli chcesz wyśrodkować */
+}
+
+.typing-text {
+  display: inline;
+  word-break: break-word;
+}
+
+.typing-cursor {
+  display: inline;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1 }
+  50% { opacity: 0 }
+}
+
+/* === FIX HERO STATS & CV SCORE === */
+.hero-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.hero-stats .stat-item {
+  min-width: 100px; /* zwiększa szerokość kwadracików */
+  padding: 10px 15px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.hero-stats .stat-number {
+  font-size: 1.6rem;
+  white-space: nowrap; /* zapobiega łamaniu tekstu */
+}
+
+.cv-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  width: 80px;  /* upewnij się, że jest kształt koła */
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+/* === FIX CV PREVIEW LINES OFFSET === */
+.cv-before .cv-score {
+  margin-bottom: 14px; /* kółko 32% ATS – opuść linie */
+}
+
+.cv-after .cv-score {
+  margin-bottom: 18px; /* kółko 95% ATS – trochę większy odstęp */
+}
+
+/* delikatna poduszka nad liniami (opcjonalnie) */
+.cv-preview .cv-content {
+  padding-top: 4px;
+}
+
+
+/* === FIX TIMELINE BADGE POSITION === */
+.timeline-badge {
+  position: relative;
+  top: -4px;
+}
+
+/* === SHIFT STEP CARDS SAFELY === */
+.timeline-steps-container {
+  padding-left: 60px; /* odsuwa wszystkie karty od zielonej linii */
+  padding-right: 60px; /* symetria po prawej */
+  box-sizing: border-box;
+}
+
+/* upewnij się, że .timeline-steps-container jest rodzicem .timeline-step w HTML */
+
+/* === FIX PURPLE NUMBER CIRCLE SAFELY === */
+.step-icon-wrapper {
+  overflow: visible;
+}
+
+.step-icon-bg {
+  transform: translateX(8px) translateY(4px);
+}
+
+.timeline-step .step-card {
+  overflow: visible; /* pozwala kółkom wychodzić poza kartę */
+}
+
+.timeline-step .step-icon-wrapper {
+  overflow: visible; /* pozwala kółkom wychodzić poza wrapper */
+}
+
+/* Odsłonięcie fioletowych kółek bez zmiany hover hitboxa */
+.timeline-step .step-card,
+.timeline-step .step-card > div,
+.timeline-step .step-icon-wrapper {
+  overflow: visible !important;
+}
+
 
 
 	`}</style>
