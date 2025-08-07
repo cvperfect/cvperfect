@@ -26,15 +26,13 @@ export default function Home() {
   const [notifications, setNotifications] = useState([])
 
   // Stats counter animation
- useEffect(() => {
+  useEffect(() => {
     const observerCallback = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const counters = entry.target.querySelectorAll('.stat-value');
           
-          // Rezerwuj miejsce przed animacją
           counters.forEach(counter => {
-            counter.style.minHeight = counter.offsetHeight + 'px';
             const target = parseFloat(counter.getAttribute('data-target'));
             const isDecimal = target % 1 !== 0;
             const duration = 2000;
@@ -110,43 +108,34 @@ const interval = setInterval(incrementStats, (180 + Math.random() * 120) * 1000)
 
 // Scroll indicator logic
 useEffect(() => {
-  let ticking = false;
-  
   const handleScroll = () => {
-    if (!ticking) {
-      window.requestAnimationFrame(() => {
-        // Update scroll progress
-        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-        const scrollProgress = (window.scrollY / scrollHeight) * 100
-        const progressBar = document.querySelector('.scroll-progress')
-        if (progressBar) {
-          progressBar.style.height = `${Math.min(scrollProgress, 100)}%`
-        }
-        
-        // Update active section
-        const sections = document.querySelectorAll('div[id]')
-        const scrollDots = document.querySelectorAll('.scroll-dot')
-        
-        let currentSection = ''
-        sections.forEach(section => {
-          const rect = section.getBoundingClientRect()
-          if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
-            currentSection = section.id
-          }
-        })
-        
-        scrollDots.forEach(dot => {
-          if (dot.getAttribute('data-section') === currentSection) {
-            dot.classList.add('active')
-          } else {
-            dot.classList.remove('active')
-          }
-        })
-        
-        ticking = false;
-      });
-      ticking = true;
+    // Update scroll progress
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+    const scrollProgress = (window.scrollY / scrollHeight) * 100
+    const progressBar = document.querySelector('.scroll-progress')
+    if (progressBar) {
+      progressBar.style.height = `${scrollProgress}%`
     }
+    
+    // Update active section
+    const sections = document.querySelectorAll('div[id]')
+    const scrollDots = document.querySelectorAll('.scroll-dot')
+    
+    let currentSection = ''
+   sections.forEach(section => {
+  const rect = section.getBoundingClientRect()
+  if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
+    currentSection = section.id
+  }
+})
+    
+    scrollDots.forEach(dot => {
+      if (dot.getAttribute('data-section') === currentSection) {
+        dot.classList.add('active')
+      } else {
+        dot.classList.remove('active')
+      }
+    })
   }
   
   window.addEventListener('scroll', handleScroll)
@@ -154,6 +143,7 @@ useEffect(() => {
   
   return () => window.removeEventListener('scroll', handleScroll)
 }, [])
+
 // Particles background - OPTIMIZED
 useEffect(() => {
   if (typeof window === 'undefined') return;
@@ -177,9 +167,6 @@ if (typeof window === 'undefined' ||
       this.speedY = Math.random() * 0.5 - 0.25
       this.opacity = Math.random() * 0.5 + 0.2
       this.color = Math.random() > 0.5 ? '#7850ff' : '#ff5080'
-      this.canvas.style.position = 'fixed';
-      this.canvas.style.pointerEvents = 'none';
-      this.canvas.style.willChange = 'transform';
     }
     
     update() {
@@ -435,7 +422,6 @@ useEffect(() => {
 // Debug function
 const openUploadModal = () => {
   console.log('Opening upload modal...');
-  document.body.style.overflow = 'hidden';
   setShowUploadModal(true);
 }
   
@@ -452,7 +438,6 @@ const typingPhrases = [
   'zwiększeniem widoczności',
   'sztuczną inteligencją'
 ];
-
 
 // Typing animation effect
 useEffect(() => {
@@ -994,14 +979,12 @@ const createConfetti = () => {
             <div className="hero-badge">
               🏆 #1 AI Platforma CV w Polsce
             </div>
-<h1 className="hero-title">
-  <span>Zwiększ swoje szanse o <span className="highlight">410%</span></span>
-  <span className="typing-line">z AI-powered
- <span className="typing-container">
+           <h1 className="hero-title">
+  Zwiększ swoje szanse o <span className="highlight">410%</span>
+  <br />z AI-powered <span className="typing-container">
     <span className="typing-text">{typingText}</span>
-<span className="typing-placeholder">sztuczną inteligencją</span>
     <span className="typing-cursor">|</span>
-  </span></span>
+  </span>
 </h1>
             <p className="hero-subtitle">
               Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy. 
@@ -1374,10 +1357,7 @@ const createConfetti = () => {
         {showUploadModal && (
           <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
             <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => {
-  document.body.style.overflow = '';
-  setShowUploadModal(false);
-}}>×</button>
+              <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
               
               <div className="upload-header">
                 <h2>Darmowa Analiza ATS</h2>
@@ -1748,22 +1728,17 @@ const createConfetti = () => {
       </div>
       <style jsx>{`
         /* Global Styles */
-body {
+       body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100vh;
-  scroll-behavior: auto !important; /* ✅ zmienione */
-  overscroll-behavior: none;
-  overflow-anchor: none;
 }
-html {
-  overflow-x: hidden;
-  overflow-y: scroll !important;
-  scroll-behavior: smooth;
-  height: 100%;
-}       
+        html {
+          overflow-x: hidden;
+	  overflow-y: scroll !important;
+        }        
         .container {
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1876,8 +1851,6 @@ html {
   z-index: 1000;
   pointer-events: none;
   max-width: 350px;
-  width: 350px; /* Stała szerokość */
-  contain: layout;
 }
 
 .floating-notification {
@@ -2138,7 +2111,6 @@ html {
 .hero-section {
   background: transparent;
   color: white;
-  will-change: transform;
   padding: 140px 40px 80px;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2183,31 +2155,19 @@ html {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translate3d(0, 20px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.hero-title {
+        .hero-title {
   font-size: 72px;
   font-weight: 900;
-  line-height: 1.2;
+  line-height: 1.1;
   margin-bottom: 32px;
   letter-spacing: -2px;
-  opacity: 1;
-  min-height: 180px;
-  display: block; /* Zmień z flex na block */
-  min-height: 180px;
-  display: block;
+  animation: fadeInUp 0.6s ease 0.1s both;
 }
 
-.hero-title > div {
-  display: block;
-  line-height: 1.1;
-}
-
-.hero-title > div:first-child {
-  margin-bottom: 10px;
-}
 .highlight {
   background: linear-gradient(135deg, #ffd700, #ffed4e);
   -webkit-background-clip: text;
@@ -2238,28 +2198,16 @@ html {
 /* Typing Animation */
 .typing-container {
   display: inline-block;
-  width: 450px;
+  min-width: 350px;
   text-align: left;
-  position: relative; 
-  vertical-align: bottom;
-  contain: layout style; /* ✅ izoluje layout */
-
-
+  position: relative;
 }
-
 
 .typing-text {
   background: linear-gradient(135deg, #7850ff, #ff5080);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 900;
-  will-change: content;
-  display: inline-block;
-  min-width: 1px; /* Zapobiega kolapsowi gdy pusty */
-  line-height: 1.2em; /* ✅ dodane dla stabilności tekstu */
-  min-height: 1.2em; /* ✅ rezerwuje wysokość */
-
-
 }
 
 .typing-cursor {
@@ -2272,15 +2220,6 @@ html {
   animation: cursorBlink 1s ease infinite;
 }
 
-.typing-placeholder {
-  visibility: hidden;
-  position: absolute;
-  white-space: nowrap;
-  font-weight: 900;
-  font-size: inherit;
-  line-height: 1.2em;
-}
-
 @keyframes cursorBlink {
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
@@ -2289,18 +2228,10 @@ html {
 /* Mobile fix for typing */
 @media (max-width: 768px) {
   .typing-container {
-    width: 100%;
-    max-width: 300px;
-    display: inline-block;
+    min-width: 250px;
+    display: block;
     margin-top: 10px;
   }
-  
- 
-  
-  .hero-title {
-    min-height: 120px;
-  }
-}
   
   .hero-title {
     line-height: 1.3;
@@ -2315,18 +2246,15 @@ html {
   .typing-text {
     font-size: 0.9em;
   }
-.typing-line {
-  display: block;
-  min-height: 60px; /* ✅ zmieniona wysokość */
-}
 }
 
-        .hero-subtitle {
-          font-size: 20px;
-          line-height: 1.6;
-          opacity: 0.9;
-          margin-bottom: 40px;
-        }
+.hero-subtitle {
+  font-size: 20px;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin-bottom: 40px;
+  margin-top: 100px; /* DUŻY ODSTĘP OD ANIMACJI */
+}
 
 .hero-stats {
   display: grid;
@@ -2384,7 +2312,7 @@ html {
 }
 
 .stat-item:hover {
-  transform: translate3d(0, -8px, 0) scale(1.05);
+  transform: translateY(-8px) scale(1.05);
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(120, 80, 255, 0.3);
   box-shadow: 
@@ -2472,7 +2400,7 @@ html {
 }
 
 .hero-button:hover {
-  transform: translate3d(0, -4px, 0) scale(1.03);
+  transform: translateY(-4px) scale(1.03);
   box-shadow: 
     0 20px 60px rgba(0, 255, 136, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -2522,9 +2450,6 @@ html {
   perspective: 1200px;
   animation: fadeInUp 0.8s ease 0.5s both;
   transform-style: preserve-3d;
-  will-change: transform;
-  contain: layout;
-  min-height: 400px; /* Rezerwuj miejsce */
 }
 
 .cv-before, .cv-after {
@@ -3123,6 +3048,31 @@ html {
   position: relative;
 }
 
+.testimonials-section::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(120, 80, 255, 0.1) 0%, transparent 70%);
+  animation: premiumFloat 15s ease infinite;
+  pointer-events: none;
+}
+
+@keyframes premiumFloat {
+  0%, 100% { 
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.3;
+  }
+  33% { 
+    transform: translate(200px, -100px) rotate(120deg);
+    opacity: 0.6;
+  }
+  66% { 
+    transform: translate(-100px, 200px) rotate(240deg);
+    opacity: 0.4;
+  }
 }
 
 /* DISABLE ON MOBILE FOR PERFORMANCE */
@@ -3824,8 +3774,9 @@ html {
   margin-bottom: 60px;
   opacity: 0;
   transform: translateY(30px);
-  min-height: 200px; /* Rezerwuj miejsce */
-  will-change: transform, opacity;
+  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .timeline-step::before {
@@ -3862,8 +3813,9 @@ html {
 
 .timeline-step.visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
+  transform: translateY(0);
 }
+
 .timeline-step:nth-child(even) {
   margin-top: 120px;
 }
@@ -4390,10 +4342,6 @@ html {
   border-radius: 28px;
   padding: 40px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  min-height: 320px; /* Rezerwuj miejsce */
-  contain: layout style paint;
-  min-height: 320px; /* Rezerwuj miejsce */
-  contain: layout style paint;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -4416,7 +4364,7 @@ html {
 
 /* Efekt hover dla wszystkich kart */
 .testimonial-card:hover {
-  transform: translate3d(0, -10px, 0) scale(1.02);
+  transform: translateY(-10px) scale(1.02);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.06), 
     rgba(120, 80, 255, 0.02),
@@ -4628,7 +4576,7 @@ html {
 @keyframes modalSlideIn {
   0% { 
     opacity: 0; 
-    transform: translate3d(0, 50px, 0) scale(0.95);
+    transform: translateY(50px) scale(0.95);
     filter: blur(10px);
   }
   50% {
@@ -5142,7 +5090,14 @@ html {
   box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
   animation: scoreRotate 20s linear infinite;
 
-
+}
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 255, 136, 0.3);
+  animation: scoreRotate 20s linear infinite;
 }
 
 @keyframes scoreRotate {
@@ -6097,7 +6052,7 @@ html {
 }
 
 .capability-card:hover {
-  transform: translate3d(0, -15px, 0) scale(1.05);
+  transform: translateY(-15px) scale(1.05);
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(120, 80, 255, 0.3);
   box-shadow: 
@@ -6302,7 +6257,7 @@ html {
 }
 
 .faq-item:hover {
-  transform: translate3d(0, -12px, 0) scale(1.03);
+  transform: translateY(-12px) scale(1.03);
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(120, 80, 255, 0.4);
   box-shadow: 
@@ -7241,8 +7196,7 @@ html {
 
         /* Smooth scrolling */
         html {
- 	scroll-behavior: auto !important;
-
+          scroll-behavior: smooth;
         }
 
         /* Selection color */
@@ -7789,8 +7743,7 @@ button:focus {
 
 /* Confetti */
 .confetti {
-  position: fixed !important;
-  pointer-events: none !important;
+  position: fixed;
   width: 10px;
   height: 10px;
   top: -10px;
