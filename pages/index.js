@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
 import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 
 export default function Home() {
+  const router = useRouter()
+  const { locale } = router
   // GŁÓWNE STATE VARIABLES - NA SAMEJ GÓRZE
+  const [currentLanguage, setCurrentLanguage] = useState(locale || 'pl')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [jobPosting, setJobPosting] = useState('')
   const [currentCV, setCurrentCV] = useState('')
@@ -12,6 +16,8 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState(null)
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [optimizedResult, setOptimizedResult] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [analysisResult, setAnalysisResult] = useState(null)
   const [showPaywall, setShowPaywall] = useState(false)
@@ -24,7 +30,53 @@ export default function Home() {
   const [tooltips, setTooltips] = useState([])
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
+  
 
+// Translations system
+  const translations = {
+    pl: {
+      nav: {
+        howItWorks: 'Jak to działa',
+        reviews: 'Opinie',
+        pricing: 'Cennik',
+        optimizeNow: '🎯 Zoptymalizuj CV teraz ⚡'
+      },
+      hero: {
+        badge: '🏆 #1 AI Platforma CV w Polsce',
+        title: 'Zwiększ swoje szanse o',
+        subtitle: 'Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy.',
+        stats: {
+          moreInterviews: 'więcej rozmów',
+          atsSuccess: 'ATS success',
+          optimization: 'optymalizacja'
+        },
+        cta: '🔍 Sprawdź swoje CV',
+        guarantee: '✅ Bez rejestracji'
+      }
+    },
+    en: {
+      nav: {
+        howItWorks: 'How it works',
+        reviews: 'Reviews',
+        pricing: 'Pricing',
+        optimizeNow: '🎯 Optimize CV now ⚡'
+      },
+      hero: {
+        badge: '🏆 #1 AI CV Platform in Poland',
+        title: 'Increase your chances by',
+        subtitle: 'The first AI in Poland that optimizes your CV for specific job offers.',
+        stats: {
+          moreInterviews: 'more interviews',
+          atsSuccess: 'ATS success',
+          optimization: 'optimization'
+        },
+        cta: '🔍 Check your CV',
+        guarantee: '✅ No registration'
+      }
+    }
+  }
+
+  const t = translations[currentLanguage]
   // Stats counter animation
   useEffect(() => {
     const observerCallback = (entries) => {
@@ -299,7 +351,7 @@ useEffect(() => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const steps = entry.target.querySelectorAll('.timeline-step')
-        const line = entry.target.querySelector('.timeline-line')
+const line = entry.target.querySelector('.timeline-progress-line')
         
         if (line) {
           line.classList.add('animate')
@@ -428,8 +480,8 @@ const openUploadModal = () => {
   // Typing animation states
 
 
-const typingPhrases = [
-  'optymalizacją CV', 
+const phrasesPL = [
+  'optymalizacją CV',
   'analizą słów kluczowych',
   'zwiększeniem szans na pracę',
   'profesjonalnym CV',
@@ -438,6 +490,19 @@ const typingPhrases = [
   'zwiększeniem widoczności',
   'sztuczną inteligencją'
 ];
+const phrasesEN = [
+  'CV optimization',
+  'keyword analysis',
+  'boosted job chances',
+  'a professional CV',
+  'custom content',
+  'ATS analysis',
+  'greater visibility',
+  'artificial intelligence'
+];
+
+const typingPhrases = currentLanguage === 'pl' ? phrasesPL : phrasesEN;
+
 
 // Typing animation effect
 useEffect(() => {
@@ -622,7 +687,7 @@ const createConfetti = () => {
       const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext))
       
       if (!isAllowed) {
-        alert('❌ Obsługujemy tylko pliki: PDF, DOC, DOCX')
+        alert(currentLanguage === 'pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ Only PDF, DOC, DOCX are supported');
         e.target.value = '' // Wyczyść input
         return
       }
@@ -630,7 +695,7 @@ const createConfetti = () => {
       // Sprawdź typ MIME
       const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
       if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
-        alert('❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX')
+        alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
         e.target.value = ''
         return
       }
@@ -642,7 +707,12 @@ const createConfetti = () => {
     }
   }
 
-  const handlePayment = (plan) => {
+const handlePayment = (plan) => {
+    // Pokaz szablony po wybraniu planu Gold lub Premium
+    if (plan === 'gold' || plan === 'premium-monthly') {
+      setShowTemplateModal(true);
+    }
+
     // Pobierz email z paywall modal lub pricing modal
     const paywallEmail = document.getElementById('paywallEmail')?.value;
     const customerEmail = document.getElementById('customerEmail')?.value;
@@ -804,31 +874,44 @@ const createConfetti = () => {
   // Floating notifications
   
   
-  useEffect(() => {
-    const floatingNotifications = [
-      { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
-      { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
-      { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
-      { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
-      { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
-    ]
+useEffect(() => {
+  const floatingNotificationsPL = [
+    { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
+    { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
+    { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
+    { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
+    { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
+  ];
 
-    let currentIndex = 0
-    const showNotification = () => {
-      const notification = floatingNotifications[currentIndex]
-      setNotifications(prev => [...prev, { ...notification, show: true }])
-      
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n.id !== notification.id))
-      }, 6000)
-      
-      currentIndex = (currentIndex + 1) % floatingNotifications.length
-    }
+  const floatingNotificationsEN = [
+    { id: 1, name: 'Anna', action: 'received a job offer at Allegro', time: '2 min ago' },
+    { id: 2, name: 'Michael', action: 'optimized his CV and got 3 interviews', time: '5 min ago' },
+    { id: 3, name: 'Catherine', action: 'increased her ATS score by 40%', time: '8 min ago' },
+    { id: 4, name: 'Peter', action: 'received an offer at CD Projekt', time: '12 min ago' },
+    { id: 5, name: 'Magdalena', action: 'passed ATS filters at Orange', time: '15 min ago' }
+  ];
 
-   showNotification()
-    const interval = setInterval(showNotification, 12000)
-    return () => clearInterval(interval)
-  }, [])
+  const floatingNotifications = currentLanguage === 'pl'
+    ? floatingNotificationsPL
+    : floatingNotificationsEN;
+
+  let currentIndex = 0;
+  const showNotification = () => {
+    const notification = floatingNotifications[currentIndex];
+    setNotifications(prev => [...prev, { ...notification, show: true }]);
+
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== notification.id));
+    }, 6000);
+
+    currentIndex = (currentIndex + 1) % floatingNotifications.length;
+  };
+
+  showNotification();
+  const interval = setInterval(showNotification, 12000);
+  return () => clearInterval(interval);
+}, [currentLanguage]);
+ 
 
   // Mobile menu functions
   const toggleMobileMenu = () => {
@@ -904,19 +987,19 @@ const createConfetti = () => {
     <div className="progress-steps">
       <div className="progress-step active" data-step="1">
         <span className="step-dot"></span>
-        <span className="step-label">Start</span>
+        <span className="step-label">{currentLanguage === 'pl' ? 'Start' : 'Start'}</span>
       </div>
       <div className="progress-step" data-step="2">
         <span className="step-dot"></span>
-        <span className="step-label">Analiza</span>
+        <span className="step-label">{currentLanguage === 'pl' ? 'Start' : 'Start'}</span>
       </div>
       <div className="progress-step" data-step="3">
         <span className="step-dot"></span>
-        <span className="step-label">Płatność</span>
+        <span className="step-label">{currentLanguage === 'pl' ? 'Płatność' : 'Payment'}</span>
       </div>
       <div className="progress-step" data-step="4">
         <span className="step-dot"></span>
-        <span className="step-label">Gotowe!</span>
+        <span className="step-label">{currentLanguage === 'pl' ? 'Gotowe!' : 'Done!'}</span>
       </div>
     </div>
   </div>
@@ -925,24 +1008,24 @@ const createConfetti = () => {
 <div className="scroll-indicator">
   <div className="scroll-progress"></div>
   <div className="scroll-sections">
-    <a href="#hero" className="scroll-dot active" data-section="hero">
-      <span className="dot-tooltip">Start</span>
-    </a>
-    <a href="#stats" className="scroll-dot" data-section="stats">
-      <span className="dot-tooltip">Statystyki</span>
-    </a>
-    <a href="#capabilities" className="scroll-dot" data-section="capabilities">
-      <span className="dot-tooltip">Możliwości</span>
-    </a>
-    <a href="#timeline" className="scroll-dot" data-section="timeline">
-      <span className="dot-tooltip">Jak to działa</span>
-    </a>
-    <a href="#testimonials" className="scroll-dot" data-section="testimonials">
-      <span className="dot-tooltip">Opinie</span>
-    </a>
-    <a href="#faq" className="scroll-dot" data-section="faq">
-      <span className="dot-tooltip">FAQ</span>
-    </a>
+<a href="#hero" className="scroll-dot active" data-section="hero">
+  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Start' : 'Start'}</span>
+</a>
+<a href="#stats" className="scroll-dot" data-section="stats">
+  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Statystyki' : 'Statistics'}</span>
+</a>
+<a href="#capabilities" className="scroll-dot" data-section="capabilities">
+  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Możliwości' : 'Capabilities'}</span>
+</a>
+<a href="#timeline" className="scroll-dot" data-section="timeline">
+  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Jak to działa' : 'How it works'}</span>
+</a>
+<a href="#testimonials" className="scroll-dot" data-section="testimonials">
+  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Opinie' : 'Reviews'}</span>
+</a>
+<a href="#faq" className="scroll-dot" data-section="faq">
+  <span className="dot-tooltip">FAQ</span>
+</a>
   </div>
 </div>
 
@@ -954,16 +1037,44 @@ const createConfetti = () => {
               <span className="logo-badge">AI</span>
               <span className="logo-text">CvPerfect</span>
             </div>
-           <div className="nav-links" id="mobileNav">
-  <a href="#timeline" className="nav-link" onClick={closeMobileMenu}>Jak to działa</a>
-  <a href="#testimonials" className="nav-link" onClick={closeMobileMenu}>Opinie</a>
-  <a href="#pricing" className="nav-link" onClick={closeMobileMenu}>Cennik</a>
- <button className="nav-cta" onClick={() => {
-  console.log('Nav button clicked');
-  setShowUploadModal(true);
-}}>
-  🎯 Zoptymalizuj CV teraz ⚡
-</button>
+<div className="nav-links" id="mobileNav">
+  <div className="language-switcher">
+    <button 
+      className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+      onClick={() => {
+        setCurrentLanguage('pl');
+        closeMobileMenu();
+      }}
+      title="Polski"
+    >
+      🇵🇱 PL
+    </button>
+    <button 
+      className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+      onClick={() => {
+        setCurrentLanguage('en');
+        closeMobileMenu();
+      }}
+      title="English"
+    >
+      🇬🇧 EN
+    </button>
+  </div>
+  <a href="#timeline" className="nav-link" onClick={closeMobileMenu}>
+    {currentLanguage === 'pl' ? 'Jak to działa' : 'How it works'}
+  </a>
+  <a href="#testimonials" className="nav-link" onClick={closeMobileMenu}>
+    {currentLanguage === 'pl' ? 'Opinie' : 'Reviews'}
+  </a>
+  <a href="#pricing" className="nav-link" onClick={closeMobileMenu}>
+    {currentLanguage === 'pl' ? 'Cennik' : 'Pricing'}
+  </a>
+  <button className="nav-cta" onClick={() => {
+    console.log('Nav button clicked');
+    setShowUploadModal(true);
+  }}>
+    {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
+  </button>
 </div>
 <div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
   <span></span>
@@ -976,78 +1087,79 @@ const createConfetti = () => {
         {/* Hero Section */}
         <div className="hero-section" id="hero">
           <div className="hero-content">
-            <div className="hero-badge">
-              🏆 #1 AI Platforma CV w Polsce
-            </div>
+<div className="hero-badge">
+  {currentLanguage === 'pl' ? '🏆 #1 AI Platforma CV w Polsce' : '🏆 #1 AI CV Platform in Poland'}
+</div>
 <h1 className="hero-title">
-  Zwiększ swoje szanse o <span className="highlight">410%</span>
+  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse o' : 'Increase your chances by'} <span className="highlight">410%</span>
   <br />
-  z AI-powered
+  {currentLanguage === 'pl' ? 'z AI-powered' : 'with AI-powered'}
   <div className="typing-safe-zone">
     <span className="typing-text">{typingText}</span>
     <span className="typing-cursor">|</span>
   </div>
 </h1>
-
-            <p className="hero-subtitle">
-              Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy. 
-              <strong> 95% skuteczności ATS, 30 sekund optymalizacji, tylko 9.99 zł.</strong>
-            </p>
-            
-            <div className="hero-stats">
-              <div className="stat-item">
-                <div className="stat-number">410%</div>
-                <div className="stat-text">więcej rozmów</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">95%</div>
-                <div className="stat-text">ATS success</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-number">30s</div>
-                <div className="stat-text">optymalizacja</div>
-              </div>
-            </div>
-
-            <div className="hero-cta">
-              <button className="hero-button primary" onClick={openUploadModal}>
-  🔍 Sprawdź swoje CV
-</button>
-              <div className="hero-guarantee">
-  <span>✅ Bez rejestracji </span>
+<p className="hero-subtitle">
+  {currentLanguage === 'pl' 
+    ? 'Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy.'
+    : 'The first AI in Poland that optimizes your CV for specific job offers.'}
+  <strong>
+    {currentLanguage === 'pl'
+      ? ' 95% skuteczności ATS, 30 sekund optymalizacji, tylko 9.99 zł.'
+      : ' 95% ATS success rate, 30 seconds optimization, only 9.99 PLN.'}
+  </strong>
+</p>
+<div className="hero-stats">
+  <div className="stat-item">
+    <div className="stat-number">410%</div>
+    <div className="stat-text">{currentLanguage === 'pl' ? 'więcej rozmów' : 'more interviews'}</div>
+  </div>
+  <div className="stat-item">
+    <div className="stat-number">95%</div>
+    <div className="stat-text">ATS success</div>
+  </div>
+  <div className="stat-item">
+    <div className="stat-number">30s</div>
+    <div className="stat-text">{currentLanguage === 'pl' ? 'optymalizacja' : 'optimization'}</div>
+  </div>
 </div>
-            </div>
+<div className="hero-cta">
+  <button className="hero-button primary" onClick={openUploadModal}>
+    {currentLanguage === 'pl' ? '🔍 Sprawdź swoje CV' : '🔍 Check your CV'}
+  </button>
+  <div className="hero-guarantee">
+    <span>{currentLanguage === 'pl' ? '✅ Bez rejestracji' : '✅ No registration'}</span>
+  </div>
+</div>
           </div>
 
           <div className="hero-visual">
             <div className="cv-preview">
               <div className="cv-before">
-                <div className="cv-header">❌ Przed optymalizacją</div>
+                <div className="cv-header">{currentLanguage === 'pl' ? '❌ Przed optymalizacją' : '❌ Before optimization'}</div>
                 <div className="cv-score bad">32% ATS</div>
                 <div className="cv-content">
                   <div className="cv-line short"></div>
                   <div className="cv-line medium"></div>
                   <div className="cv-line long"></div>
-                  <div className="cv-problems">
-                    <span>• Brak słów kluczowych</span>
-                    <span>• Złe formatowanie</span>
-                    <span>• Nieoptymalne sekcje</span>
-                  </div>
+<div className="cv-problems">
+  <span>{currentLanguage === 'pl' ? '• Brak słów kluczowych' : '• Missing keywords'}</span>
+  <span>{currentLanguage === 'pl' ? '• Złe formatowanie' : '• Poor formatting'}</span>
+  <span>{currentLanguage === 'pl' ? '• Nieoptymalne sekcje' : '• Suboptimal sections'}</span>                  </div>
                 </div>
               </div>
               <div className="cv-arrow">➜</div>
               <div className="cv-after">
-                <div className="cv-header">✅ Po optymalizacji AI</div>
+                <div className="cv-header">{currentLanguage === 'pl' ? '✅ Po optymalizacji AI' : '✅ After AI optimization'}</div>
                 <div className="cv-score good">95% ATS</div>
                 <div className="cv-content">
                   <div className="cv-line optimized short"></div>
                   <div className="cv-line optimized medium"></div>
                   <div className="cv-line optimized long"></div>
-                  <div className="cv-improvements">
-                    <span>• Słowa kluczowe ✅</span>
-                    <span>• ATS-ready format ✅</span>
-                    <span>• Optymalne sekcje ✅</span>
-                  </div>
+<div className="cv-improvements">
+  <span>{currentLanguage === 'pl' ? '• Słowa kluczowe ✅' : '• Keywords ✅'}</span>
+  <span>• ATS-ready format ✅</span>
+  <span>{currentLanguage === 'pl' ? '• Optymalne sekcje ✅' : '• Optimal sections ✅'}</span>                  </div>
                 </div>
               </div>
             </div>
@@ -1059,42 +1171,46 @@ const createConfetti = () => {
 <div className="capabilities-section" id="capabilities">
   <div className="capabilities-container">
     <div className="capabilities-header">
-  <div className="header-badge">
-    <span className="badge-icon">🤖</span>
-    <span className="badge-text">AI-Powered Detection</span>
-  </div>
-  <h3>Wspieramy wszystkie formaty dokumentów</h3>
-  <p>Wystarczy wkleić - nasz AI automatycznie rozpozna czy to CV czy list motywacyjny<br />i zastosuje odpowiednią optymalizację</p>
+<div className="header-badge">
+  <span className="badge-icon">🤖</span>
+  <span className="badge-text">{currentLanguage === 'pl' ? 'AI-Powered Detection' : 'AI-Powered Detection'}</span>
+</div>
+<h3>{currentLanguage === 'pl' ? 'Wspieramy wszystkie formaty dokumentów' : 'We support all document formats'}</h3>
+<p>
+  {currentLanguage === 'pl'
+    ? 'Wystarczy wkleić – nasz AI automatycznie rozpozna czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację'
+    : 'Just paste – our AI auto-detects CV vs cover letter and applies the right optimization'}
+</p>
 </div>
     <div className="capabilities-grid">
       <div className="capability-card">
         <div className="cap-icon">📄</div>
-        <h4>CV + Oferta pracy</h4>
-        <p>Zoptymalizujemy CV pod konkretną ofertę</p>
-        <div className="cap-result">→ Dopasowane CV</div>
+<h4>{currentLanguage === 'pl' ? 'CV + Oferta pracy' : 'CV + Job Posting'}</h4>
+<p>{currentLanguage === 'pl' ? 'Zoptymalizujemy CV pod konkretną ofertę' : 'We optimize your CV for a specific job'}</p>
+<div className="cap-result">{currentLanguage === 'pl' ? '→ Dopasowane CV' : '→ Tailored CV'}</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">✉️</div>
-        <h4>List motywacyjny + Oferta</h4>
-        <p>Dostosujemy list pod wymagania pracodawcy</p>
-        <div className="cap-result">→ Dopasowany list</div>
+<h4>{currentLanguage === 'pl' ? 'List motywacyjny + Oferta' : 'Cover Letter + Job Posting'}</h4>
+<p>{currentLanguage === 'pl' ? 'Dostosujemy list pod wymagania pracodawcy' : 'We tailor your letter to the employer’s requirements'}</p>
+<div className="cap-result">{currentLanguage === 'pl' ? '→ Dopasowany list' : '→ Tailored letter'}</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">📋</div>
-        <h4>Samo CV</h4>
-        <p>Stworzymy uniwersalne CV gotowe do użycia</p>
-        <div className="cap-result">→ Ogólne CV</div>
+<h4>{currentLanguage === 'pl' ? 'Samo CV' : 'CV only'}</h4>
+<p>{currentLanguage === 'pl' ? 'Stworzymy uniwersalne CV gotowe do użycia' : 'We’ll create a universal, ready-to-use CV'}</p>
+<div className="cap-result">{currentLanguage === 'pl' ? '→ Ogólne CV' : '→ General CV'}</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">📝</div>
-        <h4>Sam list motywacyjny</h4>
-        <p>Przygotujemy szablon do dalszej edycji</p>
-        <div className="cap-result">→ Szablon listu</div>
+<h4>{currentLanguage === 'pl' ? 'Sam list motywacyjny' : 'Cover Letter only'}</h4>
+<p>{currentLanguage === 'pl' ? 'Przygotujemy szablon do dalszej edycji' : 'We’ll prepare a template for further editing'}</p>
+<div className="cap-result">{currentLanguage === 'pl' ? '→ Szablon listu' : '→ Letter template'}</div>
       </div>
     </div>
     <div className="capabilities-note">
       <span className="note-icon">🤖</span>
-      <span>System automatycznie wykryje czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację!</span>
+<span>{currentLanguage === 'pl' ? 'System automatycznie wykryje czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację!' : 'The system will automatically detect whether it’s a CV or a cover letter and apply the appropriate optimization!'}</span>
     </div>
   </div>
 </div>
@@ -1103,40 +1219,38 @@ const createConfetti = () => {
 <div className="stats-counter-section" id="stats">
   <div className="stats-container">
     <div className="stats-header">
-      <div className="stats-badge">📊 Live Statistics</div>
-      <h2>CvPerfect w liczbach</h2>
-      <p>Dołącz do tysięcy zadowolonych użytkowników</p>
+<div className="stats-badge">📊 {currentLanguage === 'pl' ? 'Live Statistics' : 'Live Statistics'}</div>
+<h2>{currentLanguage === 'pl' ? 'CvPerfect w liczbach' : 'CvPerfect in numbers'}</h2>
+<p>{currentLanguage === 'pl' ? 'Dołącz do tysięcy zadowolonych użytkowników' : 'Join thousands of happy users'}</p>
     </div>
     
     <div className="stats-grid">
       <div className="stat-box">
         <div className="stat-icon">📄</div>
         <div className="stat-value" data-target="15234">0</div>
-        <div className="stat-label">CV zoptymalizowanych</div>
-        <div className="stat-growth">+3 dziś</div>
-      </div>
+<div className="stat-label">{currentLanguage === 'pl' ? 'CV zoptymalizowanych' : 'CVs optimized'}</div>
+<div className="stat-growth">{currentLanguage === 'pl' ? '+3 dziś' : '+3 today'}</div>      </div>
       
       <div className="stat-box">
         <div className="stat-icon">🎯</div>
         <div className="stat-value" data-target="98">0</div>
         <div className="stat-suffix">%</div>
-        <div className="stat-label">Skuteczność ATS</div>
-        <div className="stat-growth">Top 1 w PL</div>
+<div className="stat-label">{currentLanguage === 'pl' ? 'Skuteczność ATS' : 'ATS success rate'}</div>
+<div className="stat-growth">{currentLanguage === 'pl' ? 'Top 1 w PL' : 'Top 1 in Poland'}</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">⚡</div>
         <div className="stat-value" data-target="3.2">0</div>
         <div className="stat-suffix">s</div>
-        <div className="stat-label">Czas analizy</div>
-        <div className="stat-growth">Błyskawicznie</div>
-      </div>
+<div className="stat-label">{currentLanguage === 'pl' ? 'Czas analizy' : 'Analysis time'}</div>
+<div className="stat-growth">{currentLanguage === 'pl' ? 'Błyskawicznie' : 'Lightning-fast'}</div>      </div>
       
       <div className="stat-box">
         <div className="stat-icon">💼</div>
         <div className="stat-value" data-target="7846">0</div>
-        <div className="stat-label">Nowych miejsc pracy</div>
-        <div className="stat-growth">+12 dziś</div>
+<div className="stat-label">{currentLanguage === 'pl' ? 'Nowych miejsc pracy' : 'New job postings'}</div>
+<div className="stat-growth">{currentLanguage === 'pl' ? '+12 dziś' : '+12 today'}</div>
       </div>
     </div>
   </div>
@@ -1148,12 +1262,16 @@ const createConfetti = () => {
 <div className="timeline-section" id="timeline">
   <div className="timeline-container">
     <div className="timeline-header">
-      <div className="timeline-badge premium-badge">
-        <span className="badge-icon">⚡</span>
-        <span className="badge-text">Proces 30 sekund</span>
-      </div>
-      <h2>Jak zoptymalizować CV w <span className="gradient-text">30 sekund?</span></h2>
-      <p>Przewodnik krok po kroku - zobacz jak łatwo to zrobić</p>
+<div className="timeline-badge premium-badge">
+  <span className="badge-icon">⚡</span>
+  <span className="badge-text">{currentLanguage === 'pl' ? 'Proces 30 sekund' : '30-second process'}</span>
+</div>
+<h2>
+  {currentLanguage === 'pl' ? 'Jak zoptymalizować CV w ' : 'How to optimize your CV in '}
+  <span className="gradient-text">30 {currentLanguage === 'pl' ? 'sekund' : 'seconds'}?</span>
+</h2>
+<p>{currentLanguage === 'pl' ? 'Przewodnik krok po kroku - zobacz jak łatwo to zrobić' : 'Step-by-step guide – see how easy it is'}</p>
+
     </div>
     
     <div className="timeline-wrapper premium">
@@ -1172,17 +1290,17 @@ const createConfetti = () => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">KROK 1</div>
-            <h3>Wklej lub załaduj CV</h3>
-            <p>Skopiuj treść CV lub przeciągnij plik PDF/DOC</p>
-            <div className="step-details">
-              <span className="detail-item">✅ PDF, DOC, DOCX</span>
-              <span className="detail-item">✅ Lub wklej tekst</span>
-              <span className="detail-item">✅ Max 5MB</span>
+<div className="step-label">{currentLanguage === 'pl' ? 'KROK 1' : 'STEP 1'}</div>
+<h3>{currentLanguage === 'pl' ? 'Wklej lub załaduj CV' : 'Paste or upload your CV'}</h3>
+<p>{currentLanguage === 'pl' ? 'Skopiuj treść CV lub przeciągnij plik PDF/DOC' : 'Paste your CV content or drag & drop a PDF/DOC'}</p>
+<div className="step-details">
+  <span className="detail-item">✅ PDF, DOC, DOCX</span>
+  <span className="detail-item">{currentLanguage === 'pl' ? '✅ Lub wklej tekst' : '✅ Or paste text'}</span>
+  <span className="detail-item">✅ Max 5MB</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>5 sekund</span>
+                <span>{currentLanguage === 'pl' ? '5 sekund' : '5 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1203,17 +1321,17 @@ const createConfetti = () => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">KROK 2</div>
-            <h3>AI analizuje i optymalizuje</h3>
-            <p>GPT-4 skanuje CV pod kątem ATS i słów kluczowych</p>
-            <div className="step-details">
-              <span className="detail-item">🔍 Analiza ATS</span>
-              <span className="detail-item">🎯 Słowa kluczowe</span>
-              <span className="detail-item">📊 Score obliczenie</span>
+           <div className="step-label">{currentLanguage === 'pl' ? 'KROK 2' : 'STEP 2'}</div>
+<h3>{currentLanguage === 'pl' ? 'AI analizuje i optymalizuje' : 'AI analyzes and optimizes'}</h3>
+<p>{currentLanguage === 'pl' ? 'GPT-4 skanuje CV pod kątem ATS i słów kluczowych' : 'GPT-4 scans your CV for ATS and relevant keywords'}</p>
+<div className="step-details">
+  <span className="detail-item">{currentLanguage === 'pl' ? '🔍 Analiza ATS' : '🔍 ATS analysis'}</span>
+  <span className="detail-item">{currentLanguage === 'pl' ? '🎯 Słowa kluczowe' : '🎯 Keywords'}</span>
+  <span className="detail-item">{currentLanguage === 'pl' ? '📊 Score obliczenie' : '📊 Score calculation'}</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>15 sekund</span>
+                <span>{currentLanguage === 'pl' ? '15 sekund' : '15 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1234,17 +1352,17 @@ const createConfetti = () => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">KROK 3</div>
-            <h3>Szybka płatność</h3>
-            <p>Bezpieczna transakcja przez Stripe</p>
-            <div className="step-details">
-              <span className="detail-item">🔒 SSL Secure</span>
-              <span className="detail-item">💰 Tylko 9.99 zł</span>
-              <span className="detail-item">⚡ Instant</span>
+<div className="step-label">{currentLanguage === 'pl' ? 'KROK 3' : 'STEP 3'}</div>
+<h3>{currentLanguage === 'pl' ? 'Szybka płatność' : 'Quick payment'}</h3>
+<p>{currentLanguage === 'pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure transaction via Stripe'}</p>
+<div className="step-details">
+  <span className="detail-item">🔒 SSL Secure</span>
+  <span className="detail-item">{currentLanguage === 'pl' ? '💰 Tylko 9.99 zł' : '💰 Only 9.99 PLN'}</span>
+  <span className="detail-item">⚡ Instant</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>5 sekund</span>
+                <span>{currentLanguage === 'pl' ? '5 sekund' : '5 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1265,17 +1383,17 @@ const createConfetti = () => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">FINAŁ</div>
-            <h3>Pobierz zoptymalizowane CV!</h3>
-            <p>Twoje CV jest gotowe z 95% ATS score</p>
-            <div className="step-details">
-              <span className="detail-item">📈 95% ATS</span>
-              <span className="detail-item">✨ PDF & DOCX</span>
-              <span className="detail-item">🚀 Gotowe!</span>
+<div className="step-label">{currentLanguage === 'pl' ? 'FINAŁ' : 'FINAL'}</div>
+<h3>{currentLanguage === 'pl' ? 'Pobierz zoptymalizowane CV!' : 'Download your optimized CV!'}</h3>
+<p>{currentLanguage === 'pl' ? 'Twoje CV jest gotowe z 95% ATS score' : 'Your CV is ready with a 95% ATS score'}</p>
+<div className="step-details">
+  <span className="detail-item">📈 95% ATS</span>
+  <span className="detail-item">✨ PDF & DOCX</span>
+  <span className="detail-item">{currentLanguage === 'pl' ? '🚀 Gotowe!' : '🚀 Done!'}</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>5 sekund</span>
+                <span>{currentLanguage === 'pl' ? '5 sekund' : '5 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1291,19 +1409,18 @@ const createConfetti = () => {
     {/* Interactive Demo Button */}
     <div className="timeline-cta premium-cta">
       <button className="timeline-button premium-button" onClick={openUploadModal}>
-        <span className="button-text">Rozpocznij teraz</span>
+        <span className="button-text">{currentLanguage === 'pl' ? 'Rozpocznij teraz' : 'Start now'}</span>
         <span className="button-icon">🚀</span>
         <div className="button-glow"></div>
       </button>
       <div className="cta-stats">
         <div className="stat-item">
           <span className="stat-icon">⚡</span>
-          <span className="stat-text">30 sekund</span>
+          <span className="stat-text">{currentLanguage === 'pl' ? '30 sekund' : '30 seconds'}</span>
         </div>
         <div className="stat-item">
           <span className="stat-icon">💎</span>
-          <span className="stat-text">9.99 zł</span>
-        </div>
+<span className="stat-text">{currentLanguage === 'pl' ? '19.99 zł' : '19.99 PLN ≈ 4.7 €'}</span>        </div>
         <div className="stat-item">
           <span className="stat-icon">🎯</span>
           <span className="stat-text">95% ATS</span>
@@ -1317,8 +1434,12 @@ const createConfetti = () => {
 {/* Testimonials Section */}
         <div className="testimonials-section" id="testimonials">
           <div className="testimonials-header">
-            <h2 className="section-title">Już 15,000+ osób znalazło pracę dzięki CvPerfect 🎉</h2>
-            <p className="section-subtitle">Prawdziwe opinie od użytkowników, którzy dostali wymarzoną pracę</p>
+<h2 className="section-title">
+  {currentLanguage === 'pl' ? 'Już 15,000+ osób znalazło pracę dzięki CvPerfect 🎉' : 'Over 15,000 people found a job thanks to CvPerfect 🎉'}
+</h2>
+<p className="section-subtitle">
+  {currentLanguage === 'pl' ? 'Prawdziwe opinie od użytkowników, którzy dostali wymarzoną pracę' : 'Real reviews from users who landed their dream jobs'}
+</p>
           </div>
 
           <div className="testimonials-grid">
@@ -1332,7 +1453,7 @@ const createConfetti = () => {
                     <div className="testimonial-company">{testimonial.company}</div>
                   </div>
                   <div className="testimonial-verified">
-                    {testimonial.verified && <span className="verified-badge">✅ Zweryfikowane</span>}
+                    {testimonial.verified && <span className="verified-badge">{currentLanguage === 'pl' ? '✅ Zweryfikowane' : '✅ Verified'}</span>}
                   </div>
                 </div>
                 <div className="testimonial-rating">
@@ -1342,17 +1463,16 @@ const createConfetti = () => {
                 </div>
                 <p className="testimonial-text">"{testimonial.text}"</p>
                 <div className="testimonial-impact">
-                  <span className="impact-badge">🚀 Sukces dzięki CvPerfect</span>
+                  <span className="impact-badge">{currentLanguage === 'pl' ? '🚀 Sukces dzięki CvPerfect' : '🚀 Success with CvPerfect'}</span>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="testimonials-cta">
-            <h3>Dołącz do 15,000+ zadowolonych użytkowników!</h3>
-            <button className="testimonials-button" onClick={openUploadModal}>
-  Zwiększ swoje szanse 🚀
-</button>
+<h3>{currentLanguage === 'pl' ? 'Dołącz do 15,000+ zadowolonych użytkowników!' : 'Join 15,000+ happy users!'}</h3>
+<button className="testimonials-button" onClick={openUploadModal}>
+  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse 🚀' : 'Boost your chances 🚀'}</button>
           </div>
         </div>
 
@@ -1363,20 +1483,20 @@ const createConfetti = () => {
               <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
               
               <div className="upload-header">
-                <h2>Darmowa Analiza ATS</h2>
-<p>Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi</p>
-              </div>
+<h2>{currentLanguage === 'pl' ? 'Darmowa Analiza ATS' : 'Free ATS Analysis'}</h2>
+<p>{currentLanguage === 'pl' ? 'Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi' : 'See how your CV or cover letter performs with ATS'}</p>              </div>
 
               <div className="upload-area">
                 <div className="upload-zone">
                   <div className="upload-icon">📄</div>
-                  <h3>Wklej swoje CV lub wybierz plik</h3>
-                  <p>PDF, DOC, DOCX - maksymalnie 5MB</p>
-                  
-                  <textarea 
-                    className="cv-textarea"
-                    placeholder="Wklej tutaj pełne ogłoszenie o pracę...&#10;&#10;🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!"
-                    rows="8"
+<h3>{currentLanguage === 'pl' ? 'Wklej swoje CV lub wybierz plik' : 'Paste your CV or choose a file'}</h3>
+<p>{currentLanguage === 'pl' ? 'PDF, DOC, DOCX - maksymalnie 5MB' : 'PDF, DOC, DOCX - up to 5MB'}</p>
+<textarea 
+  className="cv-textarea"
+  placeholder={currentLanguage === 'pl'
+    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
+    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize accordingly!'}
+  rows="8"
                   ></textarea>
                   
                   <div className="upload-buttons">
@@ -1411,10 +1531,12 @@ const createConfetti = () => {
     reader.onload = (event) => {
       const textarea = document.querySelector('.cv-textarea');
       if (textarea) {
-        textarea.value = `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!`;
+textarea.value = currentLanguage === 'pl'
+  ? `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!`
+  : `📄 File "${file.name}" loaded successfully!\n\nSize: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Ready for analysis!`;
         
         const successMsg = document.createElement('div');
-        successMsg.innerHTML = '✅ CV zostało pomyślnie wczytane!';
+        successMsg.innerHTML = currentLanguage === 'pl' ? '✅ CV zostało pomyślnie wczytane!' : '✅ CV loaded successfully!';
         successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
         successMsg.className = 'success-message';
         const existing = document.querySelector('.success-message');
@@ -1427,23 +1549,20 @@ const createConfetti = () => {
   }
 }}
                     />
-                    <button 
-                      className="upload-btn secondary"
-                      onClick={() => document.getElementById('modalFileInput').click()}
-                    >
-                      📁 Wybierz plik
-                    </button>
-                    <button className="upload-btn primary" onClick={handleFreeAnalysis}>
-                      🔍 Analizuj teraz
-                    </button>
+<button className="upload-btn secondary" onClick={() => document.getElementById('modalFileInput').click()}>
+  {currentLanguage === 'pl' ? '📁 Wybierz plik' : '📁 Choose file'}
+</button>
+<button className="upload-btn primary" onClick={handleFreeAnalysis}>
+  {currentLanguage === 'pl' ? '🔍 Analizuj teraz' : '🔍 Analyze now'}
+</button>
                   </div>
                 </div>
 
                 <div className="upload-features">
-                  <div className="feature-check">✅ Analiza ATS w 30 sekund</div>
-                  <div className="feature-check">✅ Wykrywanie problemów</div>
-                  <div className="feature-check">✅ Score compatibility</div>
-                  <div className="feature-check">✅ 100% bezpieczne</div>
+<div className="feature-check">{currentLanguage === 'pl' ? '✅ Analiza ATS w 30 sekund' : '✅ ATS analysis in 30 seconds'}</div>
+<div className="feature-check">{currentLanguage === 'pl' ? '✅ Wykrywanie problemów' : '✅ Issue detection'}</div>
+<div className="feature-check">✅ Score compatibility</div>
+<div className="feature-check">{currentLanguage === 'pl' ? '✅ 100% bezpieczne' : '✅ 100% secure'}</div>
                 </div>
               </div>
             </div>
@@ -1459,10 +1578,14 @@ const createConfetti = () => {
   <div className="header-content">
     <div className="header-badge">
       <span className="badge-icon">🚀</span>
-      <span className="badge-text">Optymalizacja CV</span>
+      <span className="badge-text">{currentLanguage === 'pl' ? 'Optymalizacja CV' : 'CV Optimization'}</span>
     </div>
-    <h2>Odblouj pełną optymalizację!</h2>
-    <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
+<h2>{currentLanguage === 'pl' ? 'Odblokuj pełną optymalizację!' : 'Unlock full optimization!'}</h2>
+<p>
+  {currentLanguage === 'pl'
+    ? 'Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV'
+    : 'Enter your email, choose a plan, and get a detailed analysis + an optimized CV'}
+</p>
   </div>
   <button className="close-btn" onClick={() => setShowPaywall(false)}>×</button>
 </div>
@@ -1475,8 +1598,9 @@ const createConfetti = () => {
       <div className="score-label">ATS Score</div>
     </div>
     <div className="score-info">
-      <h4>🎯 Twój wynik ATS</h4>
-      <p>Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi</p>
+<h4>{currentLanguage === 'pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
+<p>{currentLanguage === 'pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for Applicant Tracking System compatibility'}</p>
+
     </div>
   </div>
 </div>
@@ -1485,61 +1609,62 @@ const createConfetti = () => {
 <div className="modal-content-inner">
   {/* Optimization Type Selection */}
 <div className="optimization-section">
-  <h3>🎯 Typ optymalizacji</h3>
+  <h3>{currentLanguage === 'pl' ? '🎯 Typ optymalizacji' : '🎯 Optimization type'}</h3>
   
   {/* Default Option - Selected */}
   <div className="default-option">
     <div className="option-header">
       <span className="option-icon">⭐</span>
       <div className="option-info">
-        <h4>Ogólna optymalizacja</h4>
-        <p>Uniwersalne CV dostosowane do Twojej branży</p>
-      </div>
-      <span className="selected-badge">✅ Wybrane</span>
-    </div>
+<h4>{currentLanguage === 'pl' ? 'Ogólna optymalizacja' : 'General optimization'}</h4>
+<p>{currentLanguage === 'pl' ? 'Uniwersalne CV dostosowane do Twojej branży' : 'A universal CV tailored to your industry'}</p>
+</div>
+<span className="selected-badge">{currentLanguage === 'pl' ? '✅ Wybrane' : '✅ Selected'}</span>    </div>
   </div>
 
   {/* Job Description Input */}
   <div className="job-upgrade-section">
     <div className="upgrade-header">
-      <h4>💼 Lub dostosuj pod konkretną ofertę pracy</h4>
-<p>Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania</p>
+<h4>{currentLanguage === 'pl' ? '💼 Lub dostosuj pod konkretną ofertę pracy' : '💼 Or tailor to a specific job posting'}</h4>
+<p>{currentLanguage === 'pl' ? 'Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania' : 'Paste the job post and we’ll optimize your CV or cover letter to those requirements'}</p>
     </div>
     <textarea 
-      className="job-textarea" 
-      placeholder="Wklej tutaj pełne ogłoszenie o pracę...&#10;&#10;🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!"
-      rows="4"
+  className="job-textarea" 
+  placeholder={currentLanguage === 'pl'
+    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
+    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize accordingly!'}
+  rows="4"
     ></textarea>
     <div className="upgrade-note">
       <span className="note-icon">💡</span>
-      <span>Im więcej szczegółów, tym lepsza optymalizacja!</span>
+<span>{currentLanguage === 'pl' ? 'Im więcej szczegółów, tym lepsza optymalizacja!' : 'The more details, the better the optimization!'}</span>
     </div>
   </div>
 </div>
 
   {/* Email Input */}
   <div className="email-section">
-    <h3>📧 Twój email</h3>
+    <h3>{currentLanguage === 'pl' ? '📧 Twój email' : '📧 Your email'}</h3>
     <input 
       type="email" 
       className="email-input" 
-      placeholder="twoj-email@example.com"
+ placeholder={currentLanguage === 'pl' ? 'twoj-email@example.com' : 'your-email@example.com'}
       id="paywallEmail"
     />
   </div>
 
   {/* Pricing Plans */}
   <div className="pricing-section">
-    <h3>💎 Wybierz plan</h3>
+    <h3>{currentLanguage === 'pl' ? '💎 Wybierz plan' : '💎 Choose a plan'}</h3>
     <div className="pricing-grid">
       {/* Basic Plan */}
       <div className="plan-card basic">
         <div className="plan-badge">BASIC</div>
         <div className="plan-header">
-          <h4>Jednorazowy</h4>
+          <h4>{currentLanguage === 'pl' ? 'Jednorazowy' : 'One-time'}</h4>
           <div className="plan-price">
-            <span className="old-price">29,99 zł</span>
-            <span className="current-price">9,99 zł</span>
+            <span className="old-price">39,99 zł</span>
+            <span className="current-price">19,99 zł</span>
             <span className="discount">-67%</span>
           </div>
         </div>
@@ -1552,67 +1677,68 @@ const createConfetti = () => {
         <button className="plan-button basic-btn" onClick={() => {
           const email = document.getElementById('paywallEmail').value;
           if (!email || !email.includes('@')) {
-            alert('⚠️ Podaj prawidłowy email!');
+           alert(currentLanguage === 'pl' ? '⚠️ Podaj prawidłowy email!' : '⚠️ Enter a valid email!');
             return;
           }
           handlePayment('premium');
-        }}>Wybierz Basic</button>
+        }}>{currentLanguage === 'pl' ? 'Wybierz Basic' : 'Choose Basic'}</button>
       </div>
 
       {/* Gold Plan */}
       <div className="plan-card gold popular">
         <div className="plan-badge">GOLD</div>
-        <div className="popularity-badge">NAJPOPULARNIEJSZY</div>
+        <div className="popularity-badge">{currentLanguage === 'pl' ? 'NAJPOPULARNIEJSZY' : 'MOST POPULAR'}</div>
+
         <div className="plan-header">
           <h4>Gold</h4>
           <div className="plan-price">
             <span className="old-price">89 zł</span>
             <span className="current-price">49 zł</span>
-            <span className="period">/miesiąc</span>
+            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
           </div>
         </div>
         <div className="plan-features">
-          <div className="feature">✅ 10 optymalizacji/mies.</div>
-          <div className="feature">✅ GPT-4 AI (najnowszy)</div>
-          <div className="feature">✅ Priorytetowa kolejka</div>
-          <div className="feature">✅ Dostęp do nowych funkcji</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ 10 optymalizacji/mies.' : '✅ 10 optimizations/month'}</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ GPT-4 AI (najnowszy)' : '✅ GPT-4 AI (latest)'}</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ Priorytetowa kolejka' : '✅ Priority queue'}</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ Dostęp do nowych funkcji' : '✅ Access to new features'}</div>
         </div>
         <button className="plan-button gold-btn" onClick={() => {
           const email = document.getElementById('paywallEmail').value;
           if (!email || !email.includes('@')) {
-            alert('⚠️ Podaj prawidłowy email!');
+            alert(currentLanguage === 'pl' ? '⚠️ Podaj prawidłowy email!' : '⚠️ Enter a valid email!');
             return;
           }
           handlePayment('gold');
-        }}>Wybierz Gold</button>
+        }}>{currentLanguage === 'pl' ? 'Wybierz Gold' : 'Choose Gold'}</button>
       </div>
 
       {/* Premium Plan */}
       <div className="plan-card premium">
         <div className="plan-badge">VIP</div>
-        <div className="premium-badge">NAJLEPSZA WARTOŚĆ</div>
+       <div className="premium-badge">{currentLanguage === 'pl' ? 'NAJLEPSZA WARTOŚĆ' : 'BEST VALUE'}</div>
         <div className="plan-header">
           <h4>Premium</h4>
           <div className="plan-price">
             <span className="old-price">129 zł</span>
             <span className="current-price">79 zł</span>
-            <span className="period">/miesiąc</span>
+            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
           </div>
         </div>
         <div className="plan-features">
-          <div className="feature">✅ 25 optymalizacji/mies.</div>
-          <div className="feature">✅ GPT-4 VIP (najlepszy)</div>
-          <div className="feature">✅ VIP Support (2h odpowiedzi)</div>
-          <div className="feature">✅ Beta tester nowości</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ 25 optymalizacji/mies.' : '✅ 25 optimizations/month'}</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ GPT-4 VIP (najlepszy)' : '✅ GPT-4 VIP (best)'}</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ VIP Support (2h odpowiedzi)' : '✅ VIP Support (2h response time)'}</div>
+<div className="feature">{currentLanguage === 'pl' ? '✅ Beta tester nowości' : '✅ Beta tester for new features'}</div>
         </div>
         <button className="plan-button premium-btn" onClick={() => {
           const email = document.getElementById('paywallEmail').value;
           if (!email || !email.includes('@')) {
-            alert('⚠️ Podaj prawidłowy email!');
+            alert(currentLanguage === 'pl' ? '⚠️ Podaj prawidłowy email!' : '⚠️ Enter a valid email!');
             return;
           }
           handlePayment('premium-monthly');
-        }}>Wybierz Premium</button>
+        }}>{currentLanguage === 'pl' ? 'Wybierz Premium' : 'Choose Premium'}</button>
       </div>
     </div>
   </div>
@@ -1621,16 +1747,16 @@ const createConfetti = () => {
   <div className="trust-section">
     <div className="trust-stats">
       <div className="stat">
-        <span className="stat-number">50,000+</span>
-        <span className="stat-label">Zoptymalizowanych CV</span>
+<span className="stat-number">50,000+</span>
+<span className="stat-label">{currentLanguage === 'pl' ? 'Zoptymalizowanych CV' : 'Optimized CVs'}</span>
       </div>
       <div className="stat">
         <span className="stat-number">410%</span>
-        <span className="stat-label">Więcej odpowiedzi</span>
+        <span className="stat-label">{currentLanguage === 'pl' ? 'Więcej odpowiedzi' : 'More responses'}</span>
       </div>
       <div className="stat">
         <span className="stat-number">95%</span>
-        <span className="stat-label">Sukces w ATS</span>
+        <span className="stat-label">{currentLanguage === 'pl' ? 'Sukces w ATS' : 'ATS success'}</span>
       </div>
     </div>
   </div>
@@ -1639,6 +1765,112 @@ const createConfetti = () => {
             </div>
           </div>
         )}
+
+{/* Template Selection Modal */}
+        {showTemplateModal && (
+          <div className="modal-overlay" onClick={() => setShowTemplateModal(false)}>
+            <div className="modal-content template-modal" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
+              
+              <div className="template-header">
+<h2>{currentLanguage === 'pl' ? 'Wybierz szablon CV' : 'Choose a CV template'}</h2>
+<p>{currentLanguage === 'pl' ? 'Dostępne szablony w Twoim planie' : 'Templates available in your plan'}</p>
+              </div>
+
+              <div className="templates-grid">
+                {/* Szablony dla planu Gold (49 zł) */}
+                <div className="template-card" onClick={() => setSelectedTemplate('modern')}>
+                  <div className="template-preview">
+                    <div className="template-icon">📄</div>
+                    <h3>Modern</h3>
+                    <p>Nowoczesny design z kolorowymi akcentami</p>
+                  </div>
+                  <div className="template-badge">Gold</div>
+                </div>
+
+                <div className="template-card" onClick={() => setSelectedTemplate('classic')}>
+                  <div className="template-preview">
+                    <div className="template-icon">📋</div>
+                    <h3>Classic</h3>
+                    <p>Klasyczny, profesjonalny układ</p>
+                  </div>
+                  <div className="template-badge">Gold</div>
+                </div>
+
+                <div className="template-card" onClick={() => setSelectedTemplate('creative')}>
+                  <div className="template-preview">
+                    <div className="template-icon">🎨</div>
+                    <h3>Creative</h3>
+                    <p>Kreatywny design dla branż artystycznych</p>
+                  </div>
+                  <div className="template-badge">Gold</div>
+                </div>
+
+                {/* Dodatkowe szablony dla Premium (79 zł) */}
+                <div className="template-card premium" onClick={() => setSelectedTemplate('executive')}>
+                  <div className="template-preview">
+                    <div className="template-icon">💼</div>
+                    <h3>Executive</h3>
+                    <p>Dla kadry zarządzającej</p>
+                  </div>
+                  <div className="template-badge premium">Premium</div>
+                </div>
+
+                <div className="template-card premium" onClick={() => setSelectedTemplate('tech')}>
+                  <div className="template-preview">
+                    <div className="template-icon">💻</div>
+                    <h3>Tech Pro</h3>
+                    <p>Dla branży IT</p>
+                  </div>
+                  <div className="template-badge premium">Premium</div>
+                </div>
+
+                <div className="template-card premium" onClick={() => setSelectedTemplate('minimal')}>
+                  <div className="template-preview">
+                    <div className="template-icon">⚡</div>
+                    <h3>Minimal</h3>
+                    <p>Minimalistyczny design</p>
+                  </div>
+                  <div className="template-badge premium">Premium</div>
+                </div>
+
+                <div className="template-card premium" onClick={() => setSelectedTemplate('infographic')}>
+                  <div className="template-preview">
+                    <div className="template-icon">📊</div>
+                    <h3>Infographic</h3>
+                    <p>Z wykresami umiejętności</p>
+                  </div>
+                  <div className="template-badge premium">Premium</div>
+                </div>
+
+                <div className="template-card premium" onClick={() => setSelectedTemplate('elegant')}>
+                  <div className="template-preview">
+                    <div className="template-icon">✨</div>
+                    <h3>Elegant</h3>
+                    <p>Elegancki i wyrafinowany</p>
+                  </div>
+                  <div className="template-badge premium">Premium</div>
+                </div>
+              </div>
+
+              <div className="template-cta">
+                <button 
+                  className="template-button" 
+                  onClick={() => {
+                    if (selectedTemplate) {
+                      showToast(`✅ Wybrano szablon: ${selectedTemplate}`, 'success');
+                      setShowTemplateModal(false);
+                    }
+                  }}
+                  disabled={!selectedTemplate}
+                >
+                  Zastosuj wybrany szablon
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* FAQ Section */}
         <div className="faq-section" id="faq">
@@ -1728,8 +1960,150 @@ const createConfetti = () => {
             <p>&copy; 2025 CvPerfect. Wszystkie prawa zastrzeżone.</p>
           </div>
         </footer>
-      </div>
+     </div>
       <style jsx>{`
+        /* Language Switcher */
+        .language-switcher {
+          display: flex;
+          gap: 8px;
+          margin-right: 20px;
+        }
+
+        .lang-btn {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 100px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lang-btn.active {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          border-color: transparent;
+        }
+
+        /* Template Modal Styles */
+        .template-modal {
+          max-width: 1200px;
+          padding: 0;
+        }
+
+        .template-header {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          padding: 48px;
+          text-align: center;
+          border-radius: 32px 32px 0 0;
+        }
+
+        .template-header h2 {
+          font-size: 36px;
+          font-weight: 900;
+          margin-bottom: 12px;
+        }
+
+        .templates-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 24px;
+          padding: 48px;
+        }
+
+        .template-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 32px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          text-align: center;
+        }
+
+        .template-card:hover {
+          transform: translateY(-5px);
+          border-color: #00ff88;
+          background: rgba(0, 255, 136, 0.05);
+        }
+
+        .template-card.premium {
+          border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .template-card.premium:hover {
+          border-color: #8b5cf6;
+          background: rgba(139, 92, 246, 0.05);
+        }
+
+        .template-icon {
+          font-size: 48px;
+          margin-bottom: 16px;
+        }
+
+        .template-preview h3 {
+          color: white;
+          font-size: 20px;
+          font-weight: 800;
+          margin-bottom: 8px;
+        }
+
+        .template-preview p {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 14px;
+        }
+
+        .template-badge {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          color: white;
+          padding: 6px 12px;
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .template-badge.premium {
+          background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .template-cta {
+          padding: 32px 48px;
+          text-align: center;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .template-button {
+          background: linear-gradient(135deg, #00ff88, #00cc70);
+          color: #000;
+          border: none;
+          padding: 18px 48px;
+          border-radius: 100px;
+          font-size: 18px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .template-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .template-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
         /* Global Styles */
        body {
   margin: 0;
@@ -1755,6 +2129,8 @@ const createConfetti = () => {
   width: 100%;
   overflow: hidden;
 }
+
+
 
 /* Particles Background */
 .particles-container {
@@ -2044,6 +2420,61 @@ html {
   display: flex;
   align-items: center;
   gap: 40px;
+}
+
+.language-switcher {
+  display: flex;
+  gap: 8px;
+  margin-right: 20px;
+  padding-right: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lang-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 8px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.lang-btn.active {
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .language-switcher {
+    margin-right: 0;
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .nav-links.show .language-switcher {
+    display: flex;
+  }
 }
 
 .nav-link {
