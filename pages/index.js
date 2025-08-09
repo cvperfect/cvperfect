@@ -260,7 +260,7 @@ if (typeof window === 'undefined' ||
 // Create particles - ADAPTIVE COUNT
 const getParticleCount = () => {
   if (window.innerWidth < 1200) return 15;
-  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 8) return 25;
+  if (navigator.hardwareConcurrency < 8) return 25;
   return 40;
 };
 const particleCount = getParticleCount();
@@ -351,7 +351,7 @@ useEffect(() => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const steps = entry.target.querySelectorAll('.timeline-step')
-const line = entry.target.querySelector('.timeline-progress-line')
+        const line = entry.target.querySelector('.timeline-line')
         
         if (line) {
           line.classList.add('animate')
@@ -368,18 +368,20 @@ const line = entry.target.querySelector('.timeline-progress-line')
     })
   }, observerOptions)
   
-const timelineSection = document.querySelector('.timeline-wrapper');
+  const timelineSection = document.querySelector('.timeline-wrapper')
+  if (timelineSection) {
 if (timelineSection) {
-  timelineObserver.observe(timelineSection);
+  timelineObserver.observe(timelineSection)
 }
 
 return () => {
   if (timelineSection) {
-    timelineObserver.unobserve(timelineSection);
+    timelineObserver.unobserve(timelineSection)
   }
-};
-}, []);
-
+}
+  }
+  
+ }, []);
 
 // Magnetic buttons effect
 useEffect(() => {
@@ -478,8 +480,8 @@ const openUploadModal = () => {
   // Typing animation states
 
 
-const phrasesPL = [
-  'optymalizacją CV',
+const typingPhrases = [
+  'optymalizacją CV', 
   'analizą słów kluczowych',
   'zwiększeniem szans na pracę',
   'profesjonalnym CV',
@@ -488,19 +490,6 @@ const phrasesPL = [
   'zwiększeniem widoczności',
   'sztuczną inteligencją'
 ];
-const phrasesEN = [
-  'CV optimization',
-  'keyword analysis',
-  'boosted job chances',
-  'a professional CV',
-  'custom content',
-  'ATS analysis',
-  'greater visibility',
-  'artificial intelligence'
-];
-
-const typingPhrases = currentLanguage === 'pl' ? phrasesPL : phrasesEN;
-
 
 // Typing animation effect
 useEffect(() => {
@@ -685,7 +674,7 @@ const createConfetti = () => {
       const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext))
       
       if (!isAllowed) {
-        alert(currentLanguage === 'pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ Only PDF, DOC, DOCX are supported');
+        alert('❌ Obsługujemy tylko pliki: PDF, DOC, DOCX')
         e.target.value = '' // Wyczyść input
         return
       }
@@ -693,7 +682,7 @@ const createConfetti = () => {
       // Sprawdź typ MIME
       const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
       if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
-        alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
+        alert('❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX')
         e.target.value = ''
         return
       }
@@ -872,44 +861,31 @@ const handlePayment = (plan) => {
   // Floating notifications
   
   
-useEffect(() => {
-  const floatingNotificationsPL = [
-    { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
-    { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
-    { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
-    { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
-    { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
-  ];
+  useEffect(() => {
+    const floatingNotifications = [
+      { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
+      { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
+      { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
+      { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
+      { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
+    ]
 
-  const floatingNotificationsEN = [
-    { id: 1, name: 'Anna', action: 'received a job offer at Allegro', time: '2 min ago' },
-    { id: 2, name: 'Michael', action: 'optimized his CV and got 3 interviews', time: '5 min ago' },
-    { id: 3, name: 'Catherine', action: 'increased her ATS score by 40%', time: '8 min ago' },
-    { id: 4, name: 'Peter', action: 'received an offer at CD Projekt', time: '12 min ago' },
-    { id: 5, name: 'Magdalena', action: 'passed ATS filters at Orange', time: '15 min ago' }
-  ];
+    let currentIndex = 0
+    const showNotification = () => {
+      const notification = floatingNotifications[currentIndex]
+      setNotifications(prev => [...prev, { ...notification, show: true }])
+      
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== notification.id))
+      }, 6000)
+      
+      currentIndex = (currentIndex + 1) % floatingNotifications.length
+    }
 
-  const floatingNotifications = currentLanguage === 'pl'
-    ? floatingNotificationsPL
-    : floatingNotificationsEN;
-
-  let currentIndex = 0;
-  const showNotification = () => {
-    const notification = floatingNotifications[currentIndex];
-    setNotifications(prev => [...prev, { ...notification, show: true }]);
-
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== notification.id));
-    }, 6000);
-
-    currentIndex = (currentIndex + 1) % floatingNotifications.length;
-  };
-
-  showNotification();
-  const interval = setInterval(showNotification, 12000);
-  return () => clearInterval(interval);
-}, [currentLanguage]);
- 
+   showNotification()
+    const interval = setInterval(showNotification, 12000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Mobile menu functions
   const toggleMobileMenu = () => {
@@ -985,19 +961,19 @@ useEffect(() => {
     <div className="progress-steps">
       <div className="progress-step active" data-step="1">
         <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage === 'pl' ? 'Start' : 'Start'}</span>
+        <span className="step-label">Start</span>
       </div>
       <div className="progress-step" data-step="2">
         <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage === 'pl' ? 'Start' : 'Start'}</span>
+        <span className="step-label">Analiza</span>
       </div>
       <div className="progress-step" data-step="3">
         <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage === 'pl' ? 'Płatność' : 'Payment'}</span>
+        <span className="step-label">Płatność</span>
       </div>
       <div className="progress-step" data-step="4">
         <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage === 'pl' ? 'Gotowe!' : 'Done!'}</span>
+        <span className="step-label">Gotowe!</span>
       </div>
     </div>
   </div>
@@ -1006,30 +982,30 @@ useEffect(() => {
 <div className="scroll-indicator">
   <div className="scroll-progress"></div>
   <div className="scroll-sections">
-<a href="#hero" className="scroll-dot active" data-section="hero">
-  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Start' : 'Start'}</span>
-</a>
-<a href="#stats" className="scroll-dot" data-section="stats">
-  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Statystyki' : 'Statistics'}</span>
-</a>
-<a href="#capabilities" className="scroll-dot" data-section="capabilities">
-  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Możliwości' : 'Capabilities'}</span>
-</a>
-<a href="#timeline" className="scroll-dot" data-section="timeline">
-  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Jak to działa' : 'How it works'}</span>
-</a>
-<a href="#testimonials" className="scroll-dot" data-section="testimonials">
-  <span className="dot-tooltip">{currentLanguage === 'pl' ? 'Opinie' : 'Reviews'}</span>
-</a>
-<a href="#faq" className="scroll-dot" data-section="faq">
-  <span className="dot-tooltip">FAQ</span>
-</a>
+    <a href="#hero" className="scroll-dot active" data-section="hero">
+      <span className="dot-tooltip">Start</span>
+    </a>
+    <a href="#stats" className="scroll-dot" data-section="stats">
+      <span className="dot-tooltip">Statystyki</span>
+    </a>
+    <a href="#capabilities" className="scroll-dot" data-section="capabilities">
+      <span className="dot-tooltip">Możliwości</span>
+    </a>
+    <a href="#timeline" className="scroll-dot" data-section="timeline">
+      <span className="dot-tooltip">Jak to działa</span>
+    </a>
+    <a href="#testimonials" className="scroll-dot" data-section="testimonials">
+      <span className="dot-tooltip">Opinie</span>
+    </a>
+    <a href="#faq" className="scroll-dot" data-section="faq">
+      <span className="dot-tooltip">FAQ</span>
+    </a>
   </div>
 </div>
 
     
     {/* Navigation */}
-        <nav className="navigation nav-bubble" role="navigation" aria-label="Main">
+        <nav className="navigation">
           <div className="nav-content">
             <div className="logo">
               <span className="logo-badge">AI</span>
@@ -1085,79 +1061,78 @@ useEffect(() => {
         {/* Hero Section */}
         <div className="hero-section" id="hero">
           <div className="hero-content">
-<div className="hero-badge">
-  {currentLanguage === 'pl' ? '🏆 #1 AI Platforma CV w Polsce' : '🏆 #1 AI CV Platform in Poland'}
-</div>
+            <div className="hero-badge">
+              🏆 #1 AI Platforma CV w Polsce
+            </div>
 <h1 className="hero-title">
-  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse o' : 'Increase your chances by'} <span className="highlight">410%</span>
+  Zwiększ swoje szanse o <span className="highlight">410%</span>
   <br />
-  {currentLanguage === 'pl' ? 'z AI-powered' : 'with AI-powered'}
+  z AI-powered
   <div className="typing-safe-zone">
     <span className="typing-text">{typingText}</span>
     <span className="typing-cursor">|</span>
   </div>
 </h1>
-<p className="hero-subtitle">
-  {currentLanguage === 'pl' 
-    ? 'Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy.'
-    : 'The first AI in Poland that optimizes your CV for specific job offers.'}
-  <strong>
-    {currentLanguage === 'pl'
-      ? ' 95% skuteczności ATS, 30 sekund optymalizacji, tylko 9.99 zł.'
-      : ' 95% ATS success rate, 30 seconds optimization, only 9.99 PLN.'}
-  </strong>
-</p>
-<div className="hero-stats">
-  <div className="stat-item">
-    <div className="stat-number">410%</div>
-    <div className="stat-text">{currentLanguage === 'pl' ? 'więcej rozmów' : 'more interviews'}</div>
-  </div>
-  <div className="stat-item">
-    <div className="stat-number">95%</div>
-    <div className="stat-text">ATS success</div>
-  </div>
-  <div className="stat-item">
-    <div className="stat-number">30s</div>
-    <div className="stat-text">{currentLanguage === 'pl' ? 'optymalizacja' : 'optimization'}</div>
-  </div>
+
+            <p className="hero-subtitle">
+              Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy. 
+              <strong> 95% skuteczności ATS, 30 sekund optymalizacji, tylko 9.99 zł.</strong>
+            </p>
+            
+            <div className="hero-stats">
+              <div className="stat-item">
+                <div className="stat-number">410%</div>
+                <div className="stat-text">więcej rozmów</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">95%</div>
+                <div className="stat-text">ATS success</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-number">30s</div>
+                <div className="stat-text">optymalizacja</div>
+              </div>
+            </div>
+
+            <div className="hero-cta">
+              <button className="hero-button primary" onClick={openUploadModal}>
+  🔍 Sprawdź swoje CV
+</button>
+              <div className="hero-guarantee">
+  <span>✅ Bez rejestracji </span>
 </div>
-<div className="hero-cta">
-  <button className="hero-button primary" onClick={openUploadModal}>
-    {currentLanguage === 'pl' ? '🔍 Sprawdź swoje CV' : '🔍 Check your CV'}
-  </button>
-  <div className="hero-guarantee">
-    <span>{currentLanguage === 'pl' ? '✅ Bez rejestracji' : '✅ No registration'}</span>
-  </div>
-</div>
+            </div>
           </div>
 
           <div className="hero-visual">
             <div className="cv-preview">
               <div className="cv-before">
-                <div className="cv-header">{currentLanguage === 'pl' ? '❌ Przed optymalizacją' : '❌ Before optimization'}</div>
+                <div className="cv-header">❌ Przed optymalizacją</div>
                 <div className="cv-score bad">32% ATS</div>
                 <div className="cv-content">
                   <div className="cv-line short"></div>
                   <div className="cv-line medium"></div>
                   <div className="cv-line long"></div>
-<div className="cv-problems">
-  <span>{currentLanguage === 'pl' ? '• Brak słów kluczowych' : '• Missing keywords'}</span>
-  <span>{currentLanguage === 'pl' ? '• Złe formatowanie' : '• Poor formatting'}</span>
-  <span>{currentLanguage === 'pl' ? '• Nieoptymalne sekcje' : '• Suboptimal sections'}</span>                  </div>
+                  <div className="cv-problems">
+                    <span>• Brak słów kluczowych</span>
+                    <span>• Złe formatowanie</span>
+                    <span>• Nieoptymalne sekcje</span>
+                  </div>
                 </div>
               </div>
               <div className="cv-arrow">➜</div>
               <div className="cv-after">
-                <div className="cv-header">{currentLanguage === 'pl' ? '✅ Po optymalizacji AI' : '✅ After AI optimization'}</div>
+                <div className="cv-header">✅ Po optymalizacji AI</div>
                 <div className="cv-score good">95% ATS</div>
                 <div className="cv-content">
                   <div className="cv-line optimized short"></div>
                   <div className="cv-line optimized medium"></div>
                   <div className="cv-line optimized long"></div>
-<div className="cv-improvements">
-  <span>{currentLanguage === 'pl' ? '• Słowa kluczowe ✅' : '• Keywords ✅'}</span>
-  <span>• ATS-ready format ✅</span>
-  <span>{currentLanguage === 'pl' ? '• Optymalne sekcje ✅' : '• Optimal sections ✅'}</span>                  </div>
+                  <div className="cv-improvements">
+                    <span>• Słowa kluczowe ✅</span>
+                    <span>• ATS-ready format ✅</span>
+                    <span>• Optymalne sekcje ✅</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1169,46 +1144,42 @@ useEffect(() => {
 <div className="capabilities-section" id="capabilities">
   <div className="capabilities-container">
     <div className="capabilities-header">
-<div className="header-badge">
-  <span className="badge-icon">🤖</span>
-  <span className="badge-text">{currentLanguage === 'pl' ? 'AI-Powered Detection' : 'AI-Powered Detection'}</span>
-</div>
-<h3>{currentLanguage === 'pl' ? 'Wspieramy wszystkie formaty dokumentów' : 'We support all document formats'}</h3>
-<p>
-  {currentLanguage === 'pl'
-    ? 'Wystarczy wkleić – nasz AI automatycznie rozpozna czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację'
-    : 'Just paste – our AI auto-detects CV vs cover letter and applies the right optimization'}
-</p>
+  <div className="header-badge">
+    <span className="badge-icon">🤖</span>
+    <span className="badge-text">AI-Powered Detection</span>
+  </div>
+  <h3>Wspieramy wszystkie formaty dokumentów</h3>
+  <p>Wystarczy wkleić - nasz AI automatycznie rozpozna czy to CV czy list motywacyjny<br />i zastosuje odpowiednią optymalizację</p>
 </div>
     <div className="capabilities-grid">
       <div className="capability-card">
         <div className="cap-icon">📄</div>
-<h4>{currentLanguage === 'pl' ? 'CV + Oferta pracy' : 'CV + Job Posting'}</h4>
-<p>{currentLanguage === 'pl' ? 'Zoptymalizujemy CV pod konkretną ofertę' : 'We optimize your CV for a specific job'}</p>
-<div className="cap-result">{currentLanguage === 'pl' ? '→ Dopasowane CV' : '→ Tailored CV'}</div>
+        <h4>CV + Oferta pracy</h4>
+        <p>Zoptymalizujemy CV pod konkretną ofertę</p>
+        <div className="cap-result">→ Dopasowane CV</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">✉️</div>
-<h4>{currentLanguage === 'pl' ? 'List motywacyjny + Oferta' : 'Cover Letter + Job Posting'}</h4>
-<p>{currentLanguage === 'pl' ? 'Dostosujemy list pod wymagania pracodawcy' : 'We tailor your letter to the employer’s requirements'}</p>
-<div className="cap-result">{currentLanguage === 'pl' ? '→ Dopasowany list' : '→ Tailored letter'}</div>
+        <h4>List motywacyjny + Oferta</h4>
+        <p>Dostosujemy list pod wymagania pracodawcy</p>
+        <div className="cap-result">→ Dopasowany list</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">📋</div>
-<h4>{currentLanguage === 'pl' ? 'Samo CV' : 'CV only'}</h4>
-<p>{currentLanguage === 'pl' ? 'Stworzymy uniwersalne CV gotowe do użycia' : 'We’ll create a universal, ready-to-use CV'}</p>
-<div className="cap-result">{currentLanguage === 'pl' ? '→ Ogólne CV' : '→ General CV'}</div>
+        <h4>Samo CV</h4>
+        <p>Stworzymy uniwersalne CV gotowe do użycia</p>
+        <div className="cap-result">→ Ogólne CV</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">📝</div>
-<h4>{currentLanguage === 'pl' ? 'Sam list motywacyjny' : 'Cover Letter only'}</h4>
-<p>{currentLanguage === 'pl' ? 'Przygotujemy szablon do dalszej edycji' : 'We’ll prepare a template for further editing'}</p>
-<div className="cap-result">{currentLanguage === 'pl' ? '→ Szablon listu' : '→ Letter template'}</div>
+        <h4>Sam list motywacyjny</h4>
+        <p>Przygotujemy szablon do dalszej edycji</p>
+        <div className="cap-result">→ Szablon listu</div>
       </div>
     </div>
     <div className="capabilities-note">
       <span className="note-icon">🤖</span>
-<span>{currentLanguage === 'pl' ? 'System automatycznie wykryje czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację!' : 'The system will automatically detect whether it’s a CV or a cover letter and apply the appropriate optimization!'}</span>
+      <span>System automatycznie wykryje czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację!</span>
     </div>
   </div>
 </div>
@@ -1217,38 +1188,40 @@ useEffect(() => {
 <div className="stats-counter-section" id="stats">
   <div className="stats-container">
     <div className="stats-header">
-<div className="stats-badge">📊 {currentLanguage === 'pl' ? 'Live Statistics' : 'Live Statistics'}</div>
-<h2>{currentLanguage === 'pl' ? 'CvPerfect w liczbach' : 'CvPerfect in numbers'}</h2>
-<p>{currentLanguage === 'pl' ? 'Dołącz do tysięcy zadowolonych użytkowników' : 'Join thousands of happy users'}</p>
+      <div className="stats-badge">📊 Live Statistics</div>
+      <h2>CvPerfect w liczbach</h2>
+      <p>Dołącz do tysięcy zadowolonych użytkowników</p>
     </div>
     
     <div className="stats-grid">
       <div className="stat-box">
         <div className="stat-icon">📄</div>
         <div className="stat-value" data-target="15234">0</div>
-<div className="stat-label">{currentLanguage === 'pl' ? 'CV zoptymalizowanych' : 'CVs optimized'}</div>
-<div className="stat-growth">{currentLanguage === 'pl' ? '+3 dziś' : '+3 today'}</div>      </div>
+        <div className="stat-label">CV zoptymalizowanych</div>
+        <div className="stat-growth">+3 dziś</div>
+      </div>
       
       <div className="stat-box">
         <div className="stat-icon">🎯</div>
         <div className="stat-value" data-target="98">0</div>
         <div className="stat-suffix">%</div>
-<div className="stat-label">{currentLanguage === 'pl' ? 'Skuteczność ATS' : 'ATS success rate'}</div>
-<div className="stat-growth">{currentLanguage === 'pl' ? 'Top 1 w PL' : 'Top 1 in Poland'}</div>
+        <div className="stat-label">Skuteczność ATS</div>
+        <div className="stat-growth">Top 1 w PL</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">⚡</div>
         <div className="stat-value" data-target="3.2">0</div>
         <div className="stat-suffix">s</div>
-<div className="stat-label">{currentLanguage === 'pl' ? 'Czas analizy' : 'Analysis time'}</div>
-<div className="stat-growth">{currentLanguage === 'pl' ? 'Błyskawicznie' : 'Lightning-fast'}</div>      </div>
+        <div className="stat-label">Czas analizy</div>
+        <div className="stat-growth">Błyskawicznie</div>
+      </div>
       
       <div className="stat-box">
         <div className="stat-icon">💼</div>
         <div className="stat-value" data-target="7846">0</div>
-<div className="stat-label">{currentLanguage === 'pl' ? 'Nowych miejsc pracy' : 'New job postings'}</div>
-<div className="stat-growth">{currentLanguage === 'pl' ? '+12 dziś' : '+12 today'}</div>
+        <div className="stat-label">Nowych miejsc pracy</div>
+        <div className="stat-growth">+12 dziś</div>
       </div>
     </div>
   </div>
@@ -1260,16 +1233,12 @@ useEffect(() => {
 <div className="timeline-section" id="timeline">
   <div className="timeline-container">
     <div className="timeline-header">
-<div className="timeline-badge premium-badge">
-  <span className="badge-icon">⚡</span>
-  <span className="badge-text">{currentLanguage === 'pl' ? 'Proces 30 sekund' : '30-second process'}</span>
-</div>
-<h2>
-  {currentLanguage === 'pl' ? 'Jak zoptymalizować CV w ' : 'How to optimize your CV in '}
-  <span className="gradient-text">30 {currentLanguage === 'pl' ? 'sekund' : 'seconds'}?</span>
-</h2>
-<p>{currentLanguage === 'pl' ? 'Przewodnik krok po kroku - zobacz jak łatwo to zrobić' : 'Step-by-step guide – see how easy it is'}</p>
-
+      <div className="timeline-badge premium-badge">
+        <span className="badge-icon">⚡</span>
+        <span className="badge-text">Proces 30 sekund</span>
+      </div>
+      <h2>Jak zoptymalizować CV w <span className="gradient-text">30 sekund?</span></h2>
+      <p>Przewodnik krok po kroku - zobacz jak łatwo to zrobić</p>
     </div>
     
     <div className="timeline-wrapper premium">
@@ -1288,17 +1257,17 @@ useEffect(() => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-<div className="step-label">{currentLanguage === 'pl' ? 'KROK 1' : 'STEP 1'}</div>
-<h3>{currentLanguage === 'pl' ? 'Wklej lub załaduj CV' : 'Paste or upload your CV'}</h3>
-<p>{currentLanguage === 'pl' ? 'Skopiuj treść CV lub przeciągnij plik PDF/DOC' : 'Paste your CV content or drag & drop a PDF/DOC'}</p>
-<div className="step-details">
-  <span className="detail-item">✅ PDF, DOC, DOCX</span>
-  <span className="detail-item">{currentLanguage === 'pl' ? '✅ Lub wklej tekst' : '✅ Or paste text'}</span>
-  <span className="detail-item">✅ Max 5MB</span>
+            <div className="step-label">KROK 1</div>
+            <h3>Wklej lub załaduj CV</h3>
+            <p>Skopiuj treść CV lub przeciągnij plik PDF/DOC</p>
+            <div className="step-details">
+              <span className="detail-item">✅ PDF, DOC, DOCX</span>
+              <span className="detail-item">✅ Lub wklej tekst</span>
+              <span className="detail-item">✅ Max 5MB</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-                <span>{currentLanguage === 'pl' ? '5 sekund' : '5 seconds'}</span>
+              <span>5 sekund</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1319,17 +1288,17 @@ useEffect(() => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-           <div className="step-label">{currentLanguage === 'pl' ? 'KROK 2' : 'STEP 2'}</div>
-<h3>{currentLanguage === 'pl' ? 'AI analizuje i optymalizuje' : 'AI analyzes and optimizes'}</h3>
-<p>{currentLanguage === 'pl' ? 'GPT-4 skanuje CV pod kątem ATS i słów kluczowych' : 'GPT-4 scans your CV for ATS and relevant keywords'}</p>
-<div className="step-details">
-  <span className="detail-item">{currentLanguage === 'pl' ? '🔍 Analiza ATS' : '🔍 ATS analysis'}</span>
-  <span className="detail-item">{currentLanguage === 'pl' ? '🎯 Słowa kluczowe' : '🎯 Keywords'}</span>
-  <span className="detail-item">{currentLanguage === 'pl' ? '📊 Score obliczenie' : '📊 Score calculation'}</span>
+            <div className="step-label">KROK 2</div>
+            <h3>AI analizuje i optymalizuje</h3>
+            <p>GPT-4 skanuje CV pod kątem ATS i słów kluczowych</p>
+            <div className="step-details">
+              <span className="detail-item">🔍 Analiza ATS</span>
+              <span className="detail-item">🎯 Słowa kluczowe</span>
+              <span className="detail-item">📊 Score obliczenie</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-                <span>{currentLanguage === 'pl' ? '15 sekund' : '15 seconds'}</span>
+              <span>15 sekund</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1350,17 +1319,17 @@ useEffect(() => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-<div className="step-label">{currentLanguage === 'pl' ? 'KROK 3' : 'STEP 3'}</div>
-<h3>{currentLanguage === 'pl' ? 'Szybka płatność' : 'Quick payment'}</h3>
-<p>{currentLanguage === 'pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure transaction via Stripe'}</p>
-<div className="step-details">
-  <span className="detail-item">🔒 SSL Secure</span>
-  <span className="detail-item">{currentLanguage === 'pl' ? '💰 Tylko 9.99 zł' : '💰 Only 9.99 PLN'}</span>
-  <span className="detail-item">⚡ Instant</span>
+            <div className="step-label">KROK 3</div>
+            <h3>Szybka płatność</h3>
+            <p>Bezpieczna transakcja przez Stripe</p>
+            <div className="step-details">
+              <span className="detail-item">🔒 SSL Secure</span>
+              <span className="detail-item">💰 Tylko 9.99 zł</span>
+              <span className="detail-item">⚡ Instant</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-                <span>{currentLanguage === 'pl' ? '5 sekund' : '5 seconds'}</span>
+              <span>5 sekund</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1381,17 +1350,17 @@ useEffect(() => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-<div className="step-label">{currentLanguage === 'pl' ? 'FINAŁ' : 'FINAL'}</div>
-<h3>{currentLanguage === 'pl' ? 'Pobierz zoptymalizowane CV!' : 'Download your optimized CV!'}</h3>
-<p>{currentLanguage === 'pl' ? 'Twoje CV jest gotowe z 95% ATS score' : 'Your CV is ready with a 95% ATS score'}</p>
-<div className="step-details">
-  <span className="detail-item">📈 95% ATS</span>
-  <span className="detail-item">✨ PDF & DOCX</span>
-  <span className="detail-item">{currentLanguage === 'pl' ? '🚀 Gotowe!' : '🚀 Done!'}</span>
+            <div className="step-label">FINAŁ</div>
+            <h3>Pobierz zoptymalizowane CV!</h3>
+            <p>Twoje CV jest gotowe z 95% ATS score</p>
+            <div className="step-details">
+              <span className="detail-item">📈 95% ATS</span>
+              <span className="detail-item">✨ PDF & DOCX</span>
+              <span className="detail-item">🚀 Gotowe!</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-                <span>{currentLanguage === 'pl' ? '5 sekund' : '5 seconds'}</span>
+              <span>5 sekund</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1407,18 +1376,19 @@ useEffect(() => {
     {/* Interactive Demo Button */}
     <div className="timeline-cta premium-cta">
       <button className="timeline-button premium-button" onClick={openUploadModal}>
-        <span className="button-text">{currentLanguage === 'pl' ? 'Rozpocznij teraz' : 'Start now'}</span>
+        <span className="button-text">Rozpocznij teraz</span>
         <span className="button-icon">🚀</span>
         <div className="button-glow"></div>
       </button>
       <div className="cta-stats">
         <div className="stat-item">
           <span className="stat-icon">⚡</span>
-          <span className="stat-text">{currentLanguage === 'pl' ? '30 sekund' : '30 seconds'}</span>
+          <span className="stat-text">30 sekund</span>
         </div>
         <div className="stat-item">
           <span className="stat-icon">💎</span>
-<span className="stat-text">{currentLanguage === 'pl' ? '19.99 zł' : '19.99 PLN ≈ 4.7 €'}</span>        </div>
+          <span className="stat-text">9.99 zł</span>
+        </div>
         <div className="stat-item">
           <span className="stat-icon">🎯</span>
           <span className="stat-text">95% ATS</span>
@@ -1432,12 +1402,8 @@ useEffect(() => {
 {/* Testimonials Section */}
         <div className="testimonials-section" id="testimonials">
           <div className="testimonials-header">
-<h2 className="section-title">
-  {currentLanguage === 'pl' ? 'Już 15,000+ osób znalazło pracę dzięki CvPerfect 🎉' : 'Over 15,000 people found a job thanks to CvPerfect 🎉'}
-</h2>
-<p className="section-subtitle">
-  {currentLanguage === 'pl' ? 'Prawdziwe opinie od użytkowników, którzy dostali wymarzoną pracę' : 'Real reviews from users who landed their dream jobs'}
-</p>
+            <h2 className="section-title">Już 15,000+ osób znalazło pracę dzięki CvPerfect 🎉</h2>
+            <p className="section-subtitle">Prawdziwe opinie od użytkowników, którzy dostali wymarzoną pracę</p>
           </div>
 
           <div className="testimonials-grid">
@@ -1451,7 +1417,7 @@ useEffect(() => {
                     <div className="testimonial-company">{testimonial.company}</div>
                   </div>
                   <div className="testimonial-verified">
-                    {testimonial.verified && <span className="verified-badge">{currentLanguage === 'pl' ? '✅ Zweryfikowane' : '✅ Verified'}</span>}
+                    {testimonial.verified && <span className="verified-badge">✅ Zweryfikowane</span>}
                   </div>
                 </div>
                 <div className="testimonial-rating">
@@ -1461,16 +1427,17 @@ useEffect(() => {
                 </div>
                 <p className="testimonial-text">"{testimonial.text}"</p>
                 <div className="testimonial-impact">
-                  <span className="impact-badge">{currentLanguage === 'pl' ? '🚀 Sukces dzięki CvPerfect' : '🚀 Success with CvPerfect'}</span>
+                  <span className="impact-badge">🚀 Sukces dzięki CvPerfect</span>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="testimonials-cta">
-<h3>{currentLanguage === 'pl' ? 'Dołącz do 15,000+ zadowolonych użytkowników!' : 'Join 15,000+ happy users!'}</h3>
-<button className="testimonials-button" onClick={openUploadModal}>
-  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse 🚀' : 'Boost your chances 🚀'}</button>
+            <h3>Dołącz do 15,000+ zadowolonych użytkowników!</h3>
+            <button className="testimonials-button" onClick={openUploadModal}>
+  Zwiększ swoje szanse 🚀
+</button>
           </div>
         </div>
 
@@ -1481,20 +1448,20 @@ useEffect(() => {
               <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
               
               <div className="upload-header">
-<h2>{currentLanguage === 'pl' ? 'Darmowa Analiza ATS' : 'Free ATS Analysis'}</h2>
-<p>{currentLanguage === 'pl' ? 'Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi' : 'See how your CV or cover letter performs with ATS'}</p>              </div>
+                <h2>Darmowa Analiza ATS</h2>
+<p>Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi</p>
+              </div>
 
               <div className="upload-area">
                 <div className="upload-zone">
                   <div className="upload-icon">📄</div>
-<h3>{currentLanguage === 'pl' ? 'Wklej swoje CV lub wybierz plik' : 'Paste your CV or choose a file'}</h3>
-<p>{currentLanguage === 'pl' ? 'PDF, DOC, DOCX - maksymalnie 5MB' : 'PDF, DOC, DOCX - up to 5MB'}</p>
-<textarea 
-  className="cv-textarea"
-  placeholder={currentLanguage === 'pl'
-    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
-    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize accordingly!'}
-  rows="8"
+                  <h3>Wklej swoje CV lub wybierz plik</h3>
+                  <p>PDF, DOC, DOCX - maksymalnie 5MB</p>
+                  
+                  <textarea 
+                    className="cv-textarea"
+                    placeholder="Wklej tutaj pełne ogłoszenie o pracę...&#10;&#10;🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!"
+                    rows="8"
                   ></textarea>
                   
                   <div className="upload-buttons">
@@ -1529,12 +1496,10 @@ useEffect(() => {
     reader.onload = (event) => {
       const textarea = document.querySelector('.cv-textarea');
       if (textarea) {
-textarea.value = currentLanguage === 'pl'
-  ? `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!`
-  : `📄 File "${file.name}" loaded successfully!\n\nSize: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Ready for analysis!`;
+        textarea.value = `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!`;
         
         const successMsg = document.createElement('div');
-        successMsg.innerHTML = currentLanguage === 'pl' ? '✅ CV zostało pomyślnie wczytane!' : '✅ CV loaded successfully!';
+        successMsg.innerHTML = '✅ CV zostało pomyślnie wczytane!';
         successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
         successMsg.className = 'success-message';
         const existing = document.querySelector('.success-message');
@@ -1547,20 +1512,23 @@ textarea.value = currentLanguage === 'pl'
   }
 }}
                     />
-<button className="upload-btn secondary" onClick={() => document.getElementById('modalFileInput').click()}>
-  {currentLanguage === 'pl' ? '📁 Wybierz plik' : '📁 Choose file'}
-</button>
-<button className="upload-btn primary" onClick={handleFreeAnalysis}>
-  {currentLanguage === 'pl' ? '🔍 Analizuj teraz' : '🔍 Analyze now'}
-</button>
+                    <button 
+                      className="upload-btn secondary"
+                      onClick={() => document.getElementById('modalFileInput').click()}
+                    >
+                      📁 Wybierz plik
+                    </button>
+                    <button className="upload-btn primary" onClick={handleFreeAnalysis}>
+                      🔍 Analizuj teraz
+                    </button>
                   </div>
                 </div>
 
                 <div className="upload-features">
-<div className="feature-check">{currentLanguage === 'pl' ? '✅ Analiza ATS w 30 sekund' : '✅ ATS analysis in 30 seconds'}</div>
-<div className="feature-check">{currentLanguage === 'pl' ? '✅ Wykrywanie problemów' : '✅ Issue detection'}</div>
-<div className="feature-check">✅ Score compatibility</div>
-<div className="feature-check">{currentLanguage === 'pl' ? '✅ 100% bezpieczne' : '✅ 100% secure'}</div>
+                  <div className="feature-check">✅ Analiza ATS w 30 sekund</div>
+                  <div className="feature-check">✅ Wykrywanie problemów</div>
+                  <div className="feature-check">✅ Score compatibility</div>
+                  <div className="feature-check">✅ 100% bezpieczne</div>
                 </div>
               </div>
             </div>
@@ -1576,14 +1544,10 @@ textarea.value = currentLanguage === 'pl'
   <div className="header-content">
     <div className="header-badge">
       <span className="badge-icon">🚀</span>
-      <span className="badge-text">{currentLanguage === 'pl' ? 'Optymalizacja CV' : 'CV Optimization'}</span>
+      <span className="badge-text">Optymalizacja CV</span>
     </div>
-<h2>{currentLanguage === 'pl' ? 'Odblokuj pełną optymalizację!' : 'Unlock full optimization!'}</h2>
-<p>
-  {currentLanguage === 'pl'
-    ? 'Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV'
-    : 'Enter your email, choose a plan, and get a detailed analysis + an optimized CV'}
-</p>
+    <h2>Odblouj pełną optymalizację!</h2>
+    <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
   </div>
   <button className="close-btn" onClick={() => setShowPaywall(false)}>×</button>
 </div>
@@ -1596,9 +1560,8 @@ textarea.value = currentLanguage === 'pl'
       <div className="score-label">ATS Score</div>
     </div>
     <div className="score-info">
-<h4>{currentLanguage === 'pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
-<p>{currentLanguage === 'pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for Applicant Tracking System compatibility'}</p>
-
+      <h4>🎯 Twój wynik ATS</h4>
+      <p>Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi</p>
     </div>
   </div>
 </div>
@@ -1607,62 +1570,61 @@ textarea.value = currentLanguage === 'pl'
 <div className="modal-content-inner">
   {/* Optimization Type Selection */}
 <div className="optimization-section">
-  <h3>{currentLanguage === 'pl' ? '🎯 Typ optymalizacji' : '🎯 Optimization type'}</h3>
+  <h3>🎯 Typ optymalizacji</h3>
   
   {/* Default Option - Selected */}
   <div className="default-option">
     <div className="option-header">
       <span className="option-icon">⭐</span>
       <div className="option-info">
-<h4>{currentLanguage === 'pl' ? 'Ogólna optymalizacja' : 'General optimization'}</h4>
-<p>{currentLanguage === 'pl' ? 'Uniwersalne CV dostosowane do Twojej branży' : 'A universal CV tailored to your industry'}</p>
-</div>
-<span className="selected-badge">{currentLanguage === 'pl' ? '✅ Wybrane' : '✅ Selected'}</span>    </div>
+        <h4>Ogólna optymalizacja</h4>
+        <p>Uniwersalne CV dostosowane do Twojej branży</p>
+      </div>
+      <span className="selected-badge">✅ Wybrane</span>
+    </div>
   </div>
 
   {/* Job Description Input */}
   <div className="job-upgrade-section">
     <div className="upgrade-header">
-<h4>{currentLanguage === 'pl' ? '💼 Lub dostosuj pod konkretną ofertę pracy' : '💼 Or tailor to a specific job posting'}</h4>
-<p>{currentLanguage === 'pl' ? 'Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania' : 'Paste the job post and we’ll optimize your CV or cover letter to those requirements'}</p>
+      <h4>💼 Lub dostosuj pod konkretną ofertę pracy</h4>
+<p>Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania</p>
     </div>
     <textarea 
-  className="job-textarea" 
-  placeholder={currentLanguage === 'pl'
-    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
-    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize accordingly!'}
-  rows="4"
+      className="job-textarea" 
+      placeholder="Wklej tutaj pełne ogłoszenie o pracę...&#10;&#10;🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!"
+      rows="4"
     ></textarea>
     <div className="upgrade-note">
       <span className="note-icon">💡</span>
-<span>{currentLanguage === 'pl' ? 'Im więcej szczegółów, tym lepsza optymalizacja!' : 'The more details, the better the optimization!'}</span>
+      <span>Im więcej szczegółów, tym lepsza optymalizacja!</span>
     </div>
   </div>
 </div>
 
   {/* Email Input */}
   <div className="email-section">
-    <h3>{currentLanguage === 'pl' ? '📧 Twój email' : '📧 Your email'}</h3>
+    <h3>📧 Twój email</h3>
     <input 
       type="email" 
       className="email-input" 
- placeholder={currentLanguage === 'pl' ? 'twoj-email@example.com' : 'your-email@example.com'}
+      placeholder="twoj-email@example.com"
       id="paywallEmail"
     />
   </div>
 
   {/* Pricing Plans */}
   <div className="pricing-section">
-    <h3>{currentLanguage === 'pl' ? '💎 Wybierz plan' : '💎 Choose a plan'}</h3>
+    <h3>💎 Wybierz plan</h3>
     <div className="pricing-grid">
       {/* Basic Plan */}
       <div className="plan-card basic">
         <div className="plan-badge">BASIC</div>
         <div className="plan-header">
-          <h4>{currentLanguage === 'pl' ? 'Jednorazowy' : 'One-time'}</h4>
+          <h4>Jednorazowy</h4>
           <div className="plan-price">
-            <span className="old-price">39,99 zł</span>
-            <span className="current-price">19,99 zł</span>
+            <span className="old-price">29,99 zł</span>
+            <span className="current-price">9,99 zł</span>
             <span className="discount">-67%</span>
           </div>
         </div>
@@ -1675,68 +1637,67 @@ textarea.value = currentLanguage === 'pl'
         <button className="plan-button basic-btn" onClick={() => {
           const email = document.getElementById('paywallEmail').value;
           if (!email || !email.includes('@')) {
-           alert(currentLanguage === 'pl' ? '⚠️ Podaj prawidłowy email!' : '⚠️ Enter a valid email!');
+            alert('⚠️ Podaj prawidłowy email!');
             return;
           }
           handlePayment('premium');
-        }}>{currentLanguage === 'pl' ? 'Wybierz Basic' : 'Choose Basic'}</button>
+        }}>Wybierz Basic</button>
       </div>
 
       {/* Gold Plan */}
       <div className="plan-card gold popular">
         <div className="plan-badge">GOLD</div>
-        <div className="popularity-badge">{currentLanguage === 'pl' ? 'NAJPOPULARNIEJSZY' : 'MOST POPULAR'}</div>
-
+        <div className="popularity-badge">NAJPOPULARNIEJSZY</div>
         <div className="plan-header">
           <h4>Gold</h4>
           <div className="plan-price">
             <span className="old-price">89 zł</span>
             <span className="current-price">49 zł</span>
-            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
+            <span className="period">/miesiąc</span>
           </div>
         </div>
         <div className="plan-features">
-<div className="feature">{currentLanguage === 'pl' ? '✅ 10 optymalizacji/mies.' : '✅ 10 optimizations/month'}</div>
-<div className="feature">{currentLanguage === 'pl' ? '✅ GPT-4 AI (najnowszy)' : '✅ GPT-4 AI (latest)'}</div>
-<div className="feature">{currentLanguage === 'pl' ? '✅ Priorytetowa kolejka' : '✅ Priority queue'}</div>
-<div className="feature">{currentLanguage === 'pl' ? '✅ Dostęp do nowych funkcji' : '✅ Access to new features'}</div>
+          <div className="feature">✅ 10 optymalizacji/mies.</div>
+          <div className="feature">✅ GPT-4 AI (najnowszy)</div>
+          <div className="feature">✅ Priorytetowa kolejka</div>
+          <div className="feature">✅ Dostęp do nowych funkcji</div>
         </div>
         <button className="plan-button gold-btn" onClick={() => {
           const email = document.getElementById('paywallEmail').value;
           if (!email || !email.includes('@')) {
-            alert(currentLanguage === 'pl' ? '⚠️ Podaj prawidłowy email!' : '⚠️ Enter a valid email!');
+            alert('⚠️ Podaj prawidłowy email!');
             return;
           }
           handlePayment('gold');
-        }}>{currentLanguage === 'pl' ? 'Wybierz Gold' : 'Choose Gold'}</button>
+        }}>Wybierz Gold</button>
       </div>
 
       {/* Premium Plan */}
       <div className="plan-card premium">
         <div className="plan-badge">VIP</div>
-       <div className="premium-badge">{currentLanguage === 'pl' ? 'NAJLEPSZA WARTOŚĆ' : 'BEST VALUE'}</div>
+        <div className="premium-badge">NAJLEPSZA WARTOŚĆ</div>
         <div className="plan-header">
           <h4>Premium</h4>
           <div className="plan-price">
             <span className="old-price">129 zł</span>
             <span className="current-price">79 zł</span>
-            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
+            <span className="period">/miesiąc</span>
           </div>
         </div>
         <div className="plan-features">
-<div className="feature">{currentLanguage === 'pl' ? '✅ 25 optymalizacji/mies.' : '✅ 25 optimizations/month'}</div>
-<div className="feature">{currentLanguage === 'pl' ? '✅ GPT-4 VIP (najlepszy)' : '✅ GPT-4 VIP (best)'}</div>
-<div className="feature">{currentLanguage === 'pl' ? '✅ VIP Support (2h odpowiedzi)' : '✅ VIP Support (2h response time)'}</div>
-<div className="feature">{currentLanguage === 'pl' ? '✅ Beta tester nowości' : '✅ Beta tester for new features'}</div>
+          <div className="feature">✅ 25 optymalizacji/mies.</div>
+          <div className="feature">✅ GPT-4 VIP (najlepszy)</div>
+          <div className="feature">✅ VIP Support (2h odpowiedzi)</div>
+          <div className="feature">✅ Beta tester nowości</div>
         </div>
         <button className="plan-button premium-btn" onClick={() => {
           const email = document.getElementById('paywallEmail').value;
           if (!email || !email.includes('@')) {
-            alert(currentLanguage === 'pl' ? '⚠️ Podaj prawidłowy email!' : '⚠️ Enter a valid email!');
+            alert('⚠️ Podaj prawidłowy email!');
             return;
           }
           handlePayment('premium-monthly');
-        }}>{currentLanguage === 'pl' ? 'Wybierz Premium' : 'Choose Premium'}</button>
+        }}>Wybierz Premium</button>
       </div>
     </div>
   </div>
@@ -1745,16 +1706,16 @@ textarea.value = currentLanguage === 'pl'
   <div className="trust-section">
     <div className="trust-stats">
       <div className="stat">
-<span className="stat-number">50,000+</span>
-<span className="stat-label">{currentLanguage === 'pl' ? 'Zoptymalizowanych CV' : 'Optimized CVs'}</span>
+        <span className="stat-number">50,000+</span>
+        <span className="stat-label">Zoptymalizowanych CV</span>
       </div>
       <div className="stat">
         <span className="stat-number">410%</span>
-        <span className="stat-label">{currentLanguage === 'pl' ? 'Więcej odpowiedzi' : 'More responses'}</span>
+        <span className="stat-label">Więcej odpowiedzi</span>
       </div>
       <div className="stat">
         <span className="stat-number">95%</span>
-        <span className="stat-label">{currentLanguage === 'pl' ? 'Sukces w ATS' : 'ATS success'}</span>
+        <span className="stat-label">Sukces w ATS</span>
       </div>
     </div>
   </div>
@@ -1771,8 +1732,8 @@ textarea.value = currentLanguage === 'pl'
               <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
               
               <div className="template-header">
-<h2>{currentLanguage === 'pl' ? 'Wybierz szablon CV' : 'Choose a CV template'}</h2>
-<p>{currentLanguage === 'pl' ? 'Dostępne szablony w Twoim planie' : 'Templates available in your plan'}</p>
+                <h2>Wybierz szablon CV</h2>
+                <p>Dostępne szablony w Twoim planie</p>
               </div>
 
               <div className="templates-grid">
@@ -2308,84 +2269,19 @@ html {
 
   /* Navigation */
 .navigation {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  left: auto;
-  top: auto;
-  width: auto;
-  max-width: none;
-  z-index: 10000;
-  border-radius: 9999px;
-  background: rgba(8, 8, 8, 0.9);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  padding: 10px 14px;
-}
-
-/* Wariant „chmurki” */
-.navigation.nav-bubble .nav-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0;
-}
-
-.navigation.nav-bubble .logo {
-  gap: 8px;
-}
-.navigation.nav-bubble .logo-text {
-  font-size: 18px;
-}
-
-.navigation.nav-bubble .nav-links {
-  position: absolute;
-  bottom: 60px;
-  right: 0;
-  display: none;
-  flex-direction: column;
-  gap: 10px;
   background: rgba(8, 8, 8, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 14px;
-  min-width: 220px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.45);
+  backdrop-filter: blur(30px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 10000;
+  transition: all 0.3s ease;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 0;
 }
-
-.navigation.nav-bubble:hover .nav-links,
-.navigation.nav-bubble .nav-links.show {
-  display: flex;
-}
-
-.navigation.nav-bubble .nav-link {
-  padding: 10px 12px;
-  border: none;
-  text-align: left;
-}
-
-.navigation.nav-bubble .nav-cta {
-  padding: 10px 12px;
-}
-
-/* Wersja mobilna – chmurka też w prawym dolnym */
-@media (max-width: 768px) {
-  .navigation.nav-bubble {
-    bottom: 16px;
-    right: 16px;
-  }
-  .navigation.nav-bubble .nav-links {
-    right: 0;
-    left: auto;
-    bottom: 56px;
-  }
-  .mobile-menu-btn {
-    display: none; /* niepotrzebny hamburger przy chmurce */
-  }
-}
-
 
 .navigation::before {
   content: '';
@@ -3638,7 +3534,7 @@ html {
 
 
 /* Premium Timeline Styles */
-.navigation:not(.nav-bubble) {
+.timeline-wrapper.premium {
   position: relative;
   padding: 60px 0;
   display: flex;
@@ -3669,7 +3565,7 @@ html {
   height: 0%;
   background: linear-gradient(180deg, #00ff88, #00cc70, #00aa5c);
   border-radius: 2px;
-  animation: none;
+  animation: progressGrow 3s ease forwards;
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
 }
 
@@ -7231,7 +7127,7 @@ html {
 
 /* Mobile menu button */
 @media (max-width: 768px) {
-    .navigation:not(.nav-bubble) {
+  .navigation {
     width: calc(100% - 20px);
     top: 10px;
   }
@@ -7336,15 +7232,14 @@ html {
 }
 
 @media (max-width: 768px) {
-  .navigation:not(.nav-bubble) {
+  .navigation {
     width: 100%;
     top: 0;
     left: 0;
     right: 0;
     border-radius: 0;
   }
-}
-
+  
   .nav-content {
     padding: 16px 20px;
     position: relative;
@@ -7931,10 +7826,10 @@ button:focus {
 }
 
 .progress-steps {
-  position: sticky;
-  top: 90px;
-  left: auto;
-  transform: none;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 100px;
   z-index: 10002;
@@ -8529,16 +8424,6 @@ button:focus {
   overflow: visible !important;
 }
 
-/* Hard reset – chmurka zawsze pływa */
-.navigation.nav-bubble {
-  position: fixed !important;
-  bottom: 20px !important;
-  right: 20px !important;
-  top: auto !important;
-  left: auto !important;
-  width: auto !important;
-  border-radius: 9999px;
-}
 
 
 	`}</style>
