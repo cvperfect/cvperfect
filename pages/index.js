@@ -480,16 +480,28 @@ const openUploadModal = () => {
   // Typing animation states
 
 
-const typingPhrases = [
-  'optymalizacją CV', 
-  'analizą słów kluczowych',
-  'zwiększeniem szans na pracę',
-  'profesjonalnym CV',
-  'personalizacją treści',
-  'analizą ATS',
-  'zwiększeniem widoczności',
-  'sztuczną inteligencją'
-];
+const typingPhrases = currentLanguage === 'pl'
+  ? [
+      'optymalizacją CV',
+      'analizą słów kluczowych',
+      'zwiększeniem szans na pracę',
+      'profesjonalnym CV',
+      'personalizacją treści',
+      'analizą ATS',
+      'zwiększeniem widoczności',
+      'sztuczną inteligencją'
+    ]
+  : [
+      'CV optimization',
+      'keyword analysis',
+      'boosting job chances',
+      'a professional CV',
+      'Custom content',
+      'ATS analysis',
+      'increasing visibility',
+      'artificial intelligence'
+    ];
+
 
 // Typing animation effect
 useEffect(() => {
@@ -1062,22 +1074,18 @@ const handlePayment = (plan) => {
         <div className="hero-section" id="hero">
           <div className="hero-content">
             <div className="hero-badge">
-              🏆 #1 AI Platforma CV w Polsce
+            {currentLanguage === 'pl' ? '🏆 #1 AI Platforma CV w Polsce' : '🏆 #1 AI CV Platform in Poland'}
             </div>
-<h1 className="hero-title">
-  Zwiększ swoje szanse o <span className="highlight">410%</span>
-  <br />
-  z AI-powered
-  <div className="typing-safe-zone">
-    <span className="typing-text">{typingText}</span>
-    <span className="typing-cursor">|</span>
-  </div>
-</h1>
-
-            <p className="hero-subtitle">
-              Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy. 
-              <strong> 95% skuteczności ATS, 30 sekund optymalizacji, tylko 9.99 zł.</strong>
-            </p>
+<p className="hero-subtitle">
+  {currentLanguage === 'pl'
+    ? 'Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy.'
+    : 'The first AI in Poland that optimizes your CV for specific job offers.'}
+  <strong>
+    {currentLanguage === 'pl'
+      ? ' 95% skuteczności ATS, 30 sekund optymalizacji, tylko 19.99 PLN ~ 4.70€ .'
+      : ' 95% ATS success, 30 seconds to optimize, only 19.99 PLN ~ 4.70€ .'}
+  </strong>
+</p>
             
             <div className="hero-stats">
               <div className="stat-item">
@@ -1095,11 +1103,12 @@ const handlePayment = (plan) => {
             </div>
 
             <div className="hero-cta">
-              <button className="hero-button primary" onClick={openUploadModal}>
-  🔍 Sprawdź swoje CV
+             
+<button className="hero-button primary" onClick={openUploadModal}>
+  {currentLanguage === 'pl' ? '🔍 Sprawdź swoje CV' : '🔍 Check your CV'}
 </button>
-              <div className="hero-guarantee">
-  <span>✅ Bez rejestracji </span>
+<div className="hero-guarantee">
+  <span>{currentLanguage === 'pl' ? '✅ Bez rejestracji' : '✅ No registration'}</span>
 </div>
             </div>
           </div>
