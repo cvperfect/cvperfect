@@ -260,7 +260,7 @@ if (typeof window === 'undefined' ||
 // Create particles - ADAPTIVE COUNT
 const getParticleCount = () => {
   if (window.innerWidth < 1200) return 15;
-  if (navigator.hardwareConcurrency < 8) return 25;
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 8) return 25;
   return 40;
 };
 const particleCount = getParticleCount();
@@ -368,20 +368,18 @@ const line = entry.target.querySelector('.timeline-progress-line')
     })
   }, observerOptions)
   
-  const timelineSection = document.querySelector('.timeline-wrapper')
-  if (timelineSection) {
+const timelineSection = document.querySelector('.timeline-wrapper');
 if (timelineSection) {
-  timelineObserver.observe(timelineSection)
+  timelineObserver.observe(timelineSection);
 }
 
 return () => {
   if (timelineSection) {
-    timelineObserver.unobserve(timelineSection)
+    timelineObserver.unobserve(timelineSection);
   }
-}
-  }
-  
- }, []);
+};
+}, []);
+
 
 // Magnetic buttons effect
 useEffect(() => {
@@ -1031,7 +1029,7 @@ useEffect(() => {
 
     
     {/* Navigation */}
-        <nav className="navigation">
+        <nav className="navigation nav-bubble" role="navigation" aria-label="Main">
           <div className="nav-content">
             <div className="logo">
               <span className="logo-badge">AI</span>
@@ -2310,19 +2308,84 @@ html {
 
   /* Navigation */
 .navigation {
-  background: rgba(8, 8, 8, 0.95);
-  backdrop-filter: blur(30px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
+  bottom: 20px;
+  right: 20px;
+  left: auto;
+  top: auto;
+  width: auto;
+  max-width: none;
   z-index: 10000;
-  transition: all 0.3s ease;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-  border-radius: 0;
+  border-radius: 9999px;
+  background: rgba(8, 8, 8, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  padding: 10px 14px;
 }
+
+/* Wariant „chmurki” */
+.navigation.nav-bubble .nav-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.navigation.nav-bubble .logo {
+  gap: 8px;
+}
+.navigation.nav-bubble .logo-text {
+  font-size: 18px;
+}
+
+.navigation.nav-bubble .nav-links {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(8, 8, 8, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 14px;
+  min-width: 220px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.45);
+}
+
+.navigation.nav-bubble:hover .nav-links,
+.navigation.nav-bubble .nav-links.show {
+  display: flex;
+}
+
+.navigation.nav-bubble .nav-link {
+  padding: 10px 12px;
+  border: none;
+  text-align: left;
+}
+
+.navigation.nav-bubble .nav-cta {
+  padding: 10px 12px;
+}
+
+/* Wersja mobilna – chmurka też w prawym dolnym */
+@media (max-width: 768px) {
+  .navigation.nav-bubble {
+    bottom: 16px;
+    right: 16px;
+  }
+  .navigation.nav-bubble .nav-links {
+    right: 0;
+    left: auto;
+    bottom: 56px;
+  }
+  .mobile-menu-btn {
+    display: none; /* niepotrzebny hamburger przy chmurce */
+  }
+}
+
 
 .navigation::before {
   content: '';
@@ -3575,7 +3638,7 @@ html {
 
 
 /* Premium Timeline Styles */
-.timeline-wrapper.premium {
+.navigation:not(.nav-bubble) {
   position: relative;
   padding: 60px 0;
   display: flex;
@@ -3606,7 +3669,7 @@ html {
   height: 0%;
   background: linear-gradient(180deg, #00ff88, #00cc70, #00aa5c);
   border-radius: 2px;
-  animation: progressGrow 3s ease forwards;
+  animation: none;
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
 }
 
@@ -7168,7 +7231,7 @@ html {
 
 /* Mobile menu button */
 @media (max-width: 768px) {
-  .navigation {
+    .navigation:not(.nav-bubble) {
     width: calc(100% - 20px);
     top: 10px;
   }
@@ -7273,14 +7336,15 @@ html {
 }
 
 @media (max-width: 768px) {
-  .navigation {
+  .navigation:not(.nav-bubble) {
     width: 100%;
     top: 0;
     left: 0;
     right: 0;
     border-radius: 0;
   }
-  
+}
+
   .nav-content {
     padding: 16px 20px;
     position: relative;
@@ -7867,10 +7931,10 @@ button:focus {
 }
 
 .progress-steps {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: sticky;
+  top: 90px;
+  left: auto;
+  transform: none;
   display: flex;
   gap: 100px;
   z-index: 10002;
@@ -8465,6 +8529,16 @@ button:focus {
   overflow: visible !important;
 }
 
+/* Hard reset – chmurka zawsze pływa */
+.navigation.nav-bubble {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  top: auto !important;
+  left: auto !important;
+  width: auto !important;
+  border-radius: 9999px;
+}
 
 
 	`}</style>
