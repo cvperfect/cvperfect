@@ -77,6 +77,7 @@ export default function Home() {
   }
 
   const t = translations[currentLanguage]
+  
   // Stats counter animation
   useEffect(() => {
     const observerCallback = (entries) => {
@@ -158,43 +159,40 @@ const interval = setInterval(incrementStats, (180 + Math.random() * 120) * 1000)
 
 
 
-// Scroll indicator logic
+// Scroll indicator logic (fixed + scrollspy z IntersectionObserver)
 useEffect(() => {
-  const handleScroll = () => {
-    // Update scroll progress
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-    const scrollProgress = (window.scrollY / scrollHeight) * 100
-    const progressBar = document.querySelector('.scroll-progress')
-    if (progressBar) {
-      progressBar.style.height = `${scrollProgress}%`
-    }
-    
-    // Update active section
-    const sections = document.querySelectorAll('div[id]')
-    const scrollDots = document.querySelectorAll('.scroll-dot')
-    
-    let currentSection = ''
-   sections.forEach(section => {
-  const rect = section.getBoundingClientRect()
-  if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
-    currentSection = section.id
-  }
-})
-    
-    scrollDots.forEach(dot => {
-      if (dot.getAttribute('data-section') === currentSection) {
-        dot.classList.add('active')
-      } else {
-        dot.classList.remove('active')
-      }
-    })
-  }
-  
-  window.addEventListener('scroll', handleScroll)
-  handleScroll() // Initial call
-  
-  return () => window.removeEventListener('scroll', handleScroll)
-}, [])
+  const SECTION_IDS = ['hero','stats','capabilities','timeline','testimonials','faq']; // dopasuj do realnych ID
+  const progressBar = document.querySelector('.scroll-progress');
+
+  const onScroll = () => {
+    const sh = document.documentElement.scrollHeight - window.innerHeight;
+    const p = sh > 0 ? (window.scrollY / sh) * 100 : 0;
+    if (progressBar) progressBar.style.height = `${p}%`;
+  };
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const id = e.target.id;
+      document.querySelectorAll('.scroll-dot').forEach(dot => {
+        dot.classList.toggle('active', dot.getAttribute('data-section') === id);
+      });
+    });
+  }, { root: null, rootMargin: '-40% 0px -40% 0px', threshold: 0.01 });
+
+  SECTION_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  return () => {
+    io.disconnect();
+    window.removeEventListener('scroll', onScroll);
+  };
+}, []);
 
 // Particles background - OPTIMIZED
 useEffect(() => {
@@ -990,31 +988,38 @@ const handlePayment = (plan) => {
     </div>
   </div>
   
-  {/* Scroll Indicator */}
-<div className="scroll-indicator">
-  <div className="scroll-progress"></div>
-  <div className="scroll-sections">
-    <a href="#hero" className="scroll-dot active" data-section="hero">
-      <span className="dot-tooltip">Start</span>
-    </a>
-    <a href="#stats" className="scroll-dot" data-section="stats">
-      <span className="dot-tooltip">Statystyki</span>
-    </a>
-    <a href="#capabilities" className="scroll-dot" data-section="capabilities">
-      <span className="dot-tooltip">Możliwości</span>
-    </a>
-    <a href="#timeline" className="scroll-dot" data-section="timeline">
-      <span className="dot-tooltip">Jak to działa</span>
-    </a>
-    <a href="#testimonials" className="scroll-dot" data-section="testimonials">
-      <span className="dot-tooltip">Opinie</span>
-    </a>
-    <a href="#faq" className="scroll-dot" data-section="faq">
-      <span className="dot-tooltip">FAQ</span>
-    </a>
+{/* Scroll Indicator (fixed, cały czas widoczny) */}
+<div
+  className="scroll-indicator fixed-indicator"
+  aria-label={currentLanguage === 'pl' ? 'Nawigacja sekcji' : 'Section navigation'}
+>
+  <div className="scroll-progress" aria-hidden="true"></div>
+  <div className="scroll-sections" role="tablist">
+    {[
+      { id: 'hero', pl: 'Start', en: 'Start' },
+      { id: 'stats', pl: 'Statystyki', en: 'Stats' },
+      { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },
+      { id: 'timeline', pl: 'Jak to działa', en: 'How it works' },
+      { id: 'testimonials', pl: 'Opinie', en: 'Reviews' },
+      { id: 'faq', pl: 'FAQ', en: 'FAQ' },
+    ].map((s, idx) => (
+      <button
+        key={s.id}
+        type="button"
+        className={`scroll-dot${idx===0 ? ' active' : ''}`}
+        data-section={s.id}
+        aria-label={`${idx+1}/6 ${currentLanguage==='pl' ? s.pl : s.en}`}
+        onClick={(e) => {
+          e.preventDefault();
+          const el = document.getElementById(s.id);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+      >
+        <span className="dot-tooltip">{currentLanguage==='pl' ? s.pl : s.en}</span>
+      </button>
+    ))}
   </div>
-</div>
-
+	</div>
     
     {/* Navigation */}
         <nav className="navigation">
@@ -8433,7 +8438,55 @@ button:focus {
   overflow: visible !important;
 }
 
+  {/* Global styles to avoid CSS-module scoping issues */}
 
+    .fixed-indicator{
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2147483000; /* ponad wszystko */
+      width: 18px;
+      pointer-events: none; /* żeby nie blokować scrolla */
+    }
+    .fixed-indicator .scroll-sections{
+      display: flex; flex-direction: column; gap: 12px;
+      align-items: center;
+    }
+    .scroll-dot{
+      pointer-events: auto;
+      width: 12px; height: 12px; border-radius: 9999px;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.4);
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+      position: relative;
+    }
+    .scroll-dot.active{
+      transform: scale(1.22);
+      background: #7850ff;
+      box-shadow: 0 0 0 4px rgba(120,80,255,.15), 0 8px 24px rgba(120,80,255,.35);
+    }
+    .scroll-dot:hover .dot-tooltip{
+      opacity: 1; transform: translateX(-8px);
+    }
+    .dot-tooltip{
+      position: absolute; right: 18px; top: 50%;
+      transform: translateY(-50%) translateX(0);
+      background: rgba(0,0,0,.85); color: #fff;
+      padding: 6px 10px; border-radius: 6px; font-size: 12px;
+      white-space: nowrap; opacity: 0; pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .scroll-progress{
+      position: absolute; right: -2px; top: 0;
+      width: 2px; height: 0%; background: linear-gradient(#7850ff,#ff5080);
+      border-radius: 2px; box-shadow: 0 0 8px rgba(120,80,255,.6);
+    }
+    @media (max-width: 1024px){
+      .fixed-indicator{ right: 10px; }
+      .dot-tooltip{ display:none; }
+    }
 
 	`}</style>
     </>
