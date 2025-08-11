@@ -1096,6 +1096,7 @@ const floatingNotifications = currentLanguage === 'pl'
         <div className="hero-section" id="hero">
           <div className="hero-content">
             <div className="hero-badge">
+
             {currentLanguage === 'pl' ? '🏆 #1 AI Platforma CV w Polsce' : '🏆 #1 AI CV Platform in Poland'}
             </div>
 <p className="hero-subtitle">
@@ -1108,6 +1109,13 @@ const floatingNotifications = currentLanguage === 'pl'
       : ' 95% ATS success, 30 seconds to optimize, only ≈ €4.40.'}
   </strong>
 </p>
+<h1 className="hero-title">
+  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki ' : 'Boost your chances with '}
+  <span className="typing-safe-zone">
+    <span className="typing-text">{typingText}</span>
+    <span className="typing-cursor">|</span>
+  </span>
+</h1>
             
             <div className="hero-stats">
               <div className="stat-item">
@@ -1385,10 +1393,10 @@ const floatingNotifications = currentLanguage === 'pl'
 
               <span className="detail-item">⚡ Instant</span>
             </div>
-            <div className="step-time">
-              <span className="time-icon">⏱️</span>
-              <span>{currentLanguage==='pl' ? '5 sekund' : '5 seconds'}</span>
-            </div>
+<div className="time">
+  <span className="time-icon">⏱️</span>
+  <span>{currentLanguage==='pl' ? '5 sekund' : '5 seconds'}</span>
+</div>
           </div>
           <div className="step-visual">
             <div className="payment-animation">
@@ -1410,7 +1418,11 @@ const floatingNotifications = currentLanguage === 'pl'
           <div className="step-content">
             <div className="step-label">{currentLanguage==='pl' ? 'FINAŁ' : 'FINAL'}</div>
             <h3>{currentLanguage==='pl' ? 'Pobierz zoptymalizowane CV!' : 'Download your optimized CV!'}</h3>
-            <p>{currentLanguage==='pl' ? 'Twoje CV jest gotowe z wynikiem ATS 95%' : 'Your CV is ready with a 95% ATS score'}</p>
+            <p>
+  {currentLanguage==='pl'
+    ? 'Twoje CV jest gotowe z wynikiem ATS 95%'
+    : 'Your CV is ready with a 95% ATS score'}
+</p>
 
 
             <div className="step-details">
@@ -2024,17 +2036,22 @@ placeholder={
 <div className="footer-section">
               <h4>{currentLanguage==='pl' ? 'Pomoc' : 'Help'}</h4>
               <ul className="footer-links">
-		<li><a href="/regulamin">Regulamin</a></li>
-                <li><a href="/kontakt">Kontakt</a></li>
-                <li><a href="/polityka-prywatnosci">Polityka prywatności</a></li>
-                <li><a href="/rodo">RODO</a></li>
+		<li><a href="/regulamin">{currentLanguage==='pl' ? 'Regulamin' : 'Terms & Conditions'}</a></li>
+                <li><a href="/kontakt">{currentLanguage==='pl' ? 'Kontakt' : 'Contact'}</a></li>
+                <li><a href="/polityka-prywatnosci">{currentLanguage==='pl' ? 'Polityka prywatności' : 'Privacy Policy'}</a></li>
+                <li><a href="/rodo">{currentLanguage==='pl' ? 'RODO' : 'GDPR'}</a></li>
                 
               </ul>
             </div>
 
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 CvPerfect. Wszystkie prawa zastrzeżone.</p>
+            <p>
+  {currentLanguage==='pl'
+    ? '© 2025 CvPerfect. Wszystkie prawa zastrzeżone.'
+    : '© 2025 CvPerfect. All rights reserved.'}
+</p>
+
           </div>
         </footer>
      </div>
@@ -2227,7 +2244,7 @@ placeholder={
 }
 
 /* Ensure content is above particles */
-.container > *:not(.particles-container) {
+.container > *:not(.scroll-indicator):not(.fixed-indicator) {
   position: relative;
   z-index: 1;
 }
@@ -2267,10 +2284,11 @@ placeholder={
   66% { transform: rotate(240deg) scale(0.9); }
 }
 
-.container > * {
+.container > *:not(.scroll-indicator) {
   position: relative;
   z-index: 1;
 }
+
 
         /* Custom Scrollbar */
         /* Enhanced Custom Scrollbar */
@@ -3662,9 +3680,9 @@ html {
   overflow-x: hidden;
 }
 
-.timeline-progress-track {
+.timeline-progress-track  {
   position: absolute;
-  left: 50px;
+  left: 0px;
   top: 0;
   bottom: 0;
   width: 4px;
@@ -3801,8 +3819,9 @@ html {
 
 @keyframes iconBounce {
   0%, 100% { transform: translateX(3px) translateY(0); }
-  50% { transform: translateX(3px) translateY(-10px); }
+  50%      { transform: translateX(3px) translateY(-10px); }
 }
+
 
 
 .step-icon-pulse {
@@ -4154,10 +4173,13 @@ html {
     opacity: 1;
   }
   
+@media (max-width: 768px) {
   .step-icon {
     animation: none;
+    position: relative;
+    left: 3px; /* lekkie dosunięcie w prawo na mobile */
   }
-  
+    
   .timeline-progress-line {
     animation: none;
     height: 100%;
@@ -4504,6 +4526,7 @@ html {
   }
   
   .step-icon {
+
     font-size: 40px;
   }
   
@@ -8158,7 +8181,7 @@ button:focus {
   right: 30px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1000;
+  z-index: 2147483000;
   background: rgba(20, 20, 20, 0.8);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -8198,6 +8221,7 @@ button:focus {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   display: block;
+  pointer-events: auto;
 }
 
 .scroll-dot::before {
@@ -8542,31 +8566,31 @@ button:focus {
   overflow: visible !important;
 }
 
-  {/* Global styles to avoid CSS-module scoping issues */}
+  /* Global styles to avoid CSS-module scoping issues */
 
 .fixed-indicator{
-      position: fixed;
-      right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 2147483000;
-      width: 18px;
-      pointer-events: none;
-      display: block !important;
-    }
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2147483000;
+  width: 18px;
+  pointer-events: none;
+  display: block !important;     /* <— DODANE */
+  opacity: 1 !important;         /* <— DODANE */
+}
     .fixed-indicator .scroll-sections{
       display: flex; flex-direction: column; gap: 12px;
       align-items: center;
     }
-.scroll-dot{
-      pointer-events: auto;
-      width: 14px; height: 14px; border-radius: 9999px;
-      background: rgba(255,255,255,.85);
-      border: 1px solid rgba(0,0,0,.25);
-      box-shadow: 0 2px 8px rgba(0,0,0,.15);
-      transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
-      position: relative;
-    }
+.scroll-dot.active{
+  background: linear-gradient(180deg, #7CF7C2 0%, #00D48A 100%);
+  border: 0;
+  box-shadow:
+    0 0 0 4px rgba(0,212,138,0.15),
+    0 8px 24px rgba(0,212,138,0.35);
+  transform: scale(1.1);
+}
     .scroll-dot.active{
       transform: scale(1.22);
       background: #7850ff;
@@ -8578,7 +8602,7 @@ button:focus {
     .dot-tooltip{
       position: absolute; right: 18px; top: 50%;
       transform: translateY(-50%) translateX(0);
-      background: rgba(0,0,0,.85); color: #fff;
+      background: rgba(0,0,0,0.85); color: #fff;
       padding: 6px 10px; border-radius: 6px; font-size: 12px;
       white-space: nowrap; opacity: 0; pointer-events: none;
       transition: opacity .15s ease, transform .15s ease;
@@ -8586,12 +8610,22 @@ button:focus {
     .scroll-progress{
       position: absolute; right: -2px; top: 0;
       width: 2px; height: 0%; background: linear-gradient(#7850ff,#ff5080);
-      border-radius: 2px; box-shadow: 0 0 8px rgba(120,80,255,.6);
+      border-radius: 2px; box-shadow: 0 0 8px rgba(120,80,255,0.6);
     }
     @media (max-width: 1024px){
       .fixed-indicator{ right: 10px; }
       .dot-tooltip{ display:none; }
     }
+
+/* === FIX: zbicie górnego odstępu hero globalnie === */
+.hero-section {
+  padding-top: 64px !important;
+  padding-bottom: 40px !important;
+  margin-top: 0 !important;
+}
+html, body { margin: 0 !important; padding: 0 !important; }
+.hero-section h1:first-child { margin-top: 0 !important; }
+
 
 	`}</style>
     </>
