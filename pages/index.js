@@ -2637,10 +2637,10 @@ html {
 
        
         /* Hero Section */
-.hero-section {
+.hero-section{
   background: transparent;
   color: white;
-  padding: 60px 40px 40px;
+  padding: 72px 40px 40px; /* było 60px 40px 40px → +12px pod stałe belki */
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
@@ -3805,7 +3805,7 @@ html {
   to { transform: rotate(360deg); }
 }
 
-.step-icon {
+.step-icon{
   position: absolute;
   inset: 0;
   display: flex;
@@ -3814,12 +3814,14 @@ html {
   font-size: 48px;
   z-index: 2;
   filter: drop-shadow(0 10px 20px rgba(0, 255, 136, 0.3));
+  --icon-shift-x: 6px;           /* ← to robi optyczny “krok w prawo” */
   animation: iconBounce 3s ease infinite;
 }
 
+
 @keyframes iconBounce {
-  0%, 100% { transform: translateX(3px) translateY(0); }
-  50%      { transform: translateX(3px) translateY(-10px); }
+  0%, 100% { transform: translateX(var(--icon-shift-x, 3px)) translateY(0); }
+  50%      { transform: translateX(var(--icon-shift-x, 3px)) translateY(-10px); }
 }
 
 
@@ -8174,104 +8176,53 @@ button:focus {
 }
 
 
-/* Scroll Indicator */
-/* Enhanced Scroll Indicator */
-.scroll-indicator {
+/* Top bar scroll indicator */
+.scroll-indicator{
   position: fixed;
-  right: 30px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
   z-index: 2147483000;
-  background: rgba(20, 20, 20, 0.8);
+  background: rgba(20, 20, 20, 0.85);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50px;
-  padding: 20px 8px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  border-radius: 100px;
+  padding: 10px 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
 
-.scroll-progress {
-  position: absolute;
-  left: 50%;
-  top: 20px;
-  width: 3px;
-  height: 0%;
-  background: linear-gradient(180deg, #7850ff, #ff5080, #50b4ff);
-  transform: translateX(-50%);
-  transition: height 0.1s ease;
-  border-radius: 2px;
-  box-shadow: 0 0 15px rgba(120, 80, 255, 0.6);
-}
-
-.scroll-sections {
+/* kropki poziomo */
+.scroll-sections{
   display: flex;
-  flex-direction: column;
-  gap: 25px;
-  position: relative;
+  flex-direction: row;
   align-items: center;
+  gap: 14px;
 }
 
-.scroll-dot {
-  width: 14px;
-  height: 14px;
+/* ukryj pionowy pasek postępu (JS liczy wysokość) */
+.scroll-progress{ display: none !important; }
+
+/* większe kropki */
+.scroll-dot{
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.3);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all .25s ease;
   position: relative;
-  display: block;
   pointer-events: auto;
 }
 
-.scroll-dot::before {
-  content: '';
+/* dymek nad dotem */
+.scroll-dot .dot-tooltip{
   position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: rgba(120, 80, 255, 0.1);
-  opacity: 0;
-  transition: all 0.3s ease;
-}
-
-.scroll-dot:hover,
-.scroll-dot.active {
-  background: linear-gradient(135deg, #7850ff, #ff5080);
-  border-color: transparent;
-  transform: scale(1.4);
-  box-shadow: 0 0 25px rgba(120, 80, 255, 0.6);
-}
-
-.scroll-dot:hover::before,
-.scroll-dot.active::before {
-  opacity: 1;
-  transform: scale(1.5);
-}
-
-.dot-tooltip {
-  position: absolute;
-  right: 35px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(40, 40, 40, 0.95));
-  backdrop-filter: blur(20px);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-}
-
-.scroll-dot:hover .dot-tooltip {
-  opacity: 1;
-  right: 40px;
-  transform: translateY(-50%) scale(1.05);
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
 }
 
 /* Ripple Effect */
@@ -8579,18 +8530,22 @@ button:focus {
   display: block !important;     /* <— DODANE */
   opacity: 1 !important;         /* <— DODANE */
 }
-    .fixed-indicator .scroll-sections{
-      display: flex; flex-direction: column; gap: 12px;
-      align-items: center;
-    }
+    /* kropki poziomo */
+.scroll-sections{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
 .scroll-dot.active{
-  background: linear-gradient(180deg, #7CF7C2 0%, #00D48A 100%);
+  background: linear-gradient(135deg, #00ff88, #00cc70);
   border: 0;
   box-shadow:
-    0 0 0 4px rgba(0,212,138,0.15),
-    0 8px 24px rgba(0,212,138,0.35);
-  transform: scale(1.1);
+    0 0 0 4px rgba(0, 204, 112, 0.18),
+    0 8px 24px rgba(0, 204, 112, 0.45);
+  transform: scale(1.18);
 }
+
     .scroll-dot.active{
       transform: scale(1.22);
       background: #7850ff;
@@ -8607,11 +8562,11 @@ button:focus {
       white-space: nowrap; opacity: 0; pointer-events: none;
       transition: opacity .15s ease, transform .15s ease;
     }
-    .scroll-progress{
-      position: absolute; right: -2px; top: 0;
-      width: 2px; height: 0%; background: linear-gradient(#7850ff,#ff5080);
-      border-radius: 2px; box-shadow: 0 0 8px rgba(120,80,255,0.6);
-    }
+/* ukryj pionowy pasek postępu (JS liczy wysokość) */
+.scroll-progress{ display: none !important; 
+
+}
+
     @media (max-width: 1024px){
       .fixed-indicator{ right: 10px; }
       .dot-tooltip{ display:none; }
