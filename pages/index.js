@@ -5,9 +5,11 @@ import { useRouter } from 'next/router'
 
 export default function Home() {
   const router = useRouter()
-  const { locale } = router
-  // GŁÓWNE STATE VARIABLES - NA SAMEJ GÓRZE
-  const [currentLanguage, setCurrentLanguage] = useState(locale || 'pl')
+const { locale } = router
+const [currentLanguage, setCurrentLanguage] = useState('pl')
+useEffect(() => {
+  if (locale) setCurrentLanguage(locale)
+}, [locale])
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [jobPosting, setJobPosting] = useState('')
   const [currentCV, setCurrentCV] = useState('')
@@ -366,8 +368,7 @@ useEffect(() => {
     })
   }, observerOptions)
   
-  const timelineSection = document.querySelector('.timeline-wrapper')
-  if (timelineSection) {
+const timelineSection = document.querySelector('.timeline-wrapper')
 if (timelineSection) {
   timelineObserver.observe(timelineSection)
 }
@@ -377,9 +378,7 @@ return () => {
     timelineObserver.unobserve(timelineSection)
   }
 }
-  }
-  
- }, []);
+}, []);
 
 // Magnetic buttons effect
 useEffect(() => {
@@ -561,7 +560,12 @@ const updateProgress = (step) => {
   // Premium success animation
   if (step === 4) {
     createConfetti();
-    showToast('🎉 Gratulacje! Twoje CV jest gotowe!', 'success');
+showToast(
+  currentLanguage === 'pl'
+    ? '🎉 Gratulacje! Twoje CV jest gotowe!'
+    : '🎉 Congrats! Your CV is ready!',
+  'success'
+);
   }  
   steps.forEach((stepEl, index) => {
     if (index < step) {
@@ -580,7 +584,12 @@ const updateProgress = (step) => {
   const cvText = cvTextarea?.value || '';
   
   if (!cvText || cvText.trim().length < 50) {
-    showToast('⚠️ Najpierw wklej treść swojego CV!', 'warning')
+showToast(
+  currentLanguage === 'pl'
+    ? '⚠️ Najpierw wklej treść swojego CV!'
+    : '⚠️ Paste your CV content first!',
+  'warning'
+)
     if (cvTextarea) {
       cvTextarea.focus();
       cvTextarea.style.borderColor = '#ef4444';
@@ -592,12 +601,19 @@ const updateProgress = (step) => {
   
   // Premium loading animation
   setIsOptimizing(true);
-  const loadingMessages = [
-    '🔍 Analizuję strukturę CV...',
-    '🤖 GPT-4 sprawdza zgodność z ATS...',
-    '⚡ Optymalizuję słowa kluczowe...',
-    '📊 Obliczam compatibility score...'
-  ];
+const loadingMessages = currentLanguage === 'pl'
+  ? [
+      '🔍 Analizuję strukturę CV...',
+      '🤖 GPT-4 sprawdza zgodność z ATS...',
+      '⚡ Optymalizuję słowa kluczowe...',
+      '📊 Obliczam compatibility score...'
+    ]
+  : [
+      '🔍 Analyzing CV structure...',
+      '🤖 GPT-4 checks ATS compliance...',
+      '⚡ Optimizing keywords...',
+      '📊 Calculating compatibility score...'
+    ];
   
   let messageIndex = 0;
   const messageInterval = setInterval(() => {
@@ -638,7 +654,12 @@ setTimeout(() => {
   
   // Show success and update progress
   setTimeout(() => {
-    showToast('✅ Analiza zakończona!', 'success')
+showToast(
+  currentLanguage === 'pl'
+    ? '✅ Analiza zakończona!'
+    : '✅ Analysis complete!',
+  'success'
+);
     updateProgress(3)
     setShowPaywall(true);
   }, 1500);
@@ -650,7 +671,12 @@ const optimizeCV = () => {
   const cvText = cvTextarea?.value || '';
   
   if (!cvText || cvText.trim().length < 50) {
-    showToast('⚠️ Najpierw wklej treść swojego CV!', 'warning');
+showToast(
+  currentLanguage === 'pl'
+    ? '⚠️ Najpierw wklej treść swojego CV!'
+    : '⚠️ Paste your CV content first!',
+  'warning'
+)
     setShowUploadModal(true);
     return;
   }
@@ -716,7 +742,8 @@ const handlePayment = (plan) => {
     const email = paywallEmail || customerEmail;
     
     if (!email || !email.includes('@')) {
-      alert('Proszę podać prawidłowy adres email')
+      alert(currentLanguage==='pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address')
+
       return
     }
 
@@ -729,156 +756,110 @@ const handlePayment = (plan) => {
     window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}`
   }
 
-// Testimonials data (15 opinii)
-  const testimonials = [
-    {
-      name: 'Anna Kowalska',
-      position: 'Marketing Manager',
-      company: 'Allegro',
-      text: 'Dzięki CvPerfect dostałam 3 rozmowy kwalifikacyjne w ciągu tygodnia! AI doskonale dostosował moje CV do wymagań.',
-      avatar: 'AK',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Michał Nowak',
-      position: 'Frontend Developer',
-      company: 'Asseco',
-      text: 'Niesamowite narzędzie! Optymalizacja pod ATS zwiększyła moje odpowiedzi z firm o 400%. Polecam każdemu!',
-      avatar: 'MN',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Katarzyna Wiśniewska',
-      position: 'HR Business Partner',
-      company: 'PKO BP',
-      text: 'Jako rekruterka mogę potwierdzić - CV zoptymalizowane przez CvPerfect rzeczywiście lepiej przechodzi przez ATS.',
-      avatar: 'KW',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Piotr Zieliński',
-      position: 'Data Analyst',
-      company: 'CD Projekt',
-      text: 'Fantastyczne AI! W 30 sekund otrzymałem CV idealnie dopasowane do oferty data scientist. Dostałem pracę!',
-      avatar: 'PZ',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Magdalena Krawczyk',
-      position: 'Project Manager',
-      company: 'Orange Polska',
-      text: 'CvPerfect to przełom! Moje CV teraz wygląda profesjonalnie i przyciąga uwagę rekruterów. 5 gwiazdek!',
-      avatar: 'MK',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Tomasz Lewandowski',
-      position: 'DevOps Engineer',
-      company: 'Allegro',
-      text: 'Najlepsze 9.99 zł jakie wydałem! CV zoptymalizowane pod konkretne wymagania, więcej rozmów kwalifikacyjnych.',
-      avatar: 'TL',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Agnieszka Dąbrowska',
-      position: 'UX Designer',
-      company: 'Livechat',
-      text: 'Wreszcie moje CV przechodzi przez filtry ATS! CvPerfect to must-have dla każdego poszukującego pracy.',
-      avatar: 'AD',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Bartosz Jankowski',
-      position: 'Sales Manager',
-      company: 'Microsoft',
-      text: 'Niesamowita jakość optymalizacji! AI perfekcyjnie dostosował treść do branży tech. Polecam w 100%!',
-      avatar: 'BJ',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Monika Pawłowska',
-      position: 'Content Manager',
-      company: 'Wirtualna Polska',
-      text: 'CvPerfect uratował moją karierę! Po optymalizacji dostałam ofertę pracy marzeń. Dziękuję!',
-      avatar: 'MP',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Rafał Wójcik',
-      position: 'Backend Developer',
-      company: 'Allegro',
-      text: 'Fenomenalne narzędzie! Optymalizacja pod kątem słów kluczowych zwiększyła moje szanse o 300%.',
-      avatar: 'RW',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Joanna Mazur',
-      position: 'Business Analyst',
-      company: 'ING Bank',
-      text: 'Szybko, skutecznie, profesjonalnie! CvPerfect to najlepsze AI do optymalizacji CV w Polsce.',
-      avatar: 'JM',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Łukasz Kamiński',
-      position: 'Product Manager',
-      company: 'Żabka',
-      text: 'Rewelacyjne rezultaty! Po 2 dniach od optymalizacji miałem już 4 rozmowy kwalifikacyjne. Polecam!',
-      avatar: 'ŁK',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Paulina Sokołowska',
-      position: 'Digital Marketing',
-      company: 'Empik',
-      text: 'CvPerfect to przyszłość rekrutacji! Moje CV teraz idealnie pasuje do każdej oferty pracy.',
-      avatar: 'PS',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Marcin Olszewski',
-      position: 'Software Engineer',
-      company: 'Google',
-      text: 'Niesamowite AI! Dostosowanie CV do wymagań firm FAANG - na tym się znają. Dostałem ofertę!',
-      avatar: 'MO',
-      rating: 5,
-      verified: true
-    },
-    {
-      name: 'Aleksandra Górska',
-      position: 'HR Director',
-      company: 'PZU',
-      text: 'Jako dyrektor HR potwierdzam - CV z CvPerfect wyróżniają się pozytywnie. Profesjonalne podejście!',
-      avatar: 'AG',
-      rating: 5,
-      verified: true
-    }
-  ]
+// Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
+const testimonialsBase = [
+  // 5 polskich (PL tekst)
+  {
+    name: 'Anna Kowalska', position: 'Marketing Manager', company: 'Allegro',
+    avatar: 'AK', rating: 5, verified: true,
+    textPL: 'Dzięki CvPerfect dostałam 3 rozmowy kwalifikacyjne w ciągu tygodnia! AI świetnie dopasował moje CV.',
+    textEN: 'Thanks to CvPerfect I got 3 interviews in a week! The AI tailored my CV perfectly.'
+  },
+  {
+    name: 'Michał Nowak', position: 'Frontend Developer', company: 'Asseco',
+    avatar: 'MN', rating: 5, verified: true,
+    textPL: 'Optymalizacja pod ATS zwiększyła odzew o 400%. Polecam!',
+    textEN: 'ATS optimization boosted responses by 400%. Highly recommend!'
+  },
+  {
+    name: 'Katarzyna Wiśniewska', position: 'HR Business Partner', company: 'PKO BP',
+    avatar: 'KW', rating: 5, verified: true,
+    textPL: 'Jako rekruterka widzę, że CV od CvPerfect lepiej przechodzi przez ATS.',
+    textEN: 'As a recruiter, I see CvPerfect CVs pass ATS much better.'
+  },
+  {
+    name: 'Piotr Zieliński', position: 'Data Analyst', company: 'CD Projekt',
+    avatar: 'PZ', rating: 5, verified: true,
+    textPL: 'W 30 sekund dostałem CV dopasowane do oferty – dostałem pracę!',
+    textEN: 'In 30 seconds I got a tailored CV – I landed the job!'
+  },
+  {
+    name: 'Magdalena Krawczyk', position: 'Project Manager', company: 'Orange Polska',
+    avatar: 'MK', rating: 5, verified: true,
+    textPL: 'Profesjonalne, szybkie i skuteczne. 5 gwiazdek!',
+    textEN: 'Professional, fast and effective. 5 stars!'
+  },
+
+  // 7 angielskich (zagraniczne nazwiska, EN tekst)
+  {
+    name: 'Olivia Smith', position: 'Product Designer', company: 'Spotify',
+    avatar: 'OS', rating: 5, verified: true,
+    textPL: 'CvPerfect dopasował moje CV do roli — zaproszenia pojawiły się w kilka dni.',
+    textEN: 'CvPerfect matched my CV to the role — interviews came within days.'
+  },
+  {
+    name: 'Liam Johnson', position: 'Software Engineer', company: 'Amazon',
+    avatar: 'LJ', rating: 5, verified: true,
+    textPL: 'Wynik ATS skoczył do 95% — rekruterzy zaczęli odpowiadać.',
+    textEN: 'My ATS score jumped to 95% — recruiters started replying.'
+  },
+  {
+    name: 'Sophia Martinez', position: 'Data Analyst', company: 'Siemens',
+    avatar: 'SM', rating: 5, verified: true,
+    textPL: 'Celne, konkretne wskazówki — CV wreszcie jest czytelne.',
+    textEN: 'Clear, targeted suggestions — my CV finally reads well.'
+  },
+  {
+    name: 'Noah Müller', position: 'Backend Developer', company: 'SAP',
+    avatar: 'NM', rating: 5, verified: true,
+    textPL: 'Moje CV w końcu przechodzi filtry ATS. Super narzędzie.',
+    textEN: 'My CV finally passes ATS filters. Great tool.'
+  },
+  {
+    name: 'Emma Williams', position: 'Marketing Lead', company: 'HSBC',
+    avatar: 'EW', rating: 5, verified: true,
+    textPL: 'Szybko, profesjonalnie, skutecznie — idealnie.',
+    textEN: 'Fast, professional, effective — perfect.'
+  },
+  {
+    name: 'Ethan Brown', position: 'DevOps Engineer', company: 'Microsoft',
+    avatar: 'EB', rating: 5, verified: true,
+    textPL: 'Świetne dopasowanie słów kluczowych i struktury.',
+    textEN: 'Great keyword matching and structure.'
+  },
+  {
+    name: 'Chloé Dubois', position: 'UX Researcher', company: "L'Oréal",
+    avatar: 'CD', rating: 5, verified: true,
+    textPL: 'Dostosowane CV dało więcej odpowiedzi od firm.',
+    textEN: 'Tailored CV got me more callbacks.'
+  }
+];
+
+// W PL: 5 pierwszych po polsku, kolejne 7 po angielsku; w EN: wszystkie po angielsku
+const testimonials = testimonialsBase.slice(0, 12).map((t, idx) => ({
+  ...t,
+  text: currentLanguage === 'pl' ? (idx < 5 ? t.textPL : t.textEN) : t.textEN
+}));
 
   // Floating notifications
   
   
   useEffect(() => {
-    const floatingNotifications = [
-      { id: 1, name: 'Anna', action: 'otrzymała ofertę pracy w Allegro', time: '2 min temu' },
-      { id: 2, name: 'Michał', action: 'zoptymalizował CV i dostał 3 rozmowy', time: '5 min temu' },
-      { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%', time: '8 min temu' },
-      { id: 4, name: 'Piotr', action: 'otrzymał ofertę w CD Projekt', time: '12 min temu' },
-      { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange', time: '15 min temu' }
+const floatingNotifications = currentLanguage === 'pl'
+  ? [
+      { id: 1, name: 'Anna',    action: 'otrzymała ofertę pracy w Allegro',        time: '2 min temu' },
+      { id: 2, name: 'Michał',  action: 'zoptymalizował CV i dostał 3 rozmowy',    time: '5 min temu' },
+      { id: 3, name: 'Katarzyna', action: 'zwiększyła ATS score o 40%',            time: '8 min temu' },
+      { id: 4, name: 'Piotr',   action: 'otrzymał ofertę w CD Projekt',            time: '12 min temu' },
+      { id: 5, name: 'Magdalena', action: 'przeszła przez filtry ATS w Orange',    time: '15 min temu' }
     ]
+  : [
+      { id: 1, name: 'Anna',    action: 'received a job offer at Allegro',         time: '2 min ago' },
+      { id: 2, name: 'Michael', action: 'optimized his CV and got 3 interviews',   time: '5 min ago' },
+      { id: 3, name: 'Kate',    action: 'increased ATS score by 40%',              time: '8 min ago' },
+      { id: 4, name: 'Peter',   action: 'received an offer at CD Projekt',         time: '12 min ago' },
+      { id: 5, name: 'Maggie',  action: 'passed ATS filters at Orange',            time: '15 min ago' }
+    ];
 
     let currentIndex = 0
     const showNotification = () => {
@@ -921,15 +902,51 @@ const handlePayment = (plan) => {
   return (
     <>
       <Head>
-        <title>CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund</title>
-        <meta name="description" content="Pierwsza AI platforma do optymalizacji CV w Polsce. 95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund za 9.99 zł." />
-        <meta name="keywords" content="optymalizacja CV, ATS, sztuczna inteligencja, CV AI, praca, rekrutacja, Polska" />
-        <meta property="og:title" content="CvPerfect - #1 AI Optymalizacja CV w Polsce" />
-        <meta property="og:description" content="95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund." />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+  <title>
+    {currentLanguage === 'pl'
+      ? 'CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund'
+      : 'CvPerfect - #1 AI CV Platform in Poland | ATS-Ready in 30 seconds'}
+  </title>
+
+  <meta
+    name="description"
+    content={
+      currentLanguage === 'pl'
+        ? 'Pierwsza AI platforma do optymalizacji CV w Polsce. 95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund za 19,99 zł.'
+        : 'The first AI platform in Poland for CV optimization. 95% ATS success rate, 410% more interviews. Optimize your CV in 30 seconds for ≈ €4.40.'
+    }
+  />
+
+  <meta
+    name="keywords"
+    content={
+      currentLanguage === 'pl'
+        ? 'optymalizacja CV, ATS, sztuczna inteligencja, CV AI, praca, rekrutacja, Polska'
+        : 'CV optimization, ATS, artificial intelligence, CV AI, jobs, recruitment, Poland'
+    }
+  />
+
+  <meta
+    property="og:title"
+    content={
+      currentLanguage === 'pl'
+        ? 'CvPerfect - #1 AI Optymalizacja CV w Polsce'
+        : 'CvPerfect - #1 AI CV Platform in Poland'
+    }
+  />
+  <meta
+    property="og:description"
+    content={
+      currentLanguage === 'pl'
+        ? '95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund.'
+        : '95% ATS success rate, 410% more interviews. Optimize your CV in 30 seconds.'
+    }
+  />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/favicon.ico" />
+</Head>
+
 
 	
 {/* Toast Notifications */}
@@ -975,15 +992,15 @@ const handlePayment = (plan) => {
       </div>
       <div className="progress-step" data-step="2">
         <span className="step-dot"></span>
-        <span className="step-label">Analiza</span>
+        <span className="step-label">{currentLanguage==='pl' ? 'Analiza' : 'Analysis'}</span>
       </div>
       <div className="progress-step" data-step="3">
         <span className="step-dot"></span>
-        <span className="step-label">Płatność</span>
+        <span className="step-label">{currentLanguage==='pl' ? 'Płatność' : 'Payment'}</span>
       </div>
       <div className="progress-step" data-step="4">
         <span className="step-dot"></span>
-        <span className="step-label">Gotowe!</span>
+        <span className="step-label">{currentLanguage==='pl' ? 'Gotowe!' : 'Done!'}</span>
       </div>
     </div>
   </div>
@@ -1087,15 +1104,16 @@ const handlePayment = (plan) => {
     : 'The first AI in Poland that optimizes your CV for specific job offers.'}
   <strong>
     {currentLanguage === 'pl'
-      ? ' 95% skuteczności ATS, 30 sekund optymalizacji, tylko 19.99 PLN ~ 4.70€ .'
-      : ' 95% ATS success, 30 seconds to optimize, only 19.99 PLN ~ 4.70€ .'}
+      ? ' 95% skuteczności ATS, 30 sekund optymalizacji, tylko 19,99 zł.'
+      : ' 95% ATS success, 30 seconds to optimize, only ≈ €4.40.'}
   </strong>
 </p>
             
             <div className="hero-stats">
               <div className="stat-item">
                 <div className="stat-number">410%</div>
-                <div className="stat-text">więcej rozmów</div>
+                <div className="stat-text">{currentLanguage === 'pl' ? 'więcej rozmów' : 'more interviews'}</div>
+
               </div>
               <div className="stat-item">
                 <div className="stat-number">95%</div>
@@ -1103,7 +1121,8 @@ const handlePayment = (plan) => {
               </div>
               <div className="stat-item">
                 <div className="stat-number">30s</div>
-                <div className="stat-text">optymalizacja</div>
+                <div className="stat-text">{currentLanguage === 'pl' ? 'optymalizacja' : 'optimization'}</div>
+
               </div>
             </div>
 
@@ -1121,31 +1140,39 @@ const handlePayment = (plan) => {
           <div className="hero-visual">
             <div className="cv-preview">
               <div className="cv-before">
-                <div className="cv-header">❌ Przed optymalizacją</div>
+                <div className="cv-header">{currentLanguage==='pl' ? '❌ Przed optymalizacją' : '❌ Before optimization'}
+</div>
                 <div className="cv-score bad">32% ATS</div>
                 <div className="cv-content">
                   <div className="cv-line short"></div>
                   <div className="cv-line medium"></div>
                   <div className="cv-line long"></div>
                   <div className="cv-problems">
-                    <span>• Brak słów kluczowych</span>
-                    <span>• Złe formatowanie</span>
-                    <span>• Nieoptymalne sekcje</span>
+                    <span>{currentLanguage==='pl' ? '• Brak słów kluczowych' : '• Missing keywords'}
+</span>
+                    <span>{currentLanguage==='pl' ? '• Złe formatowanie' : '• Poor formatting'}
+</span>
+                    <span>{currentLanguage==='pl' ? '• Nieoptymalne sekcje' : '• Suboptimal sections'}
+</span>
                   </div>
                 </div>
               </div>
               <div className="cv-arrow">➜</div>
               <div className="cv-after">
-                <div className="cv-header">✅ Po optymalizacji AI</div>
+                <div className="cv-header">{currentLanguage==='pl' ? '✅ Po optymalizacji AI' : '✅ After AI optimization'}
+</div>
                 <div className="cv-score good">95% ATS</div>
                 <div className="cv-content">
                   <div className="cv-line optimized short"></div>
                   <div className="cv-line optimized medium"></div>
                   <div className="cv-line optimized long"></div>
                   <div className="cv-improvements">
-                    <span>• Słowa kluczowe ✅</span>
-                    <span>• ATS-ready format ✅</span>
-                    <span>• Optymalne sekcje ✅</span>
+                    <span>{currentLanguage==='pl' ? '• Słowa kluczowe ✅' : '• Keywords ✅'}
+</span>
+                    <span>{currentLanguage==='pl' ? '• Format zgodny z ATS ✅' : '• ATS-ready format ✅'}
+</span>
+                    <span>{currentLanguage==='pl' ? '• Optymalne sekcje ✅' : '• Optimized sections ✅'}
+</span>
                   </div>
                 </div>
               </div>
@@ -1160,40 +1187,49 @@ const handlePayment = (plan) => {
     <div className="capabilities-header">
   <div className="header-badge">
     <span className="badge-icon">🤖</span>
-    <span className="badge-text">AI-Powered Detection</span>
+    <span className="badge-text">{currentLanguage==='pl' ? 'Wykrywanie wspierane przez AI' : 'AI-Powered Detection'}</span>
   </div>
-  <h3>Wspieramy wszystkie formaty dokumentów</h3>
-  <p>Wystarczy wkleić - nasz AI automatycznie rozpozna czy to CV czy list motywacyjny<br />i zastosuje odpowiednią optymalizację</p>
+<h3>{currentLanguage==='pl' ? 'Wspieramy wszystkie formaty dokumentów' : 'We support all document formats'}</h3>
+<p>
+  {currentLanguage==='pl'
+    ? <>Wystarczy wkleić – nasz AI automatycznie rozpozna czy to CV czy list motywacyjny<br />i zastosuje odpowiednią optymalizację</>
+    : <>Just paste – our AI detects whether it’s a CV or a cover letter<br />and applies the right optimization</>}
+</p>
 </div>
     <div className="capabilities-grid">
       <div className="capability-card">
         <div className="cap-icon">📄</div>
-        <h4>CV + Oferta pracy</h4>
-        <p>Zoptymalizujemy CV pod konkretną ofertę</p>
-        <div className="cap-result">→ Dopasowane CV</div>
+<h4>{currentLanguage==='pl' ? 'CV + Oferta pracy' : 'CV + Job posting'}</h4>
+<p>{currentLanguage==='pl' ? 'Zoptymalizujemy CV pod konkretną ofertę' : 'We tailor your CV to the job'}</p>
+<div className="cap-result">{currentLanguage==='pl' ? '→ Dopasowane CV' : '→ Tailored CV'}</div>
+
       </div>
       <div className="capability-card">
         <div className="cap-icon">✉️</div>
-        <h4>List motywacyjny + Oferta</h4>
-        <p>Dostosujemy list pod wymagania pracodawcy</p>
-        <div className="cap-result">→ Dopasowany list</div>
+<h4>{currentLanguage==='pl' ? 'List motywacyjny + Oferta' : 'Cover letter + Job posting'}</h4>
+<p>{currentLanguage==='pl' ? 'Dostosujemy list pod wymagania pracodawcy' : 'We adapt your cover letter to the employer'}</p>
+<div className="cap-result">{currentLanguage==='pl' ? '→ Dopasowany list' : '→ Tailored letter'}</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">📋</div>
-        <h4>Samo CV</h4>
-        <p>Stworzymy uniwersalne CV gotowe do użycia</p>
-        <div className="cap-result">→ Ogólne CV</div>
+<h4>{currentLanguage==='pl' ? 'Samo CV' : 'CV only'}</h4>
+<p>{currentLanguage==='pl' ? 'Stworzymy uniwersalne CV gotowe do użycia' : 'We create a universal, ready‑to‑use CV'}</p>
+<div className="cap-result">{currentLanguage==='pl' ? '→ Ogólne CV' : '→ General CV'}</div>
       </div>
       <div className="capability-card">
         <div className="cap-icon">📝</div>
-        <h4>Sam list motywacyjny</h4>
-        <p>Przygotujemy szablon do dalszej edycji</p>
-        <div className="cap-result">→ Szablon listu</div>
+<h4>{currentLanguage==='pl' ? 'Sam list motywacyjny' : 'Cover letter only'}</h4>
+<p>{currentLanguage==='pl' ? 'Przygotujemy szablon do dalszej edycji' : 'We provide an editable template'}</p>
+<div className="cap-result">{currentLanguage==='pl' ? '→ Szablon listu' : '→ Letter template'}</div>
       </div>
     </div>
     <div className="capabilities-note">
       <span className="note-icon">🤖</span>
-      <span>System automatycznie wykryje czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację!</span>
+<span>
+  {currentLanguage==='pl'
+    ? 'System automatycznie wykryje czy to CV czy list motywacyjny i zastosuje odpowiednią optymalizację!'
+    : 'The system automatically detects whether it’s a CV or a cover letter and applies the right optimization!'}
+</span>
     </div>
   </div>
 </div>
@@ -1202,40 +1238,42 @@ const handlePayment = (plan) => {
 <div className="stats-counter-section" id="stats">
   <div className="stats-container">
     <div className="stats-header">
-      <div className="stats-badge">📊 Live Statistics</div>
-      <h2>CvPerfect w liczbach</h2>
-      <p>Dołącz do tysięcy zadowolonych użytkowników</p>
+      <div className="stats-badge">{currentLanguage==='pl' ? '📊 Statystyki na żywo' : '📊 Live statistics'}</div>
+      <h2>{currentLanguage==='pl' ? 'CvPerfect w liczbach' : 'CvPerfect in numbers'}
+</h2>
+      <p>{currentLanguage==='pl' ? 'Dołącz do tysięcy zadowolonych użytkowników' : 'Join thousands of happy users'}
+</p>
     </div>
     
     <div className="stats-grid">
       <div className="stat-box">
         <div className="stat-icon">📄</div>
         <div className="stat-value" data-target="15234">0</div>
-        <div className="stat-label">CV zoptymalizowanych</div>
-        <div className="stat-growth">+3 dziś</div>
+        <div className="stat-label">{currentLanguage==='pl' ? 'CV zoptymalizowanych' : 'CV optimized'}</div>
+        <div className="stat-growth">+3 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">🎯</div>
         <div className="stat-value" data-target="98">0</div>
         <div className="stat-suffix">%</div>
-        <div className="stat-label">Skuteczność ATS</div>
-        <div className="stat-growth">Top 1 w PL</div>
+        <div className="stat-label">{currentLanguage==='pl' ? 'Skuteczność ATS' : 'ATS success rate'}</div>
+        <div className="stat-growth">{currentLanguage==='pl' ? 'Top 1 w PL' : 'Top 1 in PL'}</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">⚡</div>
         <div className="stat-value" data-target="3.2">0</div>
         <div className="stat-suffix">s</div>
-        <div className="stat-label">Czas analizy</div>
-        <div className="stat-growth">Błyskawicznie</div>
+        <div className="stat-label">{currentLanguage==='pl' ? 'Czas analizy' : 'Analysis time'}</div>
+        <div className="stat-growth">{currentLanguage==='pl' ? 'Błyskawicznie' : 'Lightning fast'}</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">💼</div>
         <div className="stat-value" data-target="7846">0</div>
-        <div className="stat-label">Nowych miejsc pracy</div>
-        <div className="stat-growth">+12 dziś</div>
+        <div className="stat-label">{currentLanguage==='pl' ? 'Nowych miejsc pracy' : 'New jobs'}</div>
+        <div className="stat-growth">+12 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
       </div>
     </div>
   </div>
@@ -1249,10 +1287,13 @@ const handlePayment = (plan) => {
     <div className="timeline-header">
       <div className="timeline-badge premium-badge">
         <span className="badge-icon">⚡</span>
-        <span className="badge-text">Proces 30 sekund</span>
+        <span className="badge-text">{currentLanguage==='pl' ? 'Proces 30 sekund' : '30-second process'}
+</span>
       </div>
-      <h2>Jak zoptymalizować CV w <span className="gradient-text">30 sekund?</span></h2>
-      <p>Przewodnik krok po kroku - zobacz jak łatwo to zrobić</p>
+      <h2>{currentLanguage==='pl' ? 'Jak zoptymalizować CV w ' : 'How to optimize your CV in '}<span className="gradient-text">30 {currentLanguage==='pl' ? 'sekund' : 'seconds'}</span>?
+</h2>
+      <p>{currentLanguage==='pl' ? 'Przewodnik krok po kroku – zobacz jak łatwo to zrobić' : 'Step-by-step guide – see how easy it is'}
+</p>
     </div>
     
     <div className="timeline-wrapper premium">
@@ -1271,17 +1312,17 @@ const handlePayment = (plan) => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">KROK 1</div>
-            <h3>Wklej lub załaduj CV</h3>
-            <p>Skopiuj treść CV lub przeciągnij plik PDF/DOC</p>
+            <div className="step-label">{currentLanguage==='pl' ? 'KROK 1' : 'STEP 1'}</div>
+            <h3>{currentLanguage==='pl' ? 'Wklej lub załaduj CV' : 'Paste or upload your CV'}</h3>
+            <p>{currentLanguage==='pl' ? 'Skopiuj treść CV lub przeciągnij plik PDF/DOC' : 'Paste CV text or drag & drop PDF/DOC'}</p>
             <div className="step-details">
               <span className="detail-item">✅ PDF, DOC, DOCX</span>
-              <span className="detail-item">✅ Lub wklej tekst</span>
+              <span className="detail-item">{currentLanguage==='pl' ? '✅ Lub wklej tekst' : '✅ Or paste text'}</span>
               <span className="detail-item">✅ Max 5MB</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>5 sekund</span>
+              <span>{currentLanguage==='pl' ? '5 sekund' : '5 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1302,17 +1343,17 @@ const handlePayment = (plan) => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">KROK 2</div>
-            <h3>AI analizuje i optymalizuje</h3>
-            <p>GPT-4 skanuje CV pod kątem ATS i słów kluczowych</p>
+            <div className="step-label">{currentLanguage==='pl' ? 'KROK 2' : 'STEP 2'}</div>
+            <h3>{currentLanguage==='pl' ? 'AI analizuje i optymalizuje' : 'AI analyzes and optimizes'}</h3>
+            <p>{currentLanguage==='pl' ? 'GPT-5 skanuje CV pod kątem ATS i słów kluczowych' : 'GPT-5 scans your CV for ATS and keywords'}</p>
             <div className="step-details">
-              <span className="detail-item">🔍 Analiza ATS</span>
-              <span className="detail-item">🎯 Słowa kluczowe</span>
-              <span className="detail-item">📊 Score obliczenie</span>
+              <span className="detail-item">{currentLanguage==='pl' ? '🔍 Analiza ATS' : '🔍 ATS analysis'}</span>
+              <span className="detail-item">{currentLanguage==='pl' ? '🎯 Słowa kluczowe' : '🎯 Keywords'}</span>
+              <span className="detail-item">{currentLanguage==='pl' ? '📊 Obliczanie wyniku' : '📊 Score calculation'}</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>15 sekund</span>
+              <span>{currentLanguage==='pl' ? '15 sekund' : '15 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1333,17 +1374,20 @@ const handlePayment = (plan) => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">KROK 3</div>
-            <h3>Szybka płatność</h3>
-            <p>Bezpieczna transakcja przez Stripe</p>
+            <div className="step-label">{currentLanguage==='pl' ? 'KROK 3' : 'STEP 3'}</div>
+            <h3>{currentLanguage==='pl' ? 'Szybka płatność' : 'Quick payment'}</h3>
+            <p>{currentLanguage==='pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure payment via Stripe'}</p>
             <div className="step-details">
               <span className="detail-item">🔒 SSL Secure</span>
-              <span className="detail-item">💰 Tylko 9.99 zł</span>
+              <span className="detail-item">
+  {currentLanguage === 'pl' ? '💰 Tylko 19,99 zł' : '💰 Only ≈ €4.40'}
+</span>
+
               <span className="detail-item">⚡ Instant</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
-              <span>5 sekund</span>
+              <span>{currentLanguage==='pl' ? '5 sekund' : '5 seconds'}</span>
             </div>
           </div>
           <div className="step-visual">
@@ -1364,13 +1408,15 @@ const handlePayment = (plan) => {
             <div className="step-icon-pulse"></div>
           </div>
           <div className="step-content">
-            <div className="step-label">FINAŁ</div>
-            <h3>Pobierz zoptymalizowane CV!</h3>
-            <p>Twoje CV jest gotowe z 95% ATS score</p>
+            <div className="step-label">{currentLanguage==='pl' ? 'FINAŁ' : 'FINAL'}</div>
+            <h3>{currentLanguage==='pl' ? 'Pobierz zoptymalizowane CV!' : 'Download your optimized CV!'}</h3>
+            <p>{currentLanguage==='pl' ? 'Twoje CV jest gotowe z wynikiem ATS 95%' : 'Your CV is ready with a 95% ATS score'}</p>
+
+
             <div className="step-details">
               <span className="detail-item">📈 95% ATS</span>
               <span className="detail-item">✨ PDF & DOCX</span>
-              <span className="detail-item">🚀 Gotowe!</span>
+              <span className="detail-item">{currentLanguage==='pl' ? '🚀 Gotowe!' : '🚀 Done!'}</span>
             </div>
             <div className="step-time">
               <span className="time-icon">⏱️</span>
@@ -1390,7 +1436,8 @@ const handlePayment = (plan) => {
     {/* Interactive Demo Button */}
     <div className="timeline-cta premium-cta">
       <button className="timeline-button premium-button" onClick={openUploadModal}>
-        <span className="button-text">Rozpocznij teraz</span>
+        <span className="button-text">{currentLanguage === 'pl' ? 'Rozpocznij teraz' : 'Start now'}</span>
+
         <span className="button-icon">🚀</span>
         <div className="button-glow"></div>
       </button>
@@ -1401,7 +1448,8 @@ const handlePayment = (plan) => {
         </div>
         <div className="stat-item">
           <span className="stat-icon">💎</span>
-          <span className="stat-text">9.99 zł</span>
+          <span className="stat-text">{currentLanguage === 'pl' ? '19,99 zł' : '≈ €4.40'}</span>
+
         </div>
         <div className="stat-item">
           <span className="stat-icon">🎯</span>
@@ -1416,8 +1464,12 @@ const handlePayment = (plan) => {
 {/* Testimonials Section */}
         <div className="testimonials-section" id="testimonials">
           <div className="testimonials-header">
-            <h2 className="section-title">Już 15,000+ osób znalazło pracę dzięki CvPerfect 🎉</h2>
-            <p className="section-subtitle">Prawdziwe opinie od użytkowników, którzy dostali wymarzoną pracę</p>
+<h2 className="section-title">
+  {currentLanguage==='pl' ? 'Już 15,000+ osób znalazło pracę dzięki CvPerfect 🎉' : '15,000+ people found a job with CvPerfect 🎉'}
+</h2>
+<p className="section-subtitle">
+  {currentLanguage==='pl' ? 'Prawdziwe opinie od użytkowników, którzy dostali wymarzoną pracę' : 'Real reviews from users who got their dream job'}
+</p>
           </div>
 
           <div className="testimonials-grid">
@@ -1431,7 +1483,10 @@ const handlePayment = (plan) => {
                     <div className="testimonial-company">{testimonial.company}</div>
                   </div>
                   <div className="testimonial-verified">
-                    {testimonial.verified && <span className="verified-badge">✅ Zweryfikowane</span>}
+                    {testimonial.verified && <span className="verified-badge">
+  {currentLanguage==='pl' ? '✅ Zweryfikowane' : '✅ Verified'}
+</span>
+}
                   </div>
                 </div>
                 <div className="testimonial-rating">
@@ -1441,16 +1496,19 @@ const handlePayment = (plan) => {
                 </div>
                 <p className="testimonial-text">"{testimonial.text}"</p>
                 <div className="testimonial-impact">
-                  <span className="impact-badge">🚀 Sukces dzięki CvPerfect</span>
+                  <span className="impact-badge">
+  {currentLanguage==='pl' ? '🚀 Sukces dzięki CvPerfect' : '🚀 Success with CvPerfect'}
+</span>
+
                 </div>
               </div>
             ))}
           </div>
 
           <div className="testimonials-cta">
-            <h3>Dołącz do 15,000+ zadowolonych użytkowników!</h3>
-            <button className="testimonials-button" onClick={openUploadModal}>
-  Zwiększ swoje szanse 🚀
+<h3>{currentLanguage==='pl' ? 'Dołącz do 15,000+ zadowolonych użytkowników!' : 'Join 15,000+ happy users!'}</h3>
+<button className="testimonials-button" onClick={openUploadModal}>
+  {currentLanguage==='pl' ? 'Zwiększ swoje szanse 🚀' : 'Boost your chances 🚀'}
 </button>
           </div>
         </div>
@@ -1462,20 +1520,23 @@ const handlePayment = (plan) => {
               <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
               
               <div className="upload-header">
-                <h2>Darmowa Analiza ATS</h2>
-<p>Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi</p>
+<h2>{currentLanguage==='pl' ? 'Darmowa Analiza ATS' : 'Free ATS Analysis'}</h2>
+<p>{currentLanguage==='pl' ? 'Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi' : 'Check how your CV or cover letter performs with ATS systems'}</p>
               </div>
 
               <div className="upload-area">
                 <div className="upload-zone">
                   <div className="upload-icon">📄</div>
-                  <h3>Wklej swoje CV lub wybierz plik</h3>
-                  <p>PDF, DOC, DOCX - maksymalnie 5MB</p>
+<h3>{currentLanguage==='pl' ? 'Wklej swoje CV lub wybierz plik' : 'Paste your CV or choose a file'}</h3>
+<p>{currentLanguage==='pl' ? 'PDF, DOC, DOCX - maksymalnie 5MB' : 'PDF, DOC, DOCX - up to 5MB'}</p>
                   
                   <textarea 
                     className="cv-textarea"
-                    placeholder="Wklej tutaj pełne ogłoszenie o pracę...&#10;&#10;🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!"
-                    rows="8"
+placeholder={
+  currentLanguage==='pl'
+    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
+    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize!'
+}                    rows="8"
                   ></textarea>
                   
                   <div className="upload-buttons">
@@ -1493,7 +1554,7 @@ const handlePayment = (plan) => {
     const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
     
     if (!isAllowed) {
-      alert('❌ Obsługujemy tylko pliki: PDF, DOC, DOCX');
+      alert(currentLanguage==='pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ We only support: PDF, DOC, DOCX');
       e.target.value = '';
       return;
     }
@@ -1501,7 +1562,7 @@ const handlePayment = (plan) => {
     // Sprawdź typ MIME
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
-      alert('❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX');
+      alert(currentLanguage==='pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
       e.target.value = '';
       return;
     }
@@ -1510,10 +1571,14 @@ const handlePayment = (plan) => {
     reader.onload = (event) => {
       const textarea = document.querySelector('.cv-textarea');
       if (textarea) {
-        textarea.value = `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowy do analizy!`;
+        textarea.value = currentLanguage==='pl'
+  ? `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowe do analizy!`
+  : `📄 File "${file.name}" loaded successfully!\n\nSize: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Ready for analysis!`;
         
         const successMsg = document.createElement('div');
-        successMsg.innerHTML = '✅ CV zostało pomyślnie wczytane!';
+        successMsg.innerHTML = currentLanguage==='pl'
+  ? '✅ CV zostało pomyślnie wczytane!'
+  : '✅ CV loaded successfully!';
         successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
         successMsg.className = 'success-message';
         const existing = document.querySelector('.success-message');
@@ -1530,19 +1595,29 @@ const handlePayment = (plan) => {
                       className="upload-btn secondary"
                       onClick={() => document.getElementById('modalFileInput').click()}
                     >
-                      📁 Wybierz plik
+                      {currentLanguage==='pl' ? '📁 Wybierz plik' : '📁 Choose file'}
+
                     </button>
                     <button className="upload-btn primary" onClick={handleFreeAnalysis}>
-                      🔍 Analizuj teraz
+                      {currentLanguage==='pl' ? '🔍 Analizuj teraz' : '🔍 Analyze now'}
+
                     </button>
                   </div>
                 </div>
 
                 <div className="upload-features">
-                  <div className="feature-check">✅ Analiza ATS w 30 sekund</div>
-                  <div className="feature-check">✅ Wykrywanie problemów</div>
-                  <div className="feature-check">✅ Score compatibility</div>
-                  <div className="feature-check">✅ 100% bezpieczne</div>
+<div className="feature-check">
+  {currentLanguage==='pl' ? '✅ Analiza ATS w 30 sekund' : '✅ ATS analysis in 30 seconds'}
+</div>
+<div className="feature-check">
+  {currentLanguage==='pl' ? '✅ Wykrywanie problemów' : '✅ Issue detection'}
+</div>
+<div className="feature-check">
+  {currentLanguage==='pl' ? '✅ Score compatibility' : '✅ Compatibility score'}
+</div>
+<div className="feature-check">
+  {currentLanguage==='pl' ? '✅ 100% bezpieczne' : '✅ 100% secure'}
+</div>
                 </div>
               </div>
             </div>
@@ -1560,8 +1635,14 @@ const handlePayment = (plan) => {
       <span className="badge-icon">🚀</span>
       <span className="badge-text">Optymalizacja CV</span>
     </div>
-    <h2>Odblouj pełną optymalizację!</h2>
-    <p>Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV</p>
+    <h2>{currentLanguage === 'pl' ? 'Odblokuj pełną optymalizację!' : 'Unlock full optimization!'}</h2>
+
+    <p>
+  {currentLanguage==='pl'
+    ? 'Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV'
+    : 'Enter your email, choose a plan, and get a detailed analysis + an optimized CV'}
+</p>
+
   </div>
   <button className="close-btn" onClick={() => setShowPaywall(false)}>×</button>
 </div>
@@ -1574,8 +1655,8 @@ const handlePayment = (plan) => {
       <div className="score-label">ATS Score</div>
     </div>
     <div className="score-info">
-      <h4>🎯 Twój wynik ATS</h4>
-      <p>Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi</p>
+<h4>{currentLanguage==='pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
+<p>{currentLanguage==='pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for ATS compliance'}</p>
     </div>
   </div>
 </div>
@@ -1601,12 +1682,16 @@ const handlePayment = (plan) => {
   {/* Job Description Input */}
   <div className="job-upgrade-section">
     <div className="upgrade-header">
-      <h4>💼 Lub dostosuj pod konkretną ofertę pracy</h4>
-<p>Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania</p>
-    </div>
+<h4>{currentLanguage==='pl' ? '💼 Lub dostosuj pod konkretną ofertę pracy' : '💼 Or tailor to a specific job posting'}</h4>
+<p>{currentLanguage==='pl' ? 'Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania' : 'Paste the job ad and we will tailor your CV or cover letter to it'}</p>    </div>
     <textarea 
       className="job-textarea" 
-      placeholder="Wklej tutaj pełne ogłoszenie o pracę...&#10;&#10;🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!"
+placeholder={
+  currentLanguage==='pl'
+    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
+    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize!'
+}
+
       rows="4"
     ></textarea>
     <div className="upgrade-note">
@@ -1618,11 +1703,11 @@ const handlePayment = (plan) => {
 
   {/* Email Input */}
   <div className="email-section">
-    <h3>📧 Twój email</h3>
+    <h3>{currentLanguage==='pl' ? '📧 Twój email' : '📧 Your email'}</h3>
     <input 
       type="email" 
       className="email-input" 
-      placeholder="twoj-email@example.com"
+      placeholder={currentLanguage==='pl' ? 'twoj-email@example.com' : 'your-email@example.com'}
       id="paywallEmail"
     />
   </div>
@@ -1637,8 +1722,8 @@ const handlePayment = (plan) => {
         <div className="plan-header">
           <h4>Jednorazowy</h4>
           <div className="plan-price">
-            <span className="old-price">29,99 zł</span>
-            <span className="current-price">9,99 zł</span>
+            <span className="old-price">{currentLanguage === 'pl' ? '39,99 zł' : '≈ €10'}</span>
+            <span className="current-price">{currentLanguage === 'pl' ? '19,99 zł' : '≈ €4.40'}</span>
             <span className="discount">-67%</span>
           </div>
         </div>
@@ -1655,7 +1740,7 @@ const handlePayment = (plan) => {
             return;
           }
           handlePayment('premium');
-        }}>Wybierz Basic</button>
+        }}>{currentLanguage === 'pl' ? 'Wybierz Basic' : 'Choose Basic'}</button>
       </div>
 
       {/* Gold Plan */}
@@ -1665,9 +1750,9 @@ const handlePayment = (plan) => {
         <div className="plan-header">
           <h4>Gold</h4>
           <div className="plan-price">
-            <span className="old-price">89 zł</span>
-            <span className="current-price">49 zł</span>
-            <span className="period">/miesiąc</span>
+            <span className="old-price">{currentLanguage === 'pl' ? '89 zł' : '≈ €20'}</span>
+            <span className="current-price">{currentLanguage === 'pl' ? '49 zł' : '≈ €11'}</span>
+            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
           </div>
         </div>
         <div className="plan-features">
@@ -1683,7 +1768,7 @@ const handlePayment = (plan) => {
             return;
           }
           handlePayment('gold');
-        }}>Wybierz Gold</button>
+        }}>{currentLanguage === 'pl' ? 'Wybierz Gold' : 'Choose Gold'}</button>
       </div>
 
       {/* Premium Plan */}
@@ -1693,9 +1778,10 @@ const handlePayment = (plan) => {
         <div className="plan-header">
           <h4>Premium</h4>
           <div className="plan-price">
-            <span className="old-price">129 zł</span>
-            <span className="current-price">79 zł</span>
-            <span className="period">/miesiąc</span>
+            <span className="old-price">{currentLanguage === 'pl' ? '129 zł' : '≈ €29'}</span>
+            <span className="current-price">{currentLanguage === 'pl' ? '79 zł' : '≈ €18'}</span>
+
+            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
           </div>
         </div>
         <div className="plan-features">
@@ -1711,7 +1797,7 @@ const handlePayment = (plan) => {
             return;
           }
           handlePayment('premium-monthly');
-        }}>Wybierz Premium</button>
+        }}>{currentLanguage === 'pl' ? 'Wybierz Premium' : 'Choose Premium'}</button>
       </div>
     </div>
   </div>
@@ -1746,8 +1832,9 @@ const handlePayment = (plan) => {
               <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
               
               <div className="template-header">
-                <h2>Wybierz szablon CV</h2>
-                <p>Dostępne szablony w Twoim planie</p>
+                <h2>{currentLanguage==='pl' ? 'Wybierz szablon CV' : 'Choose a CV template'}</h2>
+                <p>{currentLanguage==='pl' ? 'Dostępne szablony w Twoim planie' : 'Templates available in your plan'}</p>
+
               </div>
 
               <div className="templates-grid">
@@ -1837,7 +1924,8 @@ const handlePayment = (plan) => {
                   }}
                   disabled={!selectedTemplate}
                 >
-                  Zastosuj wybrany szablon
+                  {currentLanguage==='pl' ? 'Zastosuj wybrany szablon' : 'Apply selected template'}
+
                 </button>
               </div>
             </div>
@@ -1849,17 +1937,29 @@ const handlePayment = (plan) => {
         <div className="faq-section" id="faq">
           <div className="faq-container">
             <div className="faq-header">
-              <h2 className="section-title">❓ Często zadawane pytania</h2>
-              <p className="section-subtitle">Wszystko czego potrzebujesz wiedzieć o CvPerfect</p>
+<h2 className="section-title">❓ {currentLanguage==='pl' ? 'Często zadawane pytania' : 'Frequently Asked Questions'}</h2>
+<p className="section-subtitle">
+  {currentLanguage==='pl'
+    ? 'Masz pytania? Sprawdź odpowiedzi na najczęstsze wątpliwości'
+    : 'Got questions? Check answers to the most common ones'}
+</p>
             </div>
             <div className="faq-grid">
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">💰</span>
-                  <h3>Czy naprawdę kosztuje tylko 9.99 zł?</h3>
+                  <h3>
+  {currentLanguage === 'pl' 
+  ? 'Czy naprawdę kosztuje tylko 19,99 zł?' 
+  : 'Does it really cost only ≈ €4.40?'}
+</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Tak! Plan Basic to jednorazowa płatność 9.99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji.</p>
+                 <p>
+  {currentLanguage === 'pl' 
+    ? 'Tak! Plan Basic to jednorazowa płatność 19,99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji.' 
+    : 'Yes! The Basic plan is a one‑time payment of ≈ €4.40 for 1 CV optimization. No hidden fees, no subscription.'}
+</p>
                 </div>
               </div>
               <div className="faq-item">
@@ -1907,18 +2007,22 @@ const handlePayment = (plan) => {
                 <span className="logo-text">CvPerfect</span>
                 <span className="logo-badge">AI</span>
               </div>
-              <p className="footer-description">Pierwsza AI platforma do optymalizacji CV w Polsce. 95% skuteczności ATS, 410% więcej rozmów kwalifikacyjnych.</p>
+<p className="footer-description">
+  {currentLanguage==='pl'
+    ? 'Pierwsza AI platforma do optymalizacji CV w Polsce. 95% skuteczności ATS, 410% więcej rozmów kwalifikacyjnych.'
+    : 'The first AI platform in Poland for CV optimization. 95% ATS success rate, 410% more interviews.'}
+</p>
             </div>
             <div className="footer-section">
-              <h4>Produkty</h4>
+              <h4>{currentLanguage==='pl' ? 'Produkty' : 'Products'}</h4>
               <ul className="footer-links">
-                <li><a href="#features">Optymalizacja AI</a></li>
-                <li><a href="#testimonials">Opinie użytkowników</a></li>
+                <li><a href="#features">{currentLanguage==='pl' ? 'Optymalizacja AI' : 'AI Optimization'}</a></li>
+                <li><a href="#testimonials">{currentLanguage==='pl' ? 'Opinie użytkowników' : 'User reviews'}</a></li>
               </ul>
             </div>
 
 <div className="footer-section">
-              <h4>Pomoc</h4>
+              <h4>{currentLanguage==='pl' ? 'Pomoc' : 'Help'}</h4>
               <ul className="footer-links">
 		<li><a href="/regulamin">Regulamin</a></li>
                 <li><a href="/kontakt">Kontakt</a></li>
@@ -2518,7 +2622,7 @@ html {
 .hero-section {
   background: transparent;
   color: white;
-  padding: 140px 40px 80px;
+  padding: 60px 40px 40px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
@@ -3696,9 +3800,10 @@ html {
 }
 
 @keyframes iconBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateX(3px) translateY(0); }
+  50% { transform: translateX(3px) translateY(-10px); }
 }
+
 
 .step-icon-pulse {
   position: absolute;
@@ -7031,7 +7136,7 @@ html {
   .hero-section {
     grid-template-columns: 1fr;
     gap: 30px;
-    padding: 80px 20px 60px;
+    padding: 60px 20px 40px;
     max-width: 100%;
     overflow-x: hidden;
   }
@@ -7125,10 +7230,9 @@ html {
             padding: 16px 15px;
           }
 
-         .nav-links {
-  display: none;
+@media (max-width: 768px) {
+  .nav-links { display: none; }
 }
-
 
 .nav-cta {
   padding: 12px 20px;
@@ -7384,9 +7488,9 @@ html {
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.02); !important;
-  backdrop-filter: blur(25px); !important;
-  border: 1px solid rgba(255, 255, 255, 0.08); !important
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(25px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 32px;
   padding: 48px;
   text-align: center;
@@ -7394,7 +7498,7 @@ html {
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  color: white; !important
+  color: white !important;
   transform-origin: center;
 }
 
@@ -7674,7 +7778,7 @@ html {
 /* Responsive Adjustments for Premium Design */
 @media (max-width: 768px) {
   .hero-section {
-    padding: 120px 20px 60px;
+    padding: 80px 20px 48px;
     gap: 40px;
   }
   
@@ -8440,24 +8544,25 @@ button:focus {
 
   {/* Global styles to avoid CSS-module scoping issues */}
 
-    .fixed-indicator{
+.fixed-indicator{
       position: fixed;
       right: 20px;
       top: 50%;
       transform: translateY(-50%);
-      z-index: 2147483000; /* ponad wszystko */
+      z-index: 2147483000;
       width: 18px;
-      pointer-events: none; /* żeby nie blokować scrolla */
+      pointer-events: none;
+      display: block !important;
     }
     .fixed-indicator .scroll-sections{
       display: flex; flex-direction: column; gap: 12px;
       align-items: center;
     }
-    .scroll-dot{
+.scroll-dot{
       pointer-events: auto;
-      width: 12px; height: 12px; border-radius: 9999px;
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.4);
+      width: 14px; height: 14px; border-radius: 9999px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(0,0,0,.25);
       box-shadow: 0 2px 8px rgba(0,0,0,.15);
       transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
       position: relative;
