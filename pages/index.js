@@ -3,10 +3,39 @@ import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 
+
+
+// === Live stats (deterministyczne, bez backendu) ===
+const LAUNCH_DATE = '2025-08-11'; // dzisiejsza data -> brak historycznych skoków
+const BASE_STATS = { cv: 14980, interviews: 4120, jobs: 120 };
+const DAILY = { cv: [120, 480], interviews: [40, 160], jobs: [6, 18] };
+
+function hashStr(s){ let h = 2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+const seeded01 = s => (hashStr(s)%10000)/10000;
+const daysBetweenISO = (aISO,bISO) => Math.max(0,Math.floor((new Date(aISO+'T00:00:00Z')-new Date(bISO+'T00:00:00Z'))/-86400000));
+
+function computeLiveStats(now=new Date()){
+  const todayISO = now.toISOString().slice(0,10);
+  const dayIndex = daysBetweenISO(LAUNCH_DATE, todayISO);
+  let {cv,interviews,jobs} = BASE_STATS;
+  for(let i=0;i<dayIndex;i++){
+    cv += DAILY.cv[0] + Math.floor(seeded01('cv-'+i)*(DAILY.cv[1]-DAILY.cv[0]+1));
+    interviews += DAILY.interviews[0] + Math.floor(seeded01('in-'+i)*(DAILY.interviews[1]-DAILY.interviews[0]+1));
+    jobs += DAILY.jobs[0] + Math.floor(seeded01('job-'+i)*(DAILY.jobs[1]-DAILY.jobs[0]+1));
+  }
+  const prog = (now.getUTCHours()*60 + now.getUTCMinutes())/(24*60);
+  cv += Math.floor((DAILY.cv[0] + Math.floor(seeded01('cv-'+dayIndex)*(DAILY.cv[1]-DAILY.cv[0]+1))) * Math.max(0,Math.min(1,prog)));
+  interviews += Math.floor((DAILY.interviews[0] + Math.floor(seeded01('in-'+dayIndex)*(DAILY.interviews[1]-DAILY.interviews[0]+1))) * Math.max(0,Math.min(1,prog)));
+  jobs += Math.floor((DAILY.jobs[0] + Math.floor(seeded01('job-'+dayIndex)*(DAILY.jobs[1]-DAILY.jobs[0]+1))) * Math.max(0,Math.min(1,prog)));
+  return { cv, interviews, jobs, ats: 95 };
+}
+
+
 export default function Home() {
   const router = useRouter()
 const { locale } = router
 const [currentLanguage, setCurrentLanguage] = useState('pl')
+
 useEffect(() => {
   if (locale) setCurrentLanguage(locale)
 }, [locale])
@@ -32,6 +61,46 @@ useEffect(() => {
   const [tooltips, setTooltips] = useState([])
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
+
+
+
+
+const [liveStats, setLiveStats] = useState(null);
+
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+  setLiveStats(computeLiveStats(new Date()));
+}, []);
+
+function animateNumber(el, end, lang, duration=900){
+  if (!el || !Number.isFinite(end)) return;       // ← eliminuje NaN
+  const t0=performance.now(), start=0;
+  const step=(t)=>{
+    const p=Math.min(1,(t-t0)/duration);
+    const val=Math.floor(start + (end-start)*p);
+    el.textContent = val.toLocaleString(lang==='pl' ? 'pl-PL' : 'en-US');
+    if(p<1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+useEffect(() => {
+  if (!liveStats) return;
+  const lang = currentLanguage || 'pl';
+  const cv = document.querySelector('[data-stat="cv"]');
+  const ats = document.querySelector('[data-stat="ats"]');
+  const jobs = document.querySelector('[data-stat="jobs"]');
+
+  animateNumber(cv,   liveStats.cv,   lang);
+  animateNumber(jobs, liveStats.jobs, lang);
+  if (ats) ats.textContent = `${liveStats.ats}%`; // ATS bez animacji (stabilny)
+}, [liveStats, currentLanguage]);
+
+// (opcjonalnie) odśwież co 5 min
+useEffect(() => {
+  const i=setInterval(()=>setLiveStats(computeLiveStats(new Date())), 5*60*1000);
+  return ()=>clearInterval(i);
+}, []);
   
 
 // Translations system
@@ -80,85 +149,6 @@ useEffect(() => {
 
   const t = translations[currentLanguage]
   
-  // Stats counter animation
-  useEffect(() => {
-    const observerCallback = (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const counters = entry.target.querySelectorAll('.stat-value');
-          
-          counters.forEach(counter => {
-            const target = parseFloat(counter.getAttribute('data-target'));
-            const isDecimal = target % 1 !== 0;
-            const duration = 2000;
-            const start = 0;
-            const increment = target / (duration / 16);
-            let current = start;
-            
-            const updateCounter = () => {
-              current += increment;
-              if (current < target) {
-                counter.textContent = isDecimal 
-                  ? current.toFixed(1)
-                  : Math.floor(current).toLocaleString('pl-PL');
-                requestAnimationFrame(updateCounter);
-              } else {
-                counter.textContent = isDecimal 
-                  ? target.toFixed(1)
-                  : Math.floor(target).toLocaleString('pl-PL');
-              }
-            };
-            
-            updateCounter();
-          });
-          
-          observer.unobserve(entry.target);
-        }
-      });
-    };
-
-    const observer = new IntersectionObserver(observerCallback, {
-      threshold: 0.5
-    });
-
-    const statsSection = document.querySelector('.stats-counter-section');
-    if (statsSection) {
-      observer.observe(statsSection);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-// Auto increment stats
-  useEffect(() => {
-    const incrementStats = () => {
-      const cvCounter = document.querySelector('[data-target="15234"]');
-      const jobCounter = document.querySelector('[data-target="7846"]');
-      
-      if (cvCounter && cvCounter.textContent && !isNaN(parseInt(cvCounter.textContent.replace(/\s/g, '')))) {
-        const currentCV = parseInt(cvCounter.textContent.replace(/\s/g, ''));
-        if (!isNaN(currentCV)) {
-          const newCV = currentCV + Math.floor(Math.random() * 2) + 1;
-          cvCounter.setAttribute('data-target', newCV.toString());
-          cvCounter.textContent = newCV.toLocaleString('pl-PL');
-        }
-      }
-      
-      if (jobCounter && jobCounter.textContent && !isNaN(parseInt(jobCounter.textContent.replace(/\s/g, '')))) {
-        const currentJob = parseInt(jobCounter.textContent.replace(/\s/g, ''));
-        if (!isNaN(currentJob)) {
-          const newJob = currentJob + Math.floor(Math.random() * 2);
-          jobCounter.setAttribute('data-target', newJob.toString());
-          jobCounter.textContent = newJob.toLocaleString('pl-PL');
-        }
-      }
-    };
-
-   // Increment every 3-5 minutes for realistic growth
-const interval = setInterval(incrementStats, (180 + Math.random() * 120) * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
 
 
 // Scroll indicator logic (deterministyczny porządek + offset pod fixed header)
@@ -361,24 +351,24 @@ const openUploadModal = () => {
 
 const typingPhrases = currentLanguage === 'pl'
   ? [
-      'optymalizacją CV',
-      'analizą słów kluczowych',
-      'zwiększeniem szans na pracę',
-      'profesjonalnym CV',
-      'personalizacją treści',
-      'analizą ATS',
-      'zwiększeniem widoczności',
-      'sztuczną inteligencją'
+  'optymalizacji CV',
+  'analizie słów kluczowych',
+  'personalizacji treści',
+  'analizie ATS',
+  'konkretnym rezultatom',
+  'czystemu formatowaniu',
+  'zwiększeniu widoczności',
+  'sztucznej inteligencji'
     ]
   : [
-      'CV optimization',
-      'keyword analysis',
-      'boosting job chances',
-      'a professional CV',
-      'Custom content',
-      'ATS analysis',
-      'increasing visibility',
-      'artificial intelligence'
+  'CV optimization',
+  'keyword analysis',
+  'tailored content',
+  'ATS analysis',
+  'concrete results',
+  'clean formatting',
+  'higher visibility',
+  'AI assistance'
     ];
 
 
@@ -892,7 +882,7 @@ const floatingNotifications = currentLanguage === 'pl'
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }}
       >
-        <span className="dot-tooltip">{currentLanguage==='pl' ? s.pl : s.en}</span>
+        
       </button>
     ))}
   </div>
@@ -948,23 +938,19 @@ const floatingNotifications = currentLanguage === 'pl'
         {/* Hero Section */}
         <div className="hero-section" id="hero">
           <div className="hero-content">
-            <div className="hero-badge">
+           <div className="hero-badge">
+  {currentLanguage==='pl'
+    ? '🏆 #1 w Polsce • AI do CV'
+    : '🏆 #1 in Poland • AI for CVs'}
+</div>
 
-            {currentLanguage === 'pl' ? '🏆 #1 AI Platforma CV w Polsce' : '🏆 #1 AI CV Platform in Poland'}
-            </div>
 <p className="hero-subtitle">
-  {currentLanguage === 'pl'
-    ? 'Pierwsza sztuczna inteligencja w Polsce, która optymalizuje Twoje CV pod konkretne oferty pracy.'
-    : 'The first AI in Poland that optimizes your CV for specific job offers.'}
-  <strong>
-    {currentLanguage === 'pl'
-      ? ' 95% skuteczności ATS, 30 sekund optymalizacji, tylko 19,99 zł.'
-      : ' 95% ATS success, 30 seconds to optimize, only ≈ €4.40.'}
-  </strong>
+  {currentLanguage==='pl'
+    ? <>Zaufany w Polsce i całej Europie. <strong>95% skuteczności ATS</strong> i do <strong>410% więcej rozmów</strong>. Już od <strong>19,99 zł</strong> <span className="muted">(≈ €4.40)</span>.</>
+    : <>Trusted across Europe. <strong>95% ATS pass rate</strong> and up to <strong>410% more interviews</strong>. From <strong>≈ €4.40</strong>.</>}
 </p>
 <h1 className="hero-title">
-  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki ' : 'Boost your chances with '}
-  <span className="typing-safe-zone">
+{currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki ' : 'Boost your chances with '}  <span className="typing-safe-zone">
     <span className="typing-text">{typingText}</span>
     <span className="typing-cursor">|</span>
   </span>
@@ -1109,30 +1095,32 @@ const floatingNotifications = currentLanguage === 'pl'
     <div className="stats-grid">
       <div className="stat-box">
         <div className="stat-icon">📄</div>
-        <div className="stat-value" data-target="15234">0</div>
+        <div className="stat-value"><span data-stat="cv" suppressHydrationWarning>—</span></div>
+
         <div className="stat-label">{currentLanguage==='pl' ? 'CV zoptymalizowanych' : 'CV optimized'}</div>
         <div className="stat-growth">+3 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">🎯</div>
-        <div className="stat-value" data-target="98">0</div>
-        <div className="stat-suffix">%</div>
+<div className="stat-value"><span data-stat="ats" suppressHydrationWarning>95%</span></div>
+
         <div className="stat-label">{currentLanguage==='pl' ? 'Skuteczność ATS' : 'ATS success rate'}</div>
         <div className="stat-growth">{currentLanguage==='pl' ? 'Top 1 w PL' : 'Top 1 in PL'}</div>
       </div>
       
       <div className="stat-box">
-        <div className="stat-icon">⚡</div>
-        <div className="stat-value" data-target="3.2">0</div>
-        <div className="stat-suffix">s</div>
+<div className="stat-icon">⚡</div>
+<div className="stat-value">3.2</div>
+<div className="stat-suffix">s</div>
         <div className="stat-label">{currentLanguage==='pl' ? 'Czas analizy' : 'Analysis time'}</div>
         <div className="stat-growth">{currentLanguage==='pl' ? 'Błyskawicznie' : 'Lightning fast'}</div>
       </div>
       
       <div className="stat-box">
         <div className="stat-icon">💼</div>
-        <div className="stat-value" data-target="7846">0</div>
+        <div className="stat-value"><span data-stat="jobs" suppressHydrationWarning>—</span></div>
+
         <div className="stat-label">{currentLanguage==='pl' ? 'Nowych miejsc pracy' : 'New jobs'}</div>
         <div className="stat-growth">+12 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
       </div>
@@ -2173,7 +2161,7 @@ html {
 /* Enhanced Floating Notifications */
 .floating-notifications{
   position: fixed;
-  top: 8px;               /* NAD top-barem */
+  top: 96px;               /* NAD top-barem */
   right: 20px;
   z-index: 2147483646;    /* wyżej niż navbar i wskaźniki */
   pointer-events: none;
@@ -7054,11 +7042,11 @@ html {
   }
   
   /* Mobile buttons */
-  button {
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-  }
+button:not(.scroll-dot) {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
 
 .scroll-indicator {
     right: 15px;
@@ -8050,12 +8038,13 @@ button:focus {
   height: 16px;
   border-radius: 50%;
   background: rgba(255,255,255,0.2);
-  border-width: 2px
+  border: 2px solid rgba(255,255,255,0.35);
   cursor: pointer;
   transition: all .25s ease;
   position: relative;
   pointer-events: auto;
 }
+
 
 /* dymek nad dotem */
 .scroll-dot .dot-tooltip{
@@ -8430,17 +8419,6 @@ html, body { margin:0 !important; padding:0 !important; }
               0 8px 24px rgba(118, 75, 162, 0.45);
   transform: scale(1.18);
 }
-/* łączniki między kropkami */
-.scroll-dot::before, .scroll-dot::after{
-  content:'';
-  position:absolute; top:50%; width:22px; height:2px;
-  background: rgba(255,255,255,.2);
-  transform: translateY(-50%);
-}
-.scroll-dot::before{ left:-22px; }
-.scroll-dot::after { right:-22px; }
-.scroll-sections .scroll-dot:first-child::before{ display:none; }
-.scroll-sections .scroll-dot:last-child::after{  display:none; }
 
 /* „zaliczone” – koloruje się łącznik przez dotychczasowe sekcje */
 .scroll-dot.passed::before, .scroll-dot.passed::after{
@@ -8465,6 +8443,29 @@ html, body { margin:0 !important; padding:0 !important; }
   scroll-margin-top: 112px; /* 60(nav) + 44(dots) + ~8 bufora */
 }
 
+/* Live stats – nielamane liczby */
+.stat-value{ white-space: nowrap; }
+
+/* Live stats – nielamane liczby */
+.stat-value{ white-space: nowrap; 
+}
+
+/* Wyłącz tooltipy na kropkach bez ruszania kropek */
+.scroll-dot .dot-tooltip{ display: none !important; }
+
+/* gdyby tooltip był robiony przez pseudo-element z content: attr(...) */
+.scroll-dot[data-label]::after,
+.scroll-dot[aria-label]::after{
+  content: none !important;
+  display: none !important;
+}
+
+/* HMR-safe: nawet jeśli CSS się wysypie, tekst się nie pokaże zamiast kropki */
+.scroll-dot{
+  font-size: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+}
 
 
 	`}</style>
