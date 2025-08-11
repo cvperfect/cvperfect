@@ -161,184 +161,66 @@ const interval = setInterval(incrementStats, (180 + Math.random() * 120) * 1000)
 
 
 
-// Scroll indicator logic (fixed + scrollspy z IntersectionObserver)
+// Scroll indicator logic (deterministyczny porządek + offset pod fixed header)
 useEffect(() => {
-  const SECTION_IDS = ['hero','stats','capabilities','timeline','testimonials','faq']; // dopasuj do realnych ID
-  const progressBar = document.querySelector('.scroll-progress');
+  const IDS = ['hero','stats','capabilities','timeline','testimonials','faq'];
 
-  const onScroll = () => {
-    const sh = document.documentElement.scrollHeight - window.innerHeight;
-    const p = sh > 0 ? (window.scrollY / sh) * 100 : 0;
-    if (progressBar) progressBar.style.height = `${p}%`;
+  const sections = IDS
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+
+  const dots = IDS
+    .map(id => document.querySelector(`.scroll-dot[data-section="${id}"]`))
+    .filter(Boolean);
+
+  // Zaktualizuj na swoją realną wysokość paska nawigacji i kropek
+  const NAV_H = 60;   // px – wysokość headera (AI | CvPerfect | PL/EN | linki)
+  const DOTS_H = 44;  // px – wysokość topowego paska kropek
+  const OFFSET = NAV_H + DOTS_H + 8; // minimalny bufor
+
+  const mark = (idx) => {
+    dots.forEach((d,i) => {
+      if (!d) return;
+      d.classList.toggle('active', i === idx);
+      d.classList.toggle('passed', i <= idx);
+    });
   };
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (!e.isIntersecting) return;
-      const id = e.target.id;
-      document.querySelectorAll('.scroll-dot').forEach(dot => {
-        dot.classList.toggle('active', dot.getAttribute('data-section') === id);
-      });
-    });
-  }, { root: null, rootMargin: '-40% 0px -40% 0px', threshold: 0.01 });
+  const onScroll = () => {
+    const targetY = window.scrollY + OFFSET; // „cel” = linia tuż pod headerem+kropkami
+    let bestIdx = 0;
+    let bestDist = Infinity;
 
-  SECTION_IDS.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) io.observe(el);
+    sections.forEach((el, i) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const dist = Math.abs(top - targetY);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    });
+
+    mark(bestIdx);
+  };
+
+  // klik w kropkę – przewijamy z kompensacją OFFSET (żeby nagłówki nie chowały się pod navem)
+  dots.forEach((d, i) => {
+    if (!d || !sections[i]) return;
+    d.addEventListener('click', (e) => {
+      e.preventDefault();
+      const top = sections[i].getBoundingClientRect().top + window.scrollY - OFFSET;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }, { passive: false });
   });
 
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
   onScroll();
 
   return () => {
-    io.disconnect();
     window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    // szybki cleanup: zdejmujemy nasze listenery click przez klonowanie węzła
+    dots.forEach(d => d && d.replaceWith(d.cloneNode(true)));
   };
 }, []);
-
-// Particles background - OPTIMIZED
-useEffect(() => {
-  if (typeof window === 'undefined') return;
-  
-  // PERFORMANCE CHECK - Disable on weak devices
-if (typeof window === 'undefined' || 
-    window.innerWidth < 768 || 
-    (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) || 
-    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-    return;
-  }
-  
-  class Particle {
-    constructor(canvas, ctx) {
-      this.canvas = canvas
-      this.ctx = ctx
-      this.x = Math.random() * canvas.width
-      this.y = Math.random() * canvas.height
-      this.size = Math.random() * 2 + 0.5
-      this.speedX = Math.random() * 0.5 - 0.25
-      this.speedY = Math.random() * 0.5 - 0.25
-      this.opacity = Math.random() * 0.5 + 0.2
-      this.color = Math.random() > 0.5 ? '#7850ff' : '#ff5080'
-    }
-    
-    update() {
-      this.x += this.speedX
-      this.y += this.speedY
-      
-      if (this.x > this.canvas.width) this.x = 0
-      else if (this.x < 0) this.x = this.canvas.width
-      
-      if (this.y > this.canvas.height) this.y = 0
-      else if (this.y < 0) this.y = this.canvas.height
-    }
-    
-    draw() {
-      this.ctx.fillStyle = this.color
-      this.ctx.globalAlpha = this.opacity
-      this.ctx.beginPath()
-      this.ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-      this.ctx.fill()
-    }
-  }
-  
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
-  const particlesContainer = document.getElementById('particles')
-  
-  if (!particlesContainer) return
-  
-  particlesContainer.appendChild(canvas)
-  
-  const resizeCanvas = () => {
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-  }
-  
-  resizeCanvas()
-  window.addEventListener('resize', resizeCanvas)
-  
-// Create particles - ADAPTIVE COUNT
-const getParticleCount = () => {
-  if (window.innerWidth < 1200) return 15;
-  if (navigator.hardwareConcurrency < 8) return 25;
-  return 40;
-};
-const particleCount = getParticleCount();
-const particles = [];
-
-for (let i = 0; i < particleCount; i++) {
-  particles.push(new Particle(canvas, ctx));
-}
-  
-  // Connect particles
-  const connectParticles = () => {
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x
-        const dy = particles[i].y - particles[j].y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        
-        if (distance < 150) {
-          ctx.strokeStyle = particles[i].color
-          ctx.globalAlpha = (150 - distance) / 150 * 0.2
-          ctx.lineWidth = 0.5
-          ctx.beginPath()
-          ctx.moveTo(particles[i].x, particles[i].y)
-          ctx.lineTo(particles[j].x, particles[j].y)
-          ctx.stroke()
-        }
-      }
-    }
-  }
-  
-  // Animation loop
-  let animationId
-  const animate = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    
-   if (particles && particles.length > 0) {
-  particles.forEach(particle => {
-    particle.update()
-    particle.draw()
-  })
-}
-    
-    connectParticles()
-    
-    animationId = requestAnimationFrame(animate)
-  }
-  
-  animate()
-  
-  // Mouse interaction
-  const handleMouseMove = (e) => {
-    const mouseX = e.clientX
-    const mouseY = e.clientY
-    
-    particles.forEach(particle => {
-      const dx = mouseX - particle.x
-      const dy = mouseY - particle.y
-      const distance = Math.sqrt(dx * dx + dy * dy)
-      
-      if (distance < 100) {
-        const force = (100 - distance) / 100
-        particle.x -= (dx / distance) * force * 2
-        particle.y -= (dy / distance) * force * 2
-      }
-    })
-  }
-  
-  window.addEventListener('mousemove', handleMouseMove)
-  
-  return () => {
-    cancelAnimationFrame(animationId)
-    window.removeEventListener('resize', resizeCanvas)
-    window.removeEventListener('mousemove', handleMouseMove)
-    if (canvas.parentNode) {
-      canvas.parentNode.removeChild(canvas)
-    }
-  }
-}, [])
 
 // Timeline animation on scroll
 useEffect(() => {
@@ -978,36 +860,14 @@ const floatingNotifications = currentLanguage === 'pl'
           </div>
         ))}
       </div>
-	<div className="container">
+<div className="container">
   {/* Particles Background */}
-  <div className="particles-container" id="particles"></div>   
-  
-  {/* Progress Bar */}
-  <div className="progress-bar-container">
-    <div className="progress-bar"></div>
-    <div className="progress-steps">
-      <div className="progress-step active" data-step="1">
-        <span className="step-dot"></span>
-        <span className="step-label">Start</span>
-      </div>
-      <div className="progress-step" data-step="2">
-        <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage==='pl' ? 'Analiza' : 'Analysis'}</span>
-      </div>
-      <div className="progress-step" data-step="3">
-        <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage==='pl' ? 'Płatność' : 'Payment'}</span>
-      </div>
-      <div className="progress-step" data-step="4">
-        <span className="step-dot"></span>
-        <span className="step-label">{currentLanguage==='pl' ? 'Gotowe!' : 'Done!'}</span>
-      </div>
-    </div>
-  </div>
+  <div className="particles-container" id="particles"></div>  
   
 {/* Scroll Indicator (fixed, cały czas widoczny) */}
 <div
-  className="scroll-indicator fixed-indicator"
+  className="scroll-indicator"
+
   aria-label={currentLanguage === 'pl' ? 'Nawigacja sekcji' : 'Section navigation'}
 >
   <div className="scroll-progress" aria-hidden="true"></div>
@@ -1068,27 +928,20 @@ const floatingNotifications = currentLanguage === 'pl'
       🇬🇧 EN
     </button>
   </div>
-  <a href="#timeline" className="nav-link" onClick={closeMobileMenu}>
-    {currentLanguage === 'pl' ? 'Jak to działa' : 'How it works'}
-  </a>
-  <a href="#testimonials" className="nav-link" onClick={closeMobileMenu}>
-    {currentLanguage === 'pl' ? 'Opinie' : 'Reviews'}
-  </a>
-  <a href="#pricing" className="nav-link" onClick={closeMobileMenu}>
-    {currentLanguage === 'pl' ? 'Cennik' : 'Pricing'}
-  </a>
   <button className="nav-cta" onClick={() => {
     console.log('Nav button clicked');
     setShowUploadModal(true);
   }}>
     {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
   </button>
+
+</div>
 </div>
 <div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
   <span></span>
   <span></span>
   <span></span>
-</div>
+
           </div>
         </nav>
 
@@ -2318,14 +2171,15 @@ html {
 }
   
 /* Enhanced Floating Notifications */
-.floating-notifications {
+.floating-notifications{
   position: fixed;
-  top: 120px;
+  top: 8px;               /* NAD top-barem */
   right: 20px;
-  z-index: 1000;
+  z-index: 2147483646;    /* wyżej niż navbar i wskaźniki */
   pointer-events: none;
-  max-width: 350px;
+  max-width: 380px;
 }
+.floating-notification{ pointer-events: auto; }
 
 .floating-notification {
   background: linear-gradient(135deg, 
@@ -2640,7 +2494,7 @@ html {
 .hero-section{
   background: transparent;
   color: white;
-  padding: 72px 40px 40px; /* było 60px 40px 40px → +12px pod stałe belki */
+  padding: 64px 40px 40px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
@@ -2794,8 +2648,16 @@ html {
   line-height: 1.6;
   opacity: 0.9;
   margin-bottom: 40px;
-  margin-top: 100px; /* DUŻY ODSTĘP OD ANIMACJI */
+  margin-top: 12px;
 }
+
+.hero-subtitle strong{
+  background: linear-gradient(135deg, #667eea, #764ba2); /* blue-violet */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+}
+
 
 .hero-stats {
   display: grid;
@@ -3814,7 +3676,7 @@ html {
   font-size: 48px;
   z-index: 2;
   filter: drop-shadow(0 10px 20px rgba(0, 255, 136, 0.3));
-  --icon-shift-x: 6px;           /* ← to robi optyczny “krok w prawo” */
+  --icon-shift-x: 0px;           /* ← to robi optyczny “krok w prawo” */
   animation: iconBounce 3s ease infinite;
 }
 
@@ -4387,22 +4249,11 @@ html {
   transform: scale(1.2) rotate(10deg);
   box-shadow: 0 12px 35px rgba(255, 80, 150, 0.5);
 }
-.step-icon {
-  font-size: 56px;
-  margin-bottom: 24px;
-  display: block;
-  filter: drop-shadow(0 10px 20px rgba(120, 80, 255, 0.3));
-  animation: iconFloat 6s ease infinite;
-}
 
 .timeline-step[data-step="2"] .step-icon { animation-delay: 1s; }
 .timeline-step[data-step="3"] .step-icon { animation-delay: 2s; }
 .timeline-step[data-step="4"] .step-icon { animation-delay: 3s; }
 
-@media (max-width: 768px) {
-  .step-icon {
-    animation: none;
-  }
 }
 .testimonial-card:nth-child(1) { animation-delay: 0.1s; }
 .testimonial-card:nth-child(2) { animation-delay: 0.2s; }
@@ -7214,10 +7065,7 @@ html {
     padding: 15px 6px;
   }
   
-  .scroll-dot {
-    width: 10px;
-    height: 10px;
-  }
+.scroll-dot{ width: 16px; height: 16px; border-width: 2px; }
   
   .dot-tooltip {
     display: none;
@@ -7948,76 +7796,6 @@ button:focus {
   will-change: transform;
 }
 
-/* Progress Bar */
-.progress-bar-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 9999;
-  backdrop-filter: blur(10px);
-  pointer-events: none;
-}
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #7850ff, #ff5080, #50b4ff);
-  transition: width 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
-}
-
-.progress-steps {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 100px;
-  z-index: 10002;
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(20px);
-  padding: 12px 24px;
-  border-radius: 100px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.progress-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  opacity: 0.5;
-  transition: all 0.3s ease;
-}
-
-.progress-step.active {
-  opacity: 1;
-}
-
-.step-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.progress-step.active .step-dot {
-  background: linear-gradient(135deg, #7850ff, #ff5080);
-  box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
-}
-
-.step-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
-}
-
-.progress-step.active .step-label {
-  color: white;
-}
 
 /* Toast Notifications */
 .toast-container {
@@ -8177,6 +7955,30 @@ button:focus {
 
 
 /* Top bar scroll indicator */
+
+/* łączniki między kropkami */
+.scroll-sections{ gap: 16px; }
+.scroll-dot{ position: relative; }
+.scroll-dot::before,
+.scroll-dot::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 2px;
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-50%);
+}
+.scroll-dot::before{ left: -22px; }
+.scroll-dot::after { right: -22px; }
+.scroll-sections .scroll-dot:first-child::before{ display: none; }
+.scroll-sections .scroll-dot:last-child::after{  display: none; }
+/* po zaliczeniu – koloruje się na fiolet */
+.scroll-dot.passed::before,
+.scroll-dot.passed::after{
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
 .scroll-indicator{
   position: fixed;
   top: 12px;
@@ -8192,6 +7994,48 @@ button:focus {
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
 
+.scroll-sections{ gap: 16px; } /* trochę większy odstęp, czytelniej */
+
+.scroll-dot{
+  position: relative;
+}
+
+/* cienkie łączniki po lewej/prawej każdej kropki */
+.scroll-dot::before,
+.scroll-dot::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 22px;               /* długość odcinka do następnej kropki */
+  height: 2px;
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-50%);
+}
+
+.scroll-dot::before{ left: -22px; }
+.scroll-dot::after{  right: -22px; }
+
+/* brak łącznika na skrajach */
+.scroll-sections .scroll-dot:first-child::before{ display: none; }
+.scroll-sections .scroll-dot:last-child::after{  display: none;  }
+
+/* kiedy kropka jest „zaliczona”, łączniki się wypełniają */
+.scroll-dot.passed::before,
+.scroll-dot.passed::after{
+  background: linear-gradient(90deg, #667eea, #764ba2); /* blue-violet */
+}
+
+/* aktywna kropka – spójnie z Twoim wyborem kolorów */
+.scroll-dot.active{
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: 0;
+  box-shadow:
+    0 0 0 4px rgba(118, 75, 162, 0.18),
+    0 8px 24px rgba(118, 75, 162, 0.45);
+  transform: scale(1.18);
+}
+
+
 /* kropki poziomo */
 .scroll-sections{
   display: flex;
@@ -8200,16 +8044,13 @@ button:focus {
   gap: 14px;
 }
 
-/* ukryj pionowy pasek postępu (JS liczy wysokość) */
-.scroll-progress{ display: none !important; }
-
 /* większe kropki */
 .scroll-dot{
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: rgba(255,255,255,0.2);
-  border: 2px solid rgba(255,255,255,0.3);
+  border-width: 2px
   cursor: pointer;
   transition: all .25s ease;
   position: relative;
@@ -8221,9 +8062,14 @@ button:focus {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%);
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease, visibility .15s;
   right: auto;
+  opacity:0;
+  visibility: hidden;
 }
+
+
 
 /* Ripple Effect */
 .ripple {
@@ -8517,51 +8363,8 @@ button:focus {
   overflow: visible !important;
 }
 
-  /* Global styles to avoid CSS-module scoping issues */
 
-.fixed-indicator{
-  position: fixed;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2147483000;
-  width: 18px;
-  pointer-events: none;
-  display: block !important;     /* <— DODANE */
-  opacity: 1 !important;         /* <— DODANE */
-}
-    /* kropki poziomo */
-.scroll-sections{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
-}
-.scroll-dot.active{
-  background: linear-gradient(135deg, #00ff88, #00cc70);
-  border: 0;
-  box-shadow:
-    0 0 0 4px rgba(0, 204, 112, 0.18),
-    0 8px 24px rgba(0, 204, 112, 0.45);
-  transform: scale(1.18);
-}
 
-    .scroll-dot.active{
-      transform: scale(1.22);
-      background: #7850ff;
-      box-shadow: 0 0 0 4px rgba(120,80,255,.15), 0 8px 24px rgba(120,80,255,.35);
-    }
-    .scroll-dot:hover .dot-tooltip{
-      opacity: 1; transform: translateX(-8px);
-    }
-    .dot-tooltip{
-      position: absolute; right: 18px; top: 50%;
-      transform: translateY(-50%) translateX(0);
-      background: rgba(0,0,0,0.85); color: #fff;
-      padding: 6px 10px; border-radius: 6px; font-size: 12px;
-      white-space: nowrap; opacity: 0; pointer-events: none;
-      transition: opacity .15s ease, transform .15s ease;
-    }
 /* ukryj pionowy pasek postępu (JS liczy wysokość) */
 .scroll-progress{ display: none !important; 
 
@@ -8572,14 +8375,96 @@ button:focus {
       .dot-tooltip{ display:none; }
     }
 
-/* === FIX: zbicie górnego odstępu hero globalnie === */
-.hero-section {
-  padding-top: 64px !important;
-  padding-bottom: 40px !important;
-  margin-top: 0 !important;
+/* === TOP GAP KILLER (wklej na sam koniec) === */
+html, body { margin:0 !important; padding:0 !important; }
+
+.navigation { position: fixed; top:0; left:0; right:0; z-index:2147483600; }
+
+.hero-section{
+  position: relative;
+  padding-top: 64px !important;   /* stała kompensacja pod nav/top-bar */
 }
-html, body { margin: 0 !important; padding: 0 !important; }
-.hero-section h1:first-child { margin-top: 0 !important; }
+
+/* blokuje kolaps marginesów pierwszego dziecka */
+.hero-section::before{
+  content:'';
+  display:block;
+  height:1px;
+}
+
+/* zeruje „przeciekające” marginesy pierwszego elementu w hero */
+.hero-section > *:first-child{ margin-top:0 !important; }
+
+/* jeśli gdzieś zostało – nadpisz brutalnie */
+.hero-subtitle{ margin-top: 12px !important; }
+
+
+}
+
+/* === TOP DOTS (poziomy wskaźnik sekcji) === */
+.scroll-indicator{
+  position: fixed;
+  top: 56px;                 /* pod nawigacją, nad hero */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483600;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+}
+.scroll-sections{ display:flex; gap:16px; pointer-events: auto; }
+
+.scroll-dot{
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+  position: relative;
+}
+.scroll-dot.active{
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: 0;
+  box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.18),
+              0 8px 24px rgba(118, 75, 162, 0.45);
+  transform: scale(1.18);
+}
+/* łączniki między kropkami */
+.scroll-dot::before, .scroll-dot::after{
+  content:'';
+  position:absolute; top:50%; width:22px; height:2px;
+  background: rgba(255,255,255,.2);
+  transform: translateY(-50%);
+}
+.scroll-dot::before{ left:-22px; }
+.scroll-dot::after { right:-22px; }
+.scroll-sections .scroll-dot:first-child::before{ display:none; }
+.scroll-sections .scroll-dot:last-child::after{  display:none; }
+
+/* „zaliczone” – koloruje się łącznik przez dotychczasowe sekcje */
+.scroll-dot.passed::before, .scroll-dot.passed::after{
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+/* tooltip niewidoczny dopóki nie najedziesz */
+.dot-tooltip{
+  position:absolute; right:18px; top:50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,.85); color:#fff;
+  padding:6px 10px; border-radius:6px; font-size:12px;
+  white-space:nowrap; opacity:0; visibility:hidden;
+  transition: opacity .15s, transform .15s, visibility .15s;
+}
+.scroll-dot:hover .dot-tooltip{ opacity:1; visibility:visible; transform: translate(-8px,-50%); 
+}
+
+
+/* Kompensacja dla linków przewijających do #sekcji */
+#hero, #stats, #capabilities, #timeline, #testimonials, #faq {
+  scroll-margin-top: 112px; /* 60(nav) + 44(dots) + ~8 bufora */
+}
+
 
 
 	`}</style>
