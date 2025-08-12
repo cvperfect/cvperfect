@@ -8140,25 +8140,6 @@ html, body { margin:0 !important; padding:0 !important; }
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-/* --- FORCED MATCH: Step 3 visuals --- */
-.timeline-step[data-step="3"] .step-content [data-sync="step3-time"] {
-  color: #00ff88 !important; /* kolor jak step-label */
-}
-
-.timeline-step[data-step="3"] .step-content [data-sync="step3-time-value"] {
-  color: #00ff88 !important; /* ten sam zielony */
-  text-shadow: 0 0 4px rgba(0,255,136,0.20), 0 0 10px rgba(0,255,136,0.12) !important;
- /* delikatny glow */
-  font-size: 14px !important;   /* tak jak w .step-time */
-  font-weight: 800 !important;  /* wzmocnienie jak w labelu */
-  letter-spacing: 0 !important; /* bez rozjechania liter */
-}
-
-/* opis pod nagłówkiem w Kroku 3 – jak p w Kroku 4/sukces */
-.timeline-step[data-step="3"] .step-content [data-sync="step3-stripe"] {
-  color: rgba(255,255,255,0.7) !important;
-  text-shadow: none !important;
-}
 
 
 
