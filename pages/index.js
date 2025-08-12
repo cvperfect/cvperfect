@@ -193,19 +193,19 @@ if (isActive) {
   });
 };
 
-const onScroll = () => {
-  const targetY = window.scrollY + OFFSET; // linia odniesienia
-  let bestIdx = 0;
+  const onScroll = () => {
+    const targetY = window.scrollY + OFFSET; // „cel” = linia tuż pod headerem+kropkami
+    let bestIdx = 0;
+    let bestDist = Infinity;
 
-  // wybierz ostatnią sekcję, której TOP ≤ targetY (zawsze do przodu)
-  for (let i = 0; i < sections.length; i++) {
-    const top = sections[i].getBoundingClientRect().top + window.scrollY;
-    if (top <= targetY) bestIdx = i;
-    else break;
-  }
+    sections.forEach((el, i) => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const dist = Math.abs(top - targetY);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    });
 
-  mark(bestIdx);
-};
+    mark(bestIdx);
+  };
 
   // klik w kropkę – przewijamy z kompensacją OFFSET (żeby nagłówki nie chowały się pod navem)
   dots.forEach((d, i) => {
@@ -228,42 +228,6 @@ const onScroll = () => {
     dots.forEach(d => d && d.replaceWith(d.cloneNode(true)));
   };
 }, []);
-
-// === Sync kolorów + glow w Timeline (Krok 3) ===
-useEffect(() => {
-  if (typeof window === 'undefined') return;
-
-  // "5 sekund" = kolor + glow jak "KROK 3" (tylko kolor/shadow, bez rozmiaru)
-  const step3Label = document.querySelector('.timeline-step[data-step="3"] .step-content .step-label');
-  const step3TimeValue = document.querySelector('[data-sync="step3-time-value"]');
-if (step3Label && step3TimeValue) {
-  step3TimeValue.classList.remove('step-label');
-  const apply = () => {
-    const cs = getComputedStyle(step3Label);
-    step3TimeValue.style.setProperty('color', cs.color, 'important');
-    if (cs.textShadow && cs.textShadow !== 'none') {
-      step3TimeValue.style.textShadow = cs.textShadow;
-    }
-  };
-  // wykonaj po bieżącym malowaniu, żeby pokonać późniejsze nadpisy
-  requestAnimationFrame(apply);
-}
-
-  // "Bezpieczna transakcja..." = kolor + glow jak p z Kroku 4 (success-card)
-  const step4Text = document.querySelector('.timeline-step[data-step="4"] .step-card.success-card .step-content p');
-  const step3Stripe = document.querySelector('[data-sync="step3-stripe"]');
-if (step4Text && step3Stripe) {
-  const apply2 = () => {
-    const cs = getComputedStyle(step4Text);
-    step3Stripe.style.setProperty('color', cs.color, 'important');
-    if (cs.textShadow && cs.textShadow !== 'none') {
-      step3Stripe.style.textShadow = cs.textShadow;
-    }
-  };
-  requestAnimationFrame(apply2);
-}
-}, [currentLanguage]);
-
 
 // Timeline animation on scroll
 useEffect(() => {
@@ -303,9 +267,7 @@ return () => {
     timelineObserver.unobserve(timelineSection)
   }
 }
-}, 
-
-[]);
+}, []);
 
 // Magnetic buttons effect
 useEffect(() => {
@@ -902,7 +864,7 @@ const floatingNotifications = currentLanguage === 'pl'
 
 {/* Smart Tooltips */}
 <div className="tooltip-container" id="tooltipContainer"></div>
-      <div className="floating-notifications" style={{ top: '176px' }}>
+      <div className="floating-notifications" style={{ top: '120px' }}>
         {notifications.map((notification, notifIndex) => (
           <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
             <div className="notification-content">
@@ -958,9 +920,8 @@ const floatingNotifications = currentLanguage === 'pl'
   >
     {[
       { id: 'hero', pl: 'Start', en: 'Start' },
-  { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },
       { id: 'stats', pl: 'Statystyki', en: 'Stats' },
-      
+      { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },
       { id: 'timeline', pl: 'Jak to działa', en: 'How it works' },
       { id: 'testimonials', pl: 'Opinie', en: 'Reviews' },
       { id: 'faq', pl: 'FAQ', en: 'FAQ' },
@@ -1332,11 +1293,7 @@ style={{
           <div className="step-content">
             <div className="step-label">{currentLanguage==='pl' ? 'KROK 3' : 'STEP 3'}</div>
             <h3>{currentLanguage==='pl' ? 'Szybka płatność' : 'Quick payment'}</h3>
-            <p data-sync="step3-stripe">
-
-  {currentLanguage==='pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure payment via Stripe'}
-</p>
-
+            <p>{currentLanguage==='pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure payment via Stripe'}</p>
             <div className="step-details">
               <span className="detail-item">🔒 SSL Secure</span>
               <span className="detail-item">
@@ -1345,16 +1302,10 @@ style={{
 
               <span className="detail-item">⚡ Instant</span>
             </div>
-<div className="step-time" data-sync="step3-time">
+<div className="time">
   <span className="time-icon">⏱️</span>
-  <span
-    data-sync="step3-time-value"
-    className="time-value"
-  >
-    {currentLanguage==='pl' ? '5 sekund' : '5 seconds'}
-  </span>
+  <span>{currentLanguage==='pl' ? '5 sekund' : '5 seconds'}</span>
 </div>
-
           </div>
           <div className="step-visual">
             <div className="payment-animation">
