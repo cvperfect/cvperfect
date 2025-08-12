@@ -153,7 +153,8 @@ useEffect(() => {
 
 // Scroll indicator logic (deterministyczny porządek + offset pod fixed header)
 useEffect(() => {
-  const IDS = ['hero','stats','capabilities','timeline','testimonials','faq'];
+  const IDS = ['hero','capabilities','stats','timeline','testimonials','faq'];
+
 
   const sections = IDS
     .map(id => document.getElementById(id))
@@ -164,31 +165,47 @@ useEffect(() => {
     .filter(Boolean);
 
   // Zaktualizuj na swoją realną wysokość paska nawigacji i kropek
-  const NAV_H = 60;   // px – wysokość headera (AI | CvPerfect | PL/EN | linki)
-  const DOTS_H = 44;  // px – wysokość topowego paska kropek
-  const OFFSET = NAV_H + DOTS_H + 8; // minimalny bufor
+const NAV_H = 60;   // px – wysokość headera
+const DOTS_H = 44;  // px – wysokość topowego paska kropek
+const MARGIN_TOP = 20; // px – dodatkowy odstęp od górnej krawędzi
+const OFFSET = NAV_H + DOTS_H + MARGIN_TOP; // uwzględniamy odstęp
 
-  const mark = (idx) => {
-    dots.forEach((d,i) => {
-      if (!d) return;
-      d.classList.toggle('active', i === idx);
-      d.classList.toggle('passed', i <= idx);
-    });
-  };
+const mark = (idx) => {
+  dots.forEach((d,i) => {
+    if (!d) return;
+    const isActive = i === idx;
+    const isPassed = i < idx;
 
-  const onScroll = () => {
-    const targetY = window.scrollY + OFFSET; // „cel” = linia tuż pod headerem+kropkami
-    let bestIdx = 0;
-    let bestDist = Infinity;
+    // klasy zostawiamy, ale ustawiamy też inline-style (niezależnie od CSS)
+    d.classList.toggle('active', isActive);
+    d.classList.toggle('passed', isPassed || isActive);
 
-    sections.forEach((el, i) => {
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      const dist = Math.abs(top - targetY);
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-    });
+if (isActive) {
+  d.style.background = 'radial-gradient(circle, #9e33d6 0%, #1a001f 100%)'; // jaśniejszy fiolet -> ciemny
+  d.style.boxShadow = '0 0 0 2px rgba(158,51,214,0.5)';
+} else if (isPassed) {
+  d.style.background = 'radial-gradient(circle, #7a28a6 0%, #140018 100%)'; // jaśniejszy od poprzedniego
+  d.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.15) inset';
+} else {
+  d.style.background = 'radial-gradient(circle, #5c1f7a 0%, #0a000c 100%)'; // bazowy jaśniejszy
+  d.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.15) inset';
+}
+  });
+};
 
-    mark(bestIdx);
-  };
+const onScroll = () => {
+  const targetY = window.scrollY + OFFSET; // linia odniesienia
+  let bestIdx = 0;
+
+  // wybierz ostatnią sekcję, której TOP ≤ targetY (zawsze do przodu)
+  for (let i = 0; i < sections.length; i++) {
+    const top = sections[i].getBoundingClientRect().top + window.scrollY;
+    if (top <= targetY) bestIdx = i;
+    else break;
+  }
+
+  mark(bestIdx);
+};
 
   // klik w kropkę – przewijamy z kompensacją OFFSET (żeby nagłówki nie chowały się pod navem)
   dots.forEach((d, i) => {
@@ -211,6 +228,42 @@ useEffect(() => {
     dots.forEach(d => d && d.replaceWith(d.cloneNode(true)));
   };
 }, []);
+
+// === Sync kolorów + glow w Timeline (Krok 3) ===
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+
+  // "5 sekund" = kolor + glow jak "KROK 3" (tylko kolor/shadow, bez rozmiaru)
+  const step3Label = document.querySelector('.timeline-step[data-step="3"] .step-content .step-label');
+  const step3TimeValue = document.querySelector('[data-sync="step3-time-value"]');
+if (step3Label && step3TimeValue) {
+  step3TimeValue.classList.remove('step-label');
+  const apply = () => {
+    const cs = getComputedStyle(step3Label);
+    step3TimeValue.style.setProperty('color', cs.color, 'important');
+    if (cs.textShadow && cs.textShadow !== 'none') {
+      step3TimeValue.style.textShadow = cs.textShadow;
+    }
+  };
+  // wykonaj po bieżącym malowaniu, żeby pokonać późniejsze nadpisy
+  requestAnimationFrame(apply);
+}
+
+  // "Bezpieczna transakcja..." = kolor + glow jak p z Kroku 4 (success-card)
+  const step4Text = document.querySelector('.timeline-step[data-step="4"] .step-card.success-card .step-content p');
+  const step3Stripe = document.querySelector('[data-sync="step3-stripe"]');
+if (step4Text && step3Stripe) {
+  const apply2 = () => {
+    const cs = getComputedStyle(step4Text);
+    step3Stripe.style.setProperty('color', cs.color, 'important');
+    if (cs.textShadow && cs.textShadow !== 'none') {
+      step3Stripe.style.textShadow = cs.textShadow;
+    }
+  };
+  requestAnimationFrame(apply2);
+}
+}, [currentLanguage]);
+
 
 // Timeline animation on scroll
 useEffect(() => {
@@ -250,7 +303,9 @@ return () => {
     timelineObserver.unobserve(timelineSection)
   }
 }
-}, []);
+}, 
+
+[]);
 
 // Magnetic buttons effect
 useEffect(() => {
@@ -348,8 +403,11 @@ const openUploadModal = () => {
   
   // Typing animation states
 
+const [typingMinCh, setTypingMinCh] = useState(0);
 
-const typingPhrases = currentLanguage === 'pl'
+const typingPhrases =currentLanguage === 'pl'
+
+
   ? [
   'optymalizacji CV',
   'analizie słów kluczowych',
@@ -370,6 +428,14 @@ const typingPhrases = currentLanguage === 'pl'
   'higher visibility',
   'AI assistance'
     ];
+
+
+
+useEffect(() => {
+  // rezerwacja szerokości pod najdłuższą frazę (bez skakania layoutu)
+  const longest = Math.max(...typingPhrases.map(s => s.length));
+  setTypingMinCh(longest + 2); // +2 znaki luzu
+}, [typingPhrases]);
 
 
 // Typing animation effect
@@ -455,7 +521,8 @@ showToast(
   const cvTextarea = document.querySelector('.cv-textarea');
   const cvText = cvTextarea?.value || '';
   
-  if (!cvText || cvText.trim().length < 50) {
+  if ((!cvText || cvText.trim().length < 50) && !uploadedFile) {
+
 showToast(
   currentLanguage === 'pl'
     ? '⚠️ Najpierw wklej treść swojego CV!'
@@ -542,7 +609,8 @@ const optimizeCV = () => {
   const cvTextarea = document.querySelector('.cv-textarea');
   const cvText = cvTextarea?.value || '';
   
-  if (!cvText || cvText.trim().length < 50) {
+  if ((!cvText || cvText.trim().length < 50) && !uploadedFile) {
+
 showToast(
   currentLanguage === 'pl'
     ? '⚠️ Najpierw wklej treść swojego CV!'
@@ -572,35 +640,40 @@ const createConfetti = () => {
   }
 }
 
-  // POZOSTAŁE FUNKCJE (bez zmian)
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      // Sprawdź rozszerzenie pliku
-      const fileName = file.name.toLowerCase()
-      const allowedExtensions = ['.pdf', '.doc', '.docx']
-      const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext))
-      
-      if (!isAllowed) {
-        alert('❌ Obsługujemy tylko pliki: PDF, DOC, DOCX')
-        e.target.value = '' // Wyczyść input
-        return
-      }
-      
-      // Sprawdź typ MIME
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-      if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
-        alert('❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX')
-        e.target.value = ''
-        return
-      }
-      
-      setUploadedFile(file)
-      const reader = new FileReader()
-      reader.onload = (e) => setCurrentCV(e.target.result)
-      reader.readAsText(file)
-    }
+const handleFileUpload = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Sprawdź rozszerzenie
+  const fileName = file.name.toLowerCase();
+  const allowedExtensions = ['.pdf', '.doc', '.docx'];
+  const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
+  if (!isAllowed) {
+    alert(currentLanguage==='pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ We only support: PDF, DOC, DOCX');
+    e.target.value = '';
+    return;
   }
+
+  // Sprawdź typ MIME
+  const allowedTypes = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
+    alert(currentLanguage==='pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
+    e.target.value = '';
+    return;
+  }
+
+  // ✅ Nie czytamy binarki jako tekst
+  setUploadedFile(file);
+  setCurrentCV('');
+
+  // Delikatny feedback (żeby user widział, że jest OK)
+  const textarea = document.querySelector('.cv-textarea');
+  if (textarea) {
+    textarea.value = currentLanguage==='pl'
+      ? `📄 Załadowano: "${file.name}" (${(file.size/1024).toFixed(1)} KB).\n✅ Gotowe do analizy.`
+      : `📄 Loaded: "${file.name}" (${(file.size/1024).toFixed(1)} KB).\n✅ Ready for analysis.`;
+  }
+};
 
 const handlePayment = (plan) => {
     // Pokaz szablony po wybraniu planu Gold lub Premium
@@ -609,15 +682,12 @@ const handlePayment = (plan) => {
     }
 
     // Pobierz email z paywall modal lub pricing modal
-    const paywallEmail = document.getElementById('paywallEmail')?.value;
-    const customerEmail = document.getElementById('customerEmail')?.value;
-    const email = paywallEmail || customerEmail;
-    
-    if (!email || !email.includes('@')) {
-      alert(currentLanguage==='pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address')
+const email = (userEmail || document.getElementById('paywallEmail')?.value || document.getElementById('customerEmail')?.value || '').trim();
 
-      return
-    }
+if (!email || !email.includes('@')) {
+  alert(currentLanguage==='pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address');
+  return;
+}
 
     const prices = {
       premium: 'price_1RofCI4FWb3xY5tDYONIW3Ix',
@@ -832,7 +902,7 @@ const floatingNotifications = currentLanguage === 'pl'
 
 {/* Smart Tooltips */}
 <div className="tooltip-container" id="tooltipContainer"></div>
-      <div className="floating-notifications">
+      <div className="floating-notifications" style={{ top: '176px' }}>
         {notifications.map((notification, notifIndex) => (
           <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
             <div className="notification-content">
@@ -850,22 +920,47 @@ const floatingNotifications = currentLanguage === 'pl'
           </div>
         ))}
       </div>
-<div className="container">
+<div className="container" style={{ paddingTop: '76px' }}>
+
   {/* Particles Background */}
   <div className="particles-container" id="particles"></div>  
   
 {/* Scroll Indicator (fixed, cały czas widoczny) */}
 <div
   className="scroll-indicator"
-
+  style={{
+    position: 'fixed',
+    top: '16px',        // przerwa od górnej krawędzi
+    left: 0,
+    right: 0,
+    zIndex: 900,        // poniżej nav jeżeli nav ma 1000
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none'
+  }}
   aria-label={currentLanguage === 'pl' ? 'Nawigacja sekcji' : 'Section navigation'}
 >
   <div className="scroll-progress" aria-hidden="true"></div>
-  <div className="scroll-sections" role="tablist">
+  <div
+    className="scroll-sections"
+    role="tablist"
+    style={{
+      display: 'flex',
+      gap: '10px',
+      padding: '8px 14px',
+      borderRadius: '9999px',
+      background: 'rgba(12,14,22,0.75)',
+      boxShadow: '0 4px 18px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.06)',
+      backdropFilter: 'saturate(1.1) blur(6px)',
+      pointerEvents: 'auto'
+    }}
+  >
     {[
       { id: 'hero', pl: 'Start', en: 'Start' },
+  { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },
       { id: 'stats', pl: 'Statystyki', en: 'Stats' },
-      { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },
+      
       { id: 'timeline', pl: 'Jak to działa', en: 'How it works' },
       { id: 'testimonials', pl: 'Opinie', en: 'Reviews' },
       { id: 'faq', pl: 'FAQ', en: 'FAQ' },
@@ -881,12 +976,20 @@ const floatingNotifications = currentLanguage === 'pl'
           const el = document.getElementById(s.id);
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }}
-      >
-        
-      </button>
+style={{
+  width: '24px', // większa kropka
+  height: '24px',
+  borderRadius: '9999px',
+  border: 'none',
+  background: 'radial-gradient(circle, #3b005e 0%, #000000 100%)',
+  opacity: 1,
+  cursor: 'pointer',
+  boxShadow: '0 0 0 1px rgba(255,255,255,0.15) inset'
+}}
+      />
     ))}
   </div>
-	</div>
+</div>
     
     {/* Navigation */}
         <nav className="navigation">
@@ -950,9 +1053,13 @@ const floatingNotifications = currentLanguage === 'pl'
     : <>Trusted across Europe. <strong>95% ATS pass rate</strong> and up to <strong>410% more interviews</strong>. From <strong>≈ €4.40</strong>.</>}
 </p>
 <h1 className="hero-title">
-{currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki ' : 'Boost your chances with '}  <span className="typing-safe-zone">
-    <span className="typing-text">{typingText}</span>
-    <span className="typing-cursor">|</span>
+  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki ' : 'Boost your chances with '}
+  <br />
+  <span className="typing-block">
+    <span className="typing-safe-zone">
+      <span className="typing-text">{typingText}</span>
+      <span className="typing-cursor">|</span>
+    </span>
   </span>
 </h1>
             
@@ -1225,7 +1332,11 @@ const floatingNotifications = currentLanguage === 'pl'
           <div className="step-content">
             <div className="step-label">{currentLanguage==='pl' ? 'KROK 3' : 'STEP 3'}</div>
             <h3>{currentLanguage==='pl' ? 'Szybka płatność' : 'Quick payment'}</h3>
-            <p>{currentLanguage==='pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure payment via Stripe'}</p>
+            <p data-sync="step3-stripe">
+
+  {currentLanguage==='pl' ? 'Bezpieczna transakcja przez Stripe' : 'Secure payment via Stripe'}
+</p>
+
             <div className="step-details">
               <span className="detail-item">🔒 SSL Secure</span>
               <span className="detail-item">
@@ -1234,10 +1345,16 @@ const floatingNotifications = currentLanguage === 'pl'
 
               <span className="detail-item">⚡ Instant</span>
             </div>
-<div className="time">
+<div className="step-time" data-sync="step3-time">
   <span className="time-icon">⏱️</span>
-  <span>{currentLanguage==='pl' ? '5 sekund' : '5 seconds'}</span>
+  <span
+    data-sync="step3-time-value"
+    className="time-value"
+  >
+    {currentLanguage==='pl' ? '5 sekund' : '5 seconds'}
+  </span>
 </div>
+
           </div>
           <div className="step-visual">
             <div className="payment-animation">
@@ -1390,57 +1507,69 @@ placeholder={
     ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
     : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize!'
 }                    rows="8"
-                  ></textarea>
+
+         ></textarea>
                   
+
+<div className="email-field">
+  <label htmlFor="customerEmail" className="email-label">
+    {currentLanguage==='pl' ? 'Adres e-mail do wysyłki wyniku' : 'Email for delivery'}
+  </label>
+
+  <input
+    id="customerEmail"
+    type="email"
+    className="email-input"
+    required
+    value={userEmail}
+    onChange={(e)=>setUserEmail(e.target.value)}
+    placeholder={currentLanguage==='pl' ? 'np. jan.kowalski@gmail.com' : 'e.g. john.doe@gmail.com'}
+    inputMode="email"
+    autoComplete="email"
+  />
+
+  <p className="email-hint">
+    {currentLanguage==='pl'
+      ? 'Nie wymagamy rejestracji. Link do plików wyślemy na ten adres.'
+      : 'No account needed. We’ll send your files to this address.'}
+  </p>
+</div>
+
+
+
                   <div className="upload-buttons">
                     <input
                       type="file"
                       id="modalFileInput"
                       accept=".pdf,.doc,.docx"
                       style={{display: 'none'}}
-                      onChange={(e) => {
-  const file = e.target.files[0];
-  if (file) {
-    // Sprawdź rozszerzenie pliku
-    const fileName = file.name.toLowerCase();
-    const allowedExtensions = ['.pdf', '.doc', '.docx'];
-    const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
-    
-    if (!isAllowed) {
-      alert(currentLanguage==='pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ We only support: PDF, DOC, DOCX');
-      e.target.value = '';
-      return;
-    }
-    
-    // Sprawdź typ MIME
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
-      alert(currentLanguage==='pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
-      e.target.value = '';
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const textarea = document.querySelector('.cv-textarea');
-      if (textarea) {
-        textarea.value = currentLanguage==='pl'
-  ? `📄 Plik "${file.name}" został wczytany pomyślnie!\n\nRozmiar: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Gotowe do analizy!`
-  : `📄 File "${file.name}" loaded successfully!\n\nSize: ${(file.size / 1024).toFixed(1)} KB\n\n✅ Ready for analysis!`;
-        
-        const successMsg = document.createElement('div');
-        successMsg.innerHTML = currentLanguage==='pl'
-  ? '✅ CV zostało pomyślnie wczytane!'
-  : '✅ CV loaded successfully!';
-        successMsg.style.cssText = 'color: #059669; font-weight: 600; margin-top: 10px; text-align: center;';
-        successMsg.className = 'success-message';
-        const existing = document.querySelector('.success-message');
-        if (existing) existing.remove();
-        textarea.parentNode.appendChild(successMsg);
-        setTimeout(() => successMsg.remove(), 3000);
-      }
-    };
-    reader.readAsText(file);
+onChange={(e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const fileName = file.name.toLowerCase();
+  const allowed = ['.pdf','.doc','.docx'].some(ext => fileName.endsWith(ext));
+  if (!allowed) {
+    alert(currentLanguage==='pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ We only support: PDF, DOC, DOCX');
+    e.target.value = '';
+    return;
+  }
+
+  const okType = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    .includes(file.type) || file.type.includes('word');
+  if (!okType) {
+    alert(currentLanguage==='pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
+    e.target.value = '';
+    return;
+  }
+
+  setUploadedFile(file);
+
+  const textarea = document.querySelector('.cv-textarea');
+  if (textarea) {
+    textarea.value = currentLanguage==='pl'
+      ? `📄 Plik "${file.name}" został wczytany!\nRozmiar: ${(file.size/1024).toFixed(1)} KB\n✅ Gotowe do analizy`
+      : `📄 File "${file.name}" loaded!\nSize: ${(file.size/1024).toFixed(1)} KB\n✅ Ready for analysis`;
   }
 }}
                     />
@@ -1456,21 +1585,6 @@ placeholder={
 
                     </button>
                   </div>
-                </div>
-
-                <div className="upload-features">
-<div className="feature-check">
-  {currentLanguage==='pl' ? '✅ Analiza ATS w 30 sekund' : '✅ ATS analysis in 30 seconds'}
-</div>
-<div className="feature-check">
-  {currentLanguage==='pl' ? '✅ Wykrywanie problemów' : '✅ Issue detection'}
-</div>
-<div className="feature-check">
-  {currentLanguage==='pl' ? '✅ Score compatibility' : '✅ Compatibility score'}
-</div>
-<div className="feature-check">
-  {currentLanguage==='pl' ? '✅ 100% bezpieczne' : '✅ 100% secure'}
-</div>
                 </div>
               </div>
             </div>
@@ -1546,7 +1660,21 @@ placeholder={
 }
 
       rows="4"
-    ></textarea>
+    >
+
+<div className="email-capture" style={{marginTop: '14px'}}>
+  <label htmlFor="uploadEmail" className="visually-hidden">Email</label>
+  <input
+    type="email"
+    id="uploadEmail"
+    className="email-input"
+    placeholder={currentLanguage==='pl' ? 'Twój email (do wysyłki CV)' : 'Your email (for delivery)'}
+    value={userEmail}
+    onChange={(e)=>setUserEmail(e.target.value)}
+  />
+</div>
+
+</textarea>
     <div className="upgrade-note">
       <span className="note-icon">💡</span>
       <span>Im więcej szczegółów, tym lepsza optymalizacja!</span>
@@ -1557,12 +1685,14 @@ placeholder={
   {/* Email Input */}
   <div className="email-section">
     <h3>{currentLanguage==='pl' ? '📧 Twój email' : '📧 Your email'}</h3>
-    <input 
-      type="email" 
-      className="email-input" 
-      placeholder={currentLanguage==='pl' ? 'twoj-email@example.com' : 'your-email@example.com'}
-      id="paywallEmail"
-    />
+<input 
+  type="email" 
+  className="email-input" 
+  placeholder={currentLanguage==='pl' ? 'twoj-email@example.com' : 'your-email@example.com'}
+  id="paywallEmail"
+  value={userEmail}
+  onChange={(e)=>setUserEmail(e.target.value)}
+/>
   </div>
 
   {/* Pricing Plans */}
@@ -1897,6 +2027,19 @@ placeholder={
         </footer>
      </div>
       <style jsx>{`
+
+/* === HERO STATS (stabilnie / jednolicie) === */
+.hero-stats{ 
+  display:flex; gap:24px; flex-wrap:wrap; 
+  margin-top: 12px;
+}
+.hero-stats .stat-item{ 
+  flex:1 1 200px; min-width: 200px; 
+  text-align:center; 
+  padding:14px 18px; 
+}
+.stat-number{ white-space: nowrap; }
+
         /* Language Switcher */
         .language-switcher {
           display: flex;
@@ -1924,6 +2067,15 @@ placeholder={
           background: linear-gradient(135deg, #7850ff, #ff5080);
           border-color: transparent;
         }
+
+/* CV preview – wyrównaj plakietki ze score */
+.cv-score{
+  display:inline-block;
+  min-width:6ch;           /* równe dla '32% ATS' i '95% ATS' */
+  text-align:center;
+  white-space:nowrap;
+}
+
 
         /* Template Modal Styles */
         .template-modal {
@@ -2084,11 +2236,7 @@ placeholder={
   height: 100%;
 }
 
-/* Ensure content is above particles */
-.container > *:not(.scroll-indicator):not(.fixed-indicator) {
-  position: relative;
-  z-index: 1;
-}
+
 
 /* Performance optimization for mobile */
 @media (max-width: 768px) {
@@ -2131,26 +2279,7 @@ placeholder={
 }
 
 
-        /* Custom Scrollbar */
-        /* Enhanced Custom Scrollbar */
-/* MEGA VISIBLE SCROLLBAR */
-/* Normal Scrollbar */
-::-webkit-scrollbar {
-  width: 12px;
-}
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a6fd8, #6a4190);
-}
 
 /* For Firefox */
 html {
@@ -2576,6 +2705,7 @@ html {
   0%, 100% { opacity: 0.8; transform: scaleX(1); }
   50% { opacity: 1; transform: scaleX(1.05); }
 }
+
 
 
 /* Typing Animation */
@@ -5078,6 +5208,16 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Modal – no inner scroll on desktop */
+.modal-overlay{ align-items: flex-start; }
+.modal-content.upload-modal{
+  max-height: none;
+  margin-top: 5vh;
+  margin-bottom: 5vh;
+  overflow: visible;
+}
+
+
 .upload-header {
   background: linear-gradient(135deg, #7850ff, #ff5080);
   color: white;
@@ -5143,140 +5283,42 @@ html {
   font-weight: 500;
 }
 
-/* Fix dla przerywanej linii w upload-zone */
-.upload-zone {
-  text-align: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 24px;
-  padding: 30px 40px;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.upload-zone{
+  text-align:center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.14);   /* ← było: 2px dashed */
+  border-radius: 20px;
+  padding: 22px 28px;
+  transition: all .4s cubic-bezier(0.175,0.885,0.32,1.275);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin: 0 auto;
   width: 100%;
+  backdrop-filter: blur(16px) saturate(160%);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.06);
 }
-.upload-zone::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(120, 80, 255, 0.1) 0%, transparent 40%);
-  opacity: 0;
-  transition: all 0.6s ease;
-  transform: rotate(0deg);
+/* === Upload modal back-outline (auto height & aligned corners) === */
+.upload-zone{
+  position: relative; /* ważne, jeśli nie było */
 }
 
-.upload-hint {
-  margin: 20px 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-.upload-zone:hover .upload-hint {
-  color: rgba(255, 255, 255, 0.9);
-  transform: scale(1.05);
-}
-
-.upload-zone::after {
-  display: none;
-}
-
-.upload-zone:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(120, 80, 255, 0.5);
-  transform: scale(1.01);
-  box-shadow: 0 20px 60px rgba(120, 80, 255, 0.15);
-}
-.upload-zone:hover::before {
-  opacity: 1;
-  transform: rotate(180deg);
-}
-
-.upload-zone:hover::after {
-  opacity: 1;
-  bottom: 25px;
-}
-
-.upload-zone:hover .upload-icon {
-  transform: scale(1.1) rotate(5deg);
-  filter: drop-shadow(0 15px 40px rgba(120, 80, 255, 0.4));
-}
-
-
-.upload-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  transition: all 0.4s ease;
-  filter: drop-shadow(0 10px 20px rgba(120, 80, 255, 0.2));
-}
-
-
-.upload-buttons {
+.upload-buttons{
   display: flex;
-  gap: 16px;
+  gap: 14px;
   justify-content: center;
-  margin-top: 24px;
+  margin-top: 18px;
+  position: relative;
+  z-index: 3;
 }
 
-.upload-btn {
-  padding: 14px 28px;
-  border-radius: 100px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.upload-btn.secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
+/* jeżeli masz też ::after na .upload-zone – wyłącz go, żeby nie dublować ramek */
+.upload-zone::after{ display: none !important; }
 
-.upload-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.upload-btn.primary {
-  background: linear-gradient(135deg, #00ff88, #00cc70);
-  color: #000;
-  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
-}
-
-.upload-btn.primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
-}
-
-.upload-features {
-  margin-top: 32px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  width: 100%;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.feature-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-}
+/* upewnij się, że treść modalu jest NAD obramówką */
+.upload-zone > *{ position: relative; z-index: 1; }
 
 
 /* Enhanced Textarea Styles */
@@ -5294,7 +5336,7 @@ html {
   background: rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(15px);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  min-height: 160px;
+  min-height: 180px;
   max-height: 200px;
 }
 .cv-textarea:focus {
@@ -7041,69 +7083,7 @@ html {
     margin-bottom: 16px;
   }
   
-  /* Mobile buttons */
-button:not(.scroll-dot) {
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.scroll-indicator {
-    right: 15px;
-    padding: 15px 6px;
-  }
-  
-.scroll-dot{ width: 16px; height: 16px; border-width: 2px; }
-  
-  .dot-tooltip {
-    display: none;
-  }
-  
-  .scroll-sections {
-    gap: 20px;
-  }
-  
-  /* Fix horizontal scroll */
-  * {
-    max-width: 100vw !important;
-  }
-  
-  .modal-content {
-    border-radius: 20px;
-    margin: 10px;
-    width: calc(100% - 20px);
-  }
-
-          .hero-section {
-            grid-template-columns: 1fr;
-            gap: 40px;
-            padding: 60px 15px;
-            max-width: 100%;
-            overflow-x: hidden;
-          }
-
-          .hero-title {
-            font-size: 28px;
-            line-height: 1.2;
-          }
-
-          .nav-content {
-            padding: 16px 15px;
-          }
-
-@media (max-width: 768px) {
-  .nav-links { display: none; }
-}
-
-.nav-cta {
-  padding: 12px 20px;
-  font-size: 14px;
-}
-
-.logo-text {
-  font-size: 22px;
-}
-
+    
 /* Mobile menu button */
 @media (max-width: 768px) {
   .navigation {
@@ -7770,13 +7750,49 @@ button:focus {
   color: white;
 }
 
+/* Wyłącz wszelkie stare pseudo-ikonki na hero button */
+.hero-button::after { content: none !important; }
+
+
 /* Magnetic Buttons Enhancement */
 .hero-button,
 .nav-cta,
 .testimonials-button,
 .timeline-button,
 .faq-button,
-.upload-btn.primary,
+.upload-btn.primary{
+  background: linear-gradient(135deg, #00e676, #00ffa3);
+  color: #041d14;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 22px; border-radius: 14px; font-weight: 900;
+  letter-spacing: .2px; border: 0;
+  box-shadow:
+    0 14px 34px rgba(0,255,163,.28),
+    inset 0 1px 0 rgba(255,255,255,.35);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.upload-btn.primary:hover{
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 18px 46px rgba(0,255,163,.38);
+  filter: saturate(1.1);
+}
+.upload-btn.secondary{
+  background: linear-gradient(135deg, #6ea8ff, #9b5cff);
+  color: #fff;
+  border: 0;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 20px; border-radius: 14px;
+  font-weight: 800; letter-spacing: .2px;
+  box-shadow: 0 12px 32px rgba(155,92,255,.28), inset 0 1px 0 rgba(255,255,255,.28);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.upload-btn.secondary:hover{
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 16px 44px rgba(155,92,255,.38);
+  filter: saturate(1.08);
+}
+
+
 .plan-button {
   position: relative;
   overflow: hidden;
@@ -7942,361 +7958,6 @@ button:focus {
 }
 
 
-/* Top bar scroll indicator */
-
-/* łączniki między kropkami */
-.scroll-sections{ gap: 16px; }
-.scroll-dot{ position: relative; }
-.scroll-dot::before,
-.scroll-dot::after{
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 22px;
-  height: 2px;
-  background: rgba(255,255,255,0.2);
-  transform: translateY(-50%);
-}
-.scroll-dot::before{ left: -22px; }
-.scroll-dot::after { right: -22px; }
-.scroll-sections .scroll-dot:first-child::before{ display: none; }
-.scroll-sections .scroll-dot:last-child::after{  display: none; }
-/* po zaliczeniu – koloruje się na fiolet */
-.scroll-dot.passed::before,
-.scroll-dot.passed::after{
-  background: linear-gradient(90deg, #667eea, #764ba2);
-}
-
-.scroll-indicator{
-  position: fixed;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  right: auto;
-  z-index: 2147483000;
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 100px;
-  padding: 10px 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-}
-
-.scroll-sections{ gap: 16px; } /* trochę większy odstęp, czytelniej */
-
-.scroll-dot{
-  position: relative;
-}
-
-/* cienkie łączniki po lewej/prawej każdej kropki */
-.scroll-dot::before,
-.scroll-dot::after{
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 22px;               /* długość odcinka do następnej kropki */
-  height: 2px;
-  background: rgba(255,255,255,0.2);
-  transform: translateY(-50%);
-}
-
-.scroll-dot::before{ left: -22px; }
-.scroll-dot::after{  right: -22px; }
-
-/* brak łącznika na skrajach */
-.scroll-sections .scroll-dot:first-child::before{ display: none; }
-.scroll-sections .scroll-dot:last-child::after{  display: none;  }
-
-/* kiedy kropka jest „zaliczona”, łączniki się wypełniają */
-.scroll-dot.passed::before,
-.scroll-dot.passed::after{
-  background: linear-gradient(90deg, #667eea, #764ba2); /* blue-violet */
-}
-
-/* aktywna kropka – spójnie z Twoim wyborem kolorów */
-.scroll-dot.active{
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border: 0;
-  box-shadow:
-    0 0 0 4px rgba(118, 75, 162, 0.18),
-    0 8px 24px rgba(118, 75, 162, 0.45);
-  transform: scale(1.18);
-}
-
-
-/* kropki poziomo */
-.scroll-sections{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 14px;
-}
-
-/* większe kropki */
-.scroll-dot{
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  border: 2px solid rgba(255,255,255,0.35);
-  cursor: pointer;
-  transition: all .25s ease;
-  position: relative;
-  pointer-events: auto;
-}
-
-
-/* dymek nad dotem */
-.scroll-dot .dot-tooltip{
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  pointer-events: none;
-  transition: opacity .15s ease, transform .15s ease, visibility .15s;
-  right: auto;
-  opacity:0;
-  visibility: hidden;
-}
-
-
-
-/* Ripple Effect */
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: scale(0);
-  animation: ripple-animation 0.6s ease-out;
-  pointer-events: none;
-}
-
-@keyframes ripple-animation {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-/* Confetti */
-.confetti {
-  position: fixed;
-  width: 10px;
-  height: 10px;
-  top: -10px;
-  z-index: 9999;
-  animation: confetti-fall linear;
-}
-
-@keyframes confetti-fall {
-  to {
-    transform: translateY(100vh) rotate(360deg);
-  }
-}
-
-/* Enhanced button hover states */
-.hero-button:hover,
-.testimonials-button:hover,
-.timeline-button:hover {
-  box-shadow: 
-    0 15px 35px rgba(0, 255, 136, 0.4),
-    inset 0 0 15px rgba(255, 255, 255, 0.1);
-}
-
-.nav-cta:hover,
-.faq-button:hover {
-  box-shadow: 
-    0 15px 35px rgba(120, 80, 255, 0.4),
-    inset 0 0 15px rgba(255, 255, 255, 0.1);
-}
-
-/* Cursor proximity glow */
-@media (hover: hover) {
-  .hero-button::after,
-  .nav-cta::after,
-  .testimonials-button::after,
-  .timeline-button::after,
-  .faq-button::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 150%;
-    height: 150%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-  
-  .hero-button:hover::after,
-  .nav-cta:hover::after,
-  .testimonials-button:hover::after,
-  .timeline-button:hover::after,
-  .faq-button:hover::after {
-    opacity: 1;
-  }
-}
-
-/* Wyłącz ciągłe animacje na mobile */
-@media (max-width: 768px) {
-  .testimonial-card {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-
-/* Premium Reveal Animations */
-.reveal-element {
-  opacity: 0;
-  transform: translateY(50px) scale(0.95);
-  transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.reveal-element.reveal-animate {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.reveal-child {
-  opacity: 0;
-  transform: translateX(-30px);
-  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.reveal-child.reveal-animate {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.glow-on-hover {
-  position: relative;
-  overflow: hidden;
-}
-
-.glow-on-hover::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.4), 
-    transparent
-  );
-  transition: left 0.8s ease;
-}
-
-.glow-on-hover:hover::before {
-  left: 100%;
-}
-
-/* Fix for broken layout */
-@media (max-width: 1200px) {
-  .step-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 32px;
-  }
-  
-  .step-visual {
-    display: none;
-  }
-}
-
-/* Fix navigation z-index */
-.navigation {
-  z-index: 99999 !important;
-}
-
-/* Fix button hover states */
-.hero-button,
-.testimonials-button,
-.timeline-button,
-.faq-button,
-.nav-cta {
-  cursor: pointer !important;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Ensure modals are above navigation */
-.modal-overlay {
-  z-index: 100000 !important;
-}
-
-.modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.8) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 999999 !important;
-  backdrop-filter: blur(10px) !important;
-}
-
-.typing-safe-zone {
-  min-height: 3em; /* zarezerwuj miejsce na tekst */
-  line-height: 1.4;
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  text-align: left; /* lub center jeśli chcesz wyśrodkować */
-}
-
-.typing-text {
-  display: inline;
-  word-break: break-word;
-}
-
-.typing-cursor {
-  display: inline;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1 }
-  50% { opacity: 0 }
-}
-
-/* === FIX HERO STATS & CV SCORE === */
-.hero-stats {
-  display: flex;
-  gap: 20px;
-}
-
-.hero-stats .stat-item {
-  min-width: 100px; /* zwiększa szerokość kwadracików */
-  padding: 10px 15px;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.hero-stats .stat-number {
-  font-size: 1.6rem;
-  white-space: nowrap; /* zapobiega łamaniu tekstu */
-}
-
-.cv-score {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-
-  width: 80px;  /* upewnij się, że jest kształt koła */
-  height: 80px;
-  border-radius: 50%;
-  margin: 0 auto;
-}
 
 /* === FIX CV PREVIEW LINES OFFSET === */
 .cv-before .cv-score {
@@ -8353,17 +8014,6 @@ button:focus {
 }
 
 
-
-/* ukryj pionowy pasek postępu (JS liczy wysokość) */
-.scroll-progress{ display: none !important; 
-
-}
-
-    @media (max-width: 1024px){
-      .fixed-indicator{ right: 10px; }
-      .dot-tooltip{ display:none; }
-    }
-
 /* === TOP GAP KILLER (wklej na sam koniec) === */
 html, body { margin:0 !important; padding:0 !important; }
 
@@ -8390,58 +8040,13 @@ html, body { margin:0 !important; padding:0 !important; }
 
 }
 
-/* === TOP DOTS (poziomy wskaźnik sekcji) === */
-.scroll-indicator{
-  position: fixed;
-  top: 56px;                 /* pod nawigacją, nad hero */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2147483600;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  pointer-events: none;
-}
-.scroll-sections{ display:flex; gap:16px; pointer-events: auto; }
-
-.scroll-dot{
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.28);
-  background: rgba(255,255,255,.06);
-  box-shadow: 0 2px 8px rgba(0,0,0,.15);
-  transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
-  position: relative;
-}
-.scroll-dot.active{
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border: 0;
-  box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.18),
-              0 8px 24px rgba(118, 75, 162, 0.45);
-  transform: scale(1.18);
-}
-
-/* „zaliczone” – koloruje się łącznik przez dotychczasowe sekcje */
-.scroll-dot.passed::before, .scroll-dot.passed::after{
-  background: linear-gradient(90deg, #667eea, #764ba2);
-}
-
-/* tooltip niewidoczny dopóki nie najedziesz */
-.dot-tooltip{
-  position:absolute; right:18px; top:50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,.85); color:#fff;
-  padding:6px 10px; border-radius:6px; font-size:12px;
-  white-space:nowrap; opacity:0; visibility:hidden;
-  transition: opacity .15s, transform .15s, visibility .15s;
-}
-.scroll-dot:hover .dot-tooltip{ opacity:1; visibility:visible; transform: translate(-8px,-50%); 
-}
-
-
 /* Kompensacja dla linków przewijających do #sekcji */
 #hero, #stats, #capabilities, #timeline, #testimonials, #faq {
   scroll-margin-top: 112px; /* 60(nav) + 44(dots) + ~8 bufora */
 }
+
+
+
 
 /* Live stats – nielamane liczby */
 .stat-value{ white-space: nowrap; }
@@ -8450,22 +8055,111 @@ html, body { margin:0 !important; padding:0 !important; }
 .stat-value{ white-space: nowrap; 
 }
 
-/* Wyłącz tooltipy na kropkach bez ruszania kropek */
-.scroll-dot .dot-tooltip{ display: none !important; }
 
-/* gdyby tooltip był robiony przez pseudo-element z content: attr(...) */
-.scroll-dot[data-label]::after,
-.scroll-dot[aria-label]::after{
-  content: none !important;
-  display: none !important;
+/* === Upload Modal – e-mail field (pro look) === */
+.email-field{
+  margin-top: 14px;
+  padding-top: 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: grid;
+  gap: 10px;
+  position: relative;
+}
+.email-field::before{
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+}
+.email-label{
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,.92);
+}
+.email-input{
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  font-weight: 600;
+  outline: none;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+.email-input:focus{
+  border-color: rgba(120,80,255,.55);
+  box-shadow: 0 0 0 4px rgba(120,80,255,.18);
+}
+.email-hint{
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255,255,255,.82);  /* ⚠ było „ledwo widoczne” — teraz jest czytelne */
 }
 
-/* HMR-safe: nawet jeśli CSS się wysypie, tekst się nie pokaże zamiast kropki */
-.scroll-dot{
-  font-size: 0 !important;
-  line-height: 0 !important;
-  overflow: hidden !important;
+/* Jeżeli „prostokąty” w modalu się rozjeżdżały — dociśnijmy max szerokość pól tylko w modalu */
+.upload-modal .email-input,
+#uploadModal .email-input{
+  max-width: 100%;
 }
+
+/* FORCE purple/blue for dots (override whatever is left) */
+.scroll-dot::before{
+  background: #b9c0ff !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.12), 0 8px 18px rgba(120,80,255,.28) !important;
+}
+.scroll-dot.active::before{
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  box-shadow: 0 0 0 6px rgba(118,75,162,.20), 0 12px 30px rgba(118,75,162,.45) !important;
+  transform: scale(1.15) !important;
+}
+.scroll-dot.passed::after{
+  background: linear-gradient(90deg,#667eea,#764ba2) !important;
+}
+
+/* === HERO Typing (final) – wklej w <style jsx> zamiast starych typing-* === */
+.typing-block{
+  display:block;
+  /* rezerwuje wysokość na DWIE linie dużego H1 bez skakania layoutu */
+  min-height: 3.2em; 
+}
+.typing-safe-zone{
+  /* kluczowe: inline -> caret idzie razem z tekstem do 2. linii */
+  display:inline; 
+}
+.typing-text{ 
+  display:inline; 
+  word-break: break-word; 
+}
+.typing-cursor{
+  display:inline; 
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* --- FORCED MATCH: Step 3 visuals --- */
+.timeline-step[data-step="3"] .step-content [data-sync="step3-time"] {
+  color: #00ff88 !important; /* kolor jak step-label */
+}
+
+.timeline-step[data-step="3"] .step-content [data-sync="step3-time-value"] {
+  color: #00ff88 !important; /* ten sam zielony */
+  text-shadow: 0 0 4px rgba(0,255,136,0.20), 0 0 10px rgba(0,255,136,0.12) !important;
+ /* delikatny glow */
+  font-size: 14px !important;   /* tak jak w .step-time */
+  font-weight: 800 !important;  /* wzmocnienie jak w labelu */
+  letter-spacing: 0 !important; /* bez rozjechania liter */
+}
+
+/* opis pod nagłówkiem w Kroku 3 – jak p w Kroku 4/sukces */
+.timeline-step[data-step="3"] .step-content [data-sync="step3-stripe"] {
+  color: rgba(255,255,255,0.7) !important;
+  text-shadow: none !important;
+}
+
 
 
 	`}</style>

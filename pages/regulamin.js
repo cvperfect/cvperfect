@@ -321,7 +321,7 @@ export default function Regulamin() {
                       </div>
                       <ul className="price-features">
                         <li>✅ 25 optymalizacji/mies.</li>
-                        <li>✅ Najnowsze GPT-5 VIP</li>
+                        <li>✅ Najnowsze GPT-4 VIP</li>
                         <li>✅ Wsparcie VIP 24/7</li>
                         <li>✅ Beta tester funkcji</li>
                       </ul>
