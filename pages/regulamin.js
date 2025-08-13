@@ -115,7 +115,7 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
               price: '79,00',
               currency: 'PLN',
               period: '/miesiąc',
-              features: ['25 optymalizacji/mies.', 'Najnowsze GPT-4 VIP', 'Wsparcie VIP 24/7', 'Beta tester funkcji']
+              features: ['25 optymalizacji/mies.', 'Najnowsze GPT-5 VIP', 'Wsparcie VIP 24/7', 'Beta tester funkcji']
             }
           },
           notes: [
