@@ -31,6 +31,7 @@ function computeLiveStats(now=new Date()){
 }
 
 
+
 export default function Home() {
   const router = useRouter()
 const { locale } = router
@@ -39,7 +40,6 @@ const [currentLanguage, setCurrentLanguage] = useState('pl')
 useEffect(() => {
   if (locale) setCurrentLanguage(locale)
 }, [locale])
-  const [showUploadModal, setShowUploadModal] = useState(false)
   const [jobPosting, setJobPosting] = useState('')
   const [currentCV, setCurrentCV] = useState('')
   const [uploadMethod, setUploadMethod] = useState('upload')
@@ -61,6 +61,17 @@ useEffect(() => {
   const [tooltips, setTooltips] = useState([])
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [showUploadModal, setShowUploadModal] = useState(false)
+
+// Debug modal state
+useEffect(() => {
+  console.log('Modal state changed:', showUploadModal);
+  if (showUploadModal) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'auto';
+  }
+}, [showUploadModal]);
 
 
 
@@ -154,8 +165,6 @@ useEffect(() => {
 // Scroll indicator logic (deterministyczny porządek + offset pod fixed header)
 useEffect(() => {
   const IDS = ['hero','capabilities','stats','timeline','testimonials','faq'];
-
-
   const sections = IDS
     .map(id => document.getElementById(id))
     .filter(Boolean);
@@ -269,8 +278,11 @@ return () => {
 }
 }, []);
 
-// Magnetic buttons effect
+// Magnetic buttons effect - DISABLED FOR DEBUGGING
 useEffect(() => {
+  // TEMPORARILY DISABLED TO FIX MODAL ISSUE
+  return;
+  
   const buttons = document.querySelectorAll('.hero-button, .nav-cta, .testimonials-button, .timeline-button, .faq-button, .upload-btn.primary, .plan-button')
   const buttonHandlers = new Map()
   
@@ -303,14 +315,17 @@ useEffect(() => {
       button.style.transition = 'transform 0.5s ease'
     }
     
-    const handleClick = function(e) {
+const handleClick = function(e) {
+  // DON'T prevent default - let the original onClick work!
+  // e.preventDefault(); // REMOVED
+  // e.stopPropagation(); // REMOVED
+  
   // Prevent multiple ripples
   const existingRipple = this.querySelector('.ripple')
   if (existingRipple) existingRipple.remove()
   
   const ripple = document.createElement('span')
-  ripple.classList.add('ripple')
-      
+  ripple.classList.add('ripple')      
       const rect = this.getBoundingClientRect()
       const size = Math.max(rect.width, rect.height)
       const x = e.clientX - rect.left - size / 2
@@ -336,7 +351,7 @@ useEffect(() => {
     button.addEventListener('mousemove', handleMouseMove)
     button.addEventListener('mouseenter', handleMouseEnter)
     button.addEventListener('mouseleave', handleMouseLeave)
-    button.addEventListener('click', handleClick)
+    button.addEventListener('click', handleClick, { capture: false })
   })
 
   return () => {
@@ -358,7 +373,11 @@ useEffect(() => {
   
 
 // Debug function
-const openUploadModal = () => {
+const openUploadModal = (e) => {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   console.log('Opening upload modal...');
   setShowUploadModal(true);
 }
@@ -864,7 +883,7 @@ const floatingNotifications = currentLanguage === 'pl'
 
 {/* Smart Tooltips */}
 <div className="tooltip-container" id="tooltipContainer"></div>
-      <div className="floating-notifications" style={{ top: '120px' }}>
+      <div className="floating-notifications" style={{ top: '176px' }}>
         {notifications.map((notification, notifIndex) => (
           <div key={`notification-${notification.id}-${notifIndex}`} className={`floating-notification ${notification.show ? 'show' : ''}`}>
             <div className="notification-content">
@@ -920,8 +939,8 @@ const floatingNotifications = currentLanguage === 'pl'
   >
     {[
       { id: 'hero', pl: 'Start', en: 'Start' },
+      { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },      
       { id: 'stats', pl: 'Statystyki', en: 'Stats' },
-      { id: 'capabilities', pl: 'Możliwości', en: 'Capabilities' },
       { id: 'timeline', pl: 'Jak to działa', en: 'How it works' },
       { id: 'testimonials', pl: 'Opinie', en: 'Reviews' },
       { id: 'faq', pl: 'FAQ', en: 'FAQ' },
@@ -982,7 +1001,9 @@ style={{
       🇬🇧 EN
     </button>
   </div>
-  <button className="nav-cta" onClick={() => {
+<button className="nav-cta" onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('Nav button clicked');
     setShowUploadModal(true);
   }}>
@@ -1043,10 +1064,12 @@ style={{
 
             <div className="hero-cta">
              
-<button className="hero-button primary" onClick={openUploadModal}>
+<button className="hero-button primary" onClick={() => {
+  console.log('Hero button clicked - opening modal');
+  setShowUploadModal(true);
+}}>
   {currentLanguage === 'pl' ? '🔍 Sprawdź swoje CV' : '🔍 Check your CV'}
-</button>
-<div className="hero-guarantee">
+</button><div className="hero-guarantee">
   <span>{currentLanguage === 'pl' ? '✅ Bez rejestracji' : '✅ No registration'}</span>
 </div>
             </div>
@@ -1356,7 +1379,11 @@ style={{
     
     {/* Interactive Demo Button */}
     <div className="timeline-cta premium-cta">
-      <button className="timeline-button premium-button" onClick={openUploadModal}>
+      <button className="timeline-button premium-button" onClick={(e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  openUploadModal(e);
+}}>
         <span className="button-text">{currentLanguage === 'pl' ? 'Rozpocznij teraz' : 'Start now'}</span>
 
         <span className="button-icon">🚀</span>
@@ -1428,7 +1455,11 @@ style={{
 
           <div className="testimonials-cta">
 <h3>{currentLanguage==='pl' ? 'Dołącz do 15,000+ zadowolonych użytkowników!' : 'Join 15,000+ happy users!'}</h3>
-<button className="testimonials-button" onClick={openUploadModal}>
+<button className="testimonials-button" onClick={(e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  openUploadModal(e);
+}}>
   {currentLanguage==='pl' ? 'Zwiększ swoje szanse 🚀' : 'Boost your chances 🚀'}
 </button>
           </div>
@@ -1436,7 +1467,7 @@ style={{
 
 {/* Upload Modal - Darmowa Analiza */}
         {showUploadModal && (
-          <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="modal-overlay" onClick={() => setShowUploadModal(false)} style={{zIndex: 999999}}>
             <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
               <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
               
@@ -1926,7 +1957,11 @@ placeholder={
             </div>
             <div className="faq-cta">
               <h3>Nie znalazłeś odpowiedzi?</h3>
-              <button className="faq-button" onClick={openUploadModal}>
+<button className="faq-button" onClick={(e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  openUploadModal(e);
+}}>
   Wypróbuj za darmo ⚡
 </button>
             </div>
@@ -5026,17 +5061,18 @@ html {
 }
 /* Modal Styles */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  backdrop-filter: blur(10px);
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999999 !important;
   animation: modalFadeIn 0.3s ease;
 }
 
@@ -8092,6 +8128,9 @@ html, body { margin:0 !important; padding:0 !important; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
 
+.timeline-step[data-step="3"] .time {
+  color: #00ff88; /* zielony jak w innych krokach */
+}
 
 
 	`}</style>
