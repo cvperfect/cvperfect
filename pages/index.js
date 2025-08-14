@@ -1613,10 +1613,10 @@ onChange={(e) => {
       <div className="score-value">{analysisResult.score}%</div>
       <div className="score-label">ATS Score</div>
     </div>
-    <div className="score-info">
-<h4>{currentLanguage==='pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
-<p>{currentLanguage==='pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for ATS compliance'}</p>
-    </div>
+<div className="score-info">
+  <h4>{currentLanguage==='pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
+  <p>{currentLanguage==='pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for ATS compliance'}</p>
+</div>
   </div>
 </div>
 
@@ -1643,30 +1643,16 @@ onChange={(e) => {
     <div className="upgrade-header">
 <h4>{currentLanguage==='pl' ? '💼 Lub dostosuj pod konkretną ofertę pracy' : '💼 Or tailor to a specific job posting'}</h4>
 <p>{currentLanguage==='pl' ? 'Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania' : 'Paste the job ad and we will tailor your CV or cover letter to it'}</p>    </div>
-    <textarea 
-      className="job-textarea" 
-placeholder={
-  currentLanguage==='pl'
-    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
-    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize!'
-}
-
-      rows="4"
-    >
-
-<div className="email-capture" style={{marginTop: '14px'}}>
-  <label htmlFor="uploadEmail" className="visually-hidden">Email</label>
-  <input
-    type="email"
-    id="uploadEmail"
-    className="email-input"
-    placeholder={currentLanguage==='pl' ? 'Twój email (do wysyłki CV)' : 'Your email (for delivery)'}
-    value={userEmail}
-    onChange={(e)=>setUserEmail(e.target.value)}
-  />
-</div>
-
-</textarea>
+<textarea 
+  className="job-textarea" 
+  placeholder={
+    currentLanguage==='pl'
+      ? 'Wklej tutaj pełne ogłoszenie o pracę...'
+      : 'Paste the full job posting here...'
+  }
+  rows="4"
+  defaultValue=""
+/>
     <div className="upgrade-note">
       <span className="note-icon">💡</span>
       <span>Im więcej szczegółów, tym lepsza optymalizacja!</span>
@@ -5427,30 +5413,6 @@ html {
   font-weight: 400;
 }
 
-.job-textarea {
-  color: #000000 !important;
-  background: white !important;
-  border: 2px solid #d1d5db !important;
-  font-weight: 500;
-  padding: 24px;
-  border-radius: 20px;
-  line-height: 1.7;
-  transition: all 0.4s ease;
-}
-
-.job-textarea:focus {
-  color: #000000 !important;
-  background: white !important;
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
-  transform: scale(1.01);
-}
-
-.job-textarea::placeholder {
-  color: #6b7280 !important;
-  font-weight: 400;
-}
-
        /* Paywall Modal */
 .paywall-modal {
   padding: 0;
@@ -5621,19 +5583,6 @@ html {
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.3);
 }
-  backdrop-filter: blur(20px);
-  border-bottom: 2px solid rgba(80, 140, 255, 0.2);
-  padding: 48px;
-  display: block;
-  position: relative;
-  overflow: hidden;
-  margin: 20px;
-  border-radius: 24px;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-}
 
 .score-preview::before {
   content: '';
@@ -5794,16 +5743,7 @@ html {
   margin-top: 4px;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
-.score-label {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 700;
-  z-index: 2;
-  position: relative;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-top: 4px;
-}
+
 /* Modal Content Inner */
 /* NOWY KOD */
 .modal-content-inner {
@@ -6242,35 +6182,6 @@ html {
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.email-input:focus {
-  color: #000000 !important;
-  background: white !important;
-  border-color: #667eea !important;
-}
-
-.email-input::placeholder {
-  color: #9ca3af !important;
-  font-weight: 400;
-}
-.email-input {
-  width: 100%;
-  max-width: 100%;
-  padding: 16px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  font-size: 16px;
-  background: rgba(255, 255, 255, 0.95) !important;
-  color: #1f2937 !important;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-.email-input:focus {
-  outline: none;
-  border-color: rgba(80, 180, 255, 0.5);
-  box-shadow: 0 0 0 3px rgba(80, 180, 255, 0.15);
-  background: white !important;
-  color: #1f2937 !important;
-}
 .email-section {
   margin-bottom: 48px;
   background: transparent;
@@ -8582,6 +8493,7 @@ html, body { margin:0 !important; padding:0 !important; }
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #8960ff, #60a0ff);
 }
+
 
 	`}</style>
     </>
