@@ -1608,16 +1608,16 @@ onChange={(e) => {
 
 {/* ATS Score Preview */}
 <div className="score-preview" style={{ display: analysisResult ? 'block' : 'none' }}>
-  <div className="score-container">
-    <div className="score-circle">
-      <div className="score-value">{analysisResult.score}%</div>
-      <div className="score-label">ATS Score</div>
-    </div>
-<div className="score-info">
-  <h4>{currentLanguage==='pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
-  <p>{currentLanguage==='pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for ATS compliance'}</p>
-</div>
+<div className="score-container">
+  <div className="score-circle" style={{'--score': analysisResult.score}}>
+    <div className="score-value">{analysisResult.score}%</div>
+    <div className="score-label">ATS Score</div>
   </div>
+  <div className="score-info">
+    <h4>{currentLanguage==='pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
+    <p>{currentLanguage==='pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for ATS compliance'}</p>
+  </div>
+</div>
 </div>
 
 {/* Content Section */}
@@ -5691,8 +5691,8 @@ html {
   background: conic-gradient(
     from 0deg at 50% 50%,
     #00ff88 0deg,
-    #00cc70 calc(var(--score, 80) * 3.6deg),
-    transparent calc(var(--score, 80) * 3.6deg) 360deg
+    #00cc70 calc(var(--score, 45) * 3.6deg),
+    transparent calc(var(--score, 45) * 3.6deg) 360deg
   );
   animation: rotateGlow 4s linear infinite;
   z-index: -1;
@@ -5730,6 +5730,29 @@ html {
       0 0 50px rgba(0, 255, 136, 1),
       0 0 80px rgba(0, 255, 136, 0.6);
   }
+}
+
+@keyframes fillScore {
+  0% {
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      #00ff88 0deg,
+      #00cc70 0deg,
+      transparent 0deg 360deg
+    );
+  }
+  100% {
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      #00ff88 0deg,
+      #00cc70 calc(var(--score, 45) * 3.6deg),
+      transparent calc(var(--score, 45) * 3.6deg) 360deg
+    );
+  }
+}
+
+.paywall-modal .score-circle::before {
+  animation: fillScore 2s ease-out forwards, rotateGlow 4s linear infinite 2s;
 }
 
 .score-label {
@@ -8494,6 +8517,127 @@ html, body { margin:0 !important; padding:0 !important; }
   background: linear-gradient(135deg, #8960ff, #60a0ff);
 }
 
+/* FIX PAYWALL MODAL STYLES */
+.paywall-modal .modal-content-inner {
+  background: transparent !important;
+}
+
+.paywall-modal .score-info {
+  text-align: center;
+  margin-left: 40px;
+}
+
+.paywall-modal .score-info h4 {
+  color: white !important;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.paywall-modal .score-info p {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.paywall-modal .job-textarea {
+  width: 100%;
+  padding: 20px;
+  border: 2px solid rgba(120, 80, 255, 0.2);
+  border-radius: 16px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: white !important;
+  background: rgba(120, 80, 255, 0.05) !important;
+  backdrop-filter: blur(15px);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-height: 120px;
+}
+
+.paywall-modal .job-textarea:focus {
+  outline: none;
+  border-color: rgba(120, 80, 255, 0.5);
+  background: rgba(120, 80, 255, 0.08) !important;
+  box-shadow: 0 0 0 4px rgba(120, 80, 255, 0.15);
+}
+
+.paywall-modal .job-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+
+/* Premium Score Animation */
+.paywall-modal .score-value {
+  animation: scoreCountUp 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards,
+             scorePulse 2s ease infinite 1.5s;
+}
+
+@keyframes scorePulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.08);
+    filter: brightness(1.2);
+  }
+}
+
+/* Dodaj świecący efekt dla całego score preview */
+.paywall-modal .score-preview {
+  animation: scoreReveal 0.8s ease-out;
+}
+
+@keyframes scoreReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dodaj particle effect wokół kółka */
+.paywall-modal .score-circle::after {
+  content: '';
+  position: absolute;
+  inset: -50px;
+  background: radial-gradient(circle, transparent 30%, rgba(0, 255, 136, 0.4) 35%, transparent 40%);
+  animation: particleExpand 3s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes particleExpand {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .paywall-modal .score-container {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .paywall-modal .score-info {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  
+  .paywall-modal .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 	`}</style>
     </>
