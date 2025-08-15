@@ -137,8 +137,27 @@ export default function Kontakt() {
       </Head>
 
       <div className="container">
+
+{/* Animated emojis background */}
+<div className="floating-emojis">
+  <span className="emoji" style={{top: '10%', left: '5%', animationDelay: '0s'}}>📄</span>
+  <span className="emoji" style={{top: '20%', right: '10%', animationDelay: '1s'}}>✨</span>
+  <span className="emoji" style={{top: '30%', left: '15%', animationDelay: '2s'}}>🚀</span>
+  <span className="emoji" style={{top: '40%', right: '20%', animationDelay: '3s'}}>💼</span>
+  <span className="emoji" style={{top: '50%', left: '8%', animationDelay: '4s'}}>📊</span>
+  <span className="emoji" style={{top: '60%', right: '5%', animationDelay: '5s'}}>🎯</span>
+  <span className="emoji" style={{top: '70%', left: '20%', animationDelay: '6s'}}>💡</span>
+  <span className="emoji" style={{top: '80%', right: '15%', animationDelay: '7s'}}>⭐</span>
+</div>
+
         {/* Background podobny do regulamin.js */}
         <div className="particles-container" id="particles"></div>
+{/* Animated Background */}
+<div className="background-gradient">
+  <div className="gradient-orb orb-1"></div>
+  <div className="gradient-orb orb-2"></div>
+  <div className="gradient-orb orb-3"></div>
+</div>
         
         {/* Navigation */}
         <nav className="navigation">
@@ -339,46 +358,45 @@ export default function Kontakt() {
       </div>
 
       <style jsx>{`
-        /* Reset to prevent gray rectangle */
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
+/* Reset to prevent gray rectangle */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        body {
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow-x: hidden !important;
-        }
+:global(*) {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        .container {
-          min-height: 100vh;
-          background: #0a0a0a;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          color: white;
-          position: relative;
-          overflow-x: hidden;
-          width: 100%;
-        }
+:global(html) {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
 
+:global(body) {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  background: #0a0a0a !important;
+}
         /* Background gradient animation like regulamin.js */
-        .container::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-	  height: 100vh;
-          bottom: 0;
-          background: 
-            radial-gradient(circle at 20% 50%, rgba(120, 80, 255, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255, 80, 150, 0.2) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(80, 180, 255, 0.2) 0%, transparent 50%);
-          animation: gradientShift 20s ease infinite;
-          z-index: -1;
-        }
-
+.container {
+  min-height: 100vh;
+  background: #0a0a0a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: white;
+  position: relative;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
         @keyframes gradientShift {
           0%, 100% { transform: rotate(0deg) scale(1); }
           33% { transform: rotate(120deg) scale(1.1); }
@@ -402,6 +420,67 @@ export default function Kontakt() {
           opacity: 0.6;
 	  background: transparent;
         }
+
+/* Animated Background */
+.background-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: #0a0a0a;
+}
+
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.7;
+  animation: gradientShift 15s ease infinite;
+}
+
+.orb-1 {
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  top: -200px;
+  left: -200px;
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  top: 40%;
+  right: -100px;
+  animation-delay: 5s;
+}
+
+.orb-3 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #50b4ff, #00ff88);
+  bottom: -150px;
+  left: 30%;
+  animation-delay: 10s;
+}
+
+@keyframes gradientShift {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 0.6;
+  }
+  33% { 
+    transform: rotate(120deg) scale(1.1);
+    opacity: 0.8;
+  }
+  66% { 
+    transform: rotate(240deg) scale(0.9);
+    opacity: 0.7;
+  }
+}
 
         /* Navigation - same as index.js */
         .navigation {
@@ -477,18 +556,37 @@ export default function Kontakt() {
           100% { background-position: 0% 50%; }
         }
 
-        .logo-badge {
-          background: linear-gradient(135deg, #7850ff, #ff5080);
-          color: white;
-          padding: 6px 12px;
-          border-radius: 100px;
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.5px;
-          box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
-          animation: pulse 2s ease infinite;
-        }
+.logo-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  animation: pulse 2s ease infinite;
+}
 
+.nav-cta {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.lang-btn.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
         @keyframes pulse {
           0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3); }
           50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(120, 80, 255, 0.5); }
@@ -549,14 +647,15 @@ export default function Kontakt() {
         }
 
         /* Contact Section */
-        .contact-section {
-          padding: 140px 40px 80px;
-          max-width: 1200px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-
+.contact-section {
+  padding: 140px 20px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
         .contact-header {
           text-align: center;
           margin-bottom: 80px;
@@ -693,12 +792,12 @@ export default function Kontakt() {
           cursor: pointer;
         }
 
-        .category-card:hover {
-          background: rgba(255, 255, 255, 0.05);
-          transform: translateX(5px);
-          border-color: rgba(120, 80, 255, 0.3);
-        }
-
+.category-card:hover {
+  background: rgba(120, 80, 255, 0.1);
+  transform: translateX(5px) translateY(-2px);
+  border-color: rgba(120, 80, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(120, 80, 255, 0.15);
+}
         .category-card span {
           font-size: 24px;
           flex-shrink: 0;
@@ -845,6 +944,164 @@ export default function Kontakt() {
           grid-template-columns: repeat(2, 1fr);
           gap: 24px;
         }
+.faq-card {
+          background: rgba(255, 255, 255, 0.03);
+          padding: 24px;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .faq-card:hover {
+          transform: translateY(-3px);
+          border-color: rgba(120, 80, 255, 0.3);
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .faq-card h4 {
+          font-size: 18px;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 12px;
+        }
+
+        .faq-card p {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 14px;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+          .contact-section {
+            padding: 100px 20px 40px;
+          }
+
+          .contact-header h1 {
+            font-size: 36px;
+          }
+
+          .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+          }
+
+          .info-card, .form-card {
+            padding: 30px 20px;
+          }
+
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+
+          .faq-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .nav-content {
+            padding: 16px 20px;
+          }
+
+          .logo-text {
+            font-size: 20px;
+          }
+
+          .nav-links {
+            gap: 12px;
+          }
+
+          .nav-cta {
+            padding: 10px 20px;
+            font-size: 14px;
+          }
+        }
+
+        /* Ensure no scrollbar */
+        :global(html) {
+          overflow-x: hidden !important;
+        }
+
+        :global(body) {
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow-x: hidden !important;
+        }
+
+/* Force remove any scrollbars */
+:global(html::-webkit-scrollbar) {
+  width: 0 !important;
+  display: none !important;
+}
+
+:global(body::-webkit-scrollbar) {
+  width: 0 !important;
+  display: none !important;
+}
+
+/* Ensure no elements overflow */
+:global(.container *) {
+  max-width: 100% !important;
+}
+
+/* Floating Emojis - Fixed */
+.floating-emojis {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.emoji {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.4;
+  animation: float 25s infinite linear;
+  filter: blur(0.3px);
+  will-change: transform;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.4;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-100px) translateX(30px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Different timings for each emoji */
+.emoji:nth-child(1) { animation-delay: 0s; }
+.emoji:nth-child(2) { animation-delay: 3s; animation-duration: 22s; }
+.emoji:nth-child(3) { animation-delay: 6s; animation-duration: 28s; }
+.emoji:nth-child(4) { animation-delay: 9s; animation-duration: 24s; }
+.emoji:nth-child(5) { animation-delay: 12s; animation-duration: 26s; }
+.emoji:nth-child(6) { animation-delay: 15s; animation-duration: 23s; }
+.emoji:nth-child(7) { animation-delay: 18s; animation-duration: 27s; }
+.emoji:nth-child(8) { animation-delay: 21s; animation-duration: 25s; }
+/* Different animation for each emoji */
+.emoji:nth-child(even) {
+  animation-direction: reverse;
+  animation-duration: 25s;
+}
+
+.emoji:nth-child(3n) {
+  animation-duration: 30s;
+  animation-delay: -5s;
+}
+
       `}</style>
     </>
   )
