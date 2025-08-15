@@ -1,1205 +1,2142 @@
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/router'
 import Head from 'next/head'
-import Link from 'next/link'
 
-export default function PolitykaPrywatnosci() {
+export default function Kontakt() {
+  const router = useRouter()
+  const { locale } = router
+  const [currentLanguage, setCurrentLanguage] = useState('pl')
+  const [activeTab, setActiveTab] = useState('form')
+  const [isScrolled, setIsScrolled] = useState(false)
+  const canvasRef = useRef(null)
+  const mousePosition = useRef({ x: 0, y: 0 })
+  
+  useEffect(() => {
+    if (locale) setCurrentLanguage(locale)
+  }, [locale])
+
+  // 3D Particles Animation
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    const ctx = canvas.getContext('2d')
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    
+    const particles = []
+    const particleCount = 100
+    
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width
+        this.y = Math.random() * canvas.height
+        this.z = Math.random() * 1000
+        this.size = Math.random() * 2
+        this.speedX = (Math.random() - 0.5) * 0.5
+        this.speedY = (Math.random() - 0.5) * 0.5
+        this.speedZ = Math.random() * 1
+        this.opacity = Math.random() * 0.5 + 0.2
+      }
+      
+      update() {
+        this.x += this.speedX
+        this.y += this.speedY
+        this.z -= this.speedZ
+        
+        // Mouse interaction
+        const dx = this.x - mousePosition.current.x
+        const dy = this.y - mousePosition.current.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        
+        if (distance < 100) {
+          const force = (100 - distance) / 100
+          this.x += dx * force * 0.05
+          this.y += dy * force * 0.05
+        }
+        
+        // Reset particle if it goes off screen
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1
+        if (this.z <= 0) {
+          this.z = 1000
+          this.x = Math.random() * canvas.width
+          this.y = Math.random() * canvas.height
+        }
+      }
+      
+      draw() {
+        const scale = (1000 - this.z) / 1000
+        const size = this.size * scale * 2
+        
+        ctx.save()
+        ctx.globalAlpha = this.opacity * scale
+        
+        // Gradient effect
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, size)
+        gradient.addColorStop(0, 'rgba(120, 80, 255, 1)')
+        gradient.addColorStop(0.5, 'rgba(255, 80, 150, 0.5)')
+        gradient.addColorStop(1, 'rgba(80, 180, 255, 0)')
+        
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, size, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      }
+    }
+    
+    // Create particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle())
+    }
+    
+    // Animation loop
+    let animationId
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      // Draw connections
+      particles.forEach((particle, i) => {
+        particles.slice(i + 1).forEach(otherParticle => {
+          const dx = particle.x - otherParticle.x
+          const dy = particle.y - otherParticle.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          
+          if (distance < 150) {
+            ctx.save()
+            ctx.globalAlpha = (1 - distance / 150) * 0.1
+            ctx.strokeStyle = 'rgba(120, 80, 255, 0.5)'
+            ctx.lineWidth = 0.5
+            ctx.beginPath()
+            ctx.moveTo(particle.x, particle.y)
+            ctx.lineTo(otherParticle.x, otherParticle.y)
+            ctx.stroke()
+            ctx.restore()
+          }
+        })
+        
+        particle.update()
+        particle.draw()
+      })
+      
+      animationId = requestAnimationFrame(animate)
+    }
+    
+    animate()
+    
+    // Handle mouse move
+    const handleMouseMove = (e) => {
+      mousePosition.current = { x: e.clientX, y: e.clientY }
+    }
+    
+    // Handle resize
+    const handleResize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      cancelAnimationFrame(animationId)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  // Scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    company: '',
+    subject: 'technical',
+    message: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+
+  const translations = {
+    pl: {
+      title: 'Kontakt - CvPerfect | Centrum Wsparcia Premium',
+      pageTitle: 'Centrum Kontaktu',
+      subtitle: 'Jesteśmy tutaj, aby pomóc Ci osiągnąć sukces',
+      instantSupport: 'Natychmiastowe wsparcie',
+      expertTeam: 'Zespół ekspertów',
+      availability: '24/7 Dostępność',
+      backLink: '← Powrót',
+      
+      // Tabs
+      tabForm: 'Formularz kontaktowy',
+      tabSupport: 'Centrum wsparcia',
+      tabBusiness: 'Współpraca B2B',
+      
+      // Form section
+      formTitle: 'Skontaktuj się z nami',
+      formSubtitle: 'Wypełnij formularz, a odpowiemy w ciągu 24h',
+      formName: 'Imię i nazwisko',
+      formEmail: 'Email służbowy',
+      formCompany: 'Firma (opcjonalnie)',
+      formCategory: 'Kategoria',
+      formMessage: 'Twoja wiadomość',
+      formPlaceholder: 'Opisz szczegółowo, w czym możemy Ci pomóc...',
+      send: 'Wyślij wiadomość',
+      sending: 'Wysyłanie...',
+      
+      // Categories
+      technical: '🛠️ Wsparcie techniczne',
+      billing: '💳 Płatności i faktury',
+      business: '💼 Współpraca biznesowa',
+      feature: '✨ Nowe funkcje',
+      other: '📋 Inne',
+      
+      // Support Center
+      supportTitle: 'Centrum Wsparcia 24/7',
+      supportSubtitle: 'Rozwiązania najczęstszych problemów',
+      
+      faq1: 'Jak działa optymalizacja AI?',
+      faq1Desc: 'Nasza sztuczna inteligencja analizuje Twoje CV pod kątem ATS, słów kluczowych i struktury, dostosowując je do wymogów rekruterów.',
+      
+      faq2: 'Czy moje dane są bezpieczne?',
+      faq2Desc: 'Tak! Stosujemy szyfrowanie SSL i nie przechowujemy Twoich danych dłużej niż 24h. Zgodność z RODO.',
+      
+      faq3: 'Jak szybko otrzymam wynik?',
+      faq3Desc: 'Optymalizacja trwa 2-3 minuty. Otrzymasz powiadomienie email z gotowym CV.',
+      
+      faq4: 'Mogę anulować subskrypcję?',
+      faq4Desc: 'Oczywiście! Anulowanie jest natychmiastowe, bez ukrytych kosztów.',
+      
+      // Business section
+      businessTitle: 'Rozwiązania dla Biznesu',
+      businessSubtitle: 'Skrojone na miarę pakiety dla firm',
+      
+      package1: 'Startup',
+      package1Desc: 'Do 10 pracowników',
+      package1Feature1: '✓ Nielimitowane optymalizacje',
+      package1Feature2: '✓ Panel administracyjny',
+      package1Feature3: '✓ Wsparcie email',
+      
+      package2: 'Enterprise',
+      package2Desc: 'Do 100 pracowników',
+      package2Feature1: '✓ Wszystko ze Startup',
+      package2Feature2: '✓ Dedykowany opiekun',
+      package2Feature3: '✓ Integracja API',
+      
+      package3: 'Custom',
+      package3Desc: 'Rozwiązania na miarę',
+      package3Feature1: '✓ Pełna personalizacja',
+      package3Feature2: '✓ SLA gwarancja',
+      package3Feature3: '✓ Szkolenia on-site',
+      
+      contactBusiness: 'Zapytaj o ofertę',
+      
+      // Success message
+      success: 'Wiadomość wysłana!',
+      successDesc: 'Dziękujemy za kontakt. Nasz zespół odpowie najszybciej jak to możliwe.',
+      
+      // Contact info
+      quickContact: 'Szybki kontakt',
+      emailLabel: 'Email',
+      emailValue: 'pomoc@cvperfect.pl',
+      responseTime: 'Czas odpowiedzi',
+      responseValue: '< 24 godziny',
+      availability: 'Dostępność',
+      availabilityValue: 'Pon-Pt 9:00-17:00'
+    },
+    en: {
+      title: 'Contact - CvPerfect | Premium Support Center',
+      pageTitle: 'Contact Center',
+      subtitle: 'We are here to help you succeed',
+      instantSupport: 'Instant support',
+      expertTeam: 'Expert team',
+      availability: '24/7 Availability',
+      backLink: '← Back',
+      
+      // Tabs
+      tabForm: 'Contact form',
+      tabSupport: 'Support center',
+      tabBusiness: 'B2B Partnership',
+      
+      // Form section
+      formTitle: 'Get in touch',
+      formSubtitle: 'Fill the form and we\'ll respond within 24h',
+      formName: 'Full name',
+      formEmail: 'Business email',
+      formCompany: 'Company (optional)',
+      formCategory: 'Category',
+      formMessage: 'Your message',
+      formPlaceholder: 'Describe in detail how we can help you...',
+      send: 'Send message',
+      sending: 'Sending...',
+      
+      // Categories
+      technical: '🛠️ Technical support',
+      billing: '💳 Payments and invoices',
+      business: '💼 Business cooperation',
+      feature: '✨ New features',
+      other: '📋 Other',
+      
+      // Support Center
+      supportTitle: '24/7 Support Center',
+      supportSubtitle: 'Solutions to common problems',
+      
+      faq1: 'How does AI optimization work?',
+      faq1Desc: 'Our AI analyzes your CV for ATS compatibility, keywords, and structure, adapting it to recruiter requirements.',
+      
+      faq2: 'Is my data secure?',
+      faq2Desc: 'Yes! We use SSL encryption and don\'t store your data for more than 24h. GDPR compliant.',
+      
+      faq3: 'How fast will I get results?',
+      faq3Desc: 'Optimization takes 2-3 minutes. You\'ll receive an email notification with your ready CV.',
+      
+      faq4: 'Can I cancel subscription?',
+      faq4Desc: 'Of course! Cancellation is immediate, no hidden costs.',
+      
+      // Business section
+      businessTitle: 'Business Solutions',
+      businessSubtitle: 'Tailored packages for companies',
+      
+      package1: 'Startup',
+      package1Desc: 'Up to 10 employees',
+      package1Feature1: '✓ Unlimited optimizations',
+      package1Feature2: '✓ Admin panel',
+      package1Feature3: '✓ Email support',
+      
+      package2: 'Enterprise',
+      package2Desc: 'Up to 100 employees',
+      package2Feature1: '✓ Everything from Startup',
+      package2Feature2: '✓ Dedicated manager',
+      package2Feature3: '✓ API integration',
+      
+      package3: 'Custom',
+      package3Desc: 'Tailored solutions',
+      package3Feature1: '✓ Full personalization',
+      package3Feature2: '✓ SLA guarantee',
+      package3Feature3: '✓ On-site training',
+      
+      contactBusiness: 'Request offer',
+      
+      // Success message
+      success: 'Message sent!',
+      successDesc: 'Thank you for contacting us. Our team will respond as soon as possible.',
+      
+      // Contact info
+      quickContact: 'Quick contact',
+      emailLabel: 'Email',
+      emailValue: 'support@cvperfect.pl',
+      responseTime: 'Response time',
+      responseValue: '< 24 hours',
+      availability: 'Availability',
+      availabilityValue: 'Mon-Fri 9:00-17:00'
+    }
+  }
+
+  const t = translations[currentLanguage]
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    
+    // Simulate API call with animation
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    setIsSubmitting(false)
+    setIsSubmitted(true)
+    
+    setTimeout(() => {
+      setIsSubmitted(false)
+      setFormData({ name: '', email: '', company: '', subject: 'technical', message: '' })
+    }, 5000)
+  }
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
   return (
     <>
       <Head>
-        <title>Polityka Prywatności - CvPerfect | Ochrona danych osobowych</title>
-        <meta name="description" content="Polityka prywatności CvPerfect - dowiedz się jak chronimy i przetwarzamy Twoje dane osobowe zgodnie z RODO" />
+        <title>{t.title}</title>
+        <meta name="description" content={t.subtitle} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="privacy-container">
-        {/* Header */}
-        <div className="privacy-header">
-          <div className="header-content">
-            <Link href="/" className="logo-link">
-              <div className="logo">
-                <span className="logo-text">CvPerfect</span>
+      <div className="container">
+        {/* 3D Particles Canvas */}
+        <canvas ref={canvasRef} className="particles-canvas" />
+        
+        {/* Animated Background Gradients */}
+        <div className="background-effects">
+          <div className="gradient-sphere sphere-1"></div>
+          <div className="gradient-sphere sphere-2"></div>
+          <div className="gradient-sphere sphere-3"></div>
+          <div className="glow-line line-1"></div>
+          <div className="glow-line line-2"></div>
+        </div>
+        
+        {/* Navigation */}
+        <nav className={`navigation ${isScrolled ? 'scrolled' : ''}`}>
+          <div className="nav-content">
+            <div className="logo" onClick={() => router.push('/')}>
+              <div className="logo-icon">
                 <span className="logo-badge">AI</span>
               </div>
-            </Link>
-            <Link href="/" className="back-link">
-              ← Powrót na stronę główną
-            </Link>
+              <span className="logo-text">CvPerfect</span>
+            </div>
+            
+            <div className="nav-links">
+              <div className="language-switcher">
+                <button 
+                  className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+                  onClick={() => setCurrentLanguage('pl')}
+                >
+                  <span className="flag">🇵🇱</span> PL
+                </button>
+                <button 
+                  className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+                  onClick={() => setCurrentLanguage('en')}
+                >
+                  <span className="flag">🇬🇧</span> EN
+                </button>
+              </div>
+              <button className="nav-cta" onClick={() => router.push('/')}>
+                <span>{t.backLink}</span>
+                <svg className="cta-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M7 10L12 5L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
+        </nav>
 
-        {/* Main Content */}
-        <div className="privacy-content">
-          <div className="privacy-wrapper">
-            <h1 className="privacy-title">Polityka Prywatności</h1>
-            <p className="privacy-subtitle">
-              Dowiedz się jak chronimy i przetwarzamy Twoje dane osobowe
-              <br />
-              <span className="update-date">Ostatnia aktualizacja: 2 lutego 2025</span>
-            </p>
-
-            {/* Trust Badge */}
-            <div className="trust-section">
-              <div className="trust-badge">
-                <span className="shield-icon">🛡️</span>
-                <div className="trust-content">
-                  <h3>100% zgodność z RODO</h3>
-                  <p>Twoje dane są w bezpiecznych rękach</p>
-                </div>
+        {/* Hero Section */}
+        <section className="hero-section">
+          <div className="hero-content">
+            <div className="hero-badge">
+              <span className="badge-dot"></span>
+              <span>{t.availability}</span>
+            </div>
+            <h1 className="hero-title">
+              <span className="title-gradient">{t.pageTitle}</span>
+            </h1>
+            <p className="hero-subtitle">{t.subtitle}</p>
+            
+            <div className="hero-features">
+              <div className="feature-card">
+                <div className="feature-icon">⚡</div>
+                <span>{t.instantSupport}</span>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">👥</div>
+                <span>{t.expertTeam}</span>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">🌍</div>
+                <span>{t.availability}</span>
               </div>
             </div>
+          </div>
+          
+          <div className="scroll-indicator">
+            <div className="scroll-dot"></div>
+          </div>
+        </section>
 
-            {/* Quick Summary */}
-            <div className="quick-summary">
-              <h2 className="summary-title">📋 Krótko o najważniejszym</h2>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="summary-icon">🔒</span>
-                  <div>
-                    <strong>Bezpieczeństwo</strong>
-                    <p>Treść CV usuwana po optymalizacji</p>
-                  </div>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-icon">📧</span>
-                  <div>
-                    <strong>Email</strong>
-                    <p>Tylko do wysłania wyników</p>
-                  </div>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-icon">🚫</span>
-                  <div>
-                    <strong>Bez spamu</strong>
-                    <p>Nie sprzedajemy danych</p>
-                  </div>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-icon">⚡</span>
-                  <div>
-                    <strong>Szybkie usunięcie</strong>
-                    <p>Na żądanie w 24h</p>
-                  </div>
-                </div>
-              </div>
+        {/* Main Content with Tabs */}
+        <section className="main-content">
+          <div className="tabs-container">
+            <div className="tabs-header">
+              <button 
+                className={`tab-btn ${activeTab === 'form' ? 'active' : ''}`}
+                onClick={() => setActiveTab('form')}
+              >
+                <span className="tab-icon">✉️</span>
+                <span>{t.tabForm}</span>
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'support' ? 'active' : ''}`}
+                onClick={() => setActiveTab('support')}
+              >
+                <span className="tab-icon">🛡️</span>
+                <span>{t.tabSupport}</span>
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'business' ? 'active' : ''}`}
+                onClick={() => setActiveTab('business')}
+              >
+                <span className="tab-icon">🚀</span>
+                <span>{t.tabBusiness}</span>
+              </button>
             </div>
 
-            <div className="privacy-sections">
-              {/* Section 1 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">01</span>
-                  <h2 className="section-title">Administrator danych</h2>
-                </div>
-                <div className="section-content">
-                  <div className="admin-info">
-                    <div className="admin-card">
-                      <div className="admin-icon">🏢</div>
-                      <div className="admin-details">
-                        <h4>CvPerfect</h4>
-                        <p>Administrator danych osobowych</p>
-                        <p>📍 Polska</p>
-                        <p>📧 pomoccvperfect@gmail.com</p>
-                      </div>
-                    </div>
-                  </div>
-                  <p>Jesteśmy administratorem Twoich danych osobowych w rozumieniu RODO. W sprawach dotyczących ochrony danych skontaktuj się z nami pod podanym adresem email.</p>
-                </div>
-              </section>
+            <div className="tabs-content">
+              {/* Contact Form Tab */}
+              {activeTab === 'form' && (
+                <div className="tab-panel form-panel">
+                  <div className="panel-grid">
+                    <div className="form-section">
+                      <h2 className="section-title">{t.formTitle}</h2>
+                      <p className="section-subtitle">{t.formSubtitle}</p>
+                      
+                      {isSubmitted ? (
+                        <div className="success-container">
+                          <div className="success-animation">
+                            <div className="checkmark-circle">
+                              <svg className="checkmark" viewBox="0 0 52 52">
+                                <circle className="checkmark-circle-bg" cx="26" cy="26" r="25" fill="none"/>
+                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                              </svg>
+                            </div>
+                          </div>
+                          <h3>{t.success}</h3>
+                          <p>{t.successDesc}</p>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleSubmit} className="contact-form">
+                          <div className="form-grid">
+                            <div className="form-field">
+                              <label>{t.formName}</label>
+                              <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                              />
+                              <div className="field-focus"></div>
+                            </div>
+                            
+                            <div className="form-field">
+                              <label>{t.formEmail}</label>
+                              <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className="form-input"
+                              />
+                              <div className="field-focus"></div>
+                            </div>
+                          </div>
 
-              {/* Section 2 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">02</span>
-                  <h2 className="section-title">Jakie dane zbieramy</h2>
-                </div>
-                <div className="section-content">
-                  <div className="data-types">
-                    <div className="data-category">
-                      <h4>📧 Dane kontaktowe</h4>
-                      <ul>
-                        <li>Adres email (do wysłania wyników optymalizacji)</li>
-                        <li>Imię i nazwisko (opcjonalnie, w formularzu kontaktowym)</li>
-                      </ul>
-                    </div>
+                          <div className="form-field">
+                            <label>{t.formCompany}</label>
+                            <input
+                              type="text"
+                              name="company"
+                              value={formData.company}
+                              onChange={handleChange}
+                              className="form-input"
+                            />
+                            <div className="field-focus"></div>
+                          </div>
 
-                    <div className="data-category">
-                      <h4>📄 Treść CV</h4>
-                      <ul>
-                        <li>Tekst CV przesłany do optymalizacji</li>
-                        <li>Opis oferty pracy (opcjonalnie)</li>
-                        <li><strong>⚠️ Uwaga:</strong> Dane CV są usuwane natychmiast po optymalizacji</li>
-                      </ul>
-                    </div>
+                          <div className="form-field">
+                            <label>{t.formCategory}</label>
+                            <select
+                              name="subject"
+                              value={formData.subject}
+                              onChange={handleChange}
+                              required
+                              className="form-select"
+                            >
+                              <option value="technical">{t.technical}</option>
+                              <option value="billing">{t.billing}</option>
+                              <option value="business">{t.business}</option>
+                              <option value="feature">{t.feature}</option>
+                              <option value="other">{t.other}</option>
+                            </select>
+                            <div className="field-focus"></div>
+                          </div>
 
-                    <div className="data-category">
-                      <h4>💳 Dane płatności</h4>
-                      <ul>
-                        <li>Informacje o transakcjach (przetwarzane przez Stripe)</li>
-                        <li>Historia zakupów</li>
-                        <li>Status subskrypcji</li>
-                      </ul>
-                    </div>
+                          <div className="form-field">
+                            <label>{t.formMessage}</label>
+                            <textarea
+                              name="message"
+                              value={formData.message}
+                              onChange={handleChange}
+                              required
+                              rows="5"
+                              placeholder={t.formPlaceholder}
+                              className="form-textarea"
+                            ></textarea>
+                            <div className="field-focus"></div>
+                          </div>
 
-                    <div className="data-category">
-                      <h4>🔧 Dane techniczne</h4>
-                      <ul>
-                        <li>Adres IP</li>
-                        <li>Przeglądarka i urządzenie</li>
-                        <li>Czas korzystania z serwisu</li>
-                        <li>Logi systemowe (30 dni)</li>
-                      </ul>
+                          <button 
+                            type="submit" 
+                            className={`submit-btn ${isSubmitting ? 'submitting' : ''}`}
+                            disabled={isSubmitting}
+                          >
+                            <span className="btn-text">
+                              {isSubmitting ? t.sending : t.send}
+                            </span>
+                            <span className="btn-icon">
+                              {isSubmitting ? '⏳' : '🚀'}
+                            </span>
+                          </button>
+                        </form>
+                      )}
                     </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Section 3 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">03</span>
-                  <h2 className="section-title">Po co przetwarzamy dane</h2>
-                </div>
-                <div className="section-content">
-                  <div className="purposes-grid">
-                    <div className="purpose-item">
-                      <span className="purpose-icon">🎯</span>
-                      <div>
-                        <h4>Świadczenie usług</h4>
-                        <p>Optymalizacja CV przy użyciu AI</p>
-                        <span className="legal-basis">Podstawa: wykonanie umowy</span>
+                    
+                    <div className="info-section">
+                      <div className="info-card premium-card">
+                        <h3>{t.quickContact}</h3>
+                        <div className="info-items">
+                          <div className="info-item">
+                            <span className="info-label">{t.emailLabel}</span>
+                            <a href="mailto:pomoc@cvperfect.pl" className="info-value email-link">
+                              {t.emailValue}
+                            </a>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-label">{t.responseTime}</span>
+                            <span className="info-value">{t.responseValue}</span>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-label">{t.availability}</span>
+                            <span className="info-value">{t.availabilityValue}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="purpose-item">
-                      <span className="purpose-icon">📨</span>
-                      <div>
-                        <h4>Wysyłka wyników</h4>
-                        <p>Dostarczenie zoptymalizowanego CV</p>
-                        <span className="legal-basis">Podstawa: wykonanie umowy</span>
-                      </div>
-                    </div>
-                    <div className="purpose-item">
-                      <span className="purpose-icon">💰</span>
-                      <div>
-                        <h4>Rozliczenia</h4>
-                        <p>Obsługa płatności i fakturowanie</p>
-                        <span className="legal-basis">Podstawa: obowiązek prawny</span>
-                      </div>
-                    </div>
-                    <div className="purpose-item">
-                      <span className="purpose-icon">🛡️</span>
-                      <div>
-                        <h4>Bezpieczeństwo</h4>
-                        <p>Ochrona przed nadużyciami</p>
-                        <span className="legal-basis">Podstawa: uzasadniony interes</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Section 4 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">04</span>
-                  <h2 className="section-title">Jak długo przechowujemy dane</h2>
-                </div>
-                <div className="section-content">
-                  <div className="retention-timeline">
-                    <div className="timeline-item instant">
-                      <div className="timeline-badge">⚡ Natychmiast</div>
-                      <div className="timeline-content">
-                        <h4>Treść CV</h4>
-                        <p>Usuwana zaraz po optymalizacji (max. 24h)</p>
-                      </div>
-                    </div>
-                    <div className="timeline-item short">
-                      <div className="timeline-badge">📅 30 dni</div>
-                      <div className="timeline-content">
-                        <h4>Logi systemowe</h4>
-                        <p>Automatyczne usuwanie po miesiącu</p>
-                      </div>
-                    </div>
-                    <div className="timeline-item medium">
-                      <div className="timeline-badge">🗓️ 12 miesięcy</div>
-                      <div className="timeline-content">
-                        <h4>Dane techniczne</h4>
-                        <p>Do celów analitycznych i bezpieczeństwa</p>
-                      </div>
-                    </div>
-                    <div className="timeline-item long">
-                      <div className="timeline-badge">📋 5 lat</div>
-                      <div className="timeline-content">
-                        <h4>Dane płatności</h4>
-                        <p>Wymagane przepisami podatkowymi</p>
+                      
+                      <div className="decorative-card">
+                        <div className="card-glow"></div>
+                        <div className="card-content">
+                          <div className="floating-icons">
+                            <span className="float-icon">💬</span>
+                            <span className="float-icon">📧</span>
+                            <span className="float-icon">🎯</span>
+                            <span className="float-icon">✨</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </section>
+              )}
 
-              {/* Section 5 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">05</span>
-                  <h2 className="section-title">Komu udostępniamy dane</h2>
-                </div>
-                <div className="section-content">
-                  <div className="partners-grid">
-                    <div className="partner-item">
-                      <div className="partner-logo">💳</div>
-                      <div className="partner-info">
-                        <h4>Stripe Inc.</h4>
-                        <p>Procesor płatności</p>
-                        <span className="partner-purpose">Obsługa transakcji</span>
-                      </div>
-                    </div>
-                    <div className="partner-item">
-                      <div className="partner-logo">🤖</div>
-                      <div className="partner-info">
-                        <h4>Groq AI</h4>
-                        <p>Dostawca usług AI</p>
-                        <span className="partner-purpose">Optymalizacja CV</span>
-                      </div>
-                    </div>
-                    <div className="partner-item">
-                      <div className="partner-logo">☁️</div>
-                      <div className="partner-info">
-                        <h4>Vercel Inc.</h4>
-                        <p>Hosting aplikacji</p>
-                        <span className="partner-purpose">Infrastruktura</span>
-                      </div>
-                    </div>
-                    <div className="partner-item">
-                      <div className="partner-logo">🗄️</div>
-                      <div className="partner-info">
-                        <h4>Supabase Inc.</h4>
-                        <p>Baza danych</p>
-                        <span className="partner-purpose">Przechowywanie danych</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="partners-note">
-                    <p><strong>Ważne:</strong> Wszyscy partnerzy są zobowiązani umownie do ochrony Twoich danych zgodnie z RODO. Nie sprzedajemy ani nie udostępniamy danych do celów marketingowych.</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Section 6 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">06</span>
-                  <h2 className="section-title">Twoje prawa</h2>
-                </div>
-                <div className="section-content">
-                  <div className="rights-grid">
-                    <div className="right-item">
-                      <span className="right-icon">👁️</span>
-                      <div>
-                        <h4>Prawo dostępu</h4>
-                        <p>Dowiedz się jakie dane o Tobie mamy</p>
-                      </div>
-                    </div>
-                    <div className="right-item">
-                      <span className="right-icon">✏️</span>
-                      <div>
-                        <h4>Prawo sprostowania</h4>
-                        <p>Popraw nieprawidłowe informacje</p>
-                      </div>
-                    </div>
-                    <div className="right-item">
-                      <span className="right-icon">🗑️</span>
-                      <div>
-                        <h4>Prawo do usunięcia</h4>
-                        <p>Usuniemy Twoje dane w ciągu 24h</p>
-                      </div>
-                    </div>
-                    <div className="right-item">
-                      <span className="right-icon">⏸️</span>
-                      <div>
-                        <h4>Prawo do ograniczenia</h4>
-                        <p>Zawieś przetwarzanie swoich danych</p>
-                      </div>
-                    </div>
-                    <div className="right-item">
-                      <span className="right-icon">📦</span>
-                      <div>
-                        <h4>Prawo do przenoszenia</h4>
-                        <p>Pobierz swoje dane w formacie JSON</p>
-                      </div>
-                    </div>
-                    <div className="right-item">
-                      <span className="right-icon">🚫</span>
-                      <div>
-                        <h4>Prawo sprzeciwu</h4>
-                        <p>Sprzeciwuj się przetwarzaniu</p>
-                      </div>
-                    </div>
+              {/* Support Center Tab */}
+              {activeTab === 'support' && (
+                <div className="tab-panel support-panel">
+                  <div className="support-header">
+                    <h2 className="section-title">{t.supportTitle}</h2>
+                    <p className="section-subtitle">{t.supportSubtitle}</p>
                   </div>
                   
-                  <div className="contact-rights">
-                    <h4>Jak skorzystać z praw?</h4>
-                    <p>Napisz do nas na <strong>pomoccvperfect@gmail.com</strong> - odpowiemy w ciągu 30 dni (zazwyczaj dużo szybciej).</p>
-                    <p>Masz także prawo wniesienia skargi do <strong>Prezesa Urzędu Ochrony Danych Osobowych</strong>.</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Section 7 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">07</span>
-                  <h2 className="section-title">Bezpieczeństwo danych</h2>
-                </div>
-                <div className="section-content">
-                  <div className="security-measures">
-                    <div className="security-item">
-                      <span className="security-icon">🔐</span>
-                      <div>
-                        <h4>Szyfrowanie SSL/TLS</h4>
-                        <p>Wszystkie połączenia są szyfrowane</p>
-                      </div>
+                  <div className="faq-grid">
+                    <div className="faq-card">
+                      <div className="faq-icon">🤖</div>
+                      <h3>{t.faq1}</h3>
+                      <p>{t.faq1Desc}</p>
+                      <div className="card-shine"></div>
                     </div>
-                    <div className="security-item">
-                      <span className="security-icon">⚡</span>
-                      <div>
-                        <h4>Szybkie usuwanie CV</h4>
-                        <p>Treść CV jest usuwana zaraz po optymalizacji</p>
-                      </div>
+                    
+                    <div className="faq-card">
+                      <div className="faq-icon">🔒</div>
+                      <h3>{t.faq2}</h3>
+                      <p>{t.faq2Desc}</p>
+                      <div className="card-shine"></div>
                     </div>
-                    <div className="security-item">
-                      <span className="security-icon">👥</span>
-                      <div>
-                        <h4>Ograniczony dostęp</h4>
-                        <p>Tylko autoryzowany personel ma dostęp do danych</p>
-                      </div>
+                    
+                    <div className="faq-card">
+                      <div className="faq-icon">⚡</div>
+                      <h3>{t.faq3}</h3>
+                      <p>{t.faq3Desc}</p>
+                      <div className="card-shine"></div>
                     </div>
-                    <div className="security-item">
-                      <span className="security-icon">🔄</span>
-                      <div>
-                        <h4>Regularne kopie zapasowe</h4>
-                        <p>Zapewniamy ciągłość działania serwisu</p>
-                      </div>
-                    </div>
-                    <div className="security-item">
-                      <span className="security-icon">🔍</span>
-                      <div>
-                        <h4>Monitoring bezpieczeństwa</h4>
-                        <p>Śledzimy nietypową aktywność 24/7</p>
-                      </div>
-                    </div>
-                    <div className="security-item">
-                      <span className="security-icon">🛡️</span>
-                      <div>
-                        <h4>Aktualizacje systemu</h4>
-                        <p>Regularnie aktualizujemy zabezpieczenia</p>
-                      </div>
+                    
+                    <div className="faq-card">
+                      <div className="faq-icon">❌</div>
+                      <h3>{t.faq4}</h3>
+                      <p>{t.faq4Desc}</p>
+                      <div className="card-shine"></div>
                     </div>
                   </div>
                 </div>
-              </section>
+              )}
 
-              {/* Section 8 */}
-              <section className="privacy-section">
-                <div className="section-header">
-                  <span className="section-number">08</span>
-                  <h2 className="section-title">Pliki cookies</h2>
-                </div>
-                <div className="section-content">
-                  <div className="cookies-info">
-                    <div className="cookie-type">
-                      <h4>🍪 Niezbędne cookies</h4>
-                      <p>Pozwalają na podstawowe funkcjonowanie serwisu (sesje, bezpieczeństwo). Nie wymagają zgody.</p>
+              {/* Business Tab */}
+              {activeTab === 'business' && (
+                <div className="tab-panel business-panel">
+                  <div className="business-header">
+                    <h2 className="section-title">{t.businessTitle}</h2>
+                    <p className="section-subtitle">{t.businessSubtitle}</p>
+                  </div>
+                  
+                  <div className="packages-grid">
+                    <div className="package-card">
+                      <div className="package-header">
+                        <h3>{t.package1}</h3>
+                        <p>{t.package1Desc}</p>
+                      </div>
+                      <div className="package-features">
+                        <div className="feature">{t.package1Feature1}</div>
+                        <div className="feature">{t.package1Feature2}</div>
+                        <div className="feature">{t.package1Feature3}</div>
+                      </div>
+                      <button className="package-btn">
+                        {t.contactBusiness}
+                      </button>
                     </div>
-                    <div className="cookie-type">
-                      <h4>📊 Analityczne cookies</h4>
-                      <p>Pomagają nam zrozumieć jak korzystasz z serwisu. Możesz je wyłączyć w ustawieniach przeglądarki.</p>
+                    
+                    <div className="package-card featured">
+                      <div className="featured-badge">POPULAR</div>
+                      <div className="package-header">
+                        <h3>{t.package2}</h3>
+                        <p>{t.package2Desc}</p>
+                      </div>
+                      <div className="package-features">
+                        <div className="feature">{t.package2Feature1}</div>
+                        <div className="feature">{t.package2Feature2}</div>
+                        <div className="feature">{t.package2Feature3}</div>
+                      </div>
+                      <button className="package-btn primary">
+                        {t.contactBusiness}
+                      </button>
                     </div>
-                    <div className="cookie-type">
-                      <h4>💳 Cookies płatności</h4>
-                      <p>Używane przez Stripe do bezpiecznej obsługi płatności.</p>
+                    
+                    <div className="package-card">
+                      <div className="package-header">
+                        <h3>{t.package3}</h3>
+                        <p>{t.package3Desc}</p>
+                      </div>
+                      <div className="package-features">
+                        <div className="feature">{t.package3Feature1}</div>
+                        <div className="feature">{t.package3Feature2}</div>
+                        <div className="feature">{t.package3Feature3}</div>
+                      </div>
+                      <button className="package-btn">
+                        {t.contactBusiness}
+                      </button>
                     </div>
                   </div>
                 </div>
-              </section>
-            </div>
-
-            {/* Footer CTA */}
-            <div className="privacy-footer">
-              <div className="footer-content">
-                <h3>🤝 Masz pytania o prywatność?</h3>
-                <p>Jesteśmy transparentni w kwestii ochrony danych. Skontaktuj się z nami!</p>
-                <div className="footer-contact">
-                  <a href="mailto:pomoccvperfect@gmail.com" className="contact-button">
-                    📧 pomoccvperfect@gmail.com
-                  </a>
-                </div>
-                <div className="footer-links">
-                  <Link href="/regulamin" className="footer-link">Regulamin</Link>
-                  <Link href="/rodo" className="footer-link">RODO</Link>
-                  <Link href="/kontakt" className="footer-link">Kontakt</Link>
-                </div>
-              </div>
+              )}
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
       <style jsx>{`
-        .privacy-container {
+        /* Global Reset */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        :global(html), :global(body) {
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden;
+          background: #0a0a0a;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Container */
+        .container {
           min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          font-family: 'Inter', sans-serif;
+          background: #0a0a0a;
+          color: white;
+          position: relative;
+          overflow: hidden;
         }
 
-        .privacy-header {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 20px 0;
-          position: sticky;
+        /* 3D Particles Canvas */
+        .particles-canvas {
+          position: fixed;
           top: 0;
-          z-index: 100;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 1;
+          pointer-events: none;
         }
 
-        .header-content {
-          max-width: 1200px;
+        /* Background Effects */
+        .background-effects {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+          overflow: hidden;
+        }
+
+        .gradient-sphere {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.3;
+          animation: floatSphere 20s ease-in-out infinite;
+        }
+
+        .sphere-1 {
+          width: 600px;
+          height: 600px;
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          top: -200px;
+          right: -200px;
+          animation-delay: 0s;
+        }
+
+        .sphere-2 {
+          width: 400px;
+          height: 400px;
+          background: linear-gradient(135deg, #50b4ff, #00ff88);
+          bottom: -100px;
+          left: -100px;
+          animation-delay: 7s;
+        }
+
+        .sphere-3 {
+          width: 500px;
+          height: 500px;
+          background: linear-gradient(135deg, #ff5080, #ffd700);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation-delay: 14s;
+        }
+
+        .glow-line {
+          position: absolute;
+          height: 1px;
+          width: 100%;
+          background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.5), transparent);
+          animation: glowMove 8s linear infinite;
+        }
+
+        .line-1 {
+          top: 30%;
+          animation-delay: 0s;
+        }
+
+        .line-2 {
+          top: 70%;
+          animation-delay: 4s;
+        }
+
+        @keyframes floatSphere {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
+          }
+          33% {
+            transform: translate(30px, -30px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+        }
+
+        @keyframes glowMove {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+
+        /* Navigation */
+        .navigation {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1000;
+          background: rgba(10, 10, 10, 0.8);
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .navigation.scrolled {
+          background: rgba(10, 10, 10, 0.95);
+          backdrop-filter: blur(30px);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-content {
+          max-width: 1400px;
           margin: 0 auto;
-          padding: 0 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-        }
-
-        .logo-link {
-          text-decoration: none;
+          padding: 20px 40px;
         }
 
         .logo {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
+          cursor: pointer;
+          transition: transform 0.3s ease;
         }
 
-        .logo-text {
-          font-size: 28px;
-          font-weight: 800;
-          background: linear-gradient(135deg, #ffffff, #f8fafc);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+        .logo:hover {
+          transform: scale(1.05);
+        }
+
+        .logo-icon {
+          position: relative;
         }
 
         .logo-badge {
-          background: linear-gradient(135deg, #f59e0b, #d97706);
+          background: linear-gradient(135deg, #7850ff, #ff5080);
           color: white;
-          padding: 4px 8px;
-          border-radius: 8px;
+          padding: 8px 14px;
+          border-radius: 100px;
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 800;
+          letter-spacing: 1px;
+          box-shadow: 0 4px 20px rgba(120, 80, 255, 0.4);
+          animation: pulse 2s ease infinite;
         }
 
-        .back-link {
-          color: white;
-          text-decoration: none;
-          background: rgba(255, 255, 255, 0.15);
-          padding: 12px 24px;
-          border-radius: 12px;
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 4px 20px rgba(120, 80, 255, 0.4);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(120, 80, 255, 0.6);
+          }
+        }
+
+        .logo-text {
+          font-size: 26px;
+          font-weight: 900;
+          background: linear-gradient(135deg, #fff, #999);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .language-switcher {
+          display: flex;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.05);
+          padding: 4px;
+          border-radius: 100px;
+        }
+
+        .lang-btn {
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          padding: 10px 16px;
+          border-radius: 100px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
           transition: all 0.3s ease;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
 
-        .back-link:hover {
-          background: rgba(255, 255, 255, 0.25);
+        .lang-btn:hover {
+          color: white;
+        }
+
+        .lang-btn.active {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
+        }
+
+        .flag {
+          font-size: 18px;
+        }
+
+        .nav-cta {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 100px;
+          font-weight: 700;
+          font-size: 15px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 20px rgba(120, 80, 255, 0.3);
+        }
+
+        .nav-cta:hover {
           transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(120, 80, 255, 0.5);
         }
 
-        .privacy-content {
-          background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
-          backdrop-filter: blur(20px);
-          margin-top: -20px;
-          border-radius: 30px 30px 0 0;
-          min-height: calc(100vh - 100px);
+        .cta-arrow {
+          transition: transform 0.3s ease;
+        }
+
+        .nav-cta:hover .cta-arrow {
+          transform: rotate(180deg);
+        }
+
+        /* Hero Section */
+        .hero-section {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 120px 40px 80px;
           position: relative;
           z-index: 2;
         }
 
-        .privacy-wrapper {
+        .hero-content {
+          text-align: center;
           max-width: 900px;
-          margin: 0 auto;
-          padding: 60px 20px;
+          animation: fadeInUp 1s ease;
         }
 
-        .privacy-title {
-          font-size: 52px;
-          font-weight: 800;
-          color: #1f2937;
-          text-align: center;
-          margin-bottom: 20px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
-        .privacy-subtitle {
-          text-align: center;
-          font-size: 20px;
-          color: #6b7280;
-          margin-bottom: 50px;
-          line-height: 1.6;
-        }
-
-        .update-date {
-          font-size: 16px;
-          color: #059669;
-          font-weight: 600;
-          background: linear-gradient(135deg, #10b981, #059669);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .trust-section {
-          margin-bottom: 50px;
-          display: flex;
-          justify-content: center;
-        }
-
-        .trust-badge {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          padding: 20px 30px;
-          border-radius: 20px;
-          display: flex;
+        .hero-badge {
+          display: inline-flex;
           align-items: center;
-          gap: 16px;
-          box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+          gap: 8px;
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          padding: 8px 20px;
+          border-radius: 100px;
+          margin-bottom: 24px;
+          animation: fadeIn 1s ease 0.2s both;
         }
 
-        .shield-icon {
-          font-size: 32px;
+        .badge-dot {
+          width: 8px;
+          height: 8px;
+          background: #00ff88;
+          border-radius: 50%;
+          animation: blink 2s ease infinite;
         }
 
-        .trust-content h3 {
-          margin: 0 0 4px 0;
-          font-size: 18px;
-          font-weight: 700;
+        @keyframes blink {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.3;
+          }
         }
 
-        .trust-content p {
-          margin: 0;
-          opacity: 0.9;
-          font-size: 14px;
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
 
-        .quick-summary {
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(15px);
-          border-radius: 20px;
-          padding: 40px;
-          margin-bottom: 50px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        .hero-title {
+          font-size: clamp(48px, 8vw, 80px);
+          font-weight: 900;
+          margin-bottom: 24px;
+          line-height: 1.1;
+          animation: fadeInUp 1s ease 0.3s both;
         }
 
-        .summary-title {
-          font-size: 24px;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 30px;
-          text-align: center;
+        .title-gradient {
+          background: linear-gradient(135deg, #7850ff, #ff5080, #50b4ff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-size: 200% 200%;
+          animation: gradientMove 4s ease infinite;
         }
 
-        .summary-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        @keyframes gradientMove {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
+        .hero-subtitle {
+          font-size: 20px;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 48px;
+          animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        .hero-features {
+          display: flex;
           gap: 24px;
+          justify-content: center;
+          flex-wrap: wrap;
+          animation: fadeInUp 1s ease 0.5s both;
         }
 
-        .summary-item {
+        .feature-card {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 16px;
-          background: rgba(255, 255, 255, 0.6);
-          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 16px 24px;
+          border-radius: 100px;
           transition: all 0.3s ease;
         }
 
-        .summary-item:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        .feature-card:hover {
+          background: rgba(255, 255, 255, 0.08);
+          transform: translateY(-3px);
+          border-color: rgba(120, 80, 255, 0.3);
         }
 
-        .summary-icon {
+        .feature-icon {
           font-size: 24px;
-          flex-shrink: 0;
         }
 
-        .summary-item strong {
-          display: block;
-          color: #1f2937;
-          font-weight: 600;
-          margin-bottom: 2px;
+        .scroll-indicator {
+          position: absolute;
+          bottom: 40px;
+          left: 50%;
+          transform: translateX(-50%);
+          animation: bounce 2s ease infinite;
         }
 
-        .summary-item p {
-          margin: 0;
-          color: #6b7280;
-          font-size: 14px;
-        }
-
-        .privacy-sections {
-          display: flex;
-          flex-direction: column;
-          gap: 40px;
-        }
-
-        .privacy-section {
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(15px);
-          border-radius: 20px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
-        }
-
-        .privacy-section:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .section-header {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          padding: 30px 40px;
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-
-        .section-number {
-          background: rgba(255, 255, 255, 0.2);
-          width: 50px;
+        .scroll-dot {
+          width: 30px;
           height: 50px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 800;
-          font-size: 18px;
-          flex-shrink: 0;
-        }
-
-        .section-title {
-          font-size: 24px;
-          font-weight: 700;
-          margin: 0;
-        }
-
-        .section-content {
-          padding: 40px;
-        }
-
-        .admin-info {
-          margin-bottom: 20px;
-        }
-
-        .admin-card {
-          background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-          border-radius: 16px;
-          padding: 24px;
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          border: 2px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .admin-icon {
-          font-size: 32px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .admin-details h4 {
-          font-size: 20px;
-          font-weight: 700;
-          color: #1f2937;
-          margin: 0 0 8px 0;
-        }
-
-        .admin-details p {
-          margin: 4px 0;
-          color: #6b7280;
-          font-size: 14px;
-        }
-
-        .data-types {
-          display: grid;
-          gap: 24px;
-        }
-
-        .data-category {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 20px;
-          border-left: 4px solid #667eea;
-        }
-
-        .data-category h4 {
-          color: #1f2937;
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 12px;
-        }
-
-        .data-category ul {
-          margin: 0;
-          padding-left: 20px;
-        }
-
-        .data-category li {
-          color: #4b5563;
-          margin-bottom: 6px;
-          line-height: 1.5;
-        }
-
-        .purposes-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 20px;
-        }
-
-        .purpose-item {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 20px;
-          display: flex;
-          align-items: flex-start;
-          gap: 16px;
-          transition: all 0.3s ease;
-        }
-
-        .purpose-item:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
-        }
-
-        .purpose-icon {
-          font-size: 24px;
-          flex-shrink: 0;
-          margin-top: 4px;
-        }
-
-        .purpose-item h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0 0 8px 0;
-        }
-
-        .purpose-item p {
-          color: #6b7280;
-          font-size: 14px;
-          margin: 0 0 8px 0;
-        }
-
-        .legal-basis {
-          font-size: 12px;
-          color: #059669;
-          font-weight: 500;
-          background: #dcfce7;
-          padding: 4px 8px;
-          border-radius: 6px;
-          display: inline-block;
-        }
-
-        .retention-timeline {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .timeline-item {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          padding: 20px;
-          background: #f8fafc;
-          border-radius: 12px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 25px;
           position: relative;
         }
 
-        .timeline-item.instant {
-          border-left: 4px solid #10b981;
-        }
-
-        .timeline-item.short {
-          border-left: 4px solid #f59e0b;
-        }
-
-        .timeline-item.medium {
-          border-left: 4px solid #667eea;
-        }
-
-        .timeline-item.long {
-          border-left: 4px solid #dc2626;
-        }
-
-        .timeline-badge {
+        .scroll-dot::after {
+          content: '';
+          position: absolute;
+          top: 8px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 4px;
+          height: 10px;
           background: white;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-size: 14px;
+          border-radius: 2px;
+          animation: scrollDot 2s ease infinite;
+        }
+
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateX(-50%) translateY(0);
+          }
+          50% {
+            transform: translateX(-50%) translateY(10px);
+          }
+        }
+
+        @keyframes scrollDot {
+          0%, 100% {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+          }
+          50% {
+            transform: translateX(-50%) translateY(10px);
+            opacity: 0.3;
+          }
+        }
+
+        /* Main Content */
+        .main-content {
+          position: relative;
+          z-index: 2;
+          padding: 80px 40px;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        /* Tabs */
+        .tabs-container {
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 32px;
+          overflow: hidden;
+        }
+
+        .tabs-header {
+          display: flex;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 8px;
+          gap: 8px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tab-btn {
+          flex: 1;
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          padding: 16px 24px;
+          border-radius: 24px;
+          font-size: 15px;
           font-weight: 600;
-          color: #1f2937;
-          border: 2px solid #e5e7eb;
-          min-width: 120px;
-          text-align: center;
-        }
-
-        .timeline-content h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0 0 4px 0;
-        }
-
-        .timeline-content p {
-          color: #6b7280;
-          font-size: 14px;
-          margin: 0;
-        }
-
-        .partners-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-
-        .partner-item {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 20px;
-          text-align: center;
+          cursor: pointer;
           transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
         }
 
-        .partner-item:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+        .tab-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
         }
 
-        .partner-logo {
+        .tab-btn.active {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          box-shadow: 0 4px 20px rgba(120, 80, 255, 0.3);
+        }
+
+        .tab-icon {
+          font-size: 20px;
+        }
+
+        .tabs-content {
+          padding: 48px;
+        }
+
+        .tab-panel {
+          animation: fadeIn 0.5s ease;
+        }
+
+        /* Form Panel */
+        .panel-grid {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 48px;
+        }
+
+        .section-title {
           font-size: 32px;
+          font-weight: 800;
+          margin-bottom: 12px;
+          background: linear-gradient(135deg, #fff, #999);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+          color: rgba(255, 255, 255, 0.6);
+          margin-bottom: 32px;
+        }
+
+        /* Form Styles */
+        .contact-form {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+        }
+
+        .form-field {
+          position: relative;
+        }
+
+        .form-field label {
+          display: block;
+          font-size: 14px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+          width: 100%;
+          padding: 16px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          color: white;
+          font-size: 16px;
+          transition: all 0.3s ease;
+          font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+          outline: none;
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(120, 80, 255, 0.5);
+        }
+
+        .field-focus {
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%) scaleX(0);
+          width: 100%;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, #7850ff, transparent);
+          transition: transform 0.3s ease;
+          border-radius: 2px;
+        }
+
+        .form-input:focus ~ .field-focus,
+        .form-select:focus ~ .field-focus,
+        .form-textarea:focus ~ .field-focus {
+          transform: translateX(-50%) scaleX(1);
+        }
+
+        .form-textarea {
+          resize: vertical;
+          min-height: 120px;
+        }
+
+        .submit-btn {
+          background: linear-gradient(135deg, #00ff88, #00cc70);
+          color: #000;
+          border: none;
+          padding: 18px 40px;
+          border-radius: 100px;
+          font-size: 16px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .submit-btn::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .submit-btn:hover::before {
+          width: 300px;
+          height: 300px;
+        }
+
+        .submit-btn:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 15px 40px rgba(0, 255, 136, 0.4);
+        }
+
+        .submit-btn.submitting {
+          background: linear-gradient(135deg, #999, #666);
+          cursor: not-allowed;
+        }
+
+        .btn-text,
+        .btn-icon {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Success Container */
+        .success-container {
+          text-align: center;
+          padding: 60px;
+          background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 112, 0.05));
+          border-radius: 24px;
+          border: 2px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .success-animation {
+          margin-bottom: 24px;
+        }
+
+        .checkmark-circle {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto;
+        }
+
+        .checkmark {
+          width: 80px;
+          height: 80px;
+        }
+
+        .checkmark-circle-bg {
+          stroke: #00ff88;
+          stroke-width: 2;
+          stroke-dasharray: 166;
+          stroke-dashoffset: 166;
+          animation: strokeCircle 0.6s ease forwards;
+        }
+
+        .checkmark-check {
+          stroke: #00ff88;
+          stroke-width: 3;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-dasharray: 48;
+          stroke-dashoffset: 48;
+          animation: strokeCheck 0.3s 0.5s ease forwards;
+        }
+
+        @keyframes strokeCircle {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes strokeCheck {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        .success-container h3 {
+          font-size: 28px;
+          color: #00ff88;
           margin-bottom: 12px;
         }
 
-        .partner-info h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0 0 4px 0;
+        .success-container p {
+          color: rgba(255, 255, 255, 0.8);
         }
 
-        .partner-info p {
-          color: #6b7280;
-          font-size: 14px;
-          margin: 0 0 8px 0;
-        }
-
-        .partner-purpose {
-          font-size: 12px;
-          color: #059669;
-          background: #dcfce7;
-          padding: 4px 8px;
-          border-radius: 6px;
-          display: inline-block;
-        }
-
-        .partners-note {
-          background: #fef3c7;
-          border: 1px solid #f59e0b;
-          border-radius: 12px;
-          padding: 16px;
-        }
-
-        .partners-note p {
-          margin: 0;
-          color: #92400e;
-          font-size: 14px;
-        }
-
-        .rights-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-
-        .right-item {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 20px;
+        /* Info Section */
+        .info-section {
           display: flex;
-          align-items: flex-start;
-          gap: 16px;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .info-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 32px;
           transition: all 0.3s ease;
         }
 
-        .right-item:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+        .premium-card {
+          background: linear-gradient(135deg, rgba(120, 80, 255, 0.1), rgba(255, 80, 150, 0.05));
+          border-color: rgba(120, 80, 255, 0.2);
         }
 
-        .right-icon {
-          font-size: 24px;
-          flex-shrink: 0;
-          margin-top: 4px;
+        .info-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px rgba(120, 80, 255, 0.1);
         }
 
-        .right-item h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0 0 8px 0;
+        .info-card h3 {
+          font-size: 20px;
+          font-weight: 700;
+          margin-bottom: 24px;
         }
 
-        .right-item p {
-          color: #6b7280;
-          font-size: 14px;
-          margin: 0;
-        }
-
-        .contact-rights {
-          background: #dcfce7;
-          border: 1px solid #10b981;
-          border-radius: 12px;
-          padding: 20px;
-        }
-
-        .contact-rights h4 {
-          color: #065f46;
-          font-size: 16px;
-          font-weight: 600;
-          margin: 0 0 12px 0;
-        }
-
-        .contact-rights p {
-          color: #047857;
-          font-size: 14px;
-          margin: 8px 0;
-        }
-
-        .security-measures {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 20px;
-        }
-
-        .security-item {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 20px;
-          display: flex;
-          align-items: flex-start;
-          gap: 16px;
-          transition: all 0.3s ease;
-        }
-
-        .security-item:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
-        }
-
-        .security-icon {
-          font-size: 24px;
-          flex-shrink: 0;
-          margin-top: 4px;
-        }
-
-        .security-item h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0 0 8px 0;
-        }
-
-        .security-item p {
-          color: #6b7280;
-          font-size: 14px;
-          margin: 0;
-        }
-
-        .cookies-info {
+        .info-items {
           display: flex;
           flex-direction: column;
           gap: 20px;
         }
 
-        .cookie-type {
-          background: #f8fafc;
-          border-radius: 12px;
-          padding: 20px;
-          border-left: 4px solid #667eea;
-        }
-
-        .cookie-type h4 {
-          color: #1f2937;
-          font-size: 16px;
-          font-weight: 600;
-          margin: 0 0 8px 0;
-        }
-
-        .cookie-type p {
-          color: #6b7280;
-          font-size: 14px;
-          margin: 0;
-          line-height: 1.5;
-        }
-
-        .privacy-footer {
-          margin-top: 60px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          border-radius: 20px;
-          padding: 40px;
-          text-align: center;
-          color: white;
-        }
-
-        .footer-content h3 {
-          font-size: 28px;
-          font-weight: 700;
-          margin-bottom: 16px;
-        }
-
-        .footer-content p {
-          font-size: 18px;
-          opacity: 0.9;
-          margin-bottom: 30px;
-        }
-
-        .footer-contact {
-          margin-bottom: 30px;
-        }
-
-        .contact-button {
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
-          text-decoration: none;
-          padding: 16px 32px;
-          border-radius: 12px;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          display: inline-block;
-        }
-
-        .contact-button:hover {
-          background: rgba(255, 255, 255, 0.3);
-          transform: translateY(-2px);
-        }
-
-        .footer-links {
+        .info-item {
           display: flex;
-          justify-content: center;
-          gap: 20px;
-          flex-wrap: wrap;
+          flex-direction: column;
+          gap: 8px;
         }
 
-        .footer-link {
-          color: rgba(255, 255, 255, 0.8);
+        .info-label {
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.5);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .info-value {
+          font-size: 16px;
+          color: white;
+          font-weight: 600;
+        }
+
+        .email-link {
+          color: #00ff88;
           text-decoration: none;
-          font-weight: 500;
           transition: all 0.3s ease;
         }
 
-        .footer-link:hover {
-          color: white;
+        .email-link:hover {
           text-decoration: underline;
         }
 
-        @media (max-width: 768px) {
-          .privacy-title {
-            font-size: 36px;
-          }
+        .decorative-card {
+          background: linear-gradient(135deg, rgba(80, 180, 255, 0.1), rgba(0, 255, 136, 0.05));
+          border: 1px solid rgba(80, 180, 255, 0.2);
+          border-radius: 24px;
+          padding: 32px;
+          position: relative;
+          overflow: hidden;
+          min-height: 200px;
+        }
 
-          .privacy-wrapper {
-            padding: 40px 15px;
-          }
+        .card-glow {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(circle, rgba(120, 80, 255, 0.3), transparent);
+          animation: glowPulse 4s ease infinite;
+        }
 
-          .header-content {
-            flex-direction: column;
-            gap: 15px;
+        @keyframes glowPulse {
+          0%, 100% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.5;
           }
-
-          .section-header {
-            padding: 20px;
-            flex-direction: column;
-            text-align: center;
-            gap: 12px;
-          }
-
-          .section-content {
-            padding: 20px;
-          }
-
-          .quick-summary {
-            padding: 20px;
-          }
-
-          .summary-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .purposes-grid,
-          .partners-grid,
-          .rights-grid,
-          .security-measures {
-            grid-template-columns: 1fr;
-          }
-
-          .retention-timeline {
-            gap: 16px;
-          }
-
-          .timeline-item {
-            flex-direction: column;
-            text-align: center;
-            gap: 12px;
-          }
-
-          .admin-card {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .privacy-footer {
-            padding: 30px 20px;
-          }
-
-          .footer-content h3 {
-            font-size: 24px;
-          }
-
-          .footer-content p {
-            font-size: 16px;
-          }
-
-          .footer-links {
-            flex-direction: column;
-            gap: 12px;
+          50% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0.3;
           }
         }
+
+        .floating-icons {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          height: 100%;
+        }
+
+        .float-icon {
+          font-size: 32px;
+          animation: floatIcon 3s ease infinite;
+          animation-delay: calc(var(--i) * 0.5s);
+        }
+
+        .float-icon:nth-child(1) { --i: 0; }
+        .float-icon:nth-child(2) { --i: 1; }
+        .float-icon:nth-child(3) { --i: 2; }
+        .float-icon:nth-child(4) { --i: 3; }
+
+        @keyframes floatIcon {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+
+        /* Support Panel */
+        .support-panel {
+          text-align: center;
+        }
+
+        .support-header {
+          margin-bottom: 48px;
+        }
+
+        .faq-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 24px;
+        }
+
+        .faq-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 32px;
+          text-align: left;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .faq-card:hover {
+          transform: translateY(-5px) scale(1.02);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(120, 80, 255, 0.3);
+        }
+
+        .faq-icon {
+          font-size: 40px;
+          margin-bottom: 16px;
+        }
+
+        .faq-card h3 {
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 12px;
+          color: white;
+        }
+
+        .faq-card p {
+          color: rgba(255, 255, 255, 0.6);
+          line-height: 1.6;
+        }
+
+        .card-shine {
+          position: absolute;
+          top: -100%;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.1) 50%,
+            transparent 70%
+          );
+          transition: all 0.6s ease;
+        }
+
+        .faq-card:hover .card-shine {
+          top: 100%;
+          left: 100%;
+        }
+
+        /* Business Panel */
+        .business-panel {
+          text-align: center;
+        }
+
+        .business-header {
+          margin-bottom: 48px;
+        }
+
+        .packages-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 32px;
+        }
+
+        .package-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 40px 32px;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+
+        .package-card:hover {
+          transform: translateY(-10px);
+          box-shadow: 0 30px 60px rgba(120, 80, 255, 0.2);
+        }
+
+        .package-card.featured {
+          background: linear-gradient(135deg, rgba(120, 80, 255, 0.1), rgba(255, 80, 150, 0.05));
+          border-color: rgba(120, 80, 255, 0.3);
+          transform: scale(1.05);
+        }
+
+        .featured-badge {
+          position: absolute;
+          top: -12px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          padding: 6px 20px;
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 1px;
+        }
+
+        .package-header h3 {
+          font-size: 24px;
+          font-weight: 800;
+          margin-bottom: 8px;
+        }
+
+        .package-header p {
+          color: rgba(255, 255, 255, 0.6);
+          margin-bottom: 32px;
+        }
+
+        .package-features {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+
+        .feature {
+          text-align: left;
+          color: rgba(255, 255, 255, 0.8);
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .package-card:hover .feature {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .package-btn {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.1);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          padding: 16px 32px;
+          border-radius: 100px;
+          font-size: 16px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .package-btn:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-2px);
+        }
+
+        .package-btn.primary {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          border: none;
+          box-shadow: 0 10px 30px rgba(120, 80, 255, 0.3);
+        }
+
+        .package-btn.primary:hover {
+          box-shadow: 0 15px 40px rgba(120, 80, 255, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .panel-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .packages-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .package-card.featured {
+            transform: scale(1);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .nav-content {
+            padding: 16px 20px;
+          }
+
+          .hero-section {
+            padding: 100px 20px 60px;
+          }
+
+          .hero-title {
+            font-size: 40px;
+          }
+
+          .hero-features {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .main-content {
+            padding: 40px 20px;
+          }
+
+          .tabs-header {
+            flex-direction: column;
+          }
+
+          .tab-btn {
+            width: 100%;
+          }
+
+          .tabs-content {
+            padding: 24px;
+          }
+
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .faq-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .gradient-sphere {
+            filter: blur(60px);
+          }
+
+          .sphere-1 {
+            width: 300px;
+            height: 300px;
+          }
+
+          .sphere-2 {
+            width: 200px;
+            height: 200px;
+          }
+
+          .sphere-3 {
+            width: 250px;
+            height: 250px;
+          }
+        }
+
+        /* Animations on Scroll */
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        /* Scroll Animations */
+        .form-section {
+          animation: slideInLeft 0.8s ease;
+        }
+
+        .info-section {
+          animation: slideInRight 0.8s ease;
+        }
+
+        .faq-card {
+          animation: scaleIn 0.6s ease;
+          animation-fill-mode: both;
+        }
+
+        .faq-card:nth-child(1) { animation-delay: 0.1s; }
+        .faq-card:nth-child(2) { animation-delay: 0.2s; }
+        .faq-card:nth-child(3) { animation-delay: 0.3s; }
+        .faq-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .package-card {
+          animation: scaleIn 0.6s ease;
+          animation-fill-mode: both;
+        }
+
+        .package-card:nth-child(1) { animation-delay: 0.1s; }
+        .package-card:nth-child(2) { animation-delay: 0.2s; }
+        .package-card:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Custom Scrollbar */
+        :global(::-webkit-scrollbar) {
+          width: 10px;
+        }
+
+        :global(::-webkit-scrollbar-track) {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        :global(::-webkit-scrollbar-thumb) {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          border-radius: 10px;
+        }
+
+        :global(::-webkit-scrollbar-thumb:hover) {
+          background: linear-gradient(135deg, #9060ff, #ff6090);
+        }
+
+        /* Loading Animation */
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(255, 255, 255, 0.1);
+          border-top-color: #7850ff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        /* Glow Effects */
+        @keyframes glow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(120, 80, 255, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(120, 80, 255, 0.8);
+          }
+        }
+
+        /* Accessibility */
+        .form-input:focus-visible,
+        .form-select:focus-visible,
+        .form-textarea:focus-visible,
+        .tab-btn:focus-visible,
+        .submit-btn:focus-visible,
+        .package-btn:focus-visible {
+          outline: 2px solid #7850ff;
+          outline-offset: 2px;
+        }
+
+        /* Print Styles */
+        @media print {
+          .navigation,
+          .particles-canvas,
+          .background-effects,
+          .scroll-indicator {
+            display: none;
+          }
+
+          .container {
+            background: white;
+            color: black;
+          }
+        }
+
+        /* Performance Optimizations */
+        .hero-section,
+        .main-content {
+          will-change: transform;
+        }
+
+        .gradient-sphere,
+        .glow-line,
+        .float-icon {
+          will-change: transform, opacity;
+        }
+
+        /* Additional Premium Effects */
+        .premium-hover {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .premium-hover::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          background: radial-gradient(circle, rgba(120, 80, 255, 0.3), transparent);
+          transition: width 0.6s ease, height 0.6s ease;
+          transform: translate(-50%, -50%);
+        }
+
+        .premium-hover:hover::before {
+          width: 100%;
+          height: 100%;
+        }
+
+        /* Neon Text Effect */
+        .neon-text {
+          text-shadow: 
+            0 0 10px rgba(120, 80, 255, 0.8),
+            0 0 20px rgba(120, 80, 255, 0.6),
+            0 0 30px rgba(120, 80, 255, 0.4),
+            0 0 40px rgba(120, 80, 255, 0.2);
+        }
+
+        /* Glass Effect Enhancement */
+        .glass-enhanced {
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.1),
+            rgba(255, 255, 255, 0.05)
+          );
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 
+            inset 0 0 20px rgba(255, 255, 255, 0.05),
+            0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Micro-interactions */
+        .micro-interaction {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .micro-interaction:active {
+          transform: scale(0.95);
+        }
+
+        /* Advanced Gradients */
+        .advanced-gradient {
+          background: linear-gradient(
+            135deg,
+            #7850ff 0%,
+            #ff5080 25%,
+            #50b4ff 50%,
+            #00ff88 75%,
+            #ffd700 100%
+          );
+          background-size: 400% 400%;
+          animation: advancedGradient 15s ease infinite;
+        }
+
+        @keyframes advancedGradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        /* Parallax Effect */
+        .parallax-element {
+          transform: translateZ(0);
+          will-change: transform;
+        }
+
+        /* Typography Enhancement */
+        .enhanced-text {
+          font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
+        }
+
+        /* Final Polish */
+        .container {
+          position: relative;
+        }
+
+        .container::before {
+          content: '';
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(120, 80, 255, 0.5),
+            rgba(255, 80, 150, 0.5),
+            rgba(80, 180, 255, 0.5),
+            transparent
+          );
+          animation: borderFlow 4s linear infinite;
+          z-index: 9999;
+        }
+
+        @keyframes borderFlow {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        /* Easter Egg - Premium Shine on Logo Hover */
+        .logo:hover .logo-badge {
+          background: linear-gradient(
+            45deg,
+            #7850ff,
+            #ff5080,
+            #50b4ff,
+            #00ff88,
+            #ffd700
+          );
+          background-size: 200% 200%;
+          animation: rainbowShine 2s linear infinite;
+        }
+
+        @keyframes rainbowShine {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
+        }
+
+        /* Ensure no horizontal scroll */
+        :global(html),
+        :global(body) {
+          max-width: 100vw !important;
+          overflow-x: hidden !important;
+        }
+
+        /* Smooth scroll behavior */
+        :global(html) {
+          scroll-behavior: smooth;
+        }
+
+}
       `}</style>
     </>
   )
