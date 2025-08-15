@@ -138,17 +138,6 @@ export default function Kontakt() {
 
       <div className="container">
 
-{/* Animated emojis background */}
-<div className="floating-emojis">
-  <span className="emoji" style={{top: '10%', left: '5%', animationDelay: '0s'}}>📄</span>
-  <span className="emoji" style={{top: '20%', right: '10%', animationDelay: '1s'}}>✨</span>
-  <span className="emoji" style={{top: '30%', left: '15%', animationDelay: '2s'}}>🚀</span>
-  <span className="emoji" style={{top: '40%', right: '20%', animationDelay: '3s'}}>💼</span>
-  <span className="emoji" style={{top: '50%', left: '8%', animationDelay: '4s'}}>📊</span>
-  <span className="emoji" style={{top: '60%', right: '5%', animationDelay: '5s'}}>🎯</span>
-  <span className="emoji" style={{top: '70%', left: '20%', animationDelay: '6s'}}>💡</span>
-  <span className="emoji" style={{top: '80%', right: '15%', animationDelay: '7s'}}>⭐</span>
-</div>
 
         {/* Background podobny do regulamin.js */}
         <div className="particles-container" id="particles"></div>
@@ -357,6 +346,18 @@ export default function Kontakt() {
         </div>
       </div>
 
+      {/* Animated emojis background */}
+      <div className="floating-emojis" style={{position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 1}}>
+        <span className="emoji" style={{position: 'absolute', top: '10%', left: '5%', animationDelay: '0s', fontSize: '32px', opacity: 0.3}}>📄</span>
+        <span className="emoji" style={{position: 'absolute', top: '20%', right: '10%', animationDelay: '1s', fontSize: '32px', opacity: 0.3}}>✨</span>
+        <span className="emoji" style={{position: 'absolute', top: '30%', left: '15%', animationDelay: '2s', fontSize: '32px', opacity: 0.3}}>🚀</span>
+        <span className="emoji" style={{position: 'absolute', top: '40%', right: '20%', animationDelay: '3s', fontSize: '32px', opacity: 0.3}}>💼</span>
+        <span className="emoji" style={{position: 'absolute', top: '50%', left: '8%', animationDelay: '4s', fontSize: '32px', opacity: 0.3}}>📊</span>
+        <span className="emoji" style={{position: 'absolute', top: '60%', right: '5%', animationDelay: '5s', fontSize: '32px', opacity: 0.3}}>🎯</span>
+        <span className="emoji" style={{position: 'absolute', top: '70%', left: '20%', animationDelay: '6s', fontSize: '32px', opacity: 0.3}}>💡</span>
+        <span className="emoji" style={{position: 'absolute', top: '80%', right: '15%', animationDelay: '7s', fontSize: '32px', opacity: 0.3}}>⭐</span>
+      </div>
+
       <style jsx>{`
 /* Reset to prevent gray rectangle */
 * {
@@ -409,18 +410,17 @@ export default function Kontakt() {
         }
 
         /* Particles container */
-        .particles-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 0;
-          pointer-events: none;
-          opacity: 0.6;
-	  background: transparent;
-        }
-
+.particles-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+  pointer-events: none;
+  opacity: 0.6;
+  background: transparent;
+}
 /* Animated Background */
 .background-gradient {
   position: fixed;
@@ -428,10 +428,9 @@ export default function Kontakt() {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: -4;
   background: #0a0a0a;
 }
-
 .gradient-orb {
   position: absolute;
   border-radius: 50%;
@@ -483,19 +482,18 @@ export default function Kontakt() {
 }
 
         /* Navigation - same as index.js */
-        .navigation {
-          background: rgba(8, 8, 8, 0.95);
-          backdrop-filter: blur(30px) saturate(200%);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 10000;
-          transition: all 0.3s ease;
-          box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-        }
-
+.navigation {
+  background: rgba(8, 8, 8, 0.95);
+  backdrop-filter: blur(30px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  transition: all 0.3s ease;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+}
         .navigation::before {
           content: '';
           position: absolute;
@@ -648,11 +646,11 @@ export default function Kontakt() {
 
         /* Contact Section */
 .contact-section {
-  padding: 140px 20px 80px;
+  padding: 120px 20px 80px;
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   box-sizing: border-box;
 }
@@ -1045,24 +1043,34 @@ export default function Kontakt() {
 }
 
 /* Floating Emojis - Fixed */
-.floating-emojis {
+:global(.floating-emojis) {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
   overflow: hidden;
 }
-
-.emoji {
+:global(.emoji) {
   position: absolute;
-  font-size: 28px;
-  opacity: 0.4;
-  animation: float 25s infinite linear;
-  filter: blur(0.3px);
+  font-size: 32px;
+  opacity: 0.3;
+  animation: floatEmoji 25s infinite linear;
+  filter: blur(0px);
   will-change: transform;
+  user-select: none;
+}
+/* Różne animacje dla każdej emotikony */
+:global(.emoji:nth-child(even)) {
+  animation-direction: reverse;
+  animation-duration: 30s;
+}
+
+:global(.emoji:nth-child(3n)) {
+  animation-duration: 35s;
+  animation-delay: -5s;
 }
 
 @keyframes float {
@@ -1071,10 +1079,27 @@ export default function Kontakt() {
     opacity: 0;
   }
   10% {
-    opacity: 0.4;
+    opacity: 0.15;
   }
   90% {
-    opacity: 0.4;
+    opacity: 0.15;
+  }
+  100% {
+    transform: translateY(-100px) translateX(30px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes floatEmoji {
+  0% {
+    transform: translateY(100vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.3;
   }
   100% {
     transform: translateY(-100px) translateX(30px) rotate(360deg);
@@ -1083,24 +1108,15 @@ export default function Kontakt() {
 }
 
 /* Different timings for each emoji */
-.emoji:nth-child(1) { animation-delay: 0s; }
-.emoji:nth-child(2) { animation-delay: 3s; animation-duration: 22s; }
-.emoji:nth-child(3) { animation-delay: 6s; animation-duration: 28s; }
-.emoji:nth-child(4) { animation-delay: 9s; animation-duration: 24s; }
-.emoji:nth-child(5) { animation-delay: 12s; animation-duration: 26s; }
-.emoji:nth-child(6) { animation-delay: 15s; animation-duration: 23s; }
-.emoji:nth-child(7) { animation-delay: 18s; animation-duration: 27s; }
-.emoji:nth-child(8) { animation-delay: 21s; animation-duration: 25s; }
-/* Different animation for each emoji */
-.emoji:nth-child(even) {
-  animation-direction: reverse;
-  animation-duration: 25s;
-}
+:global(.emoji:nth-child(1)) { animation-delay: 0s; }
+:global(.emoji:nth-child(2)) { animation-delay: 3s; animation-duration: 22s; }
+:global(.emoji:nth-child(3)) { animation-delay: 6s; animation-duration: 28s; }
+:global(.emoji:nth-child(4)) { animation-delay: 9s; animation-duration: 24s; }
+:global(.emoji:nth-child(5)) { animation-delay: 12s; animation-duration: 26s; }
+:global(.emoji:nth-child(6)) { animation-delay: 15s; animation-duration: 23s; }
+:global(.emoji:nth-child(7)) { animation-delay: 18s; animation-duration: 27s; }
+:global(.emoji:nth-child(8)) { animation-delay: 21s; animation-duration: 25s; }
 
-.emoji:nth-child(3n) {
-  animation-duration: 30s;
-  animation-delay: -5s;
-}
 
       `}</style>
     </>
