@@ -2,120 +2,174 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 
-export default function Kontakt() {
+export default function PolitykaPrywatnosci() {
   const router = useRouter()
   const { locale } = router
   const [currentLanguage, setCurrentLanguage] = useState('pl')
-  const [activeTab, setActiveTab] = useState('form')
-  const [isScrolled, setIsScrolled] = useState(false)
-  const canvasRef = useRef(null)
-  const mousePosition = useRef({ x: 0, y: 0 })
-  
+  const [activeSection, setActiveSection] = useState('intro')
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [expandedSections, setExpandedSections] = useState({})
+  const [quizActive, setQuizActive] = useState(false)
+  const [quizScore, setQuizScore] = useState(0)
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [dataFlowActive, setDataFlowActive] = useState(false)
+  const canvasRef = useRef(null)  
   useEffect(() => {
     if (locale) setCurrentLanguage(locale)
   }, [locale])
 
-  // 3D Particles Animation
+  // Scroll Progress
   useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = (window.scrollY / totalHeight) * 100
+      setScrollProgress(progress)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Data Flow Animation
+  useEffect(() => {
+    if (!dataFlowActive) return
+    
     const canvas = canvasRef.current
     if (!canvas) return
     
     const ctx = canvas.getContext('2d')
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    canvas.width = canvas.offsetWidth
+    canvas.height = canvas.offsetHeight
     
     const particles = []
-    const particleCount = 100
+    const nodes = [
+      { x: canvas.width * 0.1, y: canvas.height * 0.5, label: 'User', color: '#7850ff' },
+      { x: canvas.width * 0.3, y: canvas.height * 0.3, label: 'CvPerfect', color: '#ff5080' },
+      { x: canvas.width * 0.5, y: canvas.height * 0.5, label: 'AI Engine', color: '#50b4ff' },
+      { x: canvas.width * 0.7, y: canvas.height * 0.7, label: 'Database', color: '#00ff88' },
+      { x: canvas.width * 0.9, y: canvas.height * 0.5, label: 'Result', color: '#ffd700' }
+    ]
     
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
-        this.z = Math.random() * 1000
-        this.size = Math.random() * 2
-        this.speedX = (Math.random() - 0.5) * 0.5
-        this.speedY = (Math.random() - 0.5) * 0.5
-        this.speedZ = Math.random() * 1
-        this.opacity = Math.random() * 0.5 + 0.2
+    class DataParticle {
+      constructor(startNode, endNode) {
+        this.start = startNode
+        this.end = endNode
+        this.progress = 0
+        this.speed = 0.01 + Math.random() * 0.02
+        this.size = 3 + Math.random() * 3
+        this.trail = []
       }
       
       update() {
-        this.x += this.speedX
-        this.y += this.speedY
-        this.z -= this.speedZ
-        
-        // Mouse interaction
-        const dx = this.x - mousePosition.current.x
-        const dy = this.y - mousePosition.current.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        
-        if (distance < 100) {
-          const force = (100 - distance) / 100
-          this.x += dx * force * 0.05
-          this.y += dy * force * 0.05
+        this.progress += this.speed
+        if (this.progress >= 1) {
+          this.progress = 0
+          this.trail = []
         }
         
-        // Reset particle if it goes off screen
-        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1
-        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1
-        if (this.z <= 0) {
-          this.z = 1000
-          this.x = Math.random() * canvas.width
-          this.y = Math.random() * canvas.height
+        const x = this.start.x + (this.end.x - this.start.x) * this.progress
+        const y = this.start.y + (this.end.y - this.start.y) * this.progress
+        
+        this.trail.push({ x, y, opacity: 1 })
+        if (this.trail.length > 10) {
+          this.trail.shift()
         }
+        
+        this.trail.forEach((point, index) => {
+          point.opacity = (index + 1) / this.trail.length * 0.5
+        })
       }
       
       draw() {
-        const scale = (1000 - this.z) / 1000
-        const size = this.size * scale * 2
+        // Draw trail
+        this.trail.forEach((point, index) => {
+          ctx.save()
+          ctx.globalAlpha = point.opacity
+          ctx.fillStyle = this.start.color
+          ctx.beginPath()
+          ctx.arc(point.x, point.y, this.size * (index / this.trail.length), 0, Math.PI * 2)
+          ctx.fill()
+          ctx.restore()
+        })
         
-        ctx.save()
-        ctx.globalAlpha = this.opacity * scale
+        // Draw main particle
+        const x = this.start.x + (this.end.x - this.start.x) * this.progress
+        const y = this.start.y + (this.end.y - this.start.y) * this.progress
         
-        // Gradient effect
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, size)
-        gradient.addColorStop(0, 'rgba(120, 80, 255, 1)')
-        gradient.addColorStop(0.5, 'rgba(255, 80, 150, 0.5)')
-        gradient.addColorStop(1, 'rgba(80, 180, 255, 0)')
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, this.size * 2)
+        gradient.addColorStop(0, this.start.color)
+        gradient.addColorStop(1, 'transparent')
         
         ctx.fillStyle = gradient
         ctx.beginPath()
-        ctx.arc(this.x, this.y, size, 0, Math.PI * 2)
+        ctx.arc(x, y, this.size, 0, Math.PI * 2)
         ctx.fill()
-        ctx.restore()
       }
     }
     
-    // Create particles
-    for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle())
-    }
+    // Create data flow paths
+    const flows = [
+      [nodes[0], nodes[1]],
+      [nodes[1], nodes[2]],
+      [nodes[2], nodes[3]],
+      [nodes[3], nodes[4]],
+      [nodes[1], nodes[3]],
+      [nodes[2], nodes[4]]
+    ]
     
-    // Animation loop
+    flows.forEach(([start, end]) => {
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          particles.push(new DataParticle(start, end))
+        }, i * 500)
+      }
+    })
+    
     let animationId
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = 'rgba(10, 10, 10, 0.1)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
       
       // Draw connections
-      particles.forEach((particle, i) => {
-        particles.slice(i + 1).forEach(otherParticle => {
-          const dx = particle.x - otherParticle.x
-          const dy = particle.y - otherParticle.y
-          const distance = Math.sqrt(dx * dx + dy * dy)
-          
-          if (distance < 150) {
-            ctx.save()
-            ctx.globalAlpha = (1 - distance / 150) * 0.1
-            ctx.strokeStyle = 'rgba(120, 80, 255, 0.5)'
-            ctx.lineWidth = 0.5
-            ctx.beginPath()
-            ctx.moveTo(particle.x, particle.y)
-            ctx.lineTo(otherParticle.x, otherParticle.y)
-            ctx.stroke()
-            ctx.restore()
-          }
+      nodes.forEach((node, i) => {
+        nodes.slice(i + 1).forEach(otherNode => {
+          ctx.save()
+          ctx.strokeStyle = 'rgba(120, 80, 255, 0.1)'
+          ctx.lineWidth = 1
+          ctx.setLineDash([5, 10])
+          ctx.beginPath()
+          ctx.moveTo(node.x, node.y)
+          ctx.lineTo(otherNode.x, otherNode.y)
+          ctx.stroke()
+          ctx.restore()
         })
+      })
+      
+      // Draw nodes
+      nodes.forEach(node => {
+        // Glow effect
+        const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, 30)
+        glow.addColorStop(0, node.color + '40')
+        glow.addColorStop(1, 'transparent')
+        ctx.fillStyle = glow
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, 30, 0, Math.PI * 2)
+        ctx.fill()
         
+        // Node circle
+        ctx.fillStyle = node.color
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, 10, 0, Math.PI * 2)
+        ctx.fill()
+        
+        // Label
+        ctx.fillStyle = 'white'
+        ctx.font = '12px Inter'
+        ctx.textAlign = 'center'
+        ctx.fillText(node.label, node.x, node.y - 20)
+      })
+      
+      // Update and draw particles
+      particles.forEach(particle => {
         particle.update()
         particle.draw()
       })
@@ -125,245 +179,389 @@ export default function Kontakt() {
     
     animate()
     
-    // Handle mouse move
-    const handleMouseMove = (e) => {
-      mousePosition.current = { x: e.clientX, y: e.clientY }
-    }
-    
-    // Handle resize
-    const handleResize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('resize', handleResize)
-    
     return () => {
       cancelAnimationFrame(animationId)
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('resize', handleResize)
     }
-  }, [])
-
-  // Scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    subject: 'technical',
-    message: ''
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  }, [dataFlowActive])
 
   const translations = {
     pl: {
-      title: 'Kontakt - CvPerfect | Centrum Wsparcia Premium',
-      pageTitle: 'Centrum Kontaktu',
-      subtitle: 'Jesteśmy tutaj, aby pomóc Ci osiągnąć sukces',
-      instantSupport: 'Natychmiastowe wsparcie',
-      expertTeam: 'Zespół ekspertów',
-      availability: '24/7 Dostępność',
+      title: 'Polityka Prywatności - CvPerfect | Ochrona Twoich Danych',
+      pageTitle: 'Polityka Prywatności',
+      subtitle: 'Transparentność i bezpieczeństwo Twoich danych',
+      lastUpdate: 'Ostatnia aktualizacja: 15 sierpnia 2025',
       backLink: '← Powrót',
       
-      // Tabs
-      tabForm: 'Formularz kontaktowy',
-      tabSupport: 'Centrum wsparcia',
-      tabBusiness: 'Współpraca B2B',
+      // Quick Info
+      quickInfo: 'Szybkie info',
+      dataRemoval: 'Dane CV usuwane po 24h',
+      gdprCompliant: '100% zgodność z RODO',
+      noSpam: 'Zero spamu',
+      encryption: 'Pełne szyfrowanie',
       
-      // Form section
-      formTitle: 'Skontaktuj się z nami',
-      formSubtitle: 'Wypełnij formularz, a odpowiemy w ciągu 24h',
-      formName: 'Imię i nazwisko',
-      formEmail: 'Email służbowy',
-      formCompany: 'Firma (opcjonalnie)',
-      formCategory: 'Kategoria',
-      formMessage: 'Twoja wiadomość',
-      formPlaceholder: 'Opisz szczegółowo, w czym możemy Ci pomóc...',
-      send: 'Wyślij wiadomość',
-      sending: 'Wysyłanie...',
+      // Quiz
+      quizTitle: 'Quiz RODO',
+      quizSubtitle: 'Sprawdź swoją wiedzę o prywatności',
+      startQuiz: 'Rozpocznij quiz',
+      nextQuestion: 'Następne pytanie',
+      finishQuiz: 'Zakończ quiz',
+      yourScore: 'Twój wynik',
+      tryAgain: 'Spróbuj ponownie',
       
-      // Categories
-      technical: '🛠️ Wsparcie techniczne',
-      billing: '💳 Płatności i faktury',
-      business: '💼 Współpraca biznesowa',
-      feature: '✨ Nowe funkcje',
-      other: '📋 Inne',
+      quizQuestions: [
+        {
+          question: 'Jak długo przechowujemy treść Twojego CV?',
+          answers: ['7 dni', '24 godziny', '30 dni', 'Na zawsze'],
+          correct: 1
+        },
+        {
+          question: 'Czy sprzedajemy Twoje dane firmom trzecim?',
+          answers: ['Tak, wszystkim', 'Tylko partnerom', 'Nigdy', 'Czasami'],
+          correct: 2
+        },
+        {
+          question: 'W jakim czasie możesz zażądać usunięcia danych?',
+          answers: ['W każdej chwili', 'Po 30 dniach', 'Po roku', 'Nie można'],
+          correct: 0
+        }
+      ],
       
-      // Support Center
-      supportTitle: 'Centrum Wsparcia 24/7',
-      supportSubtitle: 'Rozwiązania najczęstszych problemów',
+      // Data Flow
+      dataFlowTitle: 'Przepływ danych',
+      dataFlowSubtitle: 'Zobacz jak bezpiecznie przetwarzamy Twoje dane',
+      showDataFlow: 'Pokaż animację',
+      hideDataFlow: 'Ukryj animację',
       
-      faq1: 'Jak działa optymalizacja AI?',
-      faq1Desc: 'Nasza sztuczna inteligencja analizuje Twoje CV pod kątem ATS, słów kluczowych i struktury, dostosowując je do wymogów rekruterów.',
+      // Sections
+      sections: [
+        {
+          id: 'admin',
+          icon: '🏢',
+          title: 'Administrator danych',
+          content: {
+            intro: 'CvPerfect jest administratorem Twoich danych osobowych.',
+            details: [
+              'Siedziba: Polska',
+              'Email: pomoc@cvperfect.pl',
+              
+            ]
+          }
+        },
+        {
+          id: 'data',
+          icon: '📊',
+          title: 'Zakres danych',
+          content: {
+            intro: 'Przetwarzamy tylko niezbędne dane:',
+            categories: [
+              { name: 'Dane kontaktowe', items: ['Email', 'Imię (opcjonalnie)'] },
+              { name: 'Treść CV', items: ['Tekst CV', 'Usuwane po 24h'] },
+              { name: 'Dane techniczne', items: ['IP', 'Przeglądarka', 'Logi (30 dni)'] },
+              { name: 'Płatności', items: ['Historia transakcji', 'Status subskrypcji'] }
+            ]
+          }
+        },
+        {
+          id: 'purpose',
+          icon: '🎯',
+          title: 'Cele przetwarzania',
+          content: {
+            intro: 'Twoje dane przetwarzamy w celu:',
+            purposes: [
+              { title: 'Optymalizacja CV', basis: 'Wykonanie umowy' },
+              { title: 'Wysyłka rezultatów', basis: 'Wykonanie umowy' },
+              { title: 'Obsługa płatności', basis: 'Obowiązek prawny' },
+              { title: 'Bezpieczeństwo', basis: 'Uzasadniony interes' }
+            ]
+          }
+        },
+        {
+          id: 'retention',
+          icon: '⏰',
+          title: 'Okres przechowywania',
+          content: {
+            intro: 'Przechowujemy dane tylko tak długo jak to konieczne:',
+            periods: [
+              { data: 'Treść CV', time: '24 godziny', color: '#00ff88' },
+              { data: 'Logi systemowe', time: '30 dni', color: '#ffd700' },
+              { data: 'Dane techniczne', time: '12 miesięcy', color: '#50b4ff' },
+              { data: 'Dane płatności', time: '5 lat', color: '#ff5080' }
+            ]
+          }
+        },
+        {
+          id: 'sharing',
+          icon: '🤝',
+          title: 'Udostępnianie danych',
+          content: {
+            intro: 'Współpracujemy tylko z zaufanymi partnerami:',
+            partners: [
+              { name: 'Stripe', purpose: 'Płatności', icon: '💳' },
+              { name: 'Groq AI', purpose: 'Przetwarzanie AI', icon: '🤖' },
+              { name: 'Vercel', purpose: 'Hosting', icon: '☁️' },
+              { name: 'Supabase', purpose: 'Baza danych', icon: '🗄️' }
+            ]
+          }
+        },
+        {
+          id: 'rights',
+          icon: '⚖️',
+          title: 'Twoje prawa',
+          content: {
+            intro: 'Masz pełną kontrolę nad swoimi danymi:',
+            rights: [
+              { name: 'Dostęp do danych', desc: 'Sprawdź jakie dane posiadamy' },
+              { name: 'Sprostowanie', desc: 'Popraw błędne informacje' },
+              { name: 'Usunięcie', desc: 'Usuń swoje dane w 24h' },
+              { name: 'Ograniczenie', desc: 'Ogranicz przetwarzanie' },
+              { name: 'Przenoszenie', desc: 'Pobierz dane w formacie JSON' },
+              { name: 'Sprzeciw', desc: 'Sprzeciw się przetwarzaniu' }
+            ]
+          }
+        },
+        {
+          id: 'security',
+          icon: '🔐',
+          title: 'Bezpieczeństwo',
+          content: {
+            intro: 'Stosujemy najwyższe standardy bezpieczeństwa:',
+            measures: [
+              'Szyfrowanie SSL/TLS',
+              'Automatyczne usuwanie CV',
+              'Monitoring 24/7',
+              'Regularne audyty',
+              'Backup danych',
+              'Ograniczony dostęp'
+            ]
+          }
+        },
+        {
+          id: 'cookies',
+          icon: '🍪',
+          title: 'Pliki cookies',
+          content: {
+            intro: 'Używamy tylko niezbędnych cookies:',
+            types: [
+              { name: 'Funkcjonalne', desc: 'Podstawowe działanie serwisu' },
+              { name: 'Analityczne', desc: 'Poprawa jakości usług' },
+              { name: 'Bezpieczeństwa', desc: 'Ochrona przed atakami' }
+            ]
+          }
+        }
+      ],
       
-      faq2: 'Czy moje dane są bezpieczne?',
-      faq2Desc: 'Tak! Stosujemy szyfrowanie SSL i nie przechowujemy Twoich danych dłużej niż 24h. Zgodność z RODO.',
-      
-      faq3: 'Jak szybko otrzymam wynik?',
-      faq3Desc: 'Optymalizacja trwa 2-3 minuty. Otrzymasz powiadomienie email z gotowym CV.',
-      
-      faq4: 'Mogę anulować subskrypcję?',
-      faq4Desc: 'Oczywiście! Anulowanie jest natychmiastowe, bez ukrytych kosztów.',
-      
-      // Business section
-      businessTitle: 'Rozwiązania dla Biznesu',
-      businessSubtitle: 'Skrojone na miarę pakiety dla firm',
-      
-      package1: 'Startup',
-      package1Desc: 'Do 10 pracowników',
-      package1Feature1: '✓ Nielimitowane optymalizacje',
-      package1Feature2: '✓ Panel administracyjny',
-      package1Feature3: '✓ Wsparcie email',
-      
-      package2: 'Enterprise',
-      package2Desc: 'Do 100 pracowników',
-      package2Feature1: '✓ Wszystko ze Startup',
-      package2Feature2: '✓ Dedykowany opiekun',
-      package2Feature3: '✓ Integracja API',
-      
-      package3: 'Custom',
-      package3Desc: 'Rozwiązania na miarę',
-      package3Feature1: '✓ Pełna personalizacja',
-      package3Feature2: '✓ SLA gwarancja',
-      package3Feature3: '✓ Szkolenia on-site',
-      
-      contactBusiness: 'Zapytaj o ofertę',
-      
-      // Success message
-      success: 'Wiadomość wysłana!',
-      successDesc: 'Dziękujemy za kontakt. Nasz zespół odpowie najszybciej jak to możliwe.',
-      
-      // Contact info
-      quickContact: 'Szybki kontakt',
-      emailLabel: 'Email',
-      emailValue: 'pomoc@cvperfect.pl',
-      responseTime: 'Czas odpowiedzi',
-      responseValue: '< 24 godziny',
-      availability: 'Dostępność',
-      availabilityValue: 'Pon-Pt 9:00-17:00'
+      // Footer
+      contact: 'Kontakt',
+      contactText: 'Masz pytania o prywatność?',
+      contactEmail: 'pomoc@cvperfect.pl',
+      trustBadge: 'Zaufało nam już ponad 50,000 użytkowników'
     },
     en: {
-      title: 'Contact - CvPerfect | Premium Support Center',
-      pageTitle: 'Contact Center',
-      subtitle: 'We are here to help you succeed',
-      instantSupport: 'Instant support',
-      expertTeam: 'Expert team',
-      availability: '24/7 Availability',
+      title: 'Privacy Policy - CvPerfect | Your Data Protection',
+      pageTitle: 'Privacy Policy',
+      subtitle: 'Transparency and security of your data',
+      lastUpdate: 'Last updated: August 15, 2025',
       backLink: '← Back',
       
-      // Tabs
-      tabForm: 'Contact form',
-      tabSupport: 'Support center',
-      tabBusiness: 'B2B Partnership',
+      // Quick Info
+      quickInfo: 'Quick info',
+      dataRemoval: 'CV data deleted after 24h',
+      gdprCompliant: '100% GDPR compliant',
+      noSpam: 'Zero spam',
+      encryption: 'Full encryption',
       
-      // Form section
-      formTitle: 'Get in touch',
-      formSubtitle: 'Fill the form and we\'ll respond within 24h',
-      formName: 'Full name',
-      formEmail: 'Business email',
-      formCompany: 'Company (optional)',
-      formCategory: 'Category',
-      formMessage: 'Your message',
-      formPlaceholder: 'Describe in detail how we can help you...',
-      send: 'Send message',
-      sending: 'Sending...',
+      // Quiz
+      quizTitle: 'GDPR Quiz',
+      quizSubtitle: 'Test your privacy knowledge',
+      startQuiz: 'Start quiz',
+      nextQuestion: 'Next question',
+      finishQuiz: 'Finish quiz',
+      yourScore: 'Your score',
+      tryAgain: 'Try again',
       
-      // Categories
-      technical: '🛠️ Technical support',
-      billing: '💳 Payments and invoices',
-      business: '💼 Business cooperation',
-      feature: '✨ New features',
-      other: '📋 Other',
+      quizQuestions: [
+        {
+          question: 'How long do we store your CV content?',
+          answers: ['7 days', '24 hours', '30 days', 'Forever'],
+          correct: 1
+        },
+        {
+          question: 'Do we sell your data to third parties?',
+          answers: ['Yes, to everyone', 'Only to partners', 'Never', 'Sometimes'],
+          correct: 2
+        },
+        {
+          question: 'When can you request data deletion?',
+          answers: ['Anytime', 'After 30 days', 'After a year', 'Never'],
+          correct: 0
+        }
+      ],
       
-      // Support Center
-      supportTitle: '24/7 Support Center',
-      supportSubtitle: 'Solutions to common problems',
+      // Data Flow
+      dataFlowTitle: 'Data flow',
+      dataFlowSubtitle: 'See how we securely process your data',
+      showDataFlow: 'Show animation',
+      hideDataFlow: 'Hide animation',
       
-      faq1: 'How does AI optimization work?',
-      faq1Desc: 'Our AI analyzes your CV for ATS compatibility, keywords, and structure, adapting it to recruiter requirements.',
+      // Sections
+      sections: [
+        {
+          id: 'admin',
+          icon: '🏢',
+          title: 'Data controller',
+          content: {
+            intro: 'CvPerfect is the controller of your personal data.',
+            details: [
+              'Headquarters: Poland',
+              'Email: support@cvperfect.pl',
+              'Data Protection Officer: dpo@cvperfect.pl'
+            ]
+          }
+        },
+        {
+          id: 'data',
+          icon: '📊',
+          title: 'Data scope',
+          content: {
+            intro: 'We process only necessary data:',
+            categories: [
+              { name: 'Contact data', items: ['Email', 'Name (optional)'] },
+              { name: 'CV content', items: ['CV text', 'Deleted after 24h'] },
+              { name: 'Technical data', items: ['IP', 'Browser', 'Logs (30 days)'] },
+              { name: 'Payments', items: ['Transaction history', 'Subscription status'] }
+            ]
+          }
+        },
+        {
+          id: 'purpose',
+          icon: '🎯',
+          title: 'Processing purposes',
+          content: {
+            intro: 'We process your data for:',
+            purposes: [
+              { title: 'CV optimization', basis: 'Contract execution' },
+              { title: 'Results delivery', basis: 'Contract execution' },
+              { title: 'Payment processing', basis: 'Legal obligation' },
+              { title: 'Security', basis: 'Legitimate interest' }
+            ]
+          }
+        },
+        {
+          id: 'retention',
+          icon: '⏰',
+          title: 'Retention period',
+          content: {
+            intro: 'We keep data only as long as necessary:',
+            periods: [
+              { data: 'CV content', time: '24 hours', color: '#00ff88' },
+              { data: 'System logs', time: '30 days', color: '#ffd700' },
+              { data: 'Technical data', time: '12 months', color: '#50b4ff' },
+              { data: 'Payment data', time: '5 years', color: '#ff5080' }
+            ]
+          }
+        },
+        {
+          id: 'sharing',
+          icon: '🤝',
+          title: 'Data sharing',
+          content: {
+            intro: 'We work only with trusted partners:',
+            partners: [
+              { name: 'Stripe', purpose: 'Payments', icon: '💳' },
+              { name: 'Groq AI', purpose: 'AI processing', icon: '🤖' },
+              { name: 'Vercel', purpose: 'Hosting', icon: '☁️' },
+              { name: 'Supabase', purpose: 'Database', icon: '🗄️' }
+            ]
+          }
+        },
+        {
+          id: 'rights',
+          icon: '⚖️',
+          title: 'Your rights',
+          content: {
+            intro: 'You have full control over your data:',
+            rights: [
+              { name: 'Data access', desc: 'Check what data we have' },
+              { name: 'Rectification', desc: 'Correct wrong information' },
+              { name: 'Deletion', desc: 'Delete your data in 24h' },
+              { name: 'Restriction', desc: 'Limit processing' },
+              { name: 'Portability', desc: 'Download data in JSON' },
+              { name: 'Objection', desc: 'Object to processing' }
+            ]
+          }
+        },
+        {
+          id: 'security',
+          icon: '🔐',
+          title: 'Security',
+          content: {
+            intro: 'We use highest security standards:',
+            measures: [
+              'SSL/TLS encryption',
+              'Automatic CV deletion',
+              '24/7 monitoring',
+              'Regular audits',
+              'Data backup',
+              'Limited access'
+            ]
+          }
+        },
+        {
+          id: 'cookies',
+          icon: '🍪',
+          title: 'Cookies',
+          content: {
+            intro: 'We use only necessary cookies:',
+            types: [
+              { name: 'Functional', desc: 'Basic site operation' },
+              { name: 'Analytics', desc: 'Service improvement' },
+              { name: 'Security', desc: 'Attack protection' }
+            ]
+          }
+        }
+      ],
       
-      faq2: 'Is my data secure?',
-      faq2Desc: 'Yes! We use SSL encryption and don\'t store your data for more than 24h. GDPR compliant.',
-      
-      faq3: 'How fast will I get results?',
-      faq3Desc: 'Optimization takes 2-3 minutes. You\'ll receive an email notification with your ready CV.',
-      
-      faq4: 'Can I cancel subscription?',
-      faq4Desc: 'Of course! Cancellation is immediate, no hidden costs.',
-      
-      // Business section
-      businessTitle: 'Business Solutions',
-      businessSubtitle: 'Tailored packages for companies',
-      
-      package1: 'Startup',
-      package1Desc: 'Up to 10 employees',
-      package1Feature1: '✓ Unlimited optimizations',
-      package1Feature2: '✓ Admin panel',
-      package1Feature3: '✓ Email support',
-      
-      package2: 'Enterprise',
-      package2Desc: 'Up to 100 employees',
-      package2Feature1: '✓ Everything from Startup',
-      package2Feature2: '✓ Dedicated manager',
-      package2Feature3: '✓ API integration',
-      
-      package3: 'Custom',
-      package3Desc: 'Tailored solutions',
-      package3Feature1: '✓ Full personalization',
-      package3Feature2: '✓ SLA guarantee',
-      package3Feature3: '✓ On-site training',
-      
-      contactBusiness: 'Request offer',
-      
-      // Success message
-      success: 'Message sent!',
-      successDesc: 'Thank you for contacting us. Our team will respond as soon as possible.',
-      
-      // Contact info
-      quickContact: 'Quick contact',
-      emailLabel: 'Email',
-      emailValue: 'support@cvperfect.pl',
-      responseTime: 'Response time',
-      responseValue: '< 24 hours',
-      availability: 'Availability',
-      availabilityValue: 'Mon-Fri 9:00-17:00'
+      // Footer
+      contact: 'Contact',
+      contactText: 'Have privacy questions?',
+      contactEmail: 'support@cvperfect.pl',
+      trustBadge: 'Trusted by over 50,000 users'
     }
   }
 
   const t = translations[currentLanguage]
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
-    // Simulate API call with animation
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
-    
-    setTimeout(() => {
-      setIsSubmitted(false)
-      setFormData({ name: '', email: '', company: '', subject: 'technical', message: '' })
-    }, 5000)
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }))
   }
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+const handleQuizAnswer = (answerIndex) => {
+  const question = t.quizQuestions[currentQuestion]
+  
+  if (currentQuestion < t.quizQuestions.length - 1) {
+    if (answerIndex === question.correct) {
+      setQuizScore(prev => prev + 1)
+    }
+    setCurrentQuestion(currentQuestion + 1)
+  } else {
+    // Last question
+    if (answerIndex === question.correct) {
+      setQuizScore(prev => prev + 1)
+    }
+    // Quiz finished - show result
+    setCurrentQuestion(t.quizQuestions.length) // Set to length to show result
   }
+}
+  
+
+const resetQuiz = () => {
+  setQuizScore(0)
+  setCurrentQuestion(0)
+  setQuizActive(true)
+}
 
   return (
     <>
@@ -374,49 +572,45 @@ export default function Kontakt() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="container">
-        {/* 3D Particles Canvas */}
-        <canvas ref={canvasRef} className="particles-canvas" />
-        
-        {/* Animated Background Gradients */}
-        <div className="background-effects">
-          <div className="gradient-sphere sphere-1"></div>
-          <div className="gradient-sphere sphere-2"></div>
-          <div className="gradient-sphere sphere-3"></div>
-          <div className="glow-line line-1"></div>
-          <div className="glow-line line-2"></div>
+      <div className="privacy-container">
+        {/* Progress Bar */}
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: `${scrollProgress}%` }}></div>
         </div>
-        
+
+        {/* Animated Background */}
+        <div className="animated-background">
+          <div className="gradient-orb orb-1"></div>
+          <div className="gradient-orb orb-2"></div>
+          <div className="gradient-orb orb-3"></div>
+          <div className="floating-particles"></div>
+        </div>
+
         {/* Navigation */}
-        <nav className={`navigation ${isScrolled ? 'scrolled' : ''}`}>
+        <nav className="navigation">
           <div className="nav-content">
             <div className="logo" onClick={() => router.push('/')}>
-              <div className="logo-icon">
-                <span className="logo-badge">AI</span>
-              </div>
+              <span className="logo-badge">AI</span>
               <span className="logo-text">CvPerfect</span>
             </div>
             
-            <div className="nav-links">
+            <div className="nav-actions">
               <div className="language-switcher">
                 <button 
                   className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
                   onClick={() => setCurrentLanguage('pl')}
                 >
-                  <span className="flag">🇵🇱</span> PL
+                  🇵🇱 PL
                 </button>
                 <button 
                   className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
                   onClick={() => setCurrentLanguage('en')}
                 >
-                  <span className="flag">🇬🇧</span> EN
+                  🇬🇧 EN
                 </button>
               </div>
-              <button className="nav-cta" onClick={() => router.push('/')}>
-                <span>{t.backLink}</span>
-                <svg className="cta-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M7 10L12 5L17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+              <button className="back-btn" onClick={() => router.push('/')}>
+                {t.backLink}
               </button>
             </div>
           </div>
@@ -425,316 +619,271 @@ export default function Kontakt() {
         {/* Hero Section */}
         <section className="hero-section">
           <div className="hero-content">
-            <div className="hero-badge">
-              <span className="badge-dot"></span>
-              <span>{t.availability}</span>
-            </div>
             <h1 className="hero-title">
               <span className="title-gradient">{t.pageTitle}</span>
             </h1>
             <p className="hero-subtitle">{t.subtitle}</p>
+            <p className="last-update">{t.lastUpdate}</p>
             
-            <div className="hero-features">
-              <div className="feature-card">
-                <div className="feature-icon">⚡</div>
-                <span>{t.instantSupport}</span>
+            {/* Quick Info Cards */}
+            <div className="quick-info-grid">
+              <div className="info-card">
+                <div className="info-icon">⚡</div>
+                <span>{t.dataRemoval}</span>
               </div>
-              <div className="feature-card">
-                <div className="feature-icon">👥</div>
-                <span>{t.expertTeam}</span>
+              <div className="info-card">
+                <div className="info-icon">🛡️</div>
+                <span>{t.gdprCompliant}</span>
               </div>
-              <div className="feature-card">
-                <div className="feature-icon">🌍</div>
-                <span>{t.availability}</span>
+              <div className="info-card">
+                <div className="info-icon">🚫</div>
+                <span>{t.noSpam}</span>
+              </div>
+              <div className="info-card">
+                <div className="info-icon">🔐</div>
+                <span>{t.encryption}</span>
               </div>
             </div>
-          </div>
-          
-          <div className="scroll-indicator">
-            <div className="scroll-dot"></div>
           </div>
         </section>
 
-        {/* Main Content with Tabs */}
-        <section className="main-content">
-          <div className="tabs-container">
-            <div className="tabs-header">
-              <button 
-                className={`tab-btn ${activeTab === 'form' ? 'active' : ''}`}
-                onClick={() => setActiveTab('form')}
-              >
-                <span className="tab-icon">✉️</span>
-                <span>{t.tabForm}</span>
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'support' ? 'active' : ''}`}
-                onClick={() => setActiveTab('support')}
-              >
-                <span className="tab-icon">🛡️</span>
-                <span>{t.tabSupport}</span>
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'business' ? 'active' : ''}`}
-                onClick={() => setActiveTab('business')}
-              >
-                <span className="tab-icon">🚀</span>
-                <span>{t.tabBusiness}</span>
-              </button>
-            </div>
-
-            <div className="tabs-content">
-              {/* Contact Form Tab */}
-              {activeTab === 'form' && (
-                <div className="tab-panel form-panel">
-                  <div className="panel-grid">
-                    <div className="form-section">
-                      <h2 className="section-title">{t.formTitle}</h2>
-                      <p className="section-subtitle">{t.formSubtitle}</p>
-                      
-                      {isSubmitted ? (
-                        <div className="success-container">
-                          <div className="success-animation">
-                            <div className="checkmark-circle">
-                              <svg className="checkmark" viewBox="0 0 52 52">
-                                <circle className="checkmark-circle-bg" cx="26" cy="26" r="25" fill="none"/>
-                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                              </svg>
-                            </div>
-                          </div>
-                          <h3>{t.success}</h3>
-                          <p>{t.successDesc}</p>
-                        </div>
-                      ) : (
-                        <form onSubmit={handleSubmit} className="contact-form">
-                          <div className="form-grid">
-                            <div className="form-field">
-                              <label>{t.formName}</label>
-                              <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                                className="form-input"
-                              />
-                              <div className="field-focus"></div>
-                            </div>
-                            
-                            <div className="form-field">
-                              <label>{t.formEmail}</label>
-                              <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                className="form-input"
-                              />
-                              <div className="field-focus"></div>
-                            </div>
-                          </div>
-
-                          <div className="form-field">
-                            <label>{t.formCompany}</label>
-                            <input
-                              type="text"
-                              name="company"
-                              value={formData.company}
-                              onChange={handleChange}
-                              className="form-input"
-                            />
-                            <div className="field-focus"></div>
-                          </div>
-
-                          <div className="form-field">
-                            <label>{t.formCategory}</label>
-                            <select
-                              name="subject"
-                              value={formData.subject}
-                              onChange={handleChange}
-                              required
-                              className="form-select"
-                            >
-                              <option value="technical">{t.technical}</option>
-                              <option value="billing">{t.billing}</option>
-                              <option value="business">{t.business}</option>
-                              <option value="feature">{t.feature}</option>
-                              <option value="other">{t.other}</option>
-                            </select>
-                            <div className="field-focus"></div>
-                          </div>
-
-                          <div className="form-field">
-                            <label>{t.formMessage}</label>
-                            <textarea
-                              name="message"
-                              value={formData.message}
-                              onChange={handleChange}
-                              required
-                              rows="5"
-                              placeholder={t.formPlaceholder}
-                              className="form-textarea"
-                            ></textarea>
-                            <div className="field-focus"></div>
-                          </div>
-
-                          <button 
-                            type="submit" 
-                            className={`submit-btn ${isSubmitting ? 'submitting' : ''}`}
-                            disabled={isSubmitting}
+        {/* Interactive Features */}
+        <section className="interactive-section">
+          <div className="features-grid">
+            {/* GDPR Quiz */}
+            <div className="feature-card quiz-card">
+              <div className="card-header">
+                <h3>🎯 {t.quizTitle}</h3>
+                <p>{t.quizSubtitle}</p>
+              </div>
+              
+              {!quizActive ? (
+                <div className="quiz-start">
+                  <button className="quiz-btn" onClick={() => setQuizActive(true)}>
+                    {t.startQuiz}
+                  </button>
+                  {quizScore > 0 && (
+                    <div className="previous-score">
+                      {t.yourScore}: {quizScore}/{t.quizQuestions.length}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="quiz-content">
+                  {currentQuestion < t.quizQuestions.length ? (
+                    <>
+                      <div className="question-progress">
+                        {currentQuestion + 1}/{t.quizQuestions.length}
+                      </div>
+                      <h4>{t.quizQuestions[currentQuestion].question}</h4>
+                      <div className="answers-grid">
+                        {t.quizQuestions[currentQuestion].answers.map((answer, index) => (
+                          <button
+                            key={index}
+                            className="answer-btn"
+                            onClick={() => handleQuizAnswer(index)}
                           >
-                            <span className="btn-text">
-                              {isSubmitting ? t.sending : t.send}
-                            </span>
-                            <span className="btn-icon">
-                              {isSubmitting ? '⏳' : '🚀'}
-                            </span>
+                            {answer}
                           </button>
-                        </form>
-                      )}
-                    </div>
-                    
-                    <div className="info-section">
-                      <div className="info-card premium-card">
-                        <h3>{t.quickContact}</h3>
-                        <div className="info-items">
-                          <div className="info-item">
-                            <span className="info-label">{t.emailLabel}</span>
-                            <a href="mailto:pomoc@cvperfect.pl" className="info-value email-link">
-                              {t.emailValue}
-                            </a>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-label">{t.responseTime}</span>
-                            <span className="info-value">{t.responseValue}</span>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-label">{t.availability}</span>
-                            <span className="info-value">{t.availabilityValue}</span>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                      
-                      <div className="decorative-card">
-                        <div className="card-glow"></div>
-                        <div className="card-content">
-                          <div className="floating-icons">
-                            <span className="float-icon">💬</span>
-                            <span className="float-icon">📧</span>
-                            <span className="float-icon">🎯</span>
-                            <span className="float-icon">✨</span>
-                          </div>
-                        </div>
+                    </>
+                  ) : (
+                    <div className="quiz-result">
+                      <div className="score-display">
+                        <span className="score-number">{quizScore}</span>
+                        <span className="score-total">/{t.quizQuestions.length}</span>
                       </div>
+                      <button className="quiz-btn" onClick={resetQuiz}>
+                        {t.tryAgain}
+                      </button>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
+            </div>
 
-              {/* Support Center Tab */}
-              {activeTab === 'support' && (
-                <div className="tab-panel support-panel">
-                  <div className="support-header">
-                    <h2 className="section-title">{t.supportTitle}</h2>
-                    <p className="section-subtitle">{t.supportSubtitle}</p>
-                  </div>
-                  
-                  <div className="faq-grid">
-                    <div className="faq-card">
-                      <div className="faq-icon">🤖</div>
-                      <h3>{t.faq1}</h3>
-                      <p>{t.faq1Desc}</p>
-                      <div className="card-shine"></div>
-                    </div>
-                    
-                    <div className="faq-card">
-                      <div className="faq-icon">🔒</div>
-                      <h3>{t.faq2}</h3>
-                      <p>{t.faq2Desc}</p>
-                      <div className="card-shine"></div>
-                    </div>
-                    
-                    <div className="faq-card">
-                      <div className="faq-icon">⚡</div>
-                      <h3>{t.faq3}</h3>
-                      <p>{t.faq3Desc}</p>
-                      <div className="card-shine"></div>
-                    </div>
-                    
-                    <div className="faq-card">
-                      <div className="faq-icon">❌</div>
-                      <h3>{t.faq4}</h3>
-                      <p>{t.faq4Desc}</p>
-                      <div className="card-shine"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Business Tab */}
-              {activeTab === 'business' && (
-                <div className="tab-panel business-panel">
-                  <div className="business-header">
-                    <h2 className="section-title">{t.businessTitle}</h2>
-                    <p className="section-subtitle">{t.businessSubtitle}</p>
-                  </div>
-                  
-                  <div className="packages-grid">
-                    <div className="package-card">
-                      <div className="package-header">
-                        <h3>{t.package1}</h3>
-                        <p>{t.package1Desc}</p>
-                      </div>
-                      <div className="package-features">
-                        <div className="feature">{t.package1Feature1}</div>
-                        <div className="feature">{t.package1Feature2}</div>
-                        <div className="feature">{t.package1Feature3}</div>
-                      </div>
-                      <button className="package-btn">
-                        {t.contactBusiness}
-                      </button>
-                    </div>
-                    
-                    <div className="package-card featured">
-                      <div className="featured-badge">POPULAR</div>
-                      <div className="package-header">
-                        <h3>{t.package2}</h3>
-                        <p>{t.package2Desc}</p>
-                      </div>
-                      <div className="package-features">
-                        <div className="feature">{t.package2Feature1}</div>
-                        <div className="feature">{t.package2Feature2}</div>
-                        <div className="feature">{t.package2Feature3}</div>
-                      </div>
-                      <button className="package-btn primary">
-                        {t.contactBusiness}
-                      </button>
-                    </div>
-                    
-                    <div className="package-card">
-                      <div className="package-header">
-                        <h3>{t.package3}</h3>
-                        <p>{t.package3Desc}</p>
-                      </div>
-                      <div className="package-features">
-                        <div className="feature">{t.package3Feature1}</div>
-                        <div className="feature">{t.package3Feature2}</div>
-                        <div className="feature">{t.package3Feature3}</div>
-                      </div>
-                      <button className="package-btn">
-                        {t.contactBusiness}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            {/* Data Flow Visualization */}
+            <div className="feature-card flow-card">
+              <div className="card-header">
+                <h3>🔄 {t.dataFlowTitle}</h3>
+                <p>{t.dataFlowSubtitle}</p>
+              </div>
+              
+<button 
+  className="flow-btn"
+  onClick={() => setDataFlowActive(!dataFlowActive)}
+  type="button"
+  style={{ position: 'relative', zIndex: 10 }}
+>
+  {dataFlowActive ? t.hideDataFlow : t.showDataFlow}
+</button>
+              
+              {dataFlowActive && (
+                <canvas 
+                  ref={canvasRef}
+                  className="data-flow-canvas"
+                  width="400"
+                  height="300"
+                />
               )}
             </div>
           </div>
         </section>
+
+        {/* Main Content - Accordion Sections */}
+        <section className="content-section">
+          <div className="sections-container">
+            {t.sections.map((section, index) => (
+              <div 
+                key={section.id}
+                className={`accordion-item ${expandedSections[section.id] ? 'expanded' : ''}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <button
+                  className="accordion-header"
+                  onClick={() => toggleSection(section.id)}
+                >
+                  <div className="header-left">
+                    <span className="section-icon">{section.icon}</span>
+                    <h3>{section.title}</h3>
+                  </div>
+                  <div className="expand-icon">
+                    {expandedSections[section.id] ? '−' : '+'}
+                  </div>
+                </button>
+                
+                <div className={`accordion-content ${expandedSections[section.id] ? 'show' : ''}`}>
+                  <div className="content-inner">
+                    <p className="content-intro">{section.content.intro}</p>
+                    
+                    {/* Different content layouts based on section */}
+                    {section.id === 'admin' && (
+                      <div className="admin-details">
+                        {section.content.details.map((detail, i) => (
+                          <div key={i} className="detail-item">
+                            <span className="detail-icon">→</span>
+                            <span>{detail}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'data' && (
+                      <div className="data-categories">
+                        {section.content.categories.map((category, i) => (
+                          <div key={i} className="category-box">
+                            <h4>{category.name}</h4>
+                            <ul>
+                              {category.items.map((item, j) => (
+                                <li key={j}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'purpose' && (
+                      <div className="purposes-grid">
+                        {section.content.purposes.map((purpose, i) => (
+                          <div key={i} className="purpose-card">
+                            <h4>{purpose.title}</h4>
+                            <span className="legal-basis">{purpose.basis}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'retention' && (
+                      <div className="retention-timeline">
+                        {section.content.periods.map((period, i) => (
+                          <div key={i} className="timeline-item">
+                            <div 
+                              className="timeline-dot"
+                              style={{ backgroundColor: period.color }}
+                            ></div>
+                            <div className="timeline-content">
+                              <h4>{period.data}</h4>
+                              <span style={{ color: period.color }}>{period.time}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'sharing' && (
+                      <div className="partners-grid">
+                        {section.content.partners.map((partner, i) => (
+                          <div key={i} className="partner-card">
+                            <div className="partner-icon">{partner.icon}</div>
+                            <h4>{partner.name}</h4>
+                            <p>{partner.purpose}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'rights' && (
+                      <div className="rights-grid">
+                        {section.content.rights.map((right, i) => (
+                          <div key={i} className="right-card">
+                            <h4>{right.name}</h4>
+                            <p>{right.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'security' && (
+                      <div className="security-measures">
+                        {section.content.measures.map((measure, i) => (
+                          <div key={i} className="measure-item">
+                            <span className="measure-icon">✓</span>
+                            <span>{measure}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {section.id === 'cookies' && (
+                      <div className="cookies-types">
+                        {section.content.types.map((type, i) => (
+                          <div key={i} className="cookie-type">
+                            <h4>🍪 {type.name}</h4>
+                            <p>{type.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="privacy-footer">
+          <div className="footer-content">
+            <div className="trust-badge">
+              <span className="badge-icon">🛡️</span>
+              <span>{t.trustBadge}</span>
+            </div>
+            
+            <div className="contact-section">
+              <h3>{t.contactText}</h3>
+              <a href={`mailto:${t.contactEmail}`} className="contact-link">
+                {t.contactEmail}
+              </a>
+            </div>
+          </div>
+        </footer>
       </div>
 
       <style jsx>{`
-        /* Global Reset */
+        /* Global Styles */
         * {
           margin: 0;
           padding: 0;
@@ -750,91 +899,80 @@ export default function Kontakt() {
         }
 
         /* Container */
-        .container {
+        .privacy-container {
           min-height: 100vh;
-          background: #0a0a0a;
+          background: linear-gradient(135deg, #0a0a0a 0%, #1a0f2e 100%);
           color: white;
           position: relative;
           overflow: hidden;
         }
 
-        /* 3D Particles Canvas */
-        .particles-canvas {
+        /* Progress Bar */
+        .progress-bar {
           position: fixed;
           top: 0;
           left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 1;
-          pointer-events: none;
+          right: 0;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.1);
+          z-index: 10000;
         }
 
-        /* Background Effects */
-        .background-effects {
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #7850ff, #ff5080, #50b4ff);
+          transition: width 0.3s ease;
+          box-shadow: 0 0 10px rgba(120, 80, 255, 0.5);
+        }
+
+        /* Animated Background */
+        .animated-background {
           position: fixed;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
           z-index: 0;
-          overflow: hidden;
+          pointer-events: none;
         }
 
-        .gradient-sphere {
+        .gradient-orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(80px);
-          opacity: 0.3;
-          animation: floatSphere 20s ease-in-out infinite;
+          filter: blur(100px);
+          opacity: 0.4;
+          animation: floatOrb 20s ease-in-out infinite;
         }
 
-        .sphere-1 {
-          width: 600px;
-          height: 600px;
-          background: linear-gradient(135deg, #7850ff, #ff5080);
+        .orb-1 {
+          width: 500px;
+          height: 500px;
+          background: linear-gradient(135deg, #7850ff, #9060ff);
           top: -200px;
-          right: -200px;
+          left: -200px;
           animation-delay: 0s;
         }
 
-        .sphere-2 {
+        .orb-2 {
           width: 400px;
           height: 400px;
-          background: linear-gradient(135deg, #50b4ff, #00ff88);
-          bottom: -100px;
-          left: -100px;
+          background: linear-gradient(135deg, #ff5080, #ff70a0);
+          bottom: -150px;
+          right: -150px;
           animation-delay: 7s;
         }
 
-        .sphere-3 {
-          width: 500px;
-          height: 500px;
-          background: linear-gradient(135deg, #ff5080, #ffd700);
+        .orb-3 {
+          width: 350px;
+          height: 350px;
+          background: linear-gradient(135deg, #50b4ff, #70c4ff);
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
           animation-delay: 14s;
         }
 
-        .glow-line {
-          position: absolute;
-          height: 1px;
-          width: 100%;
-          background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.5), transparent);
-          animation: glowMove 8s linear infinite;
-        }
-
-        .line-1 {
-          top: 30%;
-          animation-delay: 0s;
-        }
-
-        .line-2 {
-          top: 70%;
-          animation-delay: 4s;
-        }
-
-        @keyframes floatSphere {
+        @keyframes floatOrb {
           0%, 100% {
             transform: translate(0, 0) scale(1);
           }
@@ -846,17 +984,23 @@ export default function Kontakt() {
           }
         }
 
-        @keyframes glowMove {
+        .floating-particles {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background-image: 
+            radial-gradient(circle at 20% 50%, rgba(120, 80, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 80, 150, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(80, 180, 255, 0.1) 0%, transparent 50%);
+          animation: particlesFloat 30s linear infinite;
+        }
+
+        @keyframes particlesFloat {
           0% {
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-          50% {
-            opacity: 1;
+            transform: translateY(0) rotate(0deg);
           }
           100% {
-            transform: translateX(100%);
-            opacity: 0;
+            transform: translateY(-100px) rotate(360deg);
           }
         }
 
@@ -866,17 +1010,12 @@ export default function Kontakt() {
           top: 0;
           left: 0;
           right: 0;
-          z-index: 1000;
           background: rgba(10, 10, 10, 0.8);
           backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .navigation.scrolled {
-          background: rgba(10, 10, 10, 0.95);
-          backdrop-filter: blur(30px);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+          padding: 20px 40px;
+          z-index: 1000;
+          transition: all 0.3s ease;
         }
 
         .nav-content {
@@ -885,7 +1024,6 @@ export default function Kontakt() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 20px 40px;
         }
 
         .logo {
@@ -900,10 +1038,6 @@ export default function Kontakt() {
           transform: scale(1.05);
         }
 
-        .logo-icon {
-          position: relative;
-        }
-
         .logo-badge {
           background: linear-gradient(135deg, #7850ff, #ff5080);
           color: white;
@@ -913,32 +1047,20 @@ export default function Kontakt() {
           font-weight: 800;
           letter-spacing: 1px;
           box-shadow: 0 4px 20px rgba(120, 80, 255, 0.4);
-          animation: pulse 2s ease infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-            box-shadow: 0 4px 20px rgba(120, 80, 255, 0.4);
-          }
-          50% {
-            transform: scale(1.05);
-            box-shadow: 0 6px 30px rgba(120, 80, 255, 0.6);
-          }
         }
 
         .logo-text {
-          font-size: 26px;
+          font-size: 24px;
           font-weight: 900;
           background: linear-gradient(135deg, #fff, #999);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
 
-        .nav-links {
+        .nav-actions {
           display: flex;
           align-items: center;
-          gap: 24px;
+          gap: 20px;
         }
 
         .language-switcher {
@@ -953,15 +1075,12 @@ export default function Kontakt() {
           background: transparent;
           border: none;
           color: rgba(255, 255, 255, 0.6);
-          padding: 10px 16px;
+          padding: 8px 16px;
           border-radius: 100px;
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 6px;
         }
 
         .lang-btn:hover {
@@ -974,54 +1093,35 @@ export default function Kontakt() {
           box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
         }
 
-        .flag {
-          font-size: 18px;
-        }
-
-        .nav-cta {
+        .back-btn {
           background: linear-gradient(135deg, #7850ff, #ff5080);
           color: white;
           border: none;
-          padding: 12px 24px;
+          padding: 10px 24px;
           border-radius: 100px;
           font-weight: 700;
           font-size: 15px;
           cursor: pointer;
           transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 8px;
           box-shadow: 0 4px 20px rgba(120, 80, 255, 0.3);
         }
 
-        .nav-cta:hover {
+        .back-btn:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 30px rgba(120, 80, 255, 0.5);
         }
 
-        .cta-arrow {
-          transition: transform 0.3s ease;
-        }
-
-        .nav-cta:hover .cta-arrow {
-          transform: rotate(180deg);
-        }
-
         /* Hero Section */
         .hero-section {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          padding: 120px 40px 80px;
+          padding: 140px 40px 60px;
           position: relative;
           z-index: 2;
+          text-align: center;
         }
 
         .hero-content {
-          text-align: center;
-          max-width: 900px;
+          max-width: 1000px;
+          margin: 0 auto;
           animation: fadeInUp 1s ease;
         }
 
@@ -1036,50 +1136,11 @@ export default function Kontakt() {
           }
         }
 
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(0, 255, 136, 0.1);
-          border: 1px solid rgba(0, 255, 136, 0.3);
-          padding: 8px 20px;
-          border-radius: 100px;
-          margin-bottom: 24px;
-          animation: fadeIn 1s ease 0.2s both;
-        }
-
-        .badge-dot {
-          width: 8px;
-          height: 8px;
-          background: #00ff88;
-          border-radius: 50%;
-          animation: blink 2s ease infinite;
-        }
-
-        @keyframes blink {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.3;
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
         .hero-title {
-          font-size: clamp(48px, 8vw, 80px);
+          font-size: clamp(48px, 6vw, 72px);
           font-weight: 900;
-          margin-bottom: 24px;
+          margin-bottom: 20px;
           line-height: 1.1;
-          animation: fadeInUp 1s ease 0.3s both;
         }
 
         .title-gradient {
@@ -1091,779 +1152,198 @@ export default function Kontakt() {
         }
 
         @keyframes gradientMove {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
 
         .hero-subtitle {
           font-size: 20px;
           color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 48px;
-          animation: fadeInUp 1s ease 0.4s both;
+          margin-bottom: 10px;
         }
 
-        .hero-features {
-          display: flex;
-          gap: 24px;
-          justify-content: center;
-          flex-wrap: wrap;
-          animation: fadeInUp 1s ease 0.5s both;
-        }
-
-        .feature-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 16px 24px;
-          border-radius: 100px;
-          transition: all 0.3s ease;
-        }
-
-        .feature-card:hover {
-          background: rgba(255, 255, 255, 0.08);
-          transform: translateY(-3px);
-          border-color: rgba(120, 80, 255, 0.3);
-        }
-
-        .feature-icon {
-          font-size: 24px;
-        }
-
-        .scroll-indicator {
-          position: absolute;
-          bottom: 40px;
-          left: 50%;
-          transform: translateX(-50%);
-          animation: bounce 2s ease infinite;
-        }
-
-        .scroll-dot {
-          width: 30px;
-          height: 50px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-radius: 25px;
-          position: relative;
-        }
-
-        .scroll-dot::after {
-          content: '';
-          position: absolute;
-          top: 8px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 4px;
-          height: 10px;
-          background: white;
-          border-radius: 2px;
-          animation: scrollDot 2s ease infinite;
-        }
-
-        @keyframes bounce {
-          0%, 100% {
-            transform: translateX(-50%) translateY(0);
-          }
-          50% {
-            transform: translateX(-50%) translateY(10px);
-          }
-        }
-
-        @keyframes scrollDot {
-          0%, 100% {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-          }
-          50% {
-            transform: translateX(-50%) translateY(10px);
-            opacity: 0.3;
-          }
-        }
-
-        /* Main Content */
-        .main-content {
-          position: relative;
-          z-index: 2;
-          padding: 80px 40px;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        /* Tabs */
-        .tabs-container {
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 32px;
-          overflow: hidden;
-        }
-
-        .tabs-header {
-          display: flex;
-          background: rgba(255, 255, 255, 0.03);
-          padding: 8px;
-          gap: 8px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .tab-btn {
-          flex: 1;
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.6);
-          padding: 16px 24px;
-          border-radius: 24px;
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-
-        .tab-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          color: white;
-        }
-
-        .tab-btn.active {
-          background: linear-gradient(135deg, #7850ff, #ff5080);
-          color: white;
-          box-shadow: 0 4px 20px rgba(120, 80, 255, 0.3);
-        }
-
-        .tab-icon {
-          font-size: 20px;
-        }
-
-        .tabs-content {
-          padding: 48px;
-        }
-
-        .tab-panel {
-          animation: fadeIn 0.5s ease;
-        }
-
-        /* Form Panel */
-        .panel-grid {
-          display: grid;
-          grid-template-columns: 1.5fr 1fr;
-          gap: 48px;
-        }
-
-        .section-title {
-          font-size: 32px;
-          font-weight: 800;
-          margin-bottom: 12px;
-          background: linear-gradient(135deg, #fff, #999);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .section-subtitle {
-          color: rgba(255, 255, 255, 0.6);
-          margin-bottom: 32px;
-        }
-
-        /* Form Styles */
-        .contact-form {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 24px;
-        }
-
-        .form-field {
-          position: relative;
-        }
-
-        .form-field label {
-          display: block;
+        .last-update {
           font-size: 14px;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 8px;
-        }
-
-        .form-input,
-        .form-select,
-        .form-textarea {
-          width: 100%;
-          padding: 16px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          color: white;
-          font-size: 16px;
-          transition: all 0.3s ease;
-          font-family: inherit;
-        }
-
-        .form-input:focus,
-        .form-select:focus,
-        .form-textarea:focus {
-          outline: none;
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(120, 80, 255, 0.5);
-        }
-
-        .field-focus {
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%) scaleX(0);
-          width: 100%;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, #7850ff, transparent);
-          transition: transform 0.3s ease;
-          border-radius: 2px;
-        }
-
-        .form-input:focus ~ .field-focus,
-        .form-select:focus ~ .field-focus,
-        .form-textarea:focus ~ .field-focus {
-          transform: translateX(-50%) scaleX(1);
-        }
-
-        .form-textarea {
-          resize: vertical;
-          min-height: 120px;
-        }
-
-        .submit-btn {
-          background: linear-gradient(135deg, #00ff88, #00cc70);
-          color: #000;
-          border: none;
-          padding: 18px 40px;
-          border-radius: 100px;
-          font-size: 16px;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .submit-btn::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          transition: width 0.6s ease, height 0.6s ease;
-        }
-
-        .submit-btn:hover::before {
-          width: 300px;
-          height: 300px;
-        }
-
-        .submit-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(0, 255, 136, 0.4);
-        }
-
-        .submit-btn.submitting {
-          background: linear-gradient(135deg, #999, #666);
-          cursor: not-allowed;
-        }
-
-        .btn-text,
-        .btn-icon {
-          position: relative;
-          z-index: 1;
-        }
-
-        /* Success Container */
-        .success-container {
-          text-align: center;
-          padding: 60px;
-          background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 112, 0.05));
-          border-radius: 24px;
-          border: 2px solid rgba(0, 255, 136, 0.3);
-        }
-
-        .success-animation {
-          margin-bottom: 24px;
-        }
-
-        .checkmark-circle {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto;
-        }
-
-        .checkmark {
-          width: 80px;
-          height: 80px;
-        }
-
-        .checkmark-circle-bg {
-          stroke: #00ff88;
-          stroke-width: 2;
-          stroke-dasharray: 166;
-          stroke-dashoffset: 166;
-          animation: strokeCircle 0.6s ease forwards;
-        }
-
-        .checkmark-check {
-          stroke: #00ff88;
-          stroke-width: 3;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-          stroke-dasharray: 48;
-          stroke-dashoffset: 48;
-          animation: strokeCheck 0.3s 0.5s ease forwards;
-        }
-
-        @keyframes strokeCircle {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-
-        @keyframes strokeCheck {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-
-        .success-container h3 {
-          font-size: 28px;
           color: #00ff88;
-          margin-bottom: 12px;
+          margin-bottom: 40px;
         }
 
-        .success-container p {
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Info Section */
-        .info-section {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
+        .quick-info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-top: 40px;
         }
 
         .info-card {
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 32px;
+          border-radius: 20px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
           transition: all 0.3s ease;
+          animation: slideIn 0.6s ease;
+          animation-fill-mode: both;
         }
 
-        .premium-card {
-          background: linear-gradient(135deg, rgba(120, 80, 255, 0.1), rgba(255, 80, 150, 0.05));
-          border-color: rgba(120, 80, 255, 0.2);
+        .info-card:nth-child(1) { animation-delay: 0.1s; }
+        .info-card:nth-child(2) { animation-delay: 0.2s; }
+        .info-card:nth-child(3) { animation-delay: 0.3s; }
+        .info-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .info-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 20px 40px rgba(120, 80, 255, 0.1);
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(120, 80, 255, 0.3);
+          box-shadow: 0 10px 30px rgba(120, 80, 255, 0.2);
         }
 
-        .info-card h3 {
-          font-size: 20px;
-          font-weight: 700;
+        .info-icon {
+          font-size: 24px;
+          animation: iconPulse 2s ease infinite;
+        }
+
+        @keyframes iconPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+
+        /* Interactive Section */
+        .interactive-section {
+          padding: 60px 40px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 30px;
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+
+        .feature-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 30px;
+          transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+          transform: translateY(-5px);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(120, 80, 255, 0.3);
+          box-shadow: 0 20px 40px rgba(120, 80, 255, 0.15);
+        }
+
+        .card-header {
           margin-bottom: 24px;
         }
 
-        .info-items {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .info-item {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .info-label {
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.5);
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-
-        .info-value {
-          font-size: 16px;
-          color: white;
-          font-weight: 600;
-        }
-
-        .email-link {
-          color: #00ff88;
-          text-decoration: none;
-          transition: all 0.3s ease;
-        }
-
-        .email-link:hover {
-          text-decoration: underline;
-        }
-
-        .decorative-card {
-          background: linear-gradient(135deg, rgba(80, 180, 255, 0.1), rgba(0, 255, 136, 0.05));
-          border: 1px solid rgba(80, 180, 255, 0.2);
-          border-radius: 24px;
-          padding: 32px;
-          position: relative;
-          overflow: hidden;
-          min-height: 200px;
-        }
-
-        .card-glow {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 200px;
-          height: 200px;
-          background: radial-gradient(circle, rgba(120, 80, 255, 0.3), transparent);
-          animation: glowPulse 4s ease infinite;
-        }
-
-        @keyframes glowPulse {
-          0%, 100% {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 0.5;
-          }
-          50% {
-            transform: translate(-50%, -50%) scale(1.5);
-            opacity: 0.3;
-          }
-        }
-
-        .floating-icons {
-          display: flex;
-          justify-content: space-around;
-          align-items: center;
-          height: 100%;
-        }
-
-        .float-icon {
-          font-size: 32px;
-          animation: floatIcon 3s ease infinite;
-          animation-delay: calc(var(--i) * 0.5s);
-        }
-
-        .float-icon:nth-child(1) { --i: 0; }
-        .float-icon:nth-child(2) { --i: 1; }
-        .float-icon:nth-child(3) { --i: 2; }
-        .float-icon:nth-child(4) { --i: 3; }
-
-        @keyframes floatIcon {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-
-        /* Support Panel */
-        .support-panel {
-          text-align: center;
-        }
-
-        .support-header {
-          margin-bottom: 48px;
-        }
-
-        .faq-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 24px;
-        }
-
-        .faq-card {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 32px;
-          text-align: left;
-          position: relative;
-          overflow: hidden;
-          transition: all 0.3s ease;
-        }
-
-        .faq-card:hover {
-          transform: translateY(-5px) scale(1.02);
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(120, 80, 255, 0.3);
-        }
-
-        .faq-icon {
-          font-size: 40px;
-          margin-bottom: 16px;
-        }
-
-        .faq-card h3 {
-          font-size: 18px;
-          font-weight: 700;
-          margin-bottom: 12px;
-          color: white;
-        }
-
-        .faq-card p {
-          color: rgba(255, 255, 255, 0.6);
-          line-height: 1.6;
-        }
-
-        .card-shine {
-          position: absolute;
-          top: -100%;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            45deg,
-            transparent 30%,
-            rgba(255, 255, 255, 0.1) 50%,
-            transparent 70%
-          );
-          transition: all 0.6s ease;
-        }
-
-        .faq-card:hover .card-shine {
-          top: 100%;
-          left: 100%;
-        }
-
-        /* Business Panel */
-        .business-panel {
-          text-align: center;
-        }
-
-        .business-header {
-          margin-bottom: 48px;
-        }
-
-        .packages-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 32px;
-        }
-
-        .package-card {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 40px 32px;
-          position: relative;
-          transition: all 0.3s ease;
-        }
-
-        .package-card:hover {
-          transform: translateY(-10px);
-          box-shadow: 0 30px 60px rgba(120, 80, 255, 0.2);
-        }
-
-        .package-card.featured {
-          background: linear-gradient(135deg, rgba(120, 80, 255, 0.1), rgba(255, 80, 150, 0.05));
-          border-color: rgba(120, 80, 255, 0.3);
-          transform: scale(1.05);
-        }
-
-        .featured-badge {
-          position: absolute;
-          top: -12px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: linear-gradient(135deg, #7850ff, #ff5080);
-          color: white;
-          padding: 6px 20px;
-          border-radius: 100px;
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 1px;
-        }
-
-        .package-header h3 {
+        .card-header h3 {
           font-size: 24px;
           font-weight: 800;
           margin-bottom: 8px;
         }
 
-        .package-header p {
+        .card-header p {
           color: rgba(255, 255, 255, 0.6);
-          margin-bottom: 32px;
+          font-size: 14px;
         }
 
-        .package-features {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-bottom: 32px;
-        }
-
-        .feature {
-          text-align: left;
-          color: rgba(255, 255, 255, 0.8);
-          padding: 12px;
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 12px;
-          transition: all 0.3s ease;
-        }
-
-        .package-card:hover .feature {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .package-btn {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.1);
-          border: 2px solid rgba(255, 255, 255, 0.2);
+        /* Quiz Styles */
+        .quiz-btn, .flow-btn {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
           color: white;
-          padding: 16px 32px;
+          border: none;
+          padding: 12px 24px;
           border-radius: 100px;
-          font-size: 16px;
           font-weight: 700;
+          font-size: 14px;
           cursor: pointer;
           transition: all 0.3s ease;
+          width: 100%;
         }
 
-        .package-btn:hover {
-          background: rgba(255, 255, 255, 0.15);
+        .quiz-btn:hover, .flow-btn:hover {
           transform: translateY(-2px);
-        }
-
-        .package-btn.primary {
-          background: linear-gradient(135deg, #7850ff, #ff5080);
-          border: none;
           box-shadow: 0 10px 30px rgba(120, 80, 255, 0.3);
         }
 
-        .package-btn.primary:hover {
-          box-shadow: 0 15px 40px rgba(120, 80, 255, 0.5);
+.quiz-content {
+  animation: fadeIn 0.5s ease;
+  position: relative;
+  z-index: 5;
+}
+
+.answers-grid {
+  display: grid;
+  gap: 12px;
+  position: relative;
+  z-index: 10;
+}
+
+        .question-progress {
+          text-align: center;
+          color: #00ff88;
+          font-weight: 600;
+          margin-bottom: 16px;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-          .panel-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .packages-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .package-card.featured {
-            transform: scale(1);
-          }
+        .quiz-content h4 {
+          margin-bottom: 20px;
+          font-size: 18px;
         }
 
-        @media (max-width: 768px) {
-          .nav-content {
-            padding: 16px 20px;
-          }
-
-          .hero-section {
-            padding: 100px 20px 60px;
-          }
-
-          .hero-title {
-            font-size: 40px;
-          }
-
-          .hero-features {
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .main-content {
-            padding: 40px 20px;
-          }
-
-          .tabs-header {
-            flex-direction: column;
-          }
-
-          .tab-btn {
-            width: 100%;
-          }
-
-          .tabs-content {
-            padding: 24px;
-          }
-
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .faq-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .gradient-sphere {
-            filter: blur(60px);
-          }
-
-          .sphere-1 {
-            width: 300px;
-            height: 300px;
-          }
-
-          .sphere-2 {
-            width: 200px;
-            height: 200px;
-          }
-
-          .sphere-3 {
-            width: 250px;
-            height: 250px;
-          }
+        .answers-grid {
+          display: grid;
+          gap: 12px;
         }
 
-        /* Animations on Scroll */
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
+.answer-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
+}
 
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+.answer-btn:hover {
+  background: rgba(120, 80, 255, 0.2);
+  border-color: rgba(120, 80, 255, 0.5);
+  transform: translateX(5px);
+}
+
+.answer-btn:active {
+  transform: translateX(3px) scale(0.98);
+}
+
+        .quiz-result {
+          text-align: center;
+          animation: scaleIn 0.5s ease;
         }
 
         @keyframes scaleIn {
@@ -1877,33 +1357,552 @@ export default function Kontakt() {
           }
         }
 
-        /* Scroll Animations */
-        .form-section {
-          animation: slideInLeft 0.8s ease;
+        .score-display {
+          margin: 20px 0;
         }
 
-        .info-section {
-          animation: slideInRight 0.8s ease;
+        .score-number {
+          font-size: 48px;
+          font-weight: 900;
+          color: #00ff88;
         }
 
-        .faq-card {
-          animation: scaleIn 0.6s ease;
+        .score-total {
+          font-size: 24px;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .previous-score {
+          margin-top: 12px;
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 14px;
+        }
+
+        /* Data Flow Canvas */
+        .data-flow-canvas {
+          width: 100%;
+          height: 300px;
+          margin-top: 20px;
+          border-radius: 16px;
+          background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Content Section */
+        .content-section {
+          padding: 60px 40px;
+          position: relative;
+          z-index: 2;
+        }
+
+        .sections-container {
+          max-width: 900px;
+          margin: 0 auto;
+        }
+
+        .accordion-item {
+          margin-bottom: 16px;
+          animation: slideInLeft 0.6s ease;
           animation-fill-mode: both;
         }
 
-        .faq-card:nth-child(1) { animation-delay: 0.1s; }
-        .faq-card:nth-child(2) { animation-delay: 0.2s; }
-        .faq-card:nth-child(3) { animation-delay: 0.3s; }
-        .faq-card:nth-child(4) { animation-delay: 0.4s; }
-
-        .package-card {
-          animation: scaleIn 0.6s ease;
-          animation-fill-mode: both;
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
 
-        .package-card:nth-child(1) { animation-delay: 0.1s; }
-        .package-card:nth-child(2) { animation-delay: 0.2s; }
-        .package-card:nth-child(3) { animation-delay: 0.3s; }
+        .accordion-header {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 24px 30px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          color: white;
+          font-size: 16px;
+        }
+
+        .accordion-item.expanded .accordion-header {
+          background: linear-gradient(135deg, rgba(120, 80, 255, 0.2), rgba(255, 80, 150, 0.1));
+          border-color: rgba(120, 80, 255, 0.3);
+          border-radius: 20px 20px 0 0;
+        }
+
+        .accordion-header:hover {
+          background: rgba(255, 255, 255, 0.08);
+          transform: translateX(5px);
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .section-icon {
+          font-size: 28px;
+          animation: iconFloat 3s ease infinite;
+        }
+
+        @keyframes iconFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+
+        .header-left h3 {
+          font-size: 20px;
+          font-weight: 700;
+          margin: 0;
+        }
+
+        .expand-icon {
+          font-size: 24px;
+          font-weight: 300;
+          transition: transform 0.3s ease;
+        }
+
+        .accordion-item.expanded .expand-icon {
+          transform: rotate(45deg);
+        }
+
+        .accordion-content {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.5s ease, opacity 0.3s ease;
+          opacity: 0;
+        }
+
+        .accordion-content.show {
+          max-height: 1000px;
+          opacity: 1;
+        }
+
+        .content-inner {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-top: none;
+          border-radius: 0 0 20px 20px;
+          padding: 30px;
+        }
+
+        .content-intro {
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 24px;
+          font-size: 16px;
+          line-height: 1.6;
+        }
+
+        /* Section-specific styles */
+        .admin-details {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .detail-icon {
+          color: #7850ff;
+          font-weight: bold;
+        }
+
+        .data-categories {
+          display: grid;
+          gap: 20px;
+        }
+
+        .category-box {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+          border-left: 3px solid #7850ff;
+        }
+
+        .category-box h4 {
+          color: white;
+          margin-bottom: 12px;
+          font-size: 16px;
+        }
+
+        .category-box ul {
+          list-style: none;
+          padding: 0;
+        }
+
+        .category-box li {
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 8px;
+          padding-left: 20px;
+          position: relative;
+        }
+
+        .category-box li:before {
+          content: '•';
+          position: absolute;
+          left: 0;
+          color: #50b4ff;
+        }
+
+        .purposes-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+        }
+
+        .purpose-card {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+          transition: all 0.3s ease;
+        }
+
+        .purpose-card:hover {
+          transform: translateY(-3px);
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .purpose-card h4 {
+          color: white;
+          margin-bottom: 8px;
+          font-size: 16px;
+        }
+
+        .legal-basis {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          display: inline-block;
+        }
+
+        .retention-timeline {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .timeline-item {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding: 16px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+          transform: translateX(10px);
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .timeline-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          box-shadow: 0 0 20px currentColor;
+        }
+
+        .timeline-content h4 {
+          color: white;
+          margin-bottom: 4px;
+          font-size: 16px;
+        }
+
+        .timeline-content span {
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .partners-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 16px;
+        }
+
+        .partner-card {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+          text-align: center;
+          transition: all 0.3s ease;
+        }
+
+        .partner-card:hover {
+          transform: translateY(-5px) scale(1.05);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: 0 10px 30px rgba(120, 80, 255, 0.2);
+        }
+
+        .partner-icon {
+          font-size: 32px;
+          margin-bottom: 12px;
+        }
+
+        .partner-card h4 {
+          color: white;
+          margin-bottom: 4px;
+          font-size: 16px;
+        }
+
+        .partner-card p {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 12px;
+        }
+
+        .rights-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+        }
+
+        .right-card {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .right-card:hover {
+          transform: translateY(-3px);
+          border-color: rgba(120, 80, 255, 0.3);
+          background: rgba(120, 80, 255, 0.1);
+        }
+
+        .right-card h4 {
+          color: white;
+          margin-bottom: 8px;
+          font-size: 16px;
+        }
+
+        .right-card p {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 14px;
+        }
+
+        .security-measures {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 12px;
+        }
+
+        .measure-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .measure-item:hover {
+          background: rgba(0, 255, 136, 0.1);
+          transform: translateX(5px);
+        }
+
+        .measure-icon {
+          color: #00ff88;
+          font-weight: bold;
+        }
+
+        .cookie-type h4 {
+          color: white;
+          margin-bottom: 8px;
+          font-size: 16px;
+        }
+
+        .cookie-type p {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 14px;
+        }
+
+        /* Footer */
+        .privacy-footer {
+          padding: 80px 40px 40px;
+          position: relative;
+          z-index: 2;
+          text-align: center;
+        }
+
+        .footer-content {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .trust-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 204, 112, 0.1));
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          padding: 12px 24px;
+          border-radius: 100px;
+          margin-bottom: 32px;
+          animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(0, 255, 136, 0.3);
+          }
+        }
+
+        .badge-icon {
+          font-size: 24px;
+        }
+
+        .contact-section h3 {
+          font-size: 24px;
+          font-weight: 700;
+          margin-bottom: 16px;
+          color: white;
+        }
+
+        .contact-link {
+          display: inline-block;
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          text-decoration: none;
+          padding: 14px 32px;
+          border-radius: 100px;
+          font-weight: 700;
+          transition: all 0.3s ease;
+          margin-top: 12px;
+        }
+
+        .contact-link:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px rgba(120, 80, 255, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .navigation {
+            padding: 16px 20px;
+          }
+
+          .nav-content {
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .hero-section {
+            padding: 120px 20px 40px;
+          }
+
+          .hero-title {
+            font-size: 36px;
+          }
+
+          .quick-info-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .features-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .interactive-section {
+            padding: 40px 20px;
+          }
+
+          .content-section {
+            padding: 40px 20px;
+          }
+
+          .accordion-header {
+            padding: 20px;
+          }
+
+          .section-icon {
+            font-size: 24px;
+          }
+
+          .header-left h3 {
+            font-size: 18px;
+          }
+
+          .content-inner {
+            padding: 20px;
+          }
+
+          .purposes-grid,
+          .partners-grid,
+          .rights-grid,
+          .security-measures {
+            grid-template-columns: 1fr;
+          }
+
+          .privacy-footer {
+            padding: 60px 20px 30px;
+          }
+        }
+
+        /* Accessibility */
+        .accordion-header:focus-visible,
+        .quiz-btn:focus-visible,
+        .flow-btn:focus-visible,
+        .answer-btn:focus-visible,
+        .lang-btn:focus-visible,
+        .back-btn:focus-visible,
+        .contact-link:focus-visible {
+          outline: 2px solid #7850ff;
+          outline-offset: 2px;
+        }
+
+        /* Print Styles */
+        @media print {
+          .navigation,
+          .progress-bar,
+          .animated-background,
+          .interactive-section {
+            display: none;
+          }
+
+          .privacy-container {
+            background: white;
+            color: black;
+          }
+
+          .accordion-content {
+            max-height: none !important;
+            opacity: 1 !important;
+          }
+        }
 
         /* Custom Scrollbar */
         :global(::-webkit-scrollbar) {
@@ -1923,189 +1922,77 @@ export default function Kontakt() {
           background: linear-gradient(135deg, #9060ff, #ff6090);
         }
 
-        /* Loading Animation */
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .loading-spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid rgba(255, 255, 255, 0.1);
-          border-top-color: #7850ff;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        /* Glow Effects */
-        @keyframes glow {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(120, 80, 255, 0.5);
-          }
-          50% {
-            box-shadow: 0 0 40px rgba(120, 80, 255, 0.8);
-          }
-        }
-
-        /* Accessibility */
-        .form-input:focus-visible,
-        .form-select:focus-visible,
-        .form-textarea:focus-visible,
-        .tab-btn:focus-visible,
-        .submit-btn:focus-visible,
-        .package-btn:focus-visible {
-          outline: 2px solid #7850ff;
-          outline-offset: 2px;
-        }
-
-        /* Print Styles */
-        @media print {
-          .navigation,
-          .particles-canvas,
-          .background-effects,
-          .scroll-indicator {
-            display: none;
-          }
-
-          .container {
-            background: white;
-            color: black;
-          }
-        }
-
-        /* Performance Optimizations */
-        .hero-section,
-        .main-content {
+        /* Performance optimizations */
+        .gradient-orb,
+        .floating-particles,
+        .section-icon {
           will-change: transform;
         }
 
-        .gradient-sphere,
-        .glow-line,
-        .float-icon {
-          will-change: transform, opacity;
+        .accordion-content {
+          will-change: max-height, opacity;
         }
 
-        /* Additional Premium Effects */
-        .premium-hover {
+        /* Premium glassmorphism effects */
+        .feature-card,
+        .accordion-header,
+        .info-card {
           position: relative;
           overflow: hidden;
         }
 
-        .premium-hover::before {
+        .feature-card::before,
+        .accordion-header::before,
+        .info-card::before {
           content: '';
           position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          background: radial-gradient(circle, rgba(120, 80, 255, 0.3), transparent);
-          transition: width 0.6s ease, height 0.6s ease;
-          transform: translate(-50%, -50%);
-        }
-
-        .premium-hover:hover::before {
-          width: 100%;
-          height: 100%;
-        }
-
-        /* Neon Text Effect */
-        .neon-text {
-          text-shadow: 
-            0 0 10px rgba(120, 80, 255, 0.8),
-            0 0 20px rgba(120, 80, 255, 0.6),
-            0 0 30px rgba(120, 80, 255, 0.4),
-            0 0 40px rgba(120, 80, 255, 0.2);
-        }
-
-        /* Glass Effect Enhancement */
-        .glass-enhanced {
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
           background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.05)
+            45deg,
+            transparent,
+            rgba(255, 255, 255, 0.03),
+            transparent
           );
-          backdrop-filter: blur(20px) saturate(180%);
-          -webkit-backdrop-filter: blur(20px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          box-shadow: 
-            inset 0 0 20px rgba(255, 255, 255, 0.05),
-            0 20px 40px rgba(0, 0, 0, 0.3);
+          transform: rotate(45deg);
+          transition: all 0.5s ease;
+          opacity: 0;
+        }
+
+        .feature-card:hover::before,
+        .accordion-header:hover::before,
+        .info-card:hover::before {
+          animation: shimmer 0.5s ease;
+        }
+
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+            opacity: 0;
+          }
         }
 
         /* Micro-interactions */
-        .micro-interaction {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .micro-interaction:active {
+        .answer-btn:active,
+        .quiz-btn:active,
+        .flow-btn:active {
           transform: scale(0.95);
         }
 
-        /* Advanced Gradients */
-        .advanced-gradient {
-          background: linear-gradient(
-            135deg,
-            #7850ff 0%,
-            #ff5080 25%,
-            #50b4ff 50%,
-            #00ff88 75%,
-            #ffd700 100%
-          );
-          background-size: 400% 400%;
-          animation: advancedGradient 15s ease infinite;
+        .logo:active {
+          transform: scale(0.95);
         }
 
-        @keyframes advancedGradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        /* Parallax Effect */
-        .parallax-element {
-          transform: translateZ(0);
-          will-change: transform;
-        }
-
-        /* Typography Enhancement */
-        .enhanced-text {
-          font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          text-rendering: optimizeLegibility;
-        }
-
-        /* Final Polish */
-        .container {
-          position: relative;
-        }
-
-        .container::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(120, 80, 255, 0.5),
-            rgba(255, 80, 150, 0.5),
-            rgba(80, 180, 255, 0.5),
-            transparent
-          );
-          animation: borderFlow 4s linear infinite;
-          z-index: 9999;
-        }
-
-        @keyframes borderFlow {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-
-        /* Easter Egg - Premium Shine on Logo Hover */
+        /* Easter egg - rainbow animation on logo hover */
         .logo:hover .logo-badge {
           background: linear-gradient(
             45deg,
@@ -2116,27 +2003,51 @@ export default function Kontakt() {
             #ffd700
           );
           background-size: 200% 200%;
-          animation: rainbowShine 2s linear infinite;
+          animation: rainbowMove 2s linear infinite;
         }
 
-        @keyframes rainbowShine {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
+        @keyframes rainbowMove {
+          0% {
+            background-position: 0% 50%;
+          }
+          100% {
+            background-position: 200% 50%;
+          }
         }
 
-        /* Ensure no horizontal scroll */
-        :global(html),
-        :global(body) {
-          max-width: 100vw !important;
-          overflow-x: hidden !important;
+        /* Final touches */
+        ::selection {
+          background: rgba(120, 80, 255, 0.3);
+          color: white;
         }
 
-        /* Smooth scroll behavior */
+        /* Ensure smooth scrolling */
         :global(html) {
           scroll-behavior: smooth;
         }
 
+        /* No horizontal scroll */
+        :global(html),
+        :global(body) {
+          max-width: 100vw !important;
+          overflow-x: hidden !important;
+
 }
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .cookie-type {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+          border-left: 3px solid #ffd700;
+        }
+
+        .cookieimport { useState, useEffect, useRef } from 'react'
+
+        }
       `}</style>
     </>
   )
