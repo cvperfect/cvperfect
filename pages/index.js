@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
+import Footer from '../components/Footer'
 
 
 
@@ -1970,52 +1971,9 @@ setTimeout(() => {
 </button>
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="footer">
-          <div className="footer-content">
-            <div className="footer-section">
-              <div className="footer-logo">
-                <span className="logo-text">CvPerfect</span>
-                <span className="logo-badge">AI</span>
-              </div>
-<p className="footer-description">
-  {currentLanguage==='pl'
-    ? 'Pierwsza AI platforma do optymalizacji CV w Polsce. 95% skuteczności ATS, 410% więcej rozmów kwalifikacyjnych.'
-    : 'The first AI platform in Poland for CV optimization. 95% ATS success rate, 410% more interviews.'}
-</p>
-            </div>
-            <div className="footer-section">
-              <h4>{currentLanguage==='pl' ? 'Produkty' : 'Products'}</h4>
-              <ul className="footer-links">
-                <li><a href="#features">{currentLanguage==='pl' ? 'Optymalizacja AI' : 'AI Optimization'}</a></li>
-                <li><a href="#testimonials">{currentLanguage==='pl' ? 'Opinie użytkowników' : 'User reviews'}</a></li>
-              </ul>
-            </div>
-
-<div className="footer-section">
-              <h4>{currentLanguage==='pl' ? 'Pomoc' : 'Help'}</h4>
-              <ul className="footer-links">
-		<li><a href="/regulamin">{currentLanguage==='pl' ? 'Regulamin' : 'Terms & Conditions'}</a></li>
-                <li><a href="/kontakt">{currentLanguage==='pl' ? 'Kontakt' : 'Contact'}</a></li>
-                <li><a href="/polityka-prywatnosci">{currentLanguage==='pl' ? 'Polityka prywatności' : 'Privacy Policy'}</a></li>
-                <li><a href="/rodo">{currentLanguage==='pl' ? 'RODO' : 'GDPR'}</a></li>
-                
-              </ul>
-            </div>
-
-          </div>
-          <div className="footer-bottom">
-            <p>
-  {currentLanguage==='pl'
-    ? '© 2025 CvPerfect. Wszystkie prawa zastrzeżone.'
-    : '© 2025 CvPerfect. All rights reserved.'}
-</p>
-
-          </div>
-        </footer>
-     </div>
+</div>
+        <Footer currentLanguage={currentLanguage} />
+      </div>
       <style jsx>{`
 
 /* === HERO STATS (stabilnie / jednolicie) === */
@@ -7158,175 +7116,6 @@ html {
 .faq-button:hover::before {
   width: 400px;
   height: 400px;
-}
-        /* Footer */
-.footer {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-  color: white;
-  padding: 120px 40px 40px;
-  position: relative;
-  overflow: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(120, 80, 255, 0.8) 25%, 
-    rgba(255, 80, 150, 0.8) 50%,
-    rgba(80, 180, 255, 0.8) 75%,
-    transparent 100%
-  );
-  animation: footerFlow 6s ease infinite;
-}
-
-@keyframes footerFlow {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.footer::after {
-  content: '';
-  position: absolute;
-  top: 20%;
-  left: 10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(120, 80, 255, 0.08) 0%, transparent 60%);
-  animation: footerFloat 20s ease infinite;
-}
-
-@keyframes footerFloat {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  25% { transform: translate(100px, -50px) rotate(90deg); }
-  50% { transform: translate(200px, 100px) rotate(180deg); }
-  75% { transform: translate(-50px, 150px) rotate(270deg); }
-}
-.footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 64px;
-  margin-bottom: 64px;
-  position: relative;
-  z-index: 1;
-}
-
-.footer-section h4 {
-  font-size: 20px;
-  font-weight: 800;
-  margin-bottom: 24px;
-  color: white;
-  letter-spacing: -0.5px;
-}
-
-.footer-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.footer-logo .logo-text {
-  font-size: 28px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #7850ff, #ff5080, #50b4ff);
-  background-size: 200% 200%;
-  animation: gradientMove 3s ease infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
-}
-
-.footer-logo .logo-badge {
-  background: linear-gradient(135deg, #7850ff, #ff5080);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
-}
-
-.footer-description {
-  color: rgba(255, 255, 255, 0.6);
-  line-height: 1.7;
-  margin-bottom: 32px;
-  font-size: 16px;
-  max-width: 400px;
-}
-
-.footer-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.footer-links li {
-  margin-bottom: 16px;
-}
-
-.footer-links a {
-  color: rgba(255, 255, 255, 0.6);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  font-size: 16px;
-  position: relative;
-  display: inline-block;
-}
-
-.footer-links a::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #7850ff, #ff5080);
-  transition: width 0.3s ease;
-}
-
-.footer-links a:hover {
-  color: white;
-  transform: translateX(5px);
-}
-
-.footer-links a:hover::after {
-  width: 100%;
-}
-
-.footer-bottom {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding-top: 48px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 24px;
-  position: relative;
-  z-index: 1;
-}
-
-.footer-bottom p {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 15px;
-  margin: 0;
-}
-
-.footer-badges {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
 }
 
 .badge {

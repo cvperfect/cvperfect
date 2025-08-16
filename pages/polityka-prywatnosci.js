@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Footer from '../components/Footer'
 
 export default function PolitykaPrywatnosci() {
   const router = useRouter()
@@ -881,6 +882,8 @@ const resetQuiz = () => {
           </div>
         </footer>
       </div>
+<Footer currentLanguage={currentLanguage} />
+
 
       <style jsx>{`
         /* Global Styles */

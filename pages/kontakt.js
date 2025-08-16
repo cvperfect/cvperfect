@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Footer from '../components/Footer'
 
 export default function Kontakt() {
   const router = useRouter()
@@ -225,17 +226,11 @@ export default function Kontakt() {
       package1Feature2: '✓ Panel administracyjny',
       package1Feature3: '✓ Wsparcie email',
       
-      package2: 'Enterprise',
-      package2Desc: 'Do 100 pracowników',
-      package2Feature1: '✓ Wszystko ze Startup',
-      package2Feature2: '✓ Dedykowany opiekun',
-      package2Feature3: '✓ Integracja API',
-      
-      package3: 'Custom',
-      package3Desc: 'Rozwiązania na miarę',
-      package3Feature1: '✓ Pełna personalizacja',
-      package3Feature2: '✓ SLA gwarancja',
-      package3Feature3: '✓ Szkolenia on-site',
+package2: 'Custom',
+package2Desc: 'Rozwiązania na miarę',
+package2Feature1: '✓ Wszystko ze Startup',
+package2Feature2: '✓ Pełna personalizacja',
+package2Feature3: '✓ Integracja API',
       
       contactBusiness: 'Zapytaj o ofertę',
       
@@ -311,17 +306,11 @@ export default function Kontakt() {
       package1Feature2: '✓ Admin panel',
       package1Feature3: '✓ Email support',
       
-      package2: 'Enterprise',
-      package2Desc: 'Up to 100 employees',
-      package2Feature1: '✓ Everything from Startup',
-      package2Feature2: '✓ Dedicated manager',
-      package2Feature3: '✓ API integration',
-      
-      package3: 'Custom',
-      package3Desc: 'Tailored solutions',
-      package3Feature1: '✓ Full personalization',
-      package3Feature2: '✓ SLA guarantee',
-      package3Feature3: '✓ On-site training',
+package2: 'Custom',
+package2Desc: 'Tailored solutions',
+package2Feature1: '✓ Everything from Startup',
+package2Feature2: '✓ Full personalization',
+package2Feature3: '✓ API integration',
       
       contactBusiness: 'Request offer',
       
@@ -364,6 +353,15 @@ export default function Kontakt() {
       [e.target.name]: e.target.value
     })
   }
+
+const handlePackageSelect = (packageType) => {
+  setActiveTab('form')
+  setFormData({
+    ...formData,
+    subject: 'business',
+    message: `Jestem zainteresowany pakietem ${packageType}. Proszę o kontakt w sprawie szczegółów i wyceny.`
+  })
+}
 
   return (
     <>
@@ -690,9 +688,12 @@ export default function Kontakt() {
                         <div className="feature">{t.package1Feature2}</div>
                         <div className="feature">{t.package1Feature3}</div>
                       </div>
-                      <button className="package-btn">
-                        {t.contactBusiness}
-                      </button>
+<button 
+  className="package-btn primary"
+  onClick={() => handlePackageSelect('Startup')}
+>
+  {t.contactBusiness}
+</button>
                     </div>
                     
                     <div className="package-card featured">
@@ -706,32 +707,25 @@ export default function Kontakt() {
                         <div className="feature">{t.package2Feature2}</div>
                         <div className="feature">{t.package2Feature3}</div>
                       </div>
-                      <button className="package-btn primary">
-                        {t.contactBusiness}
-                      </button>
+<button 
+  className="package-btn primary"
+  onClick={() => handlePackageSelect('Custom')}
+>
+  {t.contactBusiness}
+</button>
                     </div>
                     
-                    <div className="package-card">
-                      <div className="package-header">
-                        <h3>{t.package3}</h3>
-                        <p>{t.package3Desc}</p>
-                      </div>
-                      <div className="package-features">
-                        <div className="feature">{t.package3Feature1}</div>
-                        <div className="feature">{t.package3Feature2}</div>
-                        <div className="feature">{t.package3Feature3}</div>
-                      </div>
-                      <button className="package-btn">
-                        {t.contactBusiness}
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
             </div>
           </div>
         </section>
-      </div>
+	</div>
+        <Footer currentLanguage={currentLanguage} />
+
+
+
 
       <style jsx>{`
         /* Global Reset */
@@ -750,14 +744,18 @@ export default function Kontakt() {
         }
 
         /* Container */
-        .container {
-          min-height: 100vh;
-          background: #0a0a0a;
-          color: white;
-          position: relative;
-          overflow: hidden;
-        }
-
+.container {
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  max-width: 100vw;
+}
         /* 3D Particles Canvas */
         .particles-canvas {
           position: fixed;
@@ -1189,14 +1187,14 @@ export default function Kontakt() {
         }
 
         /* Main Content */
-        .main-content {
-          position: relative;
-          z-index: 2;
-          padding: 80px 40px;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
+.main-content {
+  position: relative;
+  z-index: 2;
+  padding: 80px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
         /* Tabs */
         .tabs-container {
           background: rgba(255, 255, 255, 0.02);
@@ -1246,9 +1244,11 @@ export default function Kontakt() {
           font-size: 20px;
         }
 
-        .tabs-content {
-          padding: 48px;
-        }
+.tabs-content {
+  padding: 48px 24px;
+  max-width: 100%;
+  margin: 0 auto;
+}
 
         .tab-panel {
           animation: fadeIn 0.5s ease;
@@ -1300,19 +1300,45 @@ export default function Kontakt() {
           margin-bottom: 8px;
         }
 
-        .form-input,
-        .form-select,
-        .form-textarea {
-          width: 100%;
-          padding: 16px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          color: white;
-          font-size: 16px;
-          transition: all 0.3s ease;
-          font-family: inherit;
-        }
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 16px;
+  background: rgba(120, 80, 255, 0.08);
+  border: 2px solid rgba(120, 80, 255, 0.15);
+  border-radius: 16px;
+  color: white;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  backdrop-filter: blur(10px);
+}
+
+/* Style dla selecta */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 50px;
+  cursor: pointer;
+}
+
+/* Style dla opcji w dropdown */
+.form-select option {
+  background: rgba(10, 10, 10, 0.95);
+  color: white;
+  padding: 12px;
+  border: none;
+}
+
+.form-select option:hover,
+.form-select option:focus {
+  background: rgba(120, 80, 255, 0.3);
+  color: white;
+}
 
         .form-input:focus,
         .form-select:focus,
@@ -1666,12 +1692,13 @@ export default function Kontakt() {
           margin-bottom: 48px;
         }
 
-        .packages-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 32px;
-        }
-
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  max-width: 800px;
+  margin: 0 auto;
+}
         .package-card {
           background: rgba(255, 255, 255, 0.03);
           backdrop-filter: blur(10px);
@@ -2136,7 +2163,18 @@ export default function Kontakt() {
           scroll-behavior: smooth;
         }
 
+/* Better centering */
+.tabs-container {
+  max-width: 1000px;
+  margin: 0 auto;
 }
+
+@media (max-width: 1200px) {
+  .main-content {
+    max-width: 90%;
+  }
+
+
       `}</style>
     </>
   )
