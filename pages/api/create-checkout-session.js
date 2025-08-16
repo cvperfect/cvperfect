@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     } else {
       switch (plan) {
         case 'premium':
-          finalPriceId = 'price_1RofCI4FWb3xY5tDYONIW3Ix'
+          finalPriceId = 'price_1RtEUF4FWb3xY5tD1URz9MEn'
           mode = 'payment'
           break
         case 'gold':
