@@ -17,19 +17,19 @@ export default async function handler(req, res) {
     } else {
       switch (plan) {
         case 'premium':
-          finalPriceId = 'price_1RtEUF4FWb3xY5tD1URz9MEn'
+          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69'
           mode = 'payment'
           break
         case 'gold':
-          finalPriceId = 'price_1Rof7b4FWb3xY5tDQ76590pw'
+          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69'
           mode = 'subscription'
           break
         case 'premium-monthly':
-          finalPriceId = 'price_1RqWk34FWb3xY5tD5W2ge1g0'
+          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69'
           mode = 'subscription'
           break
         default:
-          finalPriceId = 'price_1RofCI4FWb3xY5tDYONIW3Ix'
+          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69'
           mode = 'payment'
       }
     }

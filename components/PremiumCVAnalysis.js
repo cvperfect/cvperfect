@@ -2,6 +2,126 @@ import React from 'react';
 
 const PremiumCVAnalysis = ({ optimizedCV, originalCV, jobPosting, plan = 'basic' }) => {
   
+  // Funkcja do pobierania CV jako PDF
+  const downloadPDF = (type) => {
+    // Tworzymy element HTML z treścią CV
+    const content = type === 'cv' ? optimizedCV : generateCoverLetter();
+    
+    // Tworzymy Blob z HTML
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              line-height: 1.6; 
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 { color: #333; border-bottom: 2px solid #4A90E2; padding-bottom: 10px; }
+            h2 { color: #4A90E2; margin-top: 30px; }
+            h3 { color: #666; }
+            p { margin: 10px 0; }
+            ul { margin: 10px 0; padding-left: 20px; }
+          </style>
+        </head>
+        <body>
+          ${type === 'cv' ? `
+            <h1>CV - ${new Date().toLocaleDateString('pl-PL')}</h1>
+            <div>${optimizedCV || generateSampleCV()}</div>
+          ` : `
+            <h1>List Motywacyjny - ${new Date().toLocaleDateString('pl-PL')}</h1>
+            <div>${content}</div>
+          `}
+        </body>
+      </html>
+    `;
+    
+    // Tworzymy link do pobrania
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Otwieramy w nowym oknie z opcją drukowania jako PDF
+    const printWindow = window.open(url, '_blank');
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+    
+    // Alternatywnie - bezpośrednie pobieranie jako HTML (który można otworzyć i wydrukować jako PDF)
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = type === 'cv' ? 'CV_Zoptymalizowane.html' : 'List_Motywacyjny.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Czyszczenie
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  }
+  
+  // Funkcja generująca przykładowy list motywacyjny
+  const generateCoverLetter = () => {
+    return `
+      <h2>List Motywacyjny</h2>
+      <p>Szanowni Państwo,</p>
+      <p>Z wielkim zainteresowaniem aplikuję na stanowisko przedstawione w Państwa ogłoszeniu. 
+      Moje doświadczenie i umiejętności idealnie wpisują się w wymagania przedstawione w ofercie pracy.</p>
+      
+      <h3>Dlaczego jestem idealnym kandydatem:</h3>
+      <ul>
+        <li>Posiadam doświadczenie w branży</li>
+        <li>Znam technologie wymienione w ogłoszeniu</li>
+        <li>Jestem zmotywowany do rozwoju w Państwa firmie</li>
+      </ul>
+      
+      <p>Moje największe osiągnięcia zawodowe to między innymi skuteczne zarządzanie projektami, 
+      implementacja nowoczesnych rozwiązań oraz budowanie efektywnych zespołów.</p>
+      
+      <p>Będę zaszczycony możliwością omówienia mojej kandydatury podczas rozmowy kwalifikacyjnej.</p>
+      
+      <p>Z poważaniem,<br/>
+      [Imię i Nazwisko]</p>
+    `;
+  }
+  
+  // Funkcja generująca przykładowe CV (jeśli brak danych)
+  const generateSampleCV = () => {
+    return `
+      <h2>Dane osobowe</h2>
+      <p>Imię i Nazwisko: Jan Kowalski<br/>
+      Email: jan.kowalski@email.com<br/>
+      Telefon: +48 123 456 789</p>
+      
+      <h2>Podsumowanie zawodowe</h2>
+      <p>Doświadczony specjalista z wieloletnim doświadczeniem w branży IT. 
+      Specjalizuję się w tworzeniu nowoczesnych aplikacji webowych z wykorzystaniem najnowszych technologii.</p>
+      
+      <h2>Doświadczenie zawodowe</h2>
+      <h3>Senior Developer - Firma XYZ (2020-2024)</h3>
+      <ul>
+        <li>Rozwój aplikacji w React i Node.js</li>
+        <li>Zarządzanie zespołem 5 osób</li>
+        <li>Implementacja rozwiązań cloud (AWS)</li>
+      </ul>
+      
+      <h2>Wykształcenie</h2>
+      <p>Politechnika Warszawska - Informatyka (2015-2020)</p>
+      
+      <h2>Umiejętności</h2>
+      <ul>
+        <li>JavaScript, TypeScript, React, Node.js</li>
+        <li>AWS, Docker, Kubernetes</li>
+        <li>Git, CI/CD, Agile/Scrum</li>
+      </ul>
+    `;
+  }
+  
   // Prawdziwa analiza CV - AI powinna to generować
   const detailedAnalysis = {
     beforeOptimization: {
@@ -351,10 +471,16 @@ const PremiumCVAnalysis = ({ optimizedCV, originalCV, jobPosting, plan = 'basic'
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="bg-white text-blue-600 font-bold py-4 px-8 rounded-xl hover:bg-gray-100 transition-colors shadow-lg">
+          <button 
+            onClick={() => downloadPDF('cv')}
+            className="bg-white text-blue-600 font-bold py-4 px-8 rounded-xl hover:bg-gray-100 transition-colors shadow-lg"
+          >
             📄 Pobierz CV (PDF)
           </button>
-          <button className="bg-white text-purple-600 font-bold py-4 px-8 rounded-xl hover:bg-gray-100 transition-colors shadow-lg">
+          <button 
+            onClick={() => downloadPDF('cover')}
+            className="bg-white text-purple-600 font-bold py-4 px-8 rounded-xl hover:bg-gray-100 transition-colors shadow-lg"
+          >
             📝 Pobierz list motywacyjny (PDF)
           </button>
         </div>
