@@ -371,6 +371,30 @@ const handleClick = function(e) {
 }, [])
 
 
+	useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get('session_id');
+  
+  if (sessionId && !window.location.pathname.includes('/success')) {
+    const pendingCV = sessionStorage.getItem('pendingCV');
+    const pendingJob = sessionStorage.getItem('pendingJob');
+    const pendingEmail = sessionStorage.getItem('pendingEmail');
+    const pendingPlan = sessionStorage.getItem('pendingPlan');
+    const selectedTemplate = sessionStorage.getItem('selectedTemplate');
+    
+    if (pendingCV && pendingEmail) {
+      console.log('🔄 Powrót z płatności, przekierowuję na stronę sukcesu...');
+      
+      sessionStorage.removeItem('pendingCV');
+      sessionStorage.removeItem('pendingJob');
+      sessionStorage.removeItem('pendingEmail');
+      sessionStorage.removeItem('pendingPlan');
+      sessionStorage.removeItem('selectedTemplate');
+      
+      window.location.href = `/success?session_id=${sessionId}&template=${selectedTemplate || 'default'}`;
+    }
+  }
+}, []);
 
   
 
@@ -525,20 +549,19 @@ showToast(
 }
 
   // NOWA FUNKCJA - DARMOWA ANALIZA
- const handleFreeAnalysis = () => {
-  if (isOptimizing) return; // Prevent multiple calls
+const handleFreeAnalysis = () => {
+  if (isOptimizing) return;
   
   const cvTextarea = document.querySelector('.cv-textarea');
   const cvText = cvTextarea?.value || '';
   
   if ((!cvText || cvText.trim().length < 50) && !uploadedFile) {
-
-showToast(
-  currentLanguage === 'pl'
-    ? '⚠️ Najpierw wklej treść swojego CV!'
-    : '⚠️ Paste your CV content first!',
-  'warning'
-)
+    showToast(
+      currentLanguage === 'pl'
+        ? '⚠️ Najpierw wklej treść swojego CV!'
+        : '⚠️ Paste your CV content first!',
+      'warning'
+    );
     if (cvTextarea) {
       cvTextarea.focus();
       cvTextarea.style.borderColor = '#ef4444';
@@ -547,22 +570,30 @@ showToast(
     return;
   }
 
+  // ZAPISZ CV DO STATE
+  setSavedCV(cvText);
+  console.log('💾 CV zapisane:', cvText.substring(0, 100) + '...');
   
-  // Premium loading animation
+  // Zapisz też email jeśli został podany
+  const emailInput = document.getElementById('customerEmail');
+  if (emailInput?.value) {
+    setUserEmail(emailInput.value);
+  }
+  
   setIsOptimizing(true);
-const loadingMessages = currentLanguage === 'pl'
-  ? [
-      '🔍 Analizuję strukturę CV...',
-      '🤖 GPT-4 sprawdza zgodność z ATS...',
-      '⚡ Optymalizuję słowa kluczowe...',
-      '📊 Obliczam compatibility score...'
-    ]
-  : [
-      '🔍 Analyzing CV structure...',
-      '🤖 GPT-4 checks ATS compliance...',
-      '⚡ Optimizing keywords...',
-      '📊 Calculating compatibility score...'
-    ];
+  const loadingMessages = currentLanguage === 'pl'
+    ? [
+        '🔍 Analizuję strukturę CV...',
+        '🤖 GPT-4 sprawdza zgodność z ATS...',
+        '⚡ Optymalizuję słowa kluczowe...',
+        '📊 Obliczam compatibility score...'
+      ]
+    : [
+        '🔍 Analyzing CV structure...',
+        '🤖 GPT-4 checks ATS compliance...',
+        '⚡ Optimizing keywords...',
+        '📊 Calculating compatibility score...'
+      ];
   
   let messageIndex = 0;
   const messageInterval = setInterval(() => {
@@ -572,14 +603,13 @@ const loadingMessages = currentLanguage === 'pl'
     }
   }, 800);
   
-  updateProgress(2)
+  updateProgress(2);
   
   setTimeout(() => {
     clearInterval(messageInterval);
     setIsOptimizing(false);
   }, 3000);
   
-  // Simulate analysis
   const fakeResult = {
     score: Math.floor(Math.random() * 40) + 45,
     problems: Math.floor(Math.random() * 8) + 5
@@ -587,32 +617,17 @@ const loadingMessages = currentLanguage === 'pl'
   
   setAnalysisResult(fakeResult);
   setShowUploadModal(false);
-
-// Ustaw CSS custom property dla score circle
-/* NOWY KOD */
-setTimeout(() => {
-  setShowPaywall(true);
-  const scoreCircle = document.querySelector('.score-circle');
-  if (scoreCircle) {
-    const percentage = fakeResult.score;
-    scoreCircle.style.setProperty('--score', percentage);
-    // Animacja będzie obsługiwana przez CSS z użyciem CSS variable
-  }
-}, 100);
   
-  // Show success and update progress
   setTimeout(() => {
-showToast(
-  currentLanguage === 'pl'
-    ? '✅ Analiza zakończona!'
-    : '✅ Analysis complete!',
-  'success'
-);
-    updateProgress(3)
     setShowPaywall(true);
+    showToast(
+      currentLanguage === 'pl'
+        ? '✅ CV zapisane! Teraz możesz dodać ogłoszenie o pracę.'
+        : '✅ CV saved! Now you can add a job posting.',
+      'success'
+    );
   }, 1500);
 };
-
   // UPROSZCZONA FUNKCJA optimizeCV
 const optimizeCV = () => {
   const cvTextarea = document.querySelector('.cv-textarea');
@@ -696,23 +711,29 @@ setTimeout(() => textarea.classList.remove('flash'), 1000);
 };
 
 const handlePayment = async (plan) => {
-  // Pobierz dane z formularzy
   const email = (userEmail || document.getElementById('paywallEmail')?.value || document.getElementById('customerEmail')?.value || '').trim();
-  const cvTextarea = document.querySelector('.cv-textarea');
-  const cvText = cvTextarea?.value || '';
   const jobTextarea = document.querySelector('.job-textarea');
   const jobPosting = jobTextarea?.value || '';
+  const cvText = savedCV;
 
-  // Walidacja
   if (!email || !email.includes('@')) {
     alert(currentLanguage === 'pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address');
     return;
   }
 
   if (!cvText || cvText.trim().length < 50) {
-    alert(currentLanguage === 'pl' ? 'Proszę wkleić swoje CV' : 'Please paste your CV');
+    alert(currentLanguage === 'pl' ? 'Błąd: Nie znaleziono CV. Wróć do pierwszego kroku.' : 'Error: CV not found. Go back to first step.');
+    setShowPaywall(false);
+    setShowUploadModal(true);
     return;
   }
+
+  console.log('📤 Przygotowanie do płatności:', {
+    plan: plan,
+    hasCV: !!cvText,
+    hasJob: !!jobPosting,
+    email: email
+  });
 
   // Zapisz dane w sessionStorage
   sessionStorage.setItem('pendingCV', cvText);
@@ -720,21 +741,87 @@ const handlePayment = async (plan) => {
   sessionStorage.setItem('pendingEmail', email);
   sessionStorage.setItem('pendingPlan', plan);
   
-  // Przekieruj do Stripe
+  // LOGIKA SZABLONÓW:
+  // Basic - brak wyboru, domyślny szablon "simple"
+  // Pro/Gold - wybór z 3 szablonów
+  // Premium - wybór z 7 szablonów
+  
+  if (plan === 'basic') {
+    // Basic - od razu do płatności z domyślnym szablonem
+    sessionStorage.setItem('selectedTemplate', 'simple');
+    proceedToCheckout(plan, 'simple');
+  } else {
+    // Pro/Premium - pokaż modal z szablonami
+    setShowPaywall(false); // Zamknij modal z cenami
+    setShowTemplateModal(true); // Otwórz modal z szablonami
+  }
+};
+
+// 3. ZASTĄP funkcję handleTemplateSelection:
+const handleTemplateSelection = (template) => {
+  const plan = sessionStorage.getItem('pendingPlan');
+  
+  console.log('📄 Wybrany szablon:', template, 'dla planu:', plan);
+  
+  // Walidacja - sprawdź czy użytkownik może używać tego szablonu
+  const basicTemplates = ['simple'];
+  const proTemplates = ['simple', 'modern', 'classic', 'minimalist'];
+  const premiumTemplates = ['simple', 'modern', 'classic', 'minimalist', 'executive', 'creative', 'tech', 'elegant'];
+  
+  let allowedTemplates = [];
+  if (plan === 'basic') allowedTemplates = basicTemplates;
+  else if (plan === 'pro' || plan === 'gold') allowedTemplates = proTemplates;
+  else if (plan === 'premium' || plan === 'premium-monthly') allowedTemplates = premiumTemplates;
+  
+  if (!allowedTemplates.includes(template)) {
+    alert(currentLanguage === 'pl' 
+      ? '⚠️ Ten szablon nie jest dostępny w Twoim planie!' 
+      : '⚠️ This template is not available in your plan!');
+    return;
+  }
+  
+  // Zapisz wybrany szablon
+  sessionStorage.setItem('selectedTemplate', template);
+  setSelectedTemplate(template);
+  
+  // Zamknij modal szablonów
+  setShowTemplateModal(false);
+  
+  // Pokaż ładowanie
+  showToast(
+    currentLanguage === 'pl' 
+      ? '✅ Szablon wybrany! Przekierowuję do płatności...' 
+      : '✅ Template selected! Redirecting to payment...',
+    'success'
+  );
+  
+  // Przejdź do płatności po krótkiej przerwie
+  setTimeout(() => {
+    proceedToCheckout(plan, template);
+  }, 1000);
+};
+
+// 2. DODAJ nową funkcję do przejścia do płatności:
+const proceedToCheckout = (plan, template) => {
+  const email = sessionStorage.getItem('pendingEmail');
+  const cvText = sessionStorage.getItem('pendingCV');
+  const jobPosting = sessionStorage.getItem('pendingJob') || '';
+  
   const prices = {
-    'basic': 'price_1RofCI4FWb3xY5tDYONIW3Ix',
-    'pro': 'price_1Rof7b4FWb3xY5tDQ76590pw', 
-    'premium': 'price_1RqWk34FWb3xY5tD5W2ge1g0',
-    'premium-monthly': 'price_1RqWk34FWb3xY5tD5W2ge1g0',
-    'gold': 'price_1Rof7b4FWb3xY5tDQ76590pw'
+    'basic': 'price_1Rwooh4FWb3xY5tDRxqQ4y69', // 19.99 zł
+    'pro': 'price_1Rwooh4FWb3xY5tDRxqQ4y69',   // 49 zł (zmień na właściwy)
+    'gold': 'price_1Rwooh4FWb3xY5tDRxqQ4y69',  // 49 zł (zmień na właściwy)
+    'premium': 'price_1Rwooh4FWb3xY5tDRxqQ4y69', // 79 zł (zmień na właściwy)
+    'premium-monthly': 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 79 zł (zmień na właściwy)
   };
 
-  // Dodaj CV i job posting do metadata
-  const cvPreview = cvText.substring(0, 500); // Pierwsze 500 znaków
-  const jobPreview = jobPosting ? jobPosting.substring(0, 200) : '';
+  const cvPreview = cvText.substring(0, 400);
+  const jobPreview = jobPosting.substring(0, 200);
   
-  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}`;
-}
+  // Przekieruj do Stripe
+  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}&template=${template}`;
+};
+
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
 const testimonialsBase = [
@@ -1841,112 +1928,243 @@ setTimeout(() => {
           </div>
         )}
 
-{/* Template Selection Modal */}
-        {showTemplateModal && (
-          <div className="modal-overlay" onClick={() => setShowTemplateModal(false)}>
-            <div className="modal-content template-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
-              
-              <div className="template-header">
-                <h2>{currentLanguage==='pl' ? 'Wybierz szablon CV' : 'Choose a CV template'}</h2>
-                <p>{currentLanguage==='pl' ? 'Dostępne szablony w Twoim planie' : 'Templates available in your plan'}</p>
+{showTemplateModal && (
+  <div className="modal-overlay" onClick={() => setShowTemplateModal(false)}>
+    <div className="modal-content template-modal" onClick={(e) => e.stopPropagation()}>
+      <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
+      
+      <div className="template-header">
+        <h2>{currentLanguage === 'pl' ? '🎨 Wybierz szablon CV' : '🎨 Choose CV template'}</h2>
+        <p>
+          {(() => {
+            const plan = sessionStorage.getItem('pendingPlan');
+            if (plan === 'basic') {
+              return currentLanguage === 'pl' 
+                ? 'Plan Basic - domyślny szablon' 
+                : 'Basic plan - default template';
+            } else if (plan === 'pro' || plan === 'gold') {
+              return currentLanguage === 'pl' 
+                ? 'Plan Pro - wybierz z 3 profesjonalnych szablonów' 
+                : 'Pro plan - choose from 3 professional templates';
+            } else {
+              return currentLanguage === 'pl' 
+                ? 'Plan Premium - wybierz z 7 ekskluzywnych szablonów' 
+                : 'Premium plan - choose from 7 exclusive templates';
+            }
+          })()}
+        </p>
+      </div>
 
-              </div>
-
-              <div className="templates-grid">
-                {/* Szablony dla planu Gold (49 zł) */}
-                <div className="template-card" onClick={() => setSelectedTemplate('modern')}>
-                  <div className="template-preview">
-                    <div className="template-icon">📄</div>
-                    <h3>Modern</h3>
-                    <p>Nowoczesny design z kolorowymi akcentami</p>
-                  </div>
-                  <div className="template-badge">Gold</div>
+      <div className="templates-grid">
+        {(() => {
+          const plan = sessionStorage.getItem('pendingPlan');
+          
+          // PLAN BASIC - tylko domyślny szablon
+          if (plan === 'basic') {
+            return (
+              <div className="template-card selected" onClick={() => handleTemplateSelection('simple')}>
+                <div className="template-preview">
+                  <div className="template-icon">📝</div>
+                  <h3>Simple</h3>
+                  <p>{currentLanguage === 'pl' ? 'Prosty i czytelny szablon' : 'Simple and clean template'}</p>
                 </div>
-
-                <div className="template-card" onClick={() => setSelectedTemplate('classic')}>
-                  <div className="template-preview">
-                    <div className="template-icon">📋</div>
-                    <h3>Classic</h3>
-                    <p>Klasyczny, profesjonalny układ</p>
-                  </div>
-                  <div className="template-badge">Gold</div>
-                </div>
-
-                <div className="template-card" onClick={() => setSelectedTemplate('creative')}>
-                  <div className="template-preview">
-                    <div className="template-icon">🎨</div>
-                    <h3>Creative</h3>
-                    <p>Kreatywny design dla branż artystycznych</p>
-                  </div>
-                  <div className="template-badge">Gold</div>
-                </div>
-
-                {/* Dodatkowe szablony dla Premium (79 zł) */}
-                <div className="template-card premium" onClick={() => setSelectedTemplate('executive')}>
-                  <div className="template-preview">
-                    <div className="template-icon">💼</div>
-                    <h3>Executive</h3>
-                    <p>Dla kadry zarządzającej</p>
-                  </div>
-                  <div className="template-badge premium">Premium</div>
-                </div>
-
-                <div className="template-card premium" onClick={() => setSelectedTemplate('tech')}>
-                  <div className="template-preview">
-                    <div className="template-icon">💻</div>
-                    <h3>Tech Pro</h3>
-                    <p>Dla branży IT</p>
-                  </div>
-                  <div className="template-badge premium">Premium</div>
-                </div>
-
-                <div className="template-card premium" onClick={() => setSelectedTemplate('minimal')}>
-                  <div className="template-preview">
-                    <div className="template-icon">⚡</div>
-                    <h3>Minimal</h3>
-                    <p>Minimalistyczny design</p>
-                  </div>
-                  <div className="template-badge premium">Premium</div>
-                </div>
-
-                <div className="template-card premium" onClick={() => setSelectedTemplate('infographic')}>
-                  <div className="template-preview">
-                    <div className="template-icon">📊</div>
-                    <h3>Infographic</h3>
-                    <p>Z wykresami umiejętności</p>
-                  </div>
-                  <div className="template-badge premium">Premium</div>
-                </div>
-
-                <div className="template-card premium" onClick={() => setSelectedTemplate('elegant')}>
-                  <div className="template-preview">
-                    <div className="template-icon">✨</div>
-                    <h3>Elegant</h3>
-                    <p>Elegancki i wyrafinowany</p>
-                  </div>
-                  <div className="template-badge premium">Premium</div>
-                </div>
-              </div>
-
-              <div className="template-cta">
-                <button 
-                  className="template-button" 
-                  onClick={() => {
-                    if (selectedTemplate) {
-                      showToast(`✅ Wybrano szablon: ${selectedTemplate}`, 'success');
-                      setShowTemplateModal(false);
-                    }
-                  }}
-                  disabled={!selectedTemplate}
-                >
-                  {currentLanguage==='pl' ? 'Zastosuj wybrany szablon' : 'Apply selected template'}
-
+                <div className="template-badge">Basic</div>
+                <button className="select-template-btn">
+                  {currentLanguage === 'pl' ? 'Kontynuuj z tym szablonem' : 'Continue with this template'}
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          }
+          
+          // PLAN PRO/GOLD - 3 szablony
+          if (plan === 'pro' || plan === 'gold') {
+            return (
+              <>
+                <div className="template-card" onClick={() => handleTemplateSelection('modern')}>
+                  <div className="template-preview">
+                    <div className="template-demo">
+                      <div className="demo-header"></div>
+                      <div className="demo-line"></div>
+                      <div className="demo-line short"></div>
+                    </div>
+                    <h3>Modern</h3>
+                    <p>{currentLanguage === 'pl' ? 'Nowoczesny design' : 'Modern design'}</p>
+                  </div>
+                  <div className="template-badge">Pro</div>
+                </div>
+
+                <div className="template-card" onClick={() => handleTemplateSelection('classic')}>
+                  <div className="template-preview">
+                    <div className="template-demo">
+                      <div className="demo-header classic"></div>
+                      <div className="demo-line"></div>
+                      <div className="demo-line"></div>
+                    </div>
+                    <h3>Classic</h3>
+                    <p>{currentLanguage === 'pl' ? 'Klasyczny układ' : 'Classic layout'}</p>
+                  </div>
+                  <div className="template-badge">Pro</div>
+                </div>
+
+                <div className="template-card" onClick={() => handleTemplateSelection('minimalist')}>
+                  <div className="template-preview">
+                    <div className="template-demo">
+                      <div className="demo-header minimal"></div>
+                      <div className="demo-line thin"></div>
+                      <div className="demo-line thin"></div>
+                    </div>
+                    <h3>Minimalist</h3>
+                    <p>{currentLanguage === 'pl' ? 'Minimalistyczny' : 'Minimalist'}</p>
+                  </div>
+                  <div className="template-badge">Pro</div>
+                </div>
+              </>
+            );
+          }
+          
+          // PLAN PREMIUM - wszystkie 7 szablonów
+          if (plan === 'premium' || plan === 'premium-monthly') {
+            return (
+              <>
+                {/* Szablony Pro */}
+                <div className="template-card" onClick={() => handleTemplateSelection('modern')}>
+                  <div className="template-preview">
+                    <div className="template-demo">
+                      <div className="demo-header"></div>
+                      <div className="demo-line"></div>
+                      <div className="demo-line short"></div>
+                    </div>
+                    <h3>Modern</h3>
+                    <p>{currentLanguage === 'pl' ? 'Nowoczesny design' : 'Modern design'}</p>
+                  </div>
+                  <div className="template-badge">Pro</div>
+                </div>
+
+                <div className="template-card" onClick={() => handleTemplateSelection('classic')}>
+                  <div className="template-preview">
+                    <div className="template-demo">
+                      <div className="demo-header classic"></div>
+                      <div className="demo-line"></div>
+                      <div className="demo-line"></div>
+                    </div>
+                    <h3>Classic</h3>
+                    <p>{currentLanguage === 'pl' ? 'Klasyczny układ' : 'Classic layout'}</p>
+                  </div>
+                  <div className="template-badge">Pro</div>
+                </div>
+
+                <div className="template-card" onClick={() => handleTemplateSelection('minimalist')}>
+                  <div className="template-preview">
+                    <div className="template-demo">
+                      <div className="demo-header minimal"></div>
+                      <div className="demo-line thin"></div>
+                      <div className="demo-line thin"></div>
+                    </div>
+                    <h3>Minimalist</h3>
+                    <p>{currentLanguage === 'pl' ? 'Minimalistyczny' : 'Minimalist'}</p>
+                  </div>
+                  <div className="template-badge">Pro</div>
+                </div>
+
+                {/* Ekskluzywne szablony Premium */}
+                <div className="template-card premium" onClick={() => handleTemplateSelection('executive')}>
+                  <div className="template-preview">
+                    <div className="template-demo premium">
+                      <div className="demo-header executive"></div>
+                      <div className="demo-line gold"></div>
+                      <div className="demo-line gold short"></div>
+                    </div>
+                    <h3>Executive</h3>
+                    <p>{currentLanguage === 'pl' ? 'Dla kadry zarządzającej' : 'For executives'}</p>
+                  </div>
+                  <div className="template-badge premium">Premium ⭐</div>
+                </div>
+
+                <div className="template-card premium" onClick={() => handleTemplateSelection('creative')}>
+                  <div className="template-preview">
+                    <div className="template-demo creative">
+                      <div className="demo-header creative"></div>
+                      <div className="demo-circle"></div>
+                      <div className="demo-line colorful"></div>
+                    </div>
+                    <h3>Creative Pro</h3>
+                    <p>{currentLanguage === 'pl' ? 'Kreatywny design' : 'Creative design'}</p>
+                  </div>
+                  <div className="template-badge premium">Premium ⭐</div>
+                </div>
+
+                <div className="template-card premium" onClick={() => handleTemplateSelection('tech')}>
+                  <div className="template-preview">
+                    <div className="template-demo tech">
+                      <div className="demo-header tech"></div>
+                      <div className="demo-chart"></div>
+                      <div className="demo-line tech"></div>
+                    </div>
+                    <h3>Tech Expert</h3>
+                    <p>{currentLanguage === 'pl' ? 'Dla specjalistów IT' : 'For IT specialists'}</p>
+                  </div>
+                  <div className="template-badge premium">Premium ⭐</div>
+                </div>
+
+                <div className="template-card premium vip" onClick={() => handleTemplateSelection('elegant')}>
+                  <div className="template-preview">
+                    <div className="template-demo elegant">
+                      <div className="demo-header elegant"></div>
+                      <div className="demo-line elegant"></div>
+                      <div className="demo-decoration"></div>
+                    </div>
+                    <h3>Elegant VIP</h3>
+                    <p>{currentLanguage === 'pl' ? 'Luksusowy design' : 'Luxury design'}</p>
+                  </div>
+                  <div className="template-badge premium vip">Premium VIP 💎</div>
+                </div>
+              </>
+            );
+          }
+        })()}
+      </div>
+
+      {/* Informacja o planie */}
+      <div className="template-footer">
+        <p className="template-info">
+          {(() => {
+            const plan = sessionStorage.getItem('pendingPlan');
+            if (plan === 'basic') {
+              return currentLanguage === 'pl'
+                ? '💡 W planie Basic otrzymujesz prosty, profesjonalny szablon'
+                : '💡 Basic plan includes a simple, professional template';
+            } else if (plan === 'pro' || plan === 'gold') {
+              return currentLanguage === 'pl'
+                ? '💡 Wybierz jeden z 3 profesjonalnych szablonów'
+                : '💡 Choose from 3 professional templates';
+            } else {
+              return currentLanguage === 'pl'
+                ? '💎 Masz dostęp do wszystkich 7 ekskluzywnych szablonów!'
+                : '💎 You have access to all 7 exclusive templates!';
+            }
+          })()}
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+{savedCV && (
+  <div style={{
+    background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 112, 0.1))',
+    border: '1px solid rgba(0, 255, 136, 0.3)',
+    borderRadius: '12px',
+    padding: '16px',
+    margin: '20px',
+    textAlign: 'center'
+  }}>
+    <p style={{color: 'white', fontSize: '14px', margin: 0}}>
+      ✅ {currentLanguage === 'pl' 
+        ? `CV zapisane (${savedCV.length} znaków). Teraz możesz dodać ogłoszenie o pracę (opcjonalnie).`
+        : `CV saved (${savedCV.length} characters). Now you can add a job posting (optional).`
+      }
+    </p>
+  </div>
+)}
 
 
         {/* FAQ Section */}
@@ -8472,6 +8690,133 @@ html, body { margin:0 !important; padding:0 !important; }
   .paywall-modal .pricing-grid {
     grid-template-columns: 1fr;
   }
+}
+
+// 5. DODAJ style CSS dla demo szablonów w style jsx:
+.template-demo {
+  width: 100%;
+  height: 150px;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.demo-header {
+  width: 60%;
+  height: 20px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.demo-header.classic {
+  background: #2c3e50;
+  width: 100%;
+}
+
+.demo-header.minimal {
+  background: #000;
+  height: 2px;
+  margin-bottom: 20px;
+}
+
+.demo-header.executive {
+  background: linear-gradient(90deg, #f7971e, #ffd200);
+}
+
+.demo-header.creative {
+  background: linear-gradient(45deg, #667eea, #f093fb, #f5576c);
+  border-radius: 20px;
+}
+
+.demo-header.tech {
+  background: #00d2ff;
+}
+
+.demo-header.elegant {
+  background: linear-gradient(90deg, #232526, #414345);
+  height: 25px;
+}
+
+.demo-line {
+  width: 80%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.demo-line.short {
+  width: 50%;
+}
+
+.demo-line.thin {
+  height: 4px;
+}
+
+.demo-line.gold {
+  background: linear-gradient(90deg, #f7971e, #ffd200);
+  opacity: 0.3;
+}
+
+.demo-line.colorful {
+  background: linear-gradient(90deg, #667eea, #f093fb);
+}
+
+.demo-line.tech {
+  background: #00d2ff;
+  opacity: 0.3;
+}
+
+.demo-line.elegant {
+  background: #000;
+  height: 1px;
+  width: 100%;
+}
+
+.demo-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+  margin: 10px 0;
+}
+
+.demo-chart {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(90deg, #00d2ff 30%, #3a7bd5 60%, #00d2ff 90%);
+  opacity: 0.2;
+  border-radius: 4px;
+  margin: 15px 0;
+}
+
+.demo-decoration {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #000, transparent);
+  margin-top: 20px;
+}
+
+.template-card.premium {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(124, 58, 237, 0.05));
+}
+
+.template-card.premium.vip {
+  border-color: rgba(255, 215, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), rgba(255, 193, 7, 0.05));
+}
+
+.template-badge.premium {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.template-badge.premium.vip {
+  background: linear-gradient(135deg, #ffd700, #ffc107);
+  color: #000;
 }
 
 	`}</style>
