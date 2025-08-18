@@ -64,6 +64,17 @@ useEffect(() => {
   const [notifications, setNotifications] = useState([])
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [savedCV, setSavedCV] = useState('');
+  const [showMainModal, setShowMainModal] = useState(false);
+  const [modalStep, setModalStep] = useState(1);
+  const [formData, setFormData] = useState({
+
+  email: '',
+  cvContent: '',
+  jobPosting: '',
+  acceptTerms: false,
+  selectedPlan: null,
+  selectedTemplate: null
+});
 
 // Debug modal state
 useEffect(() => {
@@ -497,6 +508,11 @@ useEffect(() => {
   }
 }, []);
 
+// Nowa funkcja otwierająca modal
+const handleOptimizeNow = () => {
+  setShowMainModal(true);
+  setModalStep(1);
+};
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
@@ -548,121 +564,6 @@ showToast(
   })
 }
 
-  // NOWA FUNKCJA - DARMOWA ANALIZA
-const handleFreeAnalysis = () => {
-  if (isOptimizing) return;
-  
-  const cvTextarea = document.querySelector('.cv-textarea');
-  const cvText = cvTextarea?.value || '';
-  
-  if ((!cvText || cvText.trim().length < 50) && !uploadedFile) {
-    showToast(
-      currentLanguage === 'pl'
-        ? '⚠️ Najpierw wklej treść swojego CV!'
-        : '⚠️ Paste your CV content first!',
-      'warning'
-    );
-    if (cvTextarea) {
-      cvTextarea.focus();
-      cvTextarea.style.borderColor = '#ef4444';
-      setTimeout(() => cvTextarea.style.borderColor = '', 2000);
-    }
-    return;
-  }
-
-  // ZAPISZ CV DO STATE
-  setSavedCV(cvText);
-  console.log('💾 CV zapisane:', cvText.substring(0, 100) + '...');
-  
-  // Zapisz też email jeśli został podany
-  const emailInput = document.getElementById('customerEmail');
-  if (emailInput?.value) {
-    setUserEmail(emailInput.value);
-  }
-  
-  setIsOptimizing(true);
-  const loadingMessages = currentLanguage === 'pl'
-    ? [
-        '🔍 Analizuję strukturę CV...',
-        '🤖 GPT-4 sprawdza zgodność z ATS...',
-        '⚡ Optymalizuję słowa kluczowe...',
-        '📊 Obliczam compatibility score...'
-      ]
-    : [
-        '🔍 Analyzing CV structure...',
-        '🤖 GPT-4 checks ATS compliance...',
-        '⚡ Optimizing keywords...',
-        '📊 Calculating compatibility score...'
-      ];
-  
-  let messageIndex = 0;
-  const messageInterval = setInterval(() => {
-    if (messageIndex < loadingMessages.length) {
-      showToast(loadingMessages[messageIndex], 'info');
-      messageIndex++;
-    }
-  }, 800);
-  
-  updateProgress(2);
-  
-  setTimeout(() => {
-    clearInterval(messageInterval);
-    setIsOptimizing(false);
-  }, 3000);
-  
-  const fakeResult = {
-    score: Math.floor(Math.random() * 40) + 45,
-    problems: Math.floor(Math.random() * 8) + 5
-  };
-  
-  setAnalysisResult(fakeResult);
-  setShowUploadModal(false);
-  
-  setTimeout(() => {
-    setShowPaywall(true);
-    showToast(
-      currentLanguage === 'pl'
-        ? '✅ CV zapisane! Teraz możesz dodać ogłoszenie o pracę.'
-        : '✅ CV saved! Now you can add a job posting.',
-      'success'
-    );
-  }, 1500);
-};
-  // UPROSZCZONA FUNKCJA optimizeCV
-const optimizeCV = () => {
-  const cvTextarea = document.querySelector('.cv-textarea');
-  const cvText = cvTextarea?.value || '';
-  
-  if ((!cvText || cvText.trim().length < 50) && !uploadedFile) {
-
-showToast(
-  currentLanguage === 'pl'
-    ? '⚠️ Najpierw wklej treść swojego CV!'
-    : '⚠️ Paste your CV content first!',
-  'warning'
-)
-    setShowUploadModal(true);
-    return;
-  }
-  
-  handleFreeAnalysis();
-}
-const createConfetti = () => {
-  const confettiCount = 50;
-  const confettiColors = ['#7850ff', '#ff5080', '#50b4ff', '#00ff88', '#ffd700'];
-  
-  for (let i = 0; i < confettiCount; i++) {
-    const confetti = document.createElement('div');
-    confetti.classList.add('confetti');
-    confetti.style.left = Math.random() * 100 + '%';
-    confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
-    confetti.style.animationDelay = Math.random() * 3 + 's';
-    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-    document.body.appendChild(confetti);
-    
-    setTimeout(() => confetti.remove(), 5000);
-  }
-}
 
 const handleFileUpload = (e) => {
   const file = e.target.files?.[0];
@@ -1145,12 +1046,7 @@ style={{
       🇬🇧 EN
     </button>
   </div>
-<button className="nav-cta" onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Nav button clicked');
-    setShowUploadModal(true);
-  }}>
+<button className="nav-cta" onClick={handleOptimizeNow}>
     {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
   </button>
 
@@ -1208,12 +1104,11 @@ style={{
 
             <div className="hero-cta">
              
-<button className="hero-button primary" onClick={() => {
-  console.log('Hero button clicked - opening modal');
-  setShowUploadModal(true);
-}}>
+<button className="hero-button primary" onClick={handleOptimizeNow}>
   {currentLanguage === 'pl' ? '🔍 Sprawdź swoje CV' : '🔍 Check your CV'}
-</button><div className="hero-guarantee">
+</button>
+
+<div className="hero-guarantee">
   <span>{currentLanguage === 'pl' ? '✅ Bez rejestracji' : '✅ No registration'}</span>
 </div>
             </div>
@@ -1523,8 +1418,7 @@ style={{
     
     {/* Interactive Demo Button */}
     <div className="timeline-cta premium-cta">
-      <button className="timeline-button premium-button" onClick={(e) => {
-  e.preventDefault();
+<button className="timeline-button premium-button" onClick={handleOptimizeNow}>  e.preventDefault();
   e.stopPropagation();
   openUploadModal(e);
 }}>
@@ -1599,7 +1493,7 @@ style={{
 
           <div className="testimonials-cta">
 <h3>{currentLanguage==='pl' ? 'Dołącz do 15,000+ zadowolonych użytkowników!' : 'Join 15,000+ happy users!'}</h3>
-<button className="testimonials-button" onClick={(e) => {
+<button className="testimonials-button" onClick={handleOptimizeNow}>
   e.preventDefault();
   e.stopPropagation();
   openUploadModal(e);
@@ -1609,563 +1503,34 @@ style={{
           </div>
         </div>
 
-{/* Upload Modal - Darmowa Analiza */}
-        {showUploadModal && (
-          <div className="modal-overlay" onClick={() => setShowUploadModal(false)} style={{zIndex: 999999}}>
-            <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowUploadModal(false)}>×</button>
-              
-              <div className="upload-header">
-<h2>{currentLanguage==='pl' ? 'Darmowa Analiza ATS' : 'Free ATS Analysis'}</h2>
-<p>{currentLanguage==='pl' ? 'Sprawdź jak Twoje CV lub list motywacyjny radzi sobie z systemami rekrutacyjnymi' : 'Check how your CV or cover letter performs with ATS systems'}</p>
-              </div>
 
-              <div className="upload-area">
-                <div className="upload-zone">
-                  <div className="upload-icon">📄</div>
-<h3>{currentLanguage==='pl' ? 'Wklej swoje CV lub wybierz plik' : 'Paste your CV or choose a file'}</h3>
-<p>{currentLanguage==='pl' ? 'PDF, DOC, DOCX - maksymalnie 5MB' : 'PDF, DOC, DOCX - up to 5MB'}</p>
-                  
-                  <textarea 
-                    className="cv-textarea"
-placeholder={
-  currentLanguage==='pl'
-    ? 'Wklej tutaj pełne ogłoszenie o pracę...\n\n🤖 System wykryje czy to CV czy list motywacyjny i zoptymalizuje!'
-    : 'Paste the full job posting here...\n\n🤖 The system will detect CV vs cover letter and optimize!'
-}                    rows="8"
-
-         ></textarea>
-                  
-
-<div className="email-field">
-  <label htmlFor="customerEmail" className="email-label">
-    {currentLanguage==='pl' ? 'Adres e-mail do wysyłki wyniku' : 'Email for delivery'}
-  </label>
-
-  <input
-    id="customerEmail"
-    type="email"
-    className="email-input"
-    required
-    value={userEmail}
-    onChange={(e)=>setUserEmail(e.target.value)}
-    placeholder={currentLanguage==='pl' ? 'np. jan.kowalski@gmail.com' : 'e.g. john.doe@gmail.com'}
-    inputMode="email"
-    autoComplete="email"
-  />
-
-  <p className="email-hint">
-    {currentLanguage==='pl'
-      ? 'Nie wymagamy rejestracji. Link do plików wyślemy na ten adres.'
-      : 'No account needed. We’ll send your files to this address.'}
-  </p>
-</div>
-
-
-
-                  <div className="upload-buttons">
-                    <input
-                      type="file"
-                      id="modalFileInput"
-                      accept=".pdf,.doc,.docx"
-                      style={{display: 'none'}}
-onChange={(e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const fileName = file.name.toLowerCase();
-  const allowed = ['.pdf','.doc','.docx'].some(ext => fileName.endsWith(ext));
-  if (!allowed) {
-    alert(currentLanguage==='pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ We only support: PDF, DOC, DOCX');
-    e.target.value = '';
-    return;
-  }
-
-  const okType = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-    .includes(file.type) || file.type.includes('word');
-  if (!okType) {
-    alert(currentLanguage==='pl' ? '❌ Nieprawidłowy format pliku. Używaj PDF, DOC lub DOCX' : '❌ Invalid file format. Use PDF, DOC or DOCX');
-    e.target.value = '';
-    return;
-  }
-
-  setUploadedFile(file);
-
-  const textarea = document.querySelector('.cv-textarea');
-  if (textarea) {
-    textarea.value = currentLanguage==='pl'
-      ? `📄 Plik "${file.name}" został wczytany!\nRozmiar: ${(file.size/1024).toFixed(1)} KB\n✅ Gotowe do analizy`
-      : `📄 File "${file.name}" loaded!\nSize: ${(file.size/1024).toFixed(1)} KB\n✅ Ready for analysis`;
-  }
-}}
-                    />
-                    <button 
-                      className="upload-btn secondary"
-                      onClick={() => document.getElementById('modalFileInput').click()}
-                    >
-                      {currentLanguage==='pl' ? '📁 Wybierz plik' : '📁 Choose file'}
-
-                    </button>
-                    <button className="upload-btn primary" onClick={handleFreeAnalysis}>
-                      {currentLanguage==='pl' ? '🔍 Analizuj teraz' : '🔍 Analyze now'}
-
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Paywall Modal - Po analizie */}
-        {showPaywall && analysisResult && (
-          <div className="modal-overlay" onClick={() => setShowPaywall(false)}>
-            <div className="modal-content paywall-modal" onClick={(e) => e.stopPropagation()}>
-              {/* Header Section */}
-<div className="modal-header">
-  <div className="header-content">
-    <div className="header-badge">
-      <span className="badge-icon">🚀</span>
-      <span className="badge-text">Optymalizacja CV</span>
-    </div>
-    <h2>{currentLanguage === 'pl' ? 'Odblokuj pełną optymalizację!' : 'Unlock full optimization!'}</h2>
-
-    <p>
-  {currentLanguage==='pl'
-    ? 'Uzupełnij email, wybierz plan i otrzymaj szczegółową analizę + zoptymalizowane CV'
-    : 'Enter your email, choose a plan, and get a detailed analysis + an optimized CV'}
-</p>
-
-  </div>
-  <button className="close-btn" onClick={() => setShowPaywall(false)}>×</button>
-</div>
-
-{/* ATS Score Preview */}
-<div className="score-preview" style={{ display: analysisResult ? 'block' : 'none' }}>
-<div className="score-container">
-  <div className="score-circle" style={{'--score': analysisResult.score}}>
-    <div className="score-value">{analysisResult.score}%</div>
-    <div className="score-label">ATS Score</div>
-  </div>
-  <div className="score-info">
-    <h4>{currentLanguage==='pl' ? '🎯 Twój wynik ATS' : '🎯 Your ATS score'}</h4>
-    <p>{currentLanguage==='pl' ? 'Sprawdziliśmy Twoje CV pod kątem zgodności z systemami rekrutacyjnymi' : 'We checked your CV for ATS compliance'}</p>
-  </div>
-</div>
-</div>
-
-{/* Content Section */}
-<div className="modal-content-inner">
-  {/* Optimization Type Selection */}
-<div className="optimization-section">
-  <h3>🎯 Typ optymalizacji</h3>
-  
-  {/* Default Option - Selected */}
-  <div className="default-option">
-    <div className="option-header">
-      <span className="option-icon">⭐</span>
-      <div className="option-info">
-        <h4>Ogólna optymalizacja</h4>
-        <p>Uniwersalne CV dostosowane do Twojej branży</p>
-      </div>
-      <span className="selected-badge">✅ Wybrane</span>
-    </div>
-  </div>
-
-  {/* Job Description Input */}
-  <div className="job-upgrade-section">
-    <div className="upgrade-header">
-<h4>{currentLanguage==='pl' ? '💼 Lub dostosuj pod konkretną ofertę pracy' : '💼 Or tailor to a specific job posting'}</h4>
-<p>{currentLanguage==='pl' ? 'Wklej ogłoszenie, a my zoptymalizujemy CV lub list motywacyjny pod te wymagania' : 'Paste the job ad and we will tailor your CV or cover letter to it'}</p>    </div>
-<textarea 
-  className="job-textarea" 
-  placeholder={
-    currentLanguage==='pl'
-      ? 'Wklej tutaj pełne ogłoszenie o pracę...'
-      : 'Paste the full job posting here...'
-  }
-  rows="4"
-  defaultValue=""
-/>
-    <div className="upgrade-note">
-      <span className="note-icon">💡</span>
-      <span>Im więcej szczegółów, tym lepsza optymalizacja!</span>
-    </div>
-  </div>
-</div>
-
-  {/* Email Input */}
-  <div className="email-section">
-    <h3>{currentLanguage==='pl' ? '📧 Twój email' : '📧 Your email'}</h3>
-<input 
-  type="email" 
-  className="email-input" 
-  placeholder={currentLanguage==='pl' ? 'twoj-email@example.com' : 'your-email@example.com'}
-  id="paywallEmail"
-  value={userEmail}
-  onChange={(e)=>setUserEmail(e.target.value)}
-/>
-  </div>
-
-  {/* Pricing Plans */}
-  <div className="pricing-section">
-    <h3>💎 Wybierz plan</h3>
-    <div className="pricing-grid">
-      {/* Basic Plan */}
-      <div className="plan-card basic">
-        <div className="plan-badge">BASIC</div>
-        <div className="plan-header">
-          <h4>Jednorazowy</h4>
-          <div className="plan-price">
-            <span className="old-price">{currentLanguage === 'pl' ? '39,99 zł' : '≈ €10'}</span>
-            <span className="current-price">{currentLanguage === 'pl' ? '19,99 zł' : '≈ €4.40'}</span>
-            <span className="discount">-50%</span>
-          </div>
-        </div>
-        <div className="plan-features">
-          <div className="feature">✅ 1 optymalizacja CV</div>
-          <div className="feature">✅ GPT-3.5 AI Engine</div>
-          <div className="feature">✅ 95% ATS Success Rate</div>
-          <div className="feature">✅ Eksport PDF/DOCX</div>
-        </div>
-        <button className="plan-button basic-btn" onClick={() => {
-          const email = document.getElementById('paywallEmail').value;
-          if (!email || !email.includes('@')) {
-            alert('⚠️ Podaj prawidłowy email!');
-            return;
-          }
-          handlePayment('premium');
-        }}>{currentLanguage === 'pl' ? 'Wybierz Basic' : 'Choose Basic'}</button>
-      </div>
-
-      {/* Gold Plan */}
-      <div className="plan-card gold popular">
-        <div className="plan-badge">GOLD</div>
-        <div className="popularity-badge">NAJPOPULARNIEJSZY</div>
-        <div className="plan-header">
-          <h4>Gold</h4>
-          <div className="plan-price">
-            <span className="old-price">{currentLanguage === 'pl' ? '89 zł' : '≈ €20'}</span>
-            <span className="current-price">{currentLanguage === 'pl' ? '49 zł' : '≈ €11'}</span>
-            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
-          </div>
-        </div>
-        <div className="plan-features">
-          <div className="feature">✅ 10 optymalizacji/mies.</div>
-          <div className="feature">✅ GPT-4 AI (najnowszy)</div>
-          <div className="feature">✅ Priorytetowa kolejka</div>
-          <div className="feature">✅ Dostęp do nowych funkcji</div>
-        </div>
-        <button className="plan-button gold-btn" onClick={() => {
-          const email = document.getElementById('paywallEmail').value;
-          if (!email || !email.includes('@')) {
-            alert('⚠️ Podaj prawidłowy email!');
-            return;
-          }
-          handlePayment('gold');
-        }}>{currentLanguage === 'pl' ? 'Wybierz Gold' : 'Choose Gold'}</button>
-      </div>
-
-      {/* Premium Plan */}
-      <div className="plan-card premium">
-        <div className="plan-badge">VIP</div>
-        <div className="premium-badge">NAJLEPSZA WARTOŚĆ</div>
-        <div className="plan-header">
-          <h4>Premium</h4>
-          <div className="plan-price">
-            <span className="old-price">{currentLanguage === 'pl' ? '129 zł' : '≈ €29'}</span>
-            <span className="current-price">{currentLanguage === 'pl' ? '79 zł' : '≈ €18'}</span>
-
-            <span className="period">{currentLanguage === 'pl' ? '/miesiąc' : '/month'}</span>
-          </div>
-        </div>
-        <div className="plan-features">
-          <div className="feature">✅ 25 optymalizacji/mies.</div>
-          <div className="feature">✅ GPT-5 VIP (najlepszy)</div>
-          <div className="feature">✅ VIP Support (2h odpowiedzi)</div>
-          <div className="feature">✅ Beta tester nowości</div>
-        </div>
-        <button className="plan-button premium-btn" onClick={() => {
-          const email = document.getElementById('paywallEmail').value;
-          if (!email || !email.includes('@')) {
-            alert('⚠️ Podaj prawidłowy email!');
-            return;
-          }
-	const input = document.getElementById('customerEmail');
-input.classList.add('error'); 
-input.style.borderColor = '#ef4444';
-setTimeout(() => {
-  input.classList.remove('error');
-  input.style.borderColor = '';
-}, 2000);
-
-          handlePayment('premium-monthly');
-        }}>{currentLanguage === 'pl' ? 'Wybierz Premium' : 'Choose Premium'}</button>
-      </div>
-    </div>
-  </div>
-
-  {/* Trust Section */}
-  <div className="trust-section">
-    <div className="trust-stats">
-      <div className="stat">
-        <span className="stat-number">50,000+</span>
-        <span className="stat-label">Zoptymalizowanych CV</span>
-      </div>
-      <div className="stat">
-        <span className="stat-number">410%</span>
-        <span className="stat-label">Więcej odpowiedzi</span>
-      </div>
-      <div className="stat">
-        <span className="stat-number">95%</span>
-        <span className="stat-label">Sukces w ATS</span>
-      </div>
-    </div>
-  </div>
-</div>
-              
-            </div>
-          </div>
-        )}
-
-{showTemplateModal && (
-  <div className="modal-overlay" onClick={() => setShowTemplateModal(false)}>
-    <div className="modal-content template-modal" onClick={(e) => e.stopPropagation()}>
-      <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
+{/* NOWY ZOPTYMALIZOWANY MODAL */}
+{showMainModal && (
+  <div className="modal-overlay" onClick={() => setShowMainModal(false)} style={{zIndex: 999999}}>
+    <div className="modal-content optimize-modal" onClick={(e) => e.stopPropagation()}>
+      <button className="modal-close" onClick={() => setShowMainModal(false)}>×</button>
       
-      <div className="template-header">
-        <h2>{currentLanguage === 'pl' ? '🎨 Wybierz szablon CV' : '🎨 Choose CV template'}</h2>
-        <p>
-          {(() => {
-            const plan = sessionStorage.getItem('pendingPlan');
-            if (plan === 'basic') {
-              return currentLanguage === 'pl' 
-                ? 'Plan Basic - domyślny szablon' 
-                : 'Basic plan - default template';
-            } else if (plan === 'pro' || plan === 'gold') {
-              return currentLanguage === 'pl' 
-                ? 'Plan Pro - wybierz z 3 profesjonalnych szablonów' 
-                : 'Pro plan - choose from 3 professional templates';
-            } else {
-              return currentLanguage === 'pl' 
-                ? 'Plan Premium - wybierz z 7 ekskluzywnych szablonów' 
-                : 'Premium plan - choose from 7 exclusive templates';
-            }
-          })()}
-        </p>
+      <div className="modal-header">
+        <h2>{currentLanguage === 'pl' ? '🚀 Zoptymalizuj swoje CV' : '🚀 Optimize your CV'}</h2>
+        <p>{currentLanguage === 'pl' ? 'Szybko, profesjonalnie, skutecznie' : 'Fast, professional, effective'}</p>
       </div>
 
-      <div className="templates-grid">
-        {(() => {
-          const plan = sessionStorage.getItem('pendingPlan');
-          
-          // PLAN BASIC - tylko domyślny szablon
-          if (plan === 'basic') {
-            return (
-              <div className="template-card selected" onClick={() => handleTemplateSelection('simple')}>
-                <div className="template-preview">
-                  <div className="template-icon">📝</div>
-                  <h3>Simple</h3>
-                  <p>{currentLanguage === 'pl' ? 'Prosty i czytelny szablon' : 'Simple and clean template'}</p>
-                </div>
-                <div className="template-badge">Basic</div>
-                <button className="select-template-btn">
-                  {currentLanguage === 'pl' ? 'Kontynuuj z tym szablonem' : 'Continue with this template'}
-                </button>
-              </div>
-            );
-          }
-          
-          // PLAN PRO/GOLD - 3 szablony
-          if (plan === 'pro' || plan === 'gold') {
-            return (
-              <>
-                <div className="template-card" onClick={() => handleTemplateSelection('modern')}>
-                  <div className="template-preview">
-                    <div className="template-demo">
-                      <div className="demo-header"></div>
-                      <div className="demo-line"></div>
-                      <div className="demo-line short"></div>
-                    </div>
-                    <h3>Modern</h3>
-                    <p>{currentLanguage === 'pl' ? 'Nowoczesny design' : 'Modern design'}</p>
-                  </div>
-                  <div className="template-badge">Pro</div>
-                </div>
-
-                <div className="template-card" onClick={() => handleTemplateSelection('classic')}>
-                  <div className="template-preview">
-                    <div className="template-demo">
-                      <div className="demo-header classic"></div>
-                      <div className="demo-line"></div>
-                      <div className="demo-line"></div>
-                    </div>
-                    <h3>Classic</h3>
-                    <p>{currentLanguage === 'pl' ? 'Klasyczny układ' : 'Classic layout'}</p>
-                  </div>
-                  <div className="template-badge">Pro</div>
-                </div>
-
-                <div className="template-card" onClick={() => handleTemplateSelection('minimalist')}>
-                  <div className="template-preview">
-                    <div className="template-demo">
-                      <div className="demo-header minimal"></div>
-                      <div className="demo-line thin"></div>
-                      <div className="demo-line thin"></div>
-                    </div>
-                    <h3>Minimalist</h3>
-                    <p>{currentLanguage === 'pl' ? 'Minimalistyczny' : 'Minimalist'}</p>
-                  </div>
-                  <div className="template-badge">Pro</div>
-                </div>
-              </>
-            );
-          }
-          
-          // PLAN PREMIUM - wszystkie 7 szablonów
-          if (plan === 'premium' || plan === 'premium-monthly') {
-            return (
-              <>
-                {/* Szablony Pro */}
-                <div className="template-card" onClick={() => handleTemplateSelection('modern')}>
-                  <div className="template-preview">
-                    <div className="template-demo">
-                      <div className="demo-header"></div>
-                      <div className="demo-line"></div>
-                      <div className="demo-line short"></div>
-                    </div>
-                    <h3>Modern</h3>
-                    <p>{currentLanguage === 'pl' ? 'Nowoczesny design' : 'Modern design'}</p>
-                  </div>
-                  <div className="template-badge">Pro</div>
-                </div>
-
-                <div className="template-card" onClick={() => handleTemplateSelection('classic')}>
-                  <div className="template-preview">
-                    <div className="template-demo">
-                      <div className="demo-header classic"></div>
-                      <div className="demo-line"></div>
-                      <div className="demo-line"></div>
-                    </div>
-                    <h3>Classic</h3>
-                    <p>{currentLanguage === 'pl' ? 'Klasyczny układ' : 'Classic layout'}</p>
-                  </div>
-                  <div className="template-badge">Pro</div>
-                </div>
-
-                <div className="template-card" onClick={() => handleTemplateSelection('minimalist')}>
-                  <div className="template-preview">
-                    <div className="template-demo">
-                      <div className="demo-header minimal"></div>
-                      <div className="demo-line thin"></div>
-                      <div className="demo-line thin"></div>
-                    </div>
-                    <h3>Minimalist</h3>
-                    <p>{currentLanguage === 'pl' ? 'Minimalistyczny' : 'Minimalist'}</p>
-                  </div>
-                  <div className="template-badge">Pro</div>
-                </div>
-
-                {/* Ekskluzywne szablony Premium */}
-                <div className="template-card premium" onClick={() => handleTemplateSelection('executive')}>
-                  <div className="template-preview">
-                    <div className="template-demo premium">
-                      <div className="demo-header executive"></div>
-                      <div className="demo-line gold"></div>
-                      <div className="demo-line gold short"></div>
-                    </div>
-                    <h3>Executive</h3>
-                    <p>{currentLanguage === 'pl' ? 'Dla kadry zarządzającej' : 'For executives'}</p>
-                  </div>
-                  <div className="template-badge premium">Premium ⭐</div>
-                </div>
-
-                <div className="template-card premium" onClick={() => handleTemplateSelection('creative')}>
-                  <div className="template-preview">
-                    <div className="template-demo creative">
-                      <div className="demo-header creative"></div>
-                      <div className="demo-circle"></div>
-                      <div className="demo-line colorful"></div>
-                    </div>
-                    <h3>Creative Pro</h3>
-                    <p>{currentLanguage === 'pl' ? 'Kreatywny design' : 'Creative design'}</p>
-                  </div>
-                  <div className="template-badge premium">Premium ⭐</div>
-                </div>
-
-                <div className="template-card premium" onClick={() => handleTemplateSelection('tech')}>
-                  <div className="template-preview">
-                    <div className="template-demo tech">
-                      <div className="demo-header tech"></div>
-                      <div className="demo-chart"></div>
-                      <div className="demo-line tech"></div>
-                    </div>
-                    <h3>Tech Expert</h3>
-                    <p>{currentLanguage === 'pl' ? 'Dla specjalistów IT' : 'For IT specialists'}</p>
-                  </div>
-                  <div className="template-badge premium">Premium ⭐</div>
-                </div>
-
-                <div className="template-card premium vip" onClick={() => handleTemplateSelection('elegant')}>
-                  <div className="template-preview">
-                    <div className="template-demo elegant">
-                      <div className="demo-header elegant"></div>
-                      <div className="demo-line elegant"></div>
-                      <div className="demo-decoration"></div>
-                    </div>
-                    <h3>Elegant VIP</h3>
-                    <p>{currentLanguage === 'pl' ? 'Luksusowy design' : 'Luxury design'}</p>
-                  </div>
-                  <div className="template-badge premium vip">Premium VIP 💎</div>
-                </div>
-              </>
-            );
-          }
-        })()}
-      </div>
-
-      {/* Informacja o planie */}
-      <div className="template-footer">
-        <p className="template-info">
-          {(() => {
-            const plan = sessionStorage.getItem('pendingPlan');
-            if (plan === 'basic') {
-              return currentLanguage === 'pl'
-                ? '💡 W planie Basic otrzymujesz prosty, profesjonalny szablon'
-                : '💡 Basic plan includes a simple, professional template';
-            } else if (plan === 'pro' || plan === 'gold') {
-              return currentLanguage === 'pl'
-                ? '💡 Wybierz jeden z 3 profesjonalnych szablonów'
-                : '💡 Choose from 3 professional templates';
-            } else {
-              return currentLanguage === 'pl'
-                ? '💎 Masz dostęp do wszystkich 7 ekskluzywnych szablonów!'
-                : '💎 You have access to all 7 exclusive templates!';
-            }
-          })()}
-        </p>
+      <div className="modal-body">
+        {modalStep === 1 ? (
+          <div>
+            <h3>KROK 1 - Formularz (tutaj dodamy pola)</h3>
+            <button onClick={() => setModalStep(2)}>Dalej do wyboru planu</button>
+          </div>
+        ) : (
+          <div>
+            <h3>KROK 2 - Wybór planu (tutaj dodamy plany)</h3>
+            <button onClick={() => setModalStep(1)}>Wróć</button>
+          </div>
+        )}
       </div>
     </div>
   </div>
 )}
-{savedCV && (
-  <div style={{
-    background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 112, 0.1))',
-    border: '1px solid rgba(0, 255, 136, 0.3)',
-    borderRadius: '12px',
-    padding: '16px',
-    margin: '20px',
-    textAlign: 'center'
-  }}>
-    <p style={{color: 'white', fontSize: '14px', margin: 0}}>
-      ✅ {currentLanguage === 'pl' 
-        ? `CV zapisane (${savedCV.length} znaków). Teraz możesz dodać ogłoszenie o pracę (opcjonalnie).`
-        : `CV saved (${savedCV.length} characters). Now you can add a job posting (optional).`
-      }
-    </p>
-  </div>
-)}
-
 
         {/* FAQ Section */}
         <div className="faq-section" id="faq">
@@ -2226,11 +1591,7 @@ setTimeout(() => {
             </div>
             <div className="faq-cta">
               <h3>Nie znalazłeś odpowiedzi?</h3>
-<button className="faq-button" onClick={(e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  openUploadModal(e);
-}}>
+<button className="faq-button" onClick={handleOptimizeNow}>
   Wypróbuj za darmo ⚡
 </button>
             </div>
@@ -2238,6 +1599,10 @@ setTimeout(() => {
 </div>
         <Footer currentLanguage={currentLanguage} />
       </div>
+
+
+
+
       <style jsx>{`
 
 /* === HERO STATS (stabilnie / jednolicie) === */
@@ -5435,6 +4800,37 @@ html {
 .modal-close:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1) rotate(90deg);
+}
+
+/* Nowy Modal Styles */
+.optimize-modal {
+  max-width: 1000px;
+  padding: 0;
+}
+
+.optimize-modal .modal-header {
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  color: white;
+  padding: 40px;
+  text-align: center;
+  border-radius: 32px 32px 0 0;
+}
+
+.optimize-modal .modal-header h2 {
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.optimize-modal .modal-header p {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.optimize-modal .modal-body {
+  padding: 40px;
+  background: rgba(15, 15, 15, 0.98);
+  border-radius: 0 0 32px 32px;
 }
 
        /* Upload Modal */
