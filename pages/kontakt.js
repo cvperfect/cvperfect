@@ -241,7 +241,7 @@ package2Feature3: '✓ Integracja API',
       // Contact info
       quickContact: 'Szybki kontakt',
       emailLabel: 'Email',
-      emailValue: 'pomoc@cvperfect.pl',
+      emailValue: 'pomoccvperfect@gmail.com',
       responseTime: 'Czas odpowiedzi',
       responseValue: '< 24 godziny',
       availability: 'Dostępność',
