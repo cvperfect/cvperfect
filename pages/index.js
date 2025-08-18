@@ -63,6 +63,7 @@ useEffect(() => {
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState([])
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [savedCV, setSavedCV] = useState('');
 
 // Debug modal state
 useEffect(() => {
@@ -445,6 +446,33 @@ useEffect(() => {
 }, [typingText, typingIndex, isDeleting, loopNum, typingSpeed, typingPhrases]);
 
 
+// Obsługa powrotu ze Stripe i automatyczna optymalizacja
+useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get('session_id');
+  
+  if (sessionId && !window.location.pathname.includes('/success')) {
+    // Pobierz zapisane dane
+    const pendingCV = sessionStorage.getItem('pendingCV');
+    const pendingJob = sessionStorage.getItem('pendingJob');
+    const pendingEmail = sessionStorage.getItem('pendingEmail');
+    const pendingPlan = sessionStorage.getItem('pendingPlan');
+    
+    if (pendingCV && pendingEmail) {
+      console.log('🔄 Powrót z płatności, przekierowuję na stronę sukcesu...');
+      
+      // Wyczyść dane tymczasowe
+      sessionStorage.removeItem('pendingCV');
+      sessionStorage.removeItem('pendingJob');
+      sessionStorage.removeItem('pendingEmail');
+      sessionStorage.removeItem('pendingPlan');
+      
+      // Przekieruj na stronę sukcesu z danymi
+      window.location.href = `/success?session_id=${sessionId}`;
+    }
+  }
+}, []);
+
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
@@ -667,28 +695,46 @@ setTimeout(() => textarea.classList.remove('flash'), 1000);
   }
 };
 
-const handlePayment = (plan) => {
-    // Pokaz szablony po wybraniu planu Gold lub Premium
-    if (plan === 'gold' || plan === 'premium-monthly') {
-      setShowTemplateModal(true);
-    }
+const handlePayment = async (plan) => {
+  // Pobierz dane z formularzy
+  const email = (userEmail || document.getElementById('paywallEmail')?.value || document.getElementById('customerEmail')?.value || '').trim();
+  const cvTextarea = document.querySelector('.cv-textarea');
+  const cvText = cvTextarea?.value || '';
+  const jobTextarea = document.querySelector('.job-textarea');
+  const jobPosting = jobTextarea?.value || '';
 
-    // Pobierz email z paywall modal lub pricing modal
-const email = (userEmail || document.getElementById('paywallEmail')?.value || document.getElementById('customerEmail')?.value || '').trim();
-
-if (!email || !email.includes('@')) {
-  alert(currentLanguage==='pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address');
-  return;
-}
-
-    const prices = {
-      premium: 'price_1RofCI4FWb3xY5tDYONIW3Ix',
-      gold: 'price_1Rof7b4FWb3xY5tDQ76590pw',
-      'premium-monthly': 'price_1RqWk34FWb3xY5tD5W2ge1g0'
-    }
-
-    window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}`
+  // Walidacja
+  if (!email || !email.includes('@')) {
+    alert(currentLanguage === 'pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address');
+    return;
   }
+
+  if (!cvText || cvText.trim().length < 50) {
+    alert(currentLanguage === 'pl' ? 'Proszę wkleić swoje CV' : 'Please paste your CV');
+    return;
+  }
+
+  // Zapisz dane w sessionStorage
+  sessionStorage.setItem('pendingCV', cvText);
+  sessionStorage.setItem('pendingJob', jobPosting);
+  sessionStorage.setItem('pendingEmail', email);
+  sessionStorage.setItem('pendingPlan', plan);
+  
+  // Przekieruj do Stripe
+  const prices = {
+    'basic': 'price_1RofCI4FWb3xY5tDYONIW3Ix',
+    'pro': 'price_1Rof7b4FWb3xY5tDQ76590pw', 
+    'premium': 'price_1RqWk34FWb3xY5tD5W2ge1g0',
+    'premium-monthly': 'price_1RqWk34FWb3xY5tD5W2ge1g0',
+    'gold': 'price_1Rof7b4FWb3xY5tDQ76590pw'
+  };
+
+  // Dodaj CV i job posting do metadata
+  const cvPreview = cvText.substring(0, 500); // Pierwsze 500 znaków
+  const jobPreview = jobPosting ? jobPosting.substring(0, 200) : '';
+  
+  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}`;
+}
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
 const testimonialsBase = [
