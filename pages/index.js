@@ -48,9 +48,7 @@ useEffect(() => {
   const [uploadedFile, setUploadedFile] = useState(null)
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [optimizedResult, setOptimizedResult] = useState('')
-  const [selectedTemplate, setSelectedTemplate] = useState(null)
-  const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [showPricingModal, setShowPricingModal] = useState(false) 
+  const [selectedTemplate, setSelectedTemplate] = useState(null) 
   const [typingText, setTypingText] = useState('')
   const [typingIndex, setTypingIndex] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -59,20 +57,24 @@ useEffect(() => {
   const [currentStep, setCurrentStep] = useState(1)
   const [tooltips, setTooltips] = useState([])
   const [toasts, setToasts] = useState([])
-  const [notifications, setNotifications] = useState([]) 
-  const [savedCV, setSavedCV] = useState('');
-  const [showMainModal, setShowMainModal] = useState(false);
-  const [modalStep, setModalStep] = useState(1);
-  const [formData, setFormData] = useState({
-
+  const [notifications, setNotifications] = useState([])  
+const [showMainModal, setShowMainModal] = useState(false);
+const [modalStep, setModalStep] = useState(1);
+const [formData, setFormData] = useState({
   email: '',
-  cvContent: '',
-  jobPosting: '',
-  acceptTerms: false,
-  selectedPlan: null,
-  selectedTemplate: null
+  cvFile: null,
+  cvFileName: '',
+  jobText: '',
+  acceptTerms: false
 });
+const [dragActive, setDragActive] = useState(false);
+const [uploadProgress, setUploadProgress] = useState(0);
 
+const [showTemplateModal, setShowTemplateModal] = useState(false);
+const [savedCV, setSavedCV] = useState('');
+
+
+const [errors, setErrors] = useState({});
 // Modal state control
 useEffect(() => {
   if (showMainModal) {
@@ -403,7 +405,10 @@ const handleClick = function(e) {
 }, []);
 
   
-
+const createConfetti = () => {
+  // Prosta implementacja confetti
+  console.log('🎉 Confetti!');
+};
   
   // Typing animation states
 
@@ -494,11 +499,63 @@ useEffect(() => {
   }
 }, []);
 
-// Nowa funkcja otwierająca modal
 const handleOptimizeNow = () => {
   setShowMainModal(true);
   setModalStep(1);
+  setFormData({
+    email: '',
+    cvText: '',
+    jobText: '',
+    acceptTerms: false
+  });
+  setErrors({});
+  document.body.style.overflow = 'hidden';
 };
+
+const closeModal = () => {
+  setShowMainModal(false);
+  setModalStep(1);
+  document.body.style.overflow = 'auto';
+};
+
+const validateStep1 = () => {
+  const newErrors = {};
+  
+  if (!formData.email || !formData.email.includes('@')) {
+    newErrors.email = currentLanguage === 'pl' ? 'Podaj prawidłowy email' : 'Enter valid email';
+  }
+  
+  if (!formData.cvFile) {
+    newErrors.cvFile = currentLanguage === 'pl' ? 'Musisz załadować plik CV' : 'You must upload CV file';
+  }
+  
+  if (!formData.acceptTerms) {
+    newErrors.acceptTerms = currentLanguage === 'pl' ? 'Musisz zaakceptować regulamin' : 'You must accept terms';
+  }
+  
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+const handleNextStep = () => {
+  if (modalStep === 1 && validateStep1()) {
+    setModalStep(2);
+  }
+};
+
+const handlePrevStep = () => {
+  if (modalStep > 1) {
+    setModalStep(modalStep - 1);
+  }
+};
+
+const handleInputChange = (field, value) => {
+  setFormData(prev => ({
+    ...prev,
+    [field]: value
+  }));
+
+
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
@@ -551,20 +608,6 @@ showToast(
 }
 
 
-const handleFileUpload = (e) => {
-  const file = e.target.files?.[0];
-  if (file.size > 5 * 1024 * 1024) {
-  alert(currentLanguage === 'pl'
-    ? '❌ Plik jest za duży (max 5MB)'
-    : '❌ File too large (max 5MB)');
-  e.target.value = '';
-  return;
-}
-textarea.classList.add('flash');
-setTimeout(() => textarea.classList.remove('flash'), 1000);
-
-
-  if (!file) return;
 
   // Sprawdź rozszerzenie
   const fileName = file.name.toLowerCase();
@@ -1480,34 +1523,233 @@ style={{
         </div>
 
 
-{/* NOWY ZOPTYMALIZOWANY MODAL */}
+{/* NOWY MODAL - 2 KROKI */}
 {showMainModal && (
-  <div className="modal-overlay" onClick={() => setShowMainModal(false)} style={{zIndex: 999999}}>
+  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 999999}}>
     <div className="modal-content optimize-modal" onClick={(e) => e.stopPropagation()}>
-      <button className="modal-close" onClick={() => setShowMainModal(false)}>×</button>
+      <button className="modal-close" onClick={closeModal}>×</button>
       
       <div className="modal-header">
-        <h2>{currentLanguage === 'pl' ? '🚀 Zoptymalizuj swoje CV' : '🚀 Optimize your CV'}</h2>
-        <p>{currentLanguage === 'pl' ? 'Szybko, profesjonalnie, skutecznie' : 'Fast, professional, effective'}</p>
+        <h2>
+          {modalStep === 1 
+            ? (currentLanguage === 'pl' ? '📝 Wprowadź dane' : '📝 Enter your data')
+            : (currentLanguage === 'pl' ? '💳 Wybierz plan' : '💳 Choose plan')
+          }
+        </h2>
+        <p>
+          {modalStep === 1 
+            ? (currentLanguage === 'pl' ? 'Krok 1 z 2' : 'Step 1 of 2')
+            : (currentLanguage === 'pl' ? 'Krok 2 z 2' : 'Step 2 of 2')
+          }
+        </p>
       </div>
 
       <div className="modal-body">
         {modalStep === 1 ? (
-          <div>
-            <h3>KROK 1 - Formularz (tutaj dodamy pola)</h3>
-            <button onClick={() => setModalStep(2)}>Dalej do wyboru planu</button>
+          <div className="step-form">
+            {/* EMAIL */}
+            <div className="form-group">
+              <label className="form-label">
+                {currentLanguage === 'pl' ? 'Email *' : 'Email *'}
+              </label>
+              <input
+                type="email"
+                className={`email-input ${errors.email ? 'error' : ''}`}
+                placeholder={currentLanguage === 'pl' ? 'twoj@email.pl' : 'your@email.com'}
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+              />
+              {errors.email && <div className="error-message">{errors.email}</div>}
+            </div>
+
+{/* CV FILE UPLOAD */}
+<div className="form-group">
+  <label className="form-label">
+    {currentLanguage === 'pl' ? 'Twoje CV *' : 'Your CV *'}
+  </label>
+  
+  {!formData.cvFile ? (
+    <div 
+      className={`file-upload-zone ${dragActive ? 'drag-active' : ''} ${errors.cvFile ? 'error' : ''}`}
+      onDragEnter={handleDrag}
+      onDragLeave={handleDrag}
+      onDragOver={handleDrag}
+      onDrop={handleDrop}
+      onClick={() => document.getElementById('cv-file-input').click()}
+    >
+      <input
+        id="cv-file-input"
+        type="file"
+        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        onChange={handleFileInputChange}
+        style={{ display: 'none' }}
+      />
+      
+      <div className="upload-icon">📁</div>
+      <div className="upload-text">
+        <div className="upload-primary">
+          {currentLanguage === 'pl' 
+            ? 'Przeciągnij plik CV tutaj' 
+            : 'Drag CV file here'}
+        </div>
+        <div className="upload-secondary">
+          {currentLanguage === 'pl' 
+            ? 'lub kliknij aby wybrać plik' 
+            : 'or click to select file'}
+        </div>
+      </div>
+      <div className="upload-formats">
+        {currentLanguage === 'pl' 
+          ? 'Obsługiwane formaty: PDF, DOC, DOCX (max 5MB)' 
+          : 'Supported formats: PDF, DOC, DOCX (max 5MB)'}
+      </div>
+    </div>
+  ) : (
+    <div className="file-uploaded">
+      <div className="file-info">
+        <div className="file-icon">
+          {formData.cvFileName.endsWith('.pdf') ? '📄' : '📝'}
+        </div>
+        <div className="file-details">
+          <div className="file-name">{formData.cvFileName}</div>
+          <div className="file-status">
+            {uploadProgress < 100 ? (
+              <div className="upload-progress-container">
+                <div className="upload-progress-bar">
+                  <div 
+                    className="upload-progress-fill" 
+                    style={{width: `${uploadProgress}%`}}
+                  ></div>
+                </div>
+                <span>{uploadProgress}%</span>
+              </div>
+            ) : (
+              <span className="upload-success">
+                ✅ {currentLanguage === 'pl' ? 'Załadowano' : 'Uploaded'}
+              </span>
+            )}
+          </div>
+        </div>
+        <button 
+          type="button" 
+          className="remove-file-btn"
+          onClick={removeFile}
+          title={currentLanguage === 'pl' ? 'Usuń plik' : 'Remove file'}
+        >
+          ❌
+        </button>
+      </div>
+    </div>
+  )}
+  
+  {errors.cvFile && <div className="error-message">{errors.cvFile}</div>}
+</div>
+
+            {/* JOB POSTING (opcjonalne) */}
+            <div className="form-group">
+              <label className="form-label">
+                {currentLanguage === 'pl' ? 'Oferta pracy (opcjonalne)' : 'Job posting (optional)'}
+              </label>
+              <textarea
+                className="job-textarea"
+                placeholder={currentLanguage === 'pl' 
+                  ? 'Wklej ogłoszenie o pracę (opcjonalne)...' 
+                  : 'Paste job posting (optional)...'}
+                value={formData.jobText}
+                onChange={(e) => handleInputChange('jobText', e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            {/* CHECKBOX REGULAMIN */}
+            <div className="form-group">
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="acceptTerms"
+                  checked={formData.acceptTerms}
+                  onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
+                />
+                <label htmlFor="acceptTerms">
+                  {currentLanguage === 'pl' 
+                    ? 'Akceptuję regulamin i politykę prywatności *' 
+                    : 'I accept terms and privacy policy *'}
+                </label>
+              </div>
+              {errors.acceptTerms && <div className="error-message">{errors.acceptTerms}</div>}
+            </div>
+
+            <button className="next-button" onClick={handleNextStep}>
+              {currentLanguage === 'pl' ? 'Przejdź do płatności →' : 'Go to payment →'}
+            </button>
           </div>
         ) : (
-          <div>
-            <h3>KROK 2 - Wybór planu (tutaj dodamy plany)</h3>
-            <button onClick={() => setModalStep(1)}>Wróć</button>
+          <div className="step-pricing">
+            <button className="back-button" onClick={handlePrevStep}>
+              ← {currentLanguage === 'pl' ? 'Wróć' : 'Back'}
+            </button>
+            
+            <div className="pricing-grid-compact">
+              {/* BASIC */}
+              <div className="plan-card-compact">
+                <div className="plan-name">Basic</div>
+                <div className="plan-price">19,99 zł</div>
+                <ul className="plan-features-compact">
+                  <li>✅ Optymalizacja CV</li>
+                  <li>✅ 1 szablon</li>
+                  <li>✅ Format PDF</li>
+                </ul>
+                <button 
+                  className="select-plan-button" 
+                  onClick={() => handlePlanSelect('basic')}
+                >
+                  Wybierz Basic
+                </button>
+              </div>
+
+              {/* GOLD */}
+              <div className="plan-card-compact gold">
+                <div className="popular-badge">POPULARNY</div>
+                <div className="plan-name">Gold</div>
+                <div className="plan-price">49 zł</div>
+                <ul className="plan-features-compact">
+                  <li>✅ Wszystko z Basic</li>
+                  <li>✅ 3 szablony</li>
+                  <li>✅ List motywacyjny</li>
+                  <li>✅ PDF + DOCX</li>
+                </ul>
+                <button 
+                  className="select-plan-button gold" 
+                  onClick={() => handlePlanSelect('gold')}
+                >
+                  Wybierz Gold
+                </button>
+              </div>
+
+              {/* PREMIUM */}
+              <div className="plan-card-compact premium">
+                <div className="plan-name">Premium</div>
+                <div className="plan-price">79 zł</div>
+                <ul className="plan-features-compact">
+                  <li>✅ Wszystko z Gold</li>
+                  <li>✅ 7 szablonów</li>
+                  <li>✅ LinkedIn profil</li>
+                  <li>✅ Priorytet support</li>
+                </ul>
+                <button 
+                  className="select-plan-button premium" 
+                  onClick={() => handlePlanSelect('premium')}
+                >
+                  Wybierz Premium
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
     </div>
   </div>
 )}
-
         {/* FAQ Section */}
         <div className="faq-section" id="faq">
           <div className="faq-container">
@@ -1580,6 +1822,172 @@ style={{
 
 
       <style jsx>{`
+
+
+/* === FILE UPLOAD STYLES === */
+.file-upload-zone {
+  border: 2px dashed rgba(120, 80, 255, 0.3);
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(120, 80, 255, 0.02);
+  position: relative;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-upload-zone:hover {
+  border-color: rgba(120, 80, 255, 0.6);
+  background: rgba(120, 80, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.file-upload-zone.drag-active {
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.05);
+  transform: scale(1.02);
+}
+
+.file-upload-zone.error {
+  border-color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.05);
+}
+
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.upload-text {
+  margin-bottom: 12px;
+}
+
+.upload-primary {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.upload-secondary {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.upload-formats {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+}
+
+/* Uploaded file display */
+.file-uploaded {
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.file-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.file-status {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.upload-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.upload-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00cc70);
+  transition: width 0.3s ease;
+}
+
+.upload-success {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.remove-file-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.remove-file-btn:hover {
+  opacity: 1;
+  background: rgba(255, 107, 107, 0.1);
+  transform: scale(1.1);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .file-upload-zone {
+    padding: 30px 15px;
+    min-height: 140px;
+  }
+  
+  .upload-icon {
+    font-size: 36px;
+  }
+  
+  .upload-primary {
+    font-size: 16px;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .remove-file-btn {
+    align-self: center;
+  }
+}
 
 /* === HERO STATS (stabilnie / jednolicie) === */
 .hero-stats{ 
@@ -6727,6 +7135,132 @@ html, body { margin:0 !important; padding:0 !important; }
     margin: 20px;
   }
 }
+
+/* === NOWY MODAL STYLES === */
+.error-message {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.email-input.error,
+.cv-textarea.error {
+  border-color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.1) !important;
+}
+
+.step-form {
+  max-width: 100%;
+}
+
+.pricing-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.plan-card-compact {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.plan-card-compact:hover {
+  transform: translateY(-5px);
+  border-color: rgba(120, 80, 255, 0.4);
+  box-shadow: 0 10px 30px rgba(120, 80, 255, 0.2);
+}
+
+.plan-card-compact.gold {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.plan-card-compact.premium {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.plan-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.plan-price {
+  font-size: 32px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.plan-features-compact {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  text-align: left;
+}
+
+.plan-features-compact li {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.select-plan-button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.select-plan-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.select-plan-button.gold {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.select-plan-button.premium {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+@media (max-width: 768px) {
+  .pricing-grid-compact {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+
+
 	`}</style>
     </>
   )
