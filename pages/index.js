@@ -70,9 +70,7 @@ const [formData, setFormData] = useState({
 const [dragActive, setDragActive] = useState(false);
 const [uploadProgress, setUploadProgress] = useState(0);
 
-const [showTemplateModal, setShowTemplateModal] = useState(false);
 const [savedCV, setSavedCV] = useState('');
-
 
 const [errors, setErrors] = useState({});
 // Modal state control
@@ -446,6 +444,12 @@ useEffect(() => {
   setTypingMinCh(longest + 2); // +2 znaki luzu
 }, [typingPhrases]);
 
+// Cleanup toasts on component unmount
+useEffect(() => {
+  return () => {
+    setToasts([])
+  }
+}, [])
 
 // Typing animation effect
 useEffect(() => {
@@ -499,6 +503,115 @@ useEffect(() => {
   }
 }, []);
 
+const handleFileInputChange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  // Sprawdź rozmiar
+  if (file.size > 5 * 1024 * 1024) {
+    alert(currentLanguage === 'pl' ? '❌ Plik jest za duży (max 5MB)' : '❌ File too large (max 5MB)');
+    return;
+  }
+  
+  // Sprawdź format
+  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
+    alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku' : '❌ Invalid file format');
+    return;
+  }
+  
+  // Symuluj upload progress
+  setUploadProgress(0);
+  const interval = setInterval(() => {
+    setUploadProgress(prev => {
+      if (prev >= 100) {
+        clearInterval(interval);
+        return 100;
+      }
+      return prev + 20;
+    });
+  }, 200);
+  
+  // Zapisz plik
+  setFormData(prev => ({
+    ...prev,
+    cvFile: file,
+    cvFileName: file.name
+  }));
+  
+  // Czytaj zawartość pliku
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    setSavedCV(event.target.result);
+  };
+  reader.readAsText(file);
+};
+
+const handleDrag = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.type === "dragenter" || e.type === "dragover") {
+    setDragActive(true);
+  } else if (e.type === "dragleave") {
+    setDragActive(false);
+  }
+};
+
+const handleDrop = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setDragActive(false);
+  
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    const file = e.dataTransfer.files[0];
+    
+    // Użyj tej samej logiki co handleFileInputChange
+    if (file.size > 5 * 1024 * 1024) {
+      alert(currentLanguage === 'pl' ? '❌ Plik jest za duży (max 5MB)' : '❌ File too large (max 5MB)');
+      return;
+    }
+    
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
+      alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku' : '❌ Invalid file format');
+      return;
+    }
+    
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 200);
+    
+    setFormData(prev => ({
+      ...prev,
+      cvFile: file,
+      cvFileName: file.name
+    }));
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSavedCV(event.target.result);
+    };
+    reader.readAsText(file);
+  }
+};
+
+const removeFile = () => {
+  setFormData(prev => ({
+    ...prev,
+    cvFile: null,
+    cvFileName: ''
+  }));
+  setUploadProgress(0);
+  setSavedCV('');
+};
+
 const handleOptimizeNow = () => {
   setShowMainModal(true);
   setModalStep(1);
@@ -525,9 +638,9 @@ const validateStep1 = () => {
     newErrors.email = currentLanguage === 'pl' ? 'Podaj prawidłowy email' : 'Enter valid email';
   }
   
-  if (!formData.cvFile) {
-    newErrors.cvFile = currentLanguage === 'pl' ? 'Musisz załadować plik CV' : 'You must upload CV file';
-  }
+if (!formData.cvFile && !savedCV) {
+    newErrors.cvFile = currentLanguage === 'pl' ? 'Musisz załadować plik CV lub wkleić tekst' : 'You must upload CV file or paste text';
+}
   
   if (!formData.acceptTerms) {
     newErrors.acceptTerms = currentLanguage === 'pl' ? 'Musisz zaakceptować regulamin' : 'You must accept terms';
@@ -554,7 +667,37 @@ const handleInputChange = (field, value) => {
     ...prev,
     [field]: value
   }));
+};
 
+// Show toast notification
+const showToast = (message, type = 'info') => {
+  const id = `toast-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+  const newToast = { id, message, type }
+  setToasts(prev => [...prev, newToast])
+  
+  setTimeout(() => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }, 4000)
+};
+
+// Update progress
+const updateProgress = (step) => {
+  setCurrentStep(step)
+  const progressBar = document.querySelector('.progress-bar')
+  const steps = document.querySelectorAll('.progress-step')
+  
+  if (progressBar) {
+    progressBar.style.width = `${(step / 4) * 100}%`
+    progressBar.style.transition = 'width 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+  }
+  
+  steps.forEach((stepEl, index) => {
+    if (index < step) {
+      stepEl.classList.add('active')
+    } else {
+      stepEl.classList.remove('active')
+    }
+  })
 
 
 // Show toast notification
@@ -568,12 +711,7 @@ const showToast = (message, type = 'info') => {
   }, 4000)
 }
 
-// Cleanup toasts on component unmount
-useEffect(() => {
-  return () => {
-    setToasts([])
-  }
-}, [])
+
 
 // Update progress
 const updateProgress = (step) => {
@@ -609,9 +747,6 @@ showToast(
 
 
 
-  // Sprawdź rozszerzenie
-  const fileName = file.name.toLowerCase();
-  const allowedExtensions = ['.pdf', '.doc', '.docx'];
   const isAllowed = allowedExtensions.some(ext => fileName.endsWith(ext));
   if (!isAllowed) {
     alert(currentLanguage==='pl' ? '❌ Obsługujemy tylko pliki: PDF, DOC, DOCX' : '❌ We only support: PDF, DOC, DOCX');
@@ -638,6 +773,28 @@ showToast(
       ? `📄 Załadowano: "${file.name}" (${(file.size/1024).toFixed(1)} KB).\n✅ Gotowe do analizy.`
       : `📄 Loaded: "${file.name}" (${(file.size/1024).toFixed(1)} KB).\n✅ Ready for analysis.`;
   }
+};
+
+const handlePlanSelect = (plan) => {
+  // Zapisz wybrany plan
+  sessionStorage.setItem('pendingPlan', plan);
+  
+  // Przygotuj dane do płatności
+  const email = formData.email;
+  const cvText = savedCV || formData.cvText || '';
+  const jobPosting = formData.jobText || '';
+  
+  // Zapisz w sessionStorage
+  sessionStorage.setItem('pendingEmail', email);
+  sessionStorage.setItem('pendingCV', cvText);
+  sessionStorage.setItem('pendingJob', jobPosting);
+  
+  // Dla wszystkich planów - od razu do płatności
+  // Wybór szablonu będzie w success.js po płatności
+  sessionStorage.setItem('selectedTemplate', 'pending'); // oznaczymy jako "do wyboru"
+  
+  console.log('📤 Przekierowuję do Stripe dla planu:', plan);
+  proceedToCheckout(plan, 'pending');
 };
 
 const handlePayment = async (plan) => {
@@ -687,49 +844,6 @@ const handlePayment = async (plan) => {
   }
 };
 
-// 3. ZASTĄP funkcję handleTemplateSelection:
-const handleTemplateSelection = (template) => {
-  const plan = sessionStorage.getItem('pendingPlan');
-  
-  console.log('📄 Wybrany szablon:', template, 'dla planu:', plan);
-  
-  // Walidacja - sprawdź czy użytkownik może używać tego szablonu
-  const basicTemplates = ['simple'];
-  const proTemplates = ['simple', 'modern', 'classic', 'minimalist'];
-  const premiumTemplates = ['simple', 'modern', 'classic', 'minimalist', 'executive', 'creative', 'tech', 'elegant'];
-  
-  let allowedTemplates = [];
-  if (plan === 'basic') allowedTemplates = basicTemplates;
-  else if (plan === 'pro' || plan === 'gold') allowedTemplates = proTemplates;
-  else if (plan === 'premium' || plan === 'premium-monthly') allowedTemplates = premiumTemplates;
-  
-  if (!allowedTemplates.includes(template)) {
-    alert(currentLanguage === 'pl' 
-      ? '⚠️ Ten szablon nie jest dostępny w Twoim planie!' 
-      : '⚠️ This template is not available in your plan!');
-    return;
-  }
-  
-  // Zapisz wybrany szablon
-  sessionStorage.setItem('selectedTemplate', template);
-  setSelectedTemplate(template);
-  
-  // Zamknij modal szablonów
-  setShowTemplateModal(false);
-  
-  // Pokaż ładowanie
-  showToast(
-    currentLanguage === 'pl' 
-      ? '✅ Szablon wybrany! Przekierowuję do płatności...' 
-      : '✅ Template selected! Redirecting to payment...',
-    'success'
-  );
-  
-  // Przejdź do płatności po krótkiej przerwie
-  setTimeout(() => {
-    proceedToCheckout(plan, template);
-  }, 1000);
-};
 
 // 2. DODAJ nową funkcję do przejścia do płatności:
 const proceedToCheckout = (plan, template) => {
@@ -737,21 +851,12 @@ const proceedToCheckout = (plan, template) => {
   const cvText = sessionStorage.getItem('pendingCV');
   const jobPosting = sessionStorage.getItem('pendingJob') || '';
   
-  const prices = {
-    'basic': 'price_1Rwooh4FWb3xY5tDRxqQ4y69', // 19.99 zł
-    'pro': 'price_1Rwooh4FWb3xY5tDRxqQ4y69',   // 49 zł (zmień na właściwy)
-    'gold': 'price_1Rwooh4FWb3xY5tDRxqQ4y69',  // 49 zł (zmień na właściwy)
-    'premium': 'price_1Rwooh4FWb3xY5tDRxqQ4y69', // 79 zł (zmień na właściwy)
-    'premium-monthly': 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 79 zł (zmień na właściwy)
-  };
-
   const cvPreview = cvText.substring(0, 400);
   const jobPreview = jobPosting.substring(0, 200);
   
-  // Przekieruj do Stripe
-  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}&template=${template}`;
+  // Przekieruj do Stripe (template ustawimy w success.js)
+  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}`;
 };
-
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
 const testimonialsBase = [
@@ -1584,6 +1689,8 @@ style={{
         onChange={handleFileInputChange}
         style={{ display: 'none' }}
       />
+
+
       
       <div className="upload-icon">📁</div>
       <div className="upload-text">
@@ -1643,6 +1750,30 @@ style={{
   )}
   
   {errors.cvFile && <div className="error-message">{errors.cvFile}</div>}
+</div>
+
+
+
+{/* Alternatywa - wklej tekst */}
+<div className="form-group">
+  <div className="text-divider">
+    <span>{currentLanguage === 'pl' ? 'LUB' : 'OR'}</span>
+  </div>
+  <label className="form-label">
+    {currentLanguage === 'pl' ? 'Wklej treść CV' : 'Paste CV content'}
+  </label>
+  <textarea
+    className="cv-textarea"
+    placeholder={currentLanguage === 'pl' 
+      ? 'Wklej tutaj treść swojego CV...' 
+      : 'Paste your CV content here...'}
+    value={formData.cvText || ''}
+    onChange={(e) => {
+      handleInputChange('cvText', e.target.value);
+      setSavedCV(e.target.value);
+    }}
+    rows={6}
+  />
 </div>
 
             {/* JOB POSTING (opcjonalne) */}
@@ -7258,9 +7389,91 @@ html, body { margin:0 !important; padding:0 !important; }
     gap: 16px;
   }
 }
+.text-divider {
+  text-align: center;
+  margin: 30px 0;
+  position: relative;
+}
 
+.text-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
 
+.text-divider span {
+  background: rgba(15, 15, 15, 0.98);
+  padding: 0 20px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+}
 
+/* Template Modal Styles */
+.template-modal .modal-body {
+  padding: 40px;
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.template-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.template-card:hover {
+  transform: translateY(-5px);
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.template-card.premium {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.template-card .template-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.template-card h3 {
+  color: white;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.template-card p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.template-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
 	`}</style>
     </>
   )
