@@ -29,11 +29,11 @@ export default async function handler(req, res) {
           break
         case 'gold':
         case 'pro':
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 49 zł miesięcznie (musisz zmienić na właściwy price ID)
+          finalPriceId = 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł miesięcznie (musisz zmienić na właściwy price ID)
           mode = 'subscription'
           break
         case 'premium-monthly':
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 79 zł miesięcznie (musisz zmienić na właściwy price ID)
+          finalPriceId = 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł miesięcznie (musisz zmienić na właściwy price ID)
           mode = 'subscription'
           break
         default:
