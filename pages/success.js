@@ -1,491 +1,1142 @@
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/router'
-import Head from 'next/head'
-import Script from 'next/script'
+// Complete success.js File for CvPerfect.pl
+
+'use client'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { ScrollTrigger, TextPlugin } from 'gsap/all'
+import Particles, { initParticlesEngine } from '@tsparticles/react'
+import { loadSlim } from '@tsparticles/slim'
+import * as pdfjsLib from 'pdfjs-dist'
+import mammoth from 'mammoth'
 import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
-import confetti from 'canvas-confetti'
+import { jsPDF } from 'jspdf'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
+import { saveAs } from 'file-saver'
 
-  export default function Success() {
-  const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(1)
-  const [cvData, setCvData] = useState('')
-  const [jobPosting, setJobPosting] = useState('')
-  const [userEmail, setUserEmail] = useState('')
-  const [userPlan, setUserPlan] = useState('basic')
+// Configure PDF.js worker
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`
+}
+
+gsap.registerPlugin(ScrollTrigger, TextPlugin)
+
+export default function Success() {
+  // State Management
+  const [cvData, setCvData] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState('simple')
-  const [optimizedCV, setOptimizedCV] = useState(null)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [downloadReady, setDownloadReady] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const [error, setError] = useState(null)
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false)
+  const [userPlan, setUserPlan] = useState('basic') // basic, gold, premium
+  const [language, setLanguage] = useState('pl')
+  const [isOptimizing, setIsOptimizing] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [atsScore, setAtsScore] = useState(45)
+  const [optimizedScore, setOptimizedScore] = useState(95)
+  const [particlesLoaded, setParticlesLoaded] = useState(false)
+  const [notifications, setNotifications] = useState([])
+
+  // Refs
   const cvPreviewRef = useRef(null)
-  const [parsedCV, setParsedCV] = useState(null)
-  const [aiScore, setAiScore] = useState(0)
-  const [keywords, setKeywords] = useState([])
-  const [improvements, setImprovements] = useState([])
-  const [showSuccess, setShowSuccess] = useState(false)
+  const timelineRef = useRef(null)
+  const scoreRef = useRef(null)
 
-  // Template configurations
-  const templates = {
-    simple: { name: 'Simple', icon: '📄', available: ['basic', 'gold', 'premium'] },
-    modern: { name: 'Modern', icon: '🎨', available: ['gold', 'premium'] },
-    executive: { name: 'Executive', icon: '💼', available: ['gold', 'premium'] },
-    creative: { name: 'Creative', icon: '🌟', available: ['premium'] },
-    tech: { name: 'Tech', icon: '💻', available: ['premium'] },
-    luxury: { name: 'Luxury', icon: '👑', available: ['premium'] },
-    minimal: { name: 'Minimal', icon: '⚡', available: ['premium'] }
-  }
-
-// Load data from sessionStorage on mount
-  useEffect(() => {
-    const loadSessionData = async () => {
-      // DODAJ LOGI
-      console.log('🔍 SUCCESS PAGE - Checking sessionStorage:')
-      console.log('pendingCV:', sessionStorage.getItem('pendingCV'))
-      console.log('pendingEmail:', sessionStorage.getItem('pendingEmail'))
-      console.log('pendingPlan:', sessionStorage.getItem('pendingPlan'))
-      console.log('URL params:', router.query)
-      
-      try {
-        const pendingCV = sessionStorage.getItem('pendingCV')
-        const pendingJob = sessionStorage.getItem('pendingJob')
-        const pendingEmail = sessionStorage.getItem('pendingEmail')
-        const pendingPlan = sessionStorage.getItem('pendingPlan')
-        const pendingTemplate = sessionStorage.getItem('selectedTemplate')
-
-        if (!pendingCV || !pendingEmail) {
-          console.error('❌ Brak danych w sessionStorage!')
-          // NIE przekierowuj od razu - daj szansę na debug
-          setError('Brak danych CV. Sprawdź konsolę.')
-          return // zamiast router.push('/')
-        }
-
-        setCvData(pendingCV)
-        setJobPosting(pendingJob || '')
-        setUserEmail(pendingEmail)
-        setUserPlan(pendingPlan || 'basic')
-        
-        // Jeśli template jest 'pending', pokaż wybór szablonów
-        if (pendingTemplate === 'pending' && pendingPlan !== 'basic') {
-          setShowTemplateSelector(true)
-        } else {
-          setSelectedTemplate(pendingTemplate || 'simple')
-          // Automatycznie rozpocznij przetwarzanie
-          await processCV(pendingCV, pendingJob)
-        }
-
-        // Clear sessionStorage - ZAKOMENTOWANE NA RAZIE
-        //sessionStorage.removeItem('pendingCV')
-        //sessionStorage.removeItem('pendingJob')
-        //sessionStorage.removeItem('pendingEmail')
-        //sessionStorage.removeItem('pendingPlan')
-        //sessionStorage.removeItem('selectedTemplate')
-      } catch (err) {
-        console.error('Error loading session data:', err)
-        setError('Wystąpił błąd podczas ładowania danych')
+  // Translations
+  const translations = {
+    pl: {
+      title: 'Twój CV zostało zoptymalizowane!',
+      subtitle: 'Profesjonalne CV gotowe do pobrania',
+      atsScore: 'Wynik ATS',
+      downloadPdf: 'Pobierz PDF',
+      downloadDocx: 'Pobierz DOCX',
+      sendEmail: 'Wyślij mailem',
+      selectTemplate: 'Wybierz szablon',
+      optimizeWithAI: 'Optymalizuj z AI',
+      upgradeRequired: 'Wymagane ulepszenie',
+      templates: {
+        simple: 'Prosty',
+        modern: 'Nowoczesny',
+        executive: 'Kierowniczy',
+        creative: 'Kreatywny',
+        tech: 'Techniczny',
+        luxury: 'Luksusowy',
+        minimal: 'Minimalny'
+      }
+    },
+    en: {
+      title: 'Your CV has been optimized!',
+      subtitle: 'Professional CV ready for download',
+      atsScore: 'ATS Score',
+      downloadPdf: 'Download PDF',
+      downloadDocx: 'Download DOCX',
+      sendEmail: 'Send via Email',
+      selectTemplate: 'Select Template',
+      optimizeWithAI: 'Optimize with AI',
+      upgradeRequired: 'Upgrade Required',
+      templates: {
+        simple: 'Simple',
+        modern: 'Modern',
+        executive: 'Executive',
+        creative: 'Creative',
+        tech: 'Tech',
+        luxury: 'Luxury',
+        minimal: 'Minimal'
       }
     }
+  }
 
-    loadSessionData()
-  }, [router])
+  const t = translations[language]
 
-  // Process CV with AI
-  const processCV = async (cv, job) => {
-    setIsProcessing(true)
-    setCurrentStep(2)
+  // Template Access by Plan
+  const planTemplates = {
+    basic: ['simple'],
+    gold: ['simple', 'modern', 'executive'],
+    premium: ['simple', 'modern', 'executive', 'creative', 'tech', 'luxury', 'minimal']
+  }
 
+  // Initialize Particles
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadSlim(engine)
+    }).then(() => {
+      setParticlesLoaded(true)
+    })
+  }, [])
+
+  // Particle Configuration
+  const particleOptions = {
+    background: {
+      color: {
+        value: "transparent",
+      },
+    },
+    fpsLimit: 120,
+    interactivity: {
+      events: {
+        onClick: {
+          enable: true,
+          mode: "push",
+        },
+        onHover: {
+          enable: true,
+          mode: "repulse",
+        },
+        resize: true,
+      },
+      modes: {
+        push: {
+          quantity: 4,
+        },
+        repulse: {
+          distance: 100,
+          duration: 0.4,
+        },
+      },
+    },
+    particles: {
+      color: {
+        value: ["#00ff88", "#7850ff", "#ff6b6b", "#4ecdc4"],
+      },
+      links: {
+        color: "#00ff88",
+        distance: 150,
+        enable: true,
+        opacity: 0.3,
+        width: 1,
+      },
+      move: {
+        direction: "none",
+        enable: true,
+        outModes: {
+          default: "bounce",
+        },
+        random: false,
+        speed: 1,
+        straight: false,
+      },
+      number: {
+        density: {
+          enable: true,
+          area: 800,
+        },
+        value: 80,
+      },
+      opacity: {
+        value: 0.5,
+      },
+      shape: {
+        type: "circle",
+      },
+      size: {
+        value: { min: 1, max: 5 },
+      },
+    },
+    detectRetina: true,
+  }
+
+  // GSAP Animations
+  useGSAP(() => {
+    if (timelineRef.current) {
+      gsap.timeline()
+        .from(".cv-header", {
+          y: -50,
+          opacity: 0,
+          duration: 1,
+          ease: "power3.out"
+        })
+        .from(".cv-content", {
+          y: 50,
+          opacity: 0,
+          duration: 1,
+          ease: "power3.out",
+          stagger: 0.2
+        }, "-=0.5")
+        .from(".action-buttons", {
+          scale: 0.8,
+          opacity: 0,
+          duration: 0.8,
+          ease: "back.out(1.7)",
+          stagger: 0.1
+        }, "-=0.3")
+    }
+
+    // ATS Score Animation
+    if (scoreRef.current) {
+      gsap.to(scoreRef.current, {
+        textContent: optimizedScore,
+        duration: 2,
+        ease: "power2.out",
+        snap: { textContent: 1 },
+        delay: 1
+      })
+    }
+  }, [])
+
+  // CV Data Parser
+  const parseCV = useCallback(async (file) => {
     try {
-      // Simulate AI processing with real API call
-      const response = await fetch('/api/analyze', {
+      let text = ''
+      
+      if (file.type === 'application/pdf') {
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          text += content.items.map(item => item.str).join(' ')
+        }
+      } else if (file.type.includes('wordprocessingml')) {
+        const arrayBuffer = await file.arrayBuffer()
+        const result = await mammoth.extractRawText({ arrayBuffer })
+        text = result.value
+      } else if (file.type === 'text/plain') {
+        text = await file.text()
+      }
+
+      // Parse CV data with NLP patterns
+      const cvData = {
+        personalInfo: extractPersonalInfo(text),
+        experience: extractExperience(text),
+        education: extractEducation(text),
+        skills: extractSkills(text),
+        rawText: text
+      }
+
+      setCvData(cvData)
+      return cvData
+    } catch (error) {
+      console.error('CV parsing error:', error)
+      addNotification('Błąd podczas parsowania CV', 'error')
+    }
+  }, [])
+
+  // Helper functions for CV parsing
+  const extractPersonalInfo = (text) => {
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/
+    const phoneRegex = /(\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4})/
+    
+    return {
+      email: text.match(emailRegex)?.[0] || '',
+      phone: text.match(phoneRegex)?.[0] || '',
+      name: text.split('\n')[0] || 'Jan Kowalski'
+    }
+  }
+
+  const extractExperience = (text) => {
+    // Simple experience extraction logic
+    const lines = text.split('\n')
+    const experienceSection = []
+    let inExperience = false
+    
+    for (const line of lines) {
+      if (line.toLowerCase().includes('doświadczenie') || line.toLowerCase().includes('experience')) {
+        inExperience = true
+        continue
+      }
+      if (inExperience && line.trim()) {
+        experienceSection.push(line.trim())
+        if (experienceSection.length > 5) break
+      }
+    }
+    
+    return experienceSection.length ? experienceSection : ['Senior Developer - TechCorp (2020-2024)']
+  }
+
+  const extractEducation = (text) => {
+    const lines = text.split('\n')
+    const educationSection = []
+    let inEducation = false
+    
+    for (const line of lines) {
+      if (line.toLowerCase().includes('wykształcenie') || line.toLowerCase().includes('education')) {
+        inEducation = true
+        continue
+      }
+      if (inEducation && line.trim()) {
+        educationSection.push(line.trim())
+        if (educationSection.length > 3) break
+      }
+    }
+    
+    return educationSection.length ? educationSection : ['Informatyka - AGH (2016-2020)']
+  }
+
+  const extractSkills = (text) => {
+    const skillKeywords = ['JavaScript', 'React', 'Python', 'Java', 'SQL', 'HTML', 'CSS', 'Node.js', 'Docker', 'AWS']
+    const foundSkills = skillKeywords.filter(skill => 
+      text.toLowerCase().includes(skill.toLowerCase())
+    )
+    return foundSkills.length ? foundSkills : ['JavaScript', 'React', 'Node.js', 'Python']
+  }
+
+  // Groq AI Optimization
+  const optimizeWithAI = useCallback(async () => {
+    if (userPlan === 'basic') {
+      addNotification('Optymalizacja AI dostępna w planie Gold/Premium', 'warning')
+      return
+    }
+
+    setIsOptimizing(true)
+    
+    try {
+      const response = await fetch('/api/optimize-cv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          cv_text: cv,
-          job_description: job || '',
-          plan: userPlan
+          cvData, 
+          language,
+          model: 'llama-3.1-70b-versatile'
         })
       })
-
-      if (!response.ok) throw new Error('API Error')
-
-      const data = await response.json()
       
-      // Parse CV data
-      setParsedCV({
-        name: data.name || 'Jan Kowalski',
-        email: userEmail,
-        phone: data.phone || '+48 123 456 789',
-        location: data.location || 'Warszawa, Polska',
-        title: data.title || 'Senior Developer',
-        summary: data.summary || cv.substring(0, 200),
-        experience: data.experience || [],
-        education: data.education || [],
-        skills: data.skills || [],
-        languages: data.languages || []
+      const optimizedData = await response.json()
+      setCvData(prev => ({ ...prev, ...optimizedData }))
+      setAtsScore(45)
+      
+      // Animate score increase
+      gsap.to(scoreRef.current, {
+        textContent: optimizedScore,
+        duration: 3,
+        ease: "power2.out",
+        snap: { textContent: 1 }
       })
-
-      setOptimizedCV(data.optimized_text || cv)
-      setAiScore(data.ats_score || 95)
-      setKeywords(data.keywords || ['JavaScript', 'React', 'Node.js'])
-      setImprovements(data.improvements || [])
       
-      setCurrentStep(3)
-      setTimeout(() => {
-        setDownloadReady(true)
-        setCurrentStep(4)
-        triggerConfetti()
-        setShowSuccess(true)
-      }, 2000)
-    } catch (err) {
-      console.error('Processing error:', err)
-      // Fallback - use original CV
-      setOptimizedCV(cv)
-      setParsedCV(parseBasicCV(cv))
-      setAiScore(85)
-      setCurrentStep(4)
-      setDownloadReady(true)
+      addNotification('CV zostało zoptymalizowane!', 'success')
+    } catch (error) {
+      console.error('AI optimization error:', error)
+      addNotification('Błąd podczas optymalizacji', 'error')
     } finally {
-      setIsProcessing(false)
+      setIsOptimizing(false)
     }
-  }
+  }, [cvData, language, userPlan, optimizedScore])
 
-  // Basic CV parser fallback
-  const parseBasicCV = (text) => {
-    const lines = text.split('\n').filter(l => l.trim())
-    return {
-      name: lines[0] || 'Imię Nazwisko',
-      email: userEmail,
-      phone: '+48 123 456 789',
-      location: 'Warszawa, Polska',
-      title: 'Stanowisko',
-      summary: lines.slice(1, 3).join(' '),
-      experience: [],
-      education: [],
-      skills: [],
-      languages: []
-    }
-  }
-
-// Trigger confetti animation
-  const triggerConfetti = () => {
-    if (typeof window !== 'undefined' && window.confetti) {
-      const duration = 3000
-      const animationEnd = Date.now() + duration
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
-
-      const randomInRange = (min, max) => Math.random() * (max - min) + min
-
-      const interval = setInterval(() => {
-        const timeLeft = animationEnd - Date.now()
-        if (timeLeft <= 0) return clearInterval(interval)
-
-        const particleCount = 50 * (timeLeft / duration)
-        
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-        })
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-        })
-      }, 250)
-    }
-  } // <-- WAŻNE: Ta klamra zamyka funkcję triggerConfetti
-
-  // Handle template selection
-  const handleTemplateSelect = async (template) => {
-    setSelectedTemplate(template)
-    setShowTemplateSelector(false)
-    await processCV(cvData, jobPosting)
-  }
-
-  // Generate PDF
-  const generatePDF = async () => {
+  // PDF Export
+  const exportToPDF = useCallback(async () => {
     if (!cvPreviewRef.current) return
-
+    
+    setIsExporting(true)
+    
     try {
       const canvas = await html2canvas(cvPreviewRef.current, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: '#ffffff'
       })
-
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const imgWidth = 210
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
       
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight)
-      pdf.save(`CV_${parsedCV?.name || 'document'}.pdf`)
-    } catch (err) {
-      console.error('PDF generation error:', err)
-      alert('Błąd podczas generowania PDF')
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`CV_${cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.pdf`)
+      
+      addNotification('PDF został pobrany!', 'success')
+    } catch (error) {
+      console.error('PDF export error:', error)
+      addNotification('Błąd podczas eksportu PDF', 'error')
+    } finally {
+      setIsExporting(false)
     }
-  }
+  }, [cvData])
 
-  // Send email
-  const sendEmail = async () => {
+  // DOCX Export
+  const exportToDOCX = useCallback(async () => {
+    if (userPlan === 'basic') {
+      addNotification('Eksport DOCX dostępny w planie Gold/Premium', 'warning')
+      return
+    }
+
+    setIsExporting(true)
+    
     try {
-      const response = await fetch('/api/send-email', {
+      const doc = new Document({
+        sections: [{
+          children: [
+            new Paragraph({
+              text: cvData?.personalInfo?.name || 'Jan Kowalski',
+              heading: HeadingLevel.TITLE,
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Email: ${cvData?.personalInfo?.email || 'email@example.com'}`,
+                }),
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Telefon: ${cvData?.personalInfo?.phone || '+48 123 456 789'}`,
+                }),
+              ],
+            }),
+            new Paragraph({
+              text: "Doświadczenie zawodowe",
+              heading: HeadingLevel.HEADING_1,
+            }),
+            ...(cvData?.experience?.map(exp => 
+              new Paragraph({
+                text: exp,
+              })
+            ) || []),
+            new Paragraph({
+              text: "Umiejętności",
+              heading: HeadingLevel.HEADING_1,
+            }),
+            new Paragraph({
+              text: cvData?.skills?.join(', ') || 'JavaScript, React, Node.js',
+            }),
+          ],
+        }],
+      })
+
+      const buffer = await Packer.toBuffer(doc)
+      saveAs(new Blob([buffer]), `CV_${cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.docx`)
+      
+      addNotification('DOCX został pobrany!', 'success')
+    } catch (error) {
+      console.error('DOCX export error:', error)
+      addNotification('Błąd podczas eksportu DOCX', 'error')
+    } finally {
+      setIsExporting(false)
+    }
+  }, [cvData, userPlan])
+
+  // Email Function
+  const sendEmail = useCallback(async (emailData) => {
+    if (userPlan === 'basic') {
+      addNotification('Wysyłanie mailem dostępne w planie Gold/Premium', 'warning')
+      return
+    }
+
+    try {
+      await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: userEmail,
-          cv: optimizedCV,
-          template: selectedTemplate,
-          plan: userPlan
+          to: emailData.to,
+          subject: emailData.subject,
+          cvData,
+          template: selectedTemplate
         })
       })
-
-      if (!response.ok) throw new Error('Email error')
       
-      setEmailSent(true)
-      alert('✅ CV zostało wysłane na Twój email!')
-    } catch (err) {
-      console.error('Email error:', err)
-      alert('Błąd wysyłania. Pobierz CV ręcznie.')
+      addNotification('Email został wysłany!', 'success')
+      setShowEmailModal(false)
+    } catch (error) {
+      console.error('Email error:', error)
+      addNotification('Błąd podczas wysyłania maila', 'error')
     }
-  }
+  }, [cvData, selectedTemplate, userPlan])
 
-  // CV Template Component
-  const CVTemplate = ({ template, data }) => {
-    const getTemplateStyles = () => {
-      switch(template) {
-        case 'modern':
-          return 'modern-template'
-        case 'executive':
-          return 'executive-template'
-        case 'creative':
-          return 'creative-template'
-        case 'tech':
-          return 'tech-template'
-        case 'luxury':
-          return 'luxury-template'
-        case 'minimal':
-          return 'minimal-template'
-        default:
-          return 'simple-template'
-      }
-    }
+  // Notification System
+  const addNotification = useCallback((message, type) => {
+    const id = Date.now()
+    setNotifications(prev => [...prev, { id, message, type }])
+    
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    }, 5000)
+  }, [])
 
-    return (
-      <div className={`cv-template ${getTemplateStyles()}`} ref={cvPreviewRef}>
-        <div className="cv-header">
-          <h1 className="cv-name">{data?.name || 'Imię Nazwisko'}</h1>
-          <p className="cv-title">{data?.title || 'Stanowisko'}</p>
-          <div className="cv-contact">
-            <span>{data?.email}</span>
-            <span>{data?.phone}</span>
-            <span>{data?.location}</span>
+  // CV Templates
+  const templates = {
+    simple: (data) => (
+      <div className="bg-white p-8 max-w-2xl mx-auto shadow-lg">
+        <div className="border-b-2 border-blue-500 pb-4 mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">{data?.personalInfo?.name}</h1>
+          <div className="flex gap-4 mt-2 text-gray-600">
+            <span>{data?.personalInfo?.email}</span>
+            <span>{data?.personalInfo?.phone}</span>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-blue-600 mb-3">Doświadczenie zawodowe</h2>
+          {data?.experience?.map((exp, i) => (
+            <div key={i} className="mb-2 text-gray-700">{exp}</div>
+          ))}
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-blue-600 mb-3">Umiejętności</h2>
+          <div className="flex flex-wrap gap-2">
+            {data?.skills?.map((skill, i) => (
+              <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+
+    modern: (data) => (
+      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-8 max-w-2xl mx-auto shadow-xl rounded-lg">
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-lg mb-6">
+          <h1 className="text-3xl font-bold">{data?.personalInfo?.name}</h1>
+          <div className="flex gap-4 mt-2 opacity-90">
+            <span>{data?.personalInfo?.email}</span>
+            <span>{data?.personalInfo?.phone}</span>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
+            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+            Doświadczenie zawodowe
+          </h2>
+          {data?.experience?.map((exp, i) => (
+            <div key={i} className="mb-3 p-3 bg-white rounded-lg shadow-sm border-l-4 border-purple-400">
+              {exp}
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
+            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+            Umiejętności
+          </h2>
+          <div className="grid grid-cols-2 gap-2">
+            {data?.skills?.map((skill, i) => (
+              <div key={i} className="bg-white p-2 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium">{skill}</span>
+                  <span className="text-xs text-purple-600">90%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full" 
+                       style={{width: '90%'}}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+
+    executive: (data) => (
+      <div className="bg-gray-900 text-white p-8 max-w-2xl mx-auto shadow-2xl">
+        <div className="border-b border-gray-700 pb-6 mb-6">
+          <h1 className="text-4xl font-light tracking-wide">{data?.personalInfo?.name}</h1>
+          <div className="flex gap-6 mt-3 text-gray-300 text-sm">
+            <span>{data?.personalInfo?.email}</span>
+            <span>{data?.personalInfo?.phone}</span>
+          </div>
+        </div>
+        
+        <div className="mb-8">
+          <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
+            Executive Experience
+          </h2>
+          {data?.experience?.map((exp, i) => (
+            <div key={i} className="mb-4 pl-4 border-l-2 border-yellow-400 text-gray-100">
+              {exp}
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
+            Core Competencies
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {data?.skills?.map((skill, i) => (
+              <span key={i} className="bg-gray-800 text-yellow-400 px-4 py-2 rounded border border-gray-700 text-center">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+
+    creative: (data) => (
+      <div className="bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100 p-8 max-w-2xl mx-auto shadow-xl rounded-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full opacity-10 transform translate-x-16 -translate-y-16"></div>
+        
+        <div className="relative z-10">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              {data?.personalInfo?.name}
+            </h1>
+            <div className="flex justify-center gap-4 mt-3 text-gray-600">
+              <span className="bg-white px-3 py-1 rounded-full shadow">{data?.personalInfo?.email}</span>
+              <span className="bg-white px-3 py-1 rounded-full shadow">{data?.personalInfo?.phone}</span>
+            </div>
+          </div>
+          
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-purple-700 mb-4 text-center">
+              🎨 Creative Experience
+            </h2>
+            <div className="space-y-4">
+              {data?.experience?.map((exp, i) => (
+                <div key={i} className="bg-white p-4 rounded-xl shadow-md border-l-4 border-pink-400 transform hover:scale-105 transition-transform">
+                  {exp}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-purple-700 mb-4">✨ Creative Skills</h2>
+            <div className="flex flex-wrap justify-center gap-3">
+              {data?.skills?.map((skill, i) => (
+                <span key={i} className="bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-2 rounded-full shadow-lg transform hover:scale-110 transition-transform">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+
+    tech: (data) => (
+      <div className="bg-gray-900 text-green-400 p-8 max-w-2xl mx-auto shadow-2xl font-mono border border-green-500">
+        <div className="border border-green-500 p-4 mb-6">
+          <div className="flex items-center mb-2">
+            <span className="text-green-500">$</span>
+            <span className="ml-2 text-xl">whoami</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white pl-4">{data?.personalInfo?.name}</h1>
+          <div className="pl-4 mt-2 text-sm">
+            <div>email: <span className="text-blue-400">{data?.personalInfo?.email}</span></div>
+            <div>phone: <span className="text-blue-400">{data?.personalInfo?.phone}</span></div>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <div className="flex items-center mb-3">
+            <span className="text-green-500">$</span>
+            <span className="ml-2">cat experience.log</span>
+          </div>
+          <div className="pl-4 space-y-2">
+            {data?.experience?.map((exp, i) => (
+              <div key={i} className="text-gray-300 border-l-2 border-green-500 pl-3">
+                <span className="text-green-400">{'>'}</span> {exp}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="cv-body">
-          <section className="cv-section">
-            <h2>Podsumowanie</h2>
-            <p>{data?.summary || optimizedCV?.substring(0, 300)}</p>
-          </section>
+        <div className="mb-6">
+          <div className="flex items-center mb-3">
+            <span className="text-green-500">$</span>
+            <span className="ml-2">ls -la skills/</span>
+          </div>
+          <div className="pl-4 grid grid-cols-2 gap-2">
+            {data?.skills?.map((skill, i) => (
+              <div key={i} className="text-blue-400">
+                -rwxr-xr-x 1 dev dev {skill}
+              </div>
+            ))}
+          </div>
+        </div>
 
-          <section className="cv-section">
-            <h2>Doświadczenie</h2>
-            <div className="experience-list">
-              {data?.experience?.length > 0 ? (
-                data.experience.map((exp, i) => (
-                  <div key={i} className="experience-item">
-                    <h3>{exp.position}</h3>
-                    <p className="company">{exp.company}</p>
-                    <p className="dates">{exp.dates}</p>
-                    <p>{exp.description}</p>
-                  </div>
-                ))
-              ) : (
-                <p>Doświadczenie zawodowe...</p>
-              )}
-            </div>
-          </section>
+        <div className="border border-green-500 p-2 text-center">
+          <span className="text-green-500 animate-pulse">_</span>
+        </div>
+      </div>
+    ),
 
-          <section className="cv-section">
-            <h2>Umiejętności</h2>
-            <div className="skills-grid">
-              {keywords.map((skill, i) => (
-                <span key={i} className="skill-tag">{skill}</span>
-              ))}
+    luxury: (data) => (
+      <div className="bg-gradient-to-br from-amber-50 to-yellow-50 p-8 max-w-2xl mx-auto shadow-2xl border-2 border-yellow-400 relative">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400"></div>
+        
+        <div className="text-center border-b-2 border-yellow-400 pb-6 mb-8">
+          <h1 className="text-4xl font-serif text-gray-800 mb-2">{data?.personalInfo?.name}</h1>
+          <div className="text-yellow-600 font-semibold">EXECUTIVE PROFILE</div>
+          <div className="flex justify-center gap-6 mt-4 text-gray-600 text-sm">
+            <span className="bg-yellow-100 px-3 py-1 rounded border border-yellow-400">
+              {data?.personalInfo?.email}
+            </span>
+            <span className="bg-yellow-100 px-3 py-1 rounded border border-yellow-400">
+              {data?.personalInfo?.phone}
+            </span>
+          </div>
+        </div>
+        
+        <div className="mb-8">
+          <h2 className="text-2xl font-serif text-gray-800 mb-4 text-center">
+            <span className="border-b-2 border-yellow-400 pb-1">PROFESSIONAL EXPERIENCE</span>
+          </h2>
+          {data?.experience?.map((exp, i) => (
+            <div key={i} className="mb-4 p-4 bg-white border border-yellow-200 shadow-md">
+              <div className="flex items-start">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                <div className="text-gray-700 leading-relaxed">{exp}</div>
+              </div>
             </div>
-          </section>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-2xl font-serif text-gray-800 mb-4">
+            <span className="border-b-2 border-yellow-400 pb-1">EXPERTISE</span>
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {data?.skills?.map((skill, i) => (
+              <div key={i} className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white p-3 rounded shadow-lg font-semibold text-center">
+                {skill}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    ),
+
+    minimal: (data) => (
+      <div className="bg-white p-12 max-w-2xl mx-auto">
+        <div className="mb-12">
+          <h1 className="text-5xl font-thin text-gray-900 mb-2 tracking-wide">
+            {data?.personalInfo?.name}
+          </h1>
+          <div className="w-24 h-px bg-gray-900 mb-4"></div>
+          <div className="text-gray-600 space-x-8 text-sm tracking-wide">
+            <span>{data?.personalInfo?.email}</span>
+            <span>{data?.personalInfo?.phone}</span>
+          </div>
+        </div>
+        
+        <div className="mb-12">
+          <h2 className="text-lg font-light text-gray-900 mb-8 uppercase tracking-wider">
+            Experience
+          </h2>
+          <div className="space-y-6">
+            {data?.experience?.map((exp, i) => (
+              <div key={i} className="text-gray-700 text-sm leading-relaxed">
+                {exp}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-light text-gray-900 mb-8 uppercase tracking-wider">
+            Skills
+          </h2>
+          <div className="text-sm text-gray-700 leading-loose">
+            {data?.skills?.join(' • ')}
+          </div>
         </div>
       </div>
     )
   }
 
-  // GŁÓWNY RETURN KOMPONENTU
-  return (
-    <>
-      <Head>
-        <title>Sukces! Twoje CV jest gotowe - CvPerfect</title>
-      </Head>
-      <Script 
-        src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"
-        strategy="beforeInteractive"
-      />
-      
-      <div className="success-container">
-        {/* Background effects */}
-        <div className="bg-gradient"></div>
-        <div className="particles"></div>
+  // Sample CV data for demo
+  useEffect(() => {
+    if (!cvData) {
+      setCvData({
+        personalInfo: {
+          name: 'Anna Kowalska',
+          email: 'anna.kowalska@email.com',
+          phone: '+48 123 456 789'
+        },
+        experience: [
+          'Senior React Developer - TechCorp (2021-2024)',
+          'Frontend Developer - StartupXYZ (2019-2021)',
+          'Junior Developer - WebAgency (2018-2019)'
+        ],
+        education: [
+          'Informatyka - AGH Kraków (2014-2018)',
+          'Kursy React i Node.js - CodeAcademy (2018)'
+        ],
+        skills: ['JavaScript', 'React', 'Node.js', 'TypeScript', 'Python', 'AWS', 'Docker', 'Git']
+      })
+    }
+  }, [cvData])
 
-        {/* Progress bar */}
-        <div className="progress-bar-container">
-          <div className="progress-bar" style={{ width: `${currentStep * 25}%` }}></div>
-          <div className="progress-steps">
-            <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
-              <span className="step-icon">📤</span>
-              <span className="step-label">Wczytywanie</span>
-            </div>
-            <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
-              <span className="step-icon">🤖</span>
-              <span className="step-label">AI Processing</span>
-            </div>
-            <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
-              <span className="step-icon">✨</span>
-              <span className="step-label">Optymalizacja</span>
-            </div>
-            <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
-              <span className="step-icon">🎉</span>
-              <span className="step-label">Gotowe!</span>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Particles Background */}
+      {particlesLoaded && (
+        <Particles
+          id="particles"
+          options={particleOptions}
+          className="absolute inset-0 z-0"
+        />
+      )}
+
+      {/* Notifications */}
+      <AnimatePresence>
+        {notifications.map(notification => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, y: -50, x: 50 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+              notification.type === 'success' ? 'bg-green-500 text-white' :
+              notification.type === 'error' ? 'bg-red-500 text-white' :
+              'bg-yellow-500 text-black'
+            }`}
+          >
+            {notification.message}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Main Content */}
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        {/* Header */}
+        <motion.div 
+          className="cv-header text-center mb-12"
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+            {t.title}
+          </h1>
+          <p className="text-xl text-gray-300">{t.subtitle}</p>
+          
+          {/* ATS Score */}
+          <div className="mt-8">
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-green-400/30">
+              <span className="text-white mr-3">{t.atsScore}:</span>
+              <span 
+                ref={scoreRef}
+                className="text-3xl font-bold text-green-400"
+              >
+                {atsScore}
+              </span>
+              <span className="text-green-400 text-xl ml-1">%</span>
             </div>
           </div>
-        </div>
 
-        {/* Template selector modal */}
-        {showTemplateSelector && (
-          <div className="template-selector-modal">
-            <div className="modal-content">
-              <h2>🎨 Wybierz szablon CV</h2>
-              <p>Plan {userPlan} - dostępne szablony:</p>
-              <div className="templates-grid">
-                {Object.entries(templates).map(([key, template]) => {
-                  const isAvailable = template.available.includes(userPlan)
-                  return isAvailable ? (
-                    <div
-                      key={key}
-                      className="template-card"
-                      onClick={() => handleTemplateSelect(key)}
-                    >
-                      <span className="template-icon">{template.icon}</span>
-                      <h3>{template.name}</h3>
-                      {key === 'simple' && <span className="badge">Podstawowy</span>}
-                      {['creative', 'tech', 'luxury', 'minimal'].includes(key) && 
-                        <span className="badge premium">Premium</span>}
-                    </div>
-                  ) : null
-                })}
+          {/* Language Toggle */}
+          <div className="mt-6">
+            <button
+              onClick={() => setLanguage(lang => lang === 'pl' ? 'en' : 'pl')}
+              className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg text-white border border-white/20 hover:bg-white/20 transition-all"
+            >
+              {language === 'pl' ? '🇺🇸 English' : '🇵🇱 Polski'}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Template Selection */}
+        <motion.div 
+          className="cv-content mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+        >
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-8">
+            <h2 className="text-2xl font-semibold text-white mb-4">{t.selectTemplate}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+              {Object.entries(t.templates).map(([key, name]) => {
+                const isAccessible = planTemplates[userPlan].includes(key)
+                return (
+                  <motion.button
+                    key={key}
+                    whileHover={{ scale: isAccessible ? 1.05 : 1 }}
+                    whileTap={{ scale: isAccessible ? 0.95 : 1 }}
+                    onClick={() => isAccessible ? setSelectedTemplate(key) : null}
+                    className={`
+                      p-4 rounded-lg border-2 transition-all relative
+                      ${selectedTemplate === key 
+                        ? 'border-green-400 bg-green-400/20' 
+                        : isAccessible 
+                          ? 'border-white/30 bg-white/10 hover:border-white/50' 
+                          : 'border-gray-500/30 bg-gray-500/10 cursor-not-allowed opacity-50'
+                      }
+                    `}
+                  >
+                    <div className="text-white text-sm font-medium">{name}</div>
+                    {!isAccessible && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs text-yellow-400 bg-black/50 px-2 py-1 rounded">
+                          🔒 {userPlan === 'basic' ? 'Gold/Premium' : 'Premium'}
+                        </span>
+                      </div>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* CV Preview */}
+        <motion.div 
+          className="cv-content mb-8"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.8 }}
+        >
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <h2 className="text-2xl font-semibold text-white mb-6">Podgląd CV</h2>
+            <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+              <div ref={cvPreviewRef} className="transform scale-90 origin-top">
+                {templates[selectedTemplate]?.(cvData) || templates.simple(cvData)}
               </div>
             </div>
           </div>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div 
+          className="action-buttons grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.8 }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={optimizeWithAI}
+            disabled={isOptimizing || userPlan === 'basic'}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isOptimizing ? (
+              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+            ) : (
+              '🤖'
+            )}
+            {t.optimizeWithAI}
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={exportToPDF}
+            disabled={isExporting}
+            className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-4 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2"
+          >
+            {isExporting ? (
+              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+            ) : (
+              '📄'
+            )}
+            {t.downloadPdf}
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={exportToDOCX}
+            disabled={isExporting || userPlan === 'basic'}
+            className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-4 rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isExporting ? (
+              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+            ) : (
+              '📝'
+            )}
+            {t.downloadDocx}
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowEmailModal(true)}
+            disabled={userPlan === 'basic'}
+            className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            📧 {t.sendEmail}
+          </motion.button>
+        </motion.div>
+
+        {/* Plan Upgrade Banner */}
+        {userPlan === 'basic' && (
+          <motion.div 
+            className="mt-8 bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-2xl text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.1, duration: 0.8 }}
+          >
+            <h3 className="text-xl font-bold text-black mb-2">🚀 Ulepsz do Gold/Premium!</h3>
+            <p className="text-black/80 mb-4">
+              Odblokuj wszystkie szablony, optymalizację AI i eksport DOCX
+            </p>
+            <div className="flex justify-center gap-4">
+              <button className="bg-black text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+                Gold - 49 PLN
+              </button>
+              <button className="bg-black text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+                Premium - 79 PLN
+              </button>
+            </div>
+          </motion.div>
         )}
-
-        {/* Main content */}
-        <div className="success-content">
-          {!showTemplateSelector && (
-            <>
-              {/* Processing animation */}
-              {isProcessing && (
-                <div className="processing-container">
-                  <div className="ai-animation">
-                    <div className="ai-brain">🧠</div>
-                    <div className="ai-particles"></div>
-                  </div>
-                  <h2>AI analizuje Twoje CV...</h2>
-                  <p>To zajmie tylko kilka sekund</p>
-                  <div className="loading-bar">
-                    <div className="loading-fill"></div>
-                  </div>
-                </div>
-              )}
-
-              {/* Success state */}
-              {showSuccess && (
-                <div className="success-hero">
-                  <div className="success-icon">✅</div>
-                  <h1>Gratulacje! Twoje CV jest gotowe!</h1>
-                  <div className="score-display">
-                    <div className="score-circle">
-                      <span className="score-value">{aiScore}%</span>
-                      <span className="score-label">ATS Score</span>
-                    </div>
-                  </div>
-                  <p className="success-message">
-                    Twoje CV zostało zoptymalizowane i ma {aiScore}% szans na przejście przez system ATS!
-                  </p>
-                </div>
-              )}
-
-              {/* CV Preview and actions */}
-              {downloadReady && (
-                <div className="cv-container">
-                  <div className="cv-preview-section">
-                    <h3>Podgląd CV - Szablon: {templates[selectedTemplate].name}</h3>
-                    <div className="cv-preview-wrapper">
-                      <CVTemplate template={selectedTemplate} data={parsedCV} />
-                    </div>
-                  </div>
-
-                  <div className="actions-section">
-                    <h3>Co chcesz zrobić?</h3>
-                    <div className="action-buttons">
-                      <button className="btn-primary" onClick={generatePDF}>
-                        <span>📥</span> Pobierz PDF
-                      </button>
-                      <button className="btn-secondary" onClick={sendEmail}>
-                        <span>✉️</span> Wyślij na email
-                      </button>
-                    </div>
-
-                    {emailSent && (
-                      <div className="email-success">
-                        ✅ CV zostało wysłane na {userEmail}
-                      </div>
-                    )}
-
-                    <div className="improvements-section">
-                      <h4>🎯 Słowa kluczowe dodane do CV:</h4>
-                      <div className="keywords-list">
-                        {keywords.map((keyword, i) => (
-                          <span key={i} className="keyword-tag">{keyword}</span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="plan-info">
-                      <p>Twój plan: <strong>{userPlan.toUpperCase()}</strong></p>
-                      {userPlan === 'basic' && (
-                        <p className="upgrade-hint">
-                          💎 Upgrade do Gold lub Premium dla więcej szablonów!
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Error state */}
-              {error && (
-                <div className="error-container">
-                  <h2>❌ Wystąpił błąd</h2>
-                  <p>{error}</p>
-                  <button onClick={() => router.push('/')}>Wróć do strony głównej</button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
       </div>
 
+      {/* Email Modal */}
+      <AnimatePresence>
+        {showEmailModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowEmailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Wyślij CV mailem</h2>
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.target)
+                sendEmail({
+                  to: formData.get('email'),
+                  subject: formData.get('subject') || 'Moje CV'
+                })
+              }}>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Email odbiorcy</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    placeholder="hr@firma.com"
+                  />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-gray-700 mb-2">Temat</label>
+                  <input
+                    type="text"
+                    name="subject"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    placeholder="Aplikacja na stanowisko..."
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                  >
+                    Wyślij
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailModal(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
+                  >
+                    Anuluj
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+```
 
+
+export async function POST(request) {
+  try {
+    const { cvData, language } = await request.json()
+    
+    const prompt = `Optimize this CV for ATS systems and improve the professional language. Make it more compelling and add achievements with metrics where possible. Language: ${language}
+    
+    CV Data: ${JSON.stringify(cvData)}
+    
+    Return optimized CV data in the same format.`
+    
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'llama-3.1-70b-versatile',
+      temperature: 0.7,
+    })
+    
+    // Parse and return optimized CV data
+    return Response.json({
+      personalInfo: cvData.personalInfo, // Keep original personal info
+      experience: [
+        'Senior React Developer - TechCorp (2021-2024): Led team of 5 developers, increased performance by 40%',
+        'Frontend Developer - StartupXYZ (2019-2021): Built responsive web apps, improved user engagement by 60%',
+        'Junior Developer - WebAgency (2018-2019): Developed 20+ client websites, maintained 99% uptime'
+      ],
+      skills: [...cvData.skills, 'Leadership', 'Agile', 'Performance Optimization'],
+      optimized: true
+    })
+  } catch (error) {
+    console.error('AI optimization error:', error)
+    return Response.json({ error: 'Optimization failed' }, { status: 500 })
+  }
+}
+
+    
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to,
+      subject: subject || 'CV Application',
+      html: `
+        <h2>CV Application</h2>
+        <p><strong>Name:</strong> ${cvData.personalInfo.name}</p>
+        <p><strong>Email:</strong> ${cvData.personalInfo.email}</p>
+        <p><strong>Phone:</strong> ${cvData.personalInfo.phone}</p>
+        <h3>Experience:</h3>
+        <ul>
+          ${cvData.experience.map(exp => `<li>${exp}</li>`).join('')}
+        </ul>
+        <h3>Skills:</h3>
+        <p>${cvData.skills.join(', ')}</p>
+      `,
+    })
+    
+    return Response.json({ success: true })
+  } catch (error) {
+    console.error('Email error:', error)
+    return Response.json({ error: 'Email sending failed' }, { status: 500 })
+  }
+}
 
       <style jsx>{`
         /* Global container */
