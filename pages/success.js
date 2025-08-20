@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Script from 'next/script'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import confetti from 'canvas-confetti'
 
-export default function Success() {
+  export default function Success() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [cvData, setCvData] = useState('')
@@ -37,7 +38,30 @@ export default function Success() {
     minimal: { name: 'Minimal', icon: '⚡', available: ['premium'] }
   }
 
-  // Load data from sessionStorage on mount
+useEffect(() => {
+  const loadSessionData = async () => {
+    // DODAJ LOGI
+    console.log('🔍 SUCCESS PAGE - Checking sessionStorage:')
+    console.log('pendingCV:', sessionStorage.getItem('pendingCV'))
+    console.log('pendingEmail:', sessionStorage.getItem('pendingEmail'))
+    console.log('pendingPlan:', sessionStorage.getItem('pendingPlan'))
+    console.log('URL params:', router.query)
+    
+    try {
+      const pendingCV = sessionStorage.getItem('pendingCV')
+      const pendingJob = sessionStorage.getItem('pendingJob')
+      const pendingEmail = sessionStorage.getItem('pendingEmail')
+      const pendingPlan = sessionStorage.getItem('pendingPlan')
+      const pendingTemplate = sessionStorage.getItem('selectedTemplate')
+
+      if (!pendingCV || !pendingEmail) {
+        console.error('❌ Brak danych w sessionStorage!')
+        // NIE przekierowuj od razu - daj szansę na debug
+        setError('Brak danych CV. Sprawdź konsolę.')
+        return // zamiast router.push('/')
+      }  
+
+// Load data from sessionStorage on mount
   useEffect(() => {
     const loadSessionData = async () => {
       try {
@@ -67,11 +91,11 @@ export default function Success() {
         }
 
         // Clear sessionStorage
-        sessionStorage.removeItem('pendingCV')
-        sessionStorage.removeItem('pendingJob')
-        sessionStorage.removeItem('pendingEmail')
-        sessionStorage.removeItem('pendingPlan')
-        sessionStorage.removeItem('selectedTemplate')
+        //sessionStorage.removeItem('pendingCV')
+        //sessionStorage.removeItem('pendingJob')
+        //sessionStorage.removeItem('pendingEmail')
+        //sessionStorage.removeItem('pendingPlan')
+        //sessionStorage.removeItem('selectedTemplate')
       } catch (err) {
         console.error('Error loading session data:', err)
         setError('Wystąpił błąd podczas ładowania danych')
@@ -158,32 +182,34 @@ export default function Success() {
     }
   }
 
-  // Trigger confetti animation
+// Trigger confetti animation
   const triggerConfetti = () => {
-    const duration = 3000
-    const animationEnd = Date.now() + duration
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+    if (typeof window !== 'undefined' && window.confetti) {
+      const duration = 3000
+      const animationEnd = Date.now() + duration
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
 
-    const randomInRange = (min, max) => Math.random() * (max - min) + min
+      const randomInRange = (min, max) => Math.random() * (max - min) + min
 
-    const interval = setInterval(() => {
-      const timeLeft = animationEnd - Date.now()
-      if (timeLeft <= 0) return clearInterval(interval)
+      const interval = setInterval(() => {
+        const timeLeft = animationEnd - Date.now()
+        if (timeLeft <= 0) return clearInterval(interval)
 
-      const particleCount = 50 * (timeLeft / duration)
-      
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-      })
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-      })
-    }, 250)
-  }
+        const particleCount = 50 * (timeLeft / duration)
+        
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        })
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        })
+      }, 250)
+    }
+  } // <-- WAŻNE: Ta klamra zamyka funkcję triggerConfetti
 
   // Handle template selection
   const handleTemplateSelect = async (template) => {
@@ -309,13 +335,17 @@ export default function Success() {
     )
   }
 
+  // GŁÓWNY RETURN KOMPONENTU
   return (
     <>
       <Head>
         <title>Sukces! Twoje CV jest gotowe - CvPerfect</title>
-        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
       </Head>
-
+      <Script 
+        src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"
+        strategy="beforeInteractive"
+      />
+      
       <div className="success-container">
         {/* Background effects */}
         <div className="bg-gradient"></div>
