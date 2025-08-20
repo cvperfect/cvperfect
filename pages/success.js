@@ -38,32 +38,16 @@ import confetti from 'canvas-confetti'
     minimal: { name: 'Minimal', icon: '⚡', available: ['premium'] }
   }
 
-useEffect(() => {
-  const loadSessionData = async () => {
-    // DODAJ LOGI
-    console.log('🔍 SUCCESS PAGE - Checking sessionStorage:')
-    console.log('pendingCV:', sessionStorage.getItem('pendingCV'))
-    console.log('pendingEmail:', sessionStorage.getItem('pendingEmail'))
-    console.log('pendingPlan:', sessionStorage.getItem('pendingPlan'))
-    console.log('URL params:', router.query)
-    
-    try {
-      const pendingCV = sessionStorage.getItem('pendingCV')
-      const pendingJob = sessionStorage.getItem('pendingJob')
-      const pendingEmail = sessionStorage.getItem('pendingEmail')
-      const pendingPlan = sessionStorage.getItem('pendingPlan')
-      const pendingTemplate = sessionStorage.getItem('selectedTemplate')
-
-      if (!pendingCV || !pendingEmail) {
-        console.error('❌ Brak danych w sessionStorage!')
-        // NIE przekierowuj od razu - daj szansę na debug
-        setError('Brak danych CV. Sprawdź konsolę.')
-        return // zamiast router.push('/')
-      }  
-
 // Load data from sessionStorage on mount
   useEffect(() => {
     const loadSessionData = async () => {
+      // DODAJ LOGI
+      console.log('🔍 SUCCESS PAGE - Checking sessionStorage:')
+      console.log('pendingCV:', sessionStorage.getItem('pendingCV'))
+      console.log('pendingEmail:', sessionStorage.getItem('pendingEmail'))
+      console.log('pendingPlan:', sessionStorage.getItem('pendingPlan'))
+      console.log('URL params:', router.query)
+      
       try {
         const pendingCV = sessionStorage.getItem('pendingCV')
         const pendingJob = sessionStorage.getItem('pendingJob')
@@ -72,8 +56,10 @@ useEffect(() => {
         const pendingTemplate = sessionStorage.getItem('selectedTemplate')
 
         if (!pendingCV || !pendingEmail) {
-          router.push('/')
-          return
+          console.error('❌ Brak danych w sessionStorage!')
+          // NIE przekierowuj od razu - daj szansę na debug
+          setError('Brak danych CV. Sprawdź konsolę.')
+          return // zamiast router.push('/')
         }
 
         setCvData(pendingCV)
@@ -90,7 +76,7 @@ useEffect(() => {
           await processCV(pendingCV, pendingJob)
         }
 
-        // Clear sessionStorage
+        // Clear sessionStorage - ZAKOMENTOWANE NA RAZIE
         //sessionStorage.removeItem('pendingCV')
         //sessionStorage.removeItem('pendingJob')
         //sessionStorage.removeItem('pendingEmail')
@@ -498,6 +484,8 @@ useEffect(() => {
           )}
         </div>
       </div>
+
+
 
       <style jsx>{`
         /* Global container */

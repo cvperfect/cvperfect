@@ -503,7 +503,96 @@ useEffect(() => {
   }
 }, []);
 
-const handleFileInputChange = (e) => {
+// 🚀 DODAJ NA POCZĄTKU KOMPONENTU (przed handleFileInputChange)
+const parseDocument = async (file) => {
+  const fileName = file.name.toLowerCase();
+  
+  try {
+    let extractedText = '';
+    
+    // PDF PARSING
+    if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
+      // Sprawdź czy PDF.js jest załadowany
+      if (!window.pdfjsLib && !window['pdfjs-dist/build/pdf']) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        document.head.appendChild(script);
+        await new Promise(resolve => script.onload = resolve);
+      }
+      
+      const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        extractedText += pageText + '\n';
+      }
+    }
+    
+    // DOCX PARSING
+    else if (fileName.endsWith('.docx')) {
+      // Sprawdź czy mammoth.js jest załadowany
+      if (!window.mammoth) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+        document.head.appendChild(script);
+        await new Promise(resolve => script.onload = resolve);
+      }
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await window.mammoth.extractRawText({ arrayBuffer });
+      extractedText = result.value;
+    }
+    
+    // DOC PARSING (stary format)
+    else if (fileName.endsWith('.doc')) {
+      // Dla starego .doc możemy spróbować mammoth (czasem działa)
+      if (!window.mammoth) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+        document.head.appendChild(script);
+        await new Promise(resolve => script.onload = resolve);
+      }
+      
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await window.mammoth.extractRawText({ arrayBuffer });
+        extractedText = result.value;
+      } catch {
+        // Jeśli mammoth nie działa, użyj prostego tekstu
+        extractedText = await file.text();
+        // Usuń binarne śmieci
+        extractedText = extractedText.replace(/[^\x20-\x7E\n\r\t\u00A0-\u00FF\u0100-\u017F]/g, ' ');
+      }
+    }
+    
+    // TXT - prosty text
+    else if (fileName.endsWith('.txt')) {
+      extractedText = await file.text();
+    }
+    
+    // Oczyść tekst
+    extractedText = extractedText
+      .replace(/\s+/g, ' ')  // Usuń wielokrotne spacje
+      .replace(/\n{3,}/g, '\n\n')  // Max 2 entery
+      .trim();
+    
+    return extractedText;
+  } catch (error) {
+    console.error('Błąd parsowania:', error);
+    showToast('❌ Błąd parsowania pliku: ' + error.message, 'error');
+    return null;
+  }
+};
+
+// 🔄 ZASTĄP CAŁĄ FUNKCJĘ handleFileInputChange
+const handleFileInputChange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   
@@ -514,50 +603,88 @@ const handleFileInputChange = (e) => {
   }
   
   // Sprawdź format
-  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-  if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
-    alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku' : '❌ Invalid file format');
+  const fileName = file.name.toLowerCase();
+  const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+  const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+  
+  if (!hasValidExtension) {
+    alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku (tylko PDF, DOC, DOCX, TXT)' : '❌ Invalid file format (only PDF, DOC, DOCX, TXT)');
     return;
   }
   
-  // Symuluj upload progress
+  // Zapisz oryginalny format pliku
+  const originalFormat = fileName.split('.').pop().toLowerCase();
+  
+  // Pokaż progress
   setUploadProgress(0);
+  showToast(currentLanguage === 'pl' ? '📄 Parsowanie dokumentu...' : '📄 Parsing document...', 'info');
+  
   const interval = setInterval(() => {
     setUploadProgress(prev => {
-      if (prev >= 100) {
+      if (prev >= 90) {
         clearInterval(interval);
-        return 100;
+        return 90;
       }
-      return prev + 20;
+      return prev + 10;
     });
   }, 200);
   
-  // Zapisz plik
-  setFormData(prev => ({
-    ...prev,
-    cvFile: file,
-    cvFileName: file.name
-  }));
-  
-  // Czytaj zawartość pliku
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    setSavedCV(event.target.result);
-  };
-  reader.readAsText(file);
-};
-
-const handleDrag = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  if (e.type === "dragenter" || e.type === "dragover") {
-    setDragActive(true);
-  } else if (e.type === "dragleave") {
-    setDragActive(false);
+  try {
+    // PARSUJ DOKUMENT!
+    const extractedText = await parseDocument(file);
+    
+    if (extractedText && extractedText.length > 10) {
+      clearInterval(interval);
+      setUploadProgress(100);
+      
+      // Zapisz TEKST i informację o formacie
+      setSavedCV(extractedText);
+      setFormData(prev => ({
+        ...prev,
+        cvFile: file,
+        cvFileName: file.name,
+        cvText: extractedText,  // Wyekstraktowany tekst
+        originalFormat: originalFormat  // Zapisz format źródłowy (pdf/doc/docx)
+      }));
+      
+      // Pokaż sukces
+      showToast(
+        currentLanguage === 'pl' 
+          ? `✅ CV załadowane! (${extractedText.length} znaków)` 
+          : `✅ CV loaded! (${extractedText.length} characters)`,
+        'success'
+      );
+      
+      console.log('✅ CV sparsowane:', {
+        fileName: file.name,
+        format: originalFormat,
+        textLength: extractedText.length,
+        preview: extractedText.substring(0, 100) + '...'
+      });
+    } else {
+      throw new Error('Nie udało się wyekstraktować tekstu z pliku');
+    }
+  } catch (error) {
+    clearInterval(interval);
+    setUploadProgress(0);
+    setSavedCV('');
+    setFormData(prev => ({
+      ...prev,
+      cvFile: null,
+      cvFileName: ''
+    }));
+    
+    alert(
+      currentLanguage === 'pl' 
+        ? `❌ Nie udało się odczytać pliku. Sprawdź czy plik nie jest uszkodzony.` 
+        : `❌ Failed to read file. Check if the file is not corrupted.`
+    );
+    console.error('Błąd parsowania:', error);
   }
 };
 
-const handleDrop = (e) => {
+// 🔄 ZASTĄP CAŁĄ FUNKCJĘ handleDrop
+const handleDrop = async (e) => {
   e.preventDefault();
   e.stopPropagation();
   setDragActive(false);
@@ -565,109 +692,113 @@ const handleDrop = (e) => {
   if (e.dataTransfer.files && e.dataTransfer.files[0]) {
     const file = e.dataTransfer.files[0];
     
-    // Użyj tej samej logiki co handleFileInputChange
+    // Sprawdź rozmiar
     if (file.size > 5 * 1024 * 1024) {
       alert(currentLanguage === 'pl' ? '❌ Plik jest za duży (max 5MB)' : '❌ File too large (max 5MB)');
       return;
     }
     
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
+    // Sprawdź format
+    const fileName = file.name.toLowerCase();
+    const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!hasValidExtension) {
       alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku' : '❌ Invalid file format');
       return;
     }
     
+    // Zapisz oryginalny format
+    const originalFormat = fileName.split('.').pop().toLowerCase();
+    
+    // Pokaż progress
     setUploadProgress(0);
+    showToast(currentLanguage === 'pl' ? '📄 Parsowanie dokumentu...' : '📄 Parsing document...', 'info');
+    
     const interval = setInterval(() => {
       setUploadProgress(prev => {
-        if (prev >= 100) {
+        if (prev >= 90) {
           clearInterval(interval);
-          return 100;
+          return 90;
         }
-        return prev + 20;
+        return prev + 10;
       });
     }, 200);
     
-    setFormData(prev => ({
-      ...prev,
-      cvFile: file,
-      cvFileName: file.name
-    }));
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSavedCV(event.target.result);
-    };
-    reader.readAsText(file);
+    try {
+      // PARSUJ DOKUMENT!
+      const extractedText = await parseDocument(file);
+      
+      if (extractedText && extractedText.length > 10) {
+        clearInterval(interval);
+        setUploadProgress(100);
+        
+        // Zapisz tekst i format
+        setSavedCV(extractedText);
+        setFormData(prev => ({
+          ...prev,
+          cvFile: file,
+          cvFileName: file.name,
+          cvText: extractedText,
+          originalFormat: originalFormat
+        }));
+        
+        showToast(
+          currentLanguage === 'pl' 
+            ? `✅ CV załadowane! (${extractedText.length} znaków)` 
+            : `✅ CV loaded! (${extractedText.length} characters)`,
+          'success'
+        );
+        
+        console.log('✅ CV sparsowane (drag&drop):', {
+          fileName: file.name,
+          format: originalFormat,
+          textLength: extractedText.length
+        });
+      } else {
+        throw new Error('Nie udało się wyekstraktować tekstu');
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setUploadProgress(0);
+      setSavedCV('');
+      setFormData(prev => ({
+        ...prev,
+        cvFile: null,
+        cvFileName: ''
+      }));
+      
+      alert(
+        currentLanguage === 'pl' 
+          ? '❌ Nie udało się odczytać pliku' 
+          : '❌ Failed to read file'
+      );
+      console.error('Błąd parsowania:', error);
+    }
   }
 };
 
-const removeFile = () => {
-  setFormData(prev => ({
-    ...prev,
-    cvFile: null,
-    cvFileName: ''
-  }));
-  setUploadProgress(0);
-  setSavedCV('');
-};
-
-const handleOptimizeNow = () => {
-  setShowMainModal(true);
-  setModalStep(1);
-  setFormData({
-    email: '',
-    cvText: '',
-    jobText: '',
-    acceptTerms: false
-  });
-  setErrors({});
-  document.body.style.overflow = 'hidden';
-};
-
-const closeModal = () => {
-  setShowMainModal(false);
-  setModalStep(1);
-  document.body.style.overflow = 'auto';
-};
-
-const validateStep1 = () => {
-  const newErrors = {};
+// 🔥 WAŻNE: Zaktualizuj też funkcję handlePaymentSuccess (jeśli masz)
+// Znajdź funkcję gdzie zapisujesz do sessionStorage i zamień na:
+const saveToSessionStorage = () => {
+  // Używaj TEKSTU z parsowania, nie pliku!
+  const cvText = formData.cvText || savedCV;
   
-  if (!formData.email || !formData.email.includes('@')) {
-    newErrors.email = currentLanguage === 'pl' ? 'Podaj prawidłowy email' : 'Enter valid email';
+  if (!cvText) {
+    alert('Brak danych CV!');
+    return false;
   }
   
-if (!formData.cvFile && !savedCV) {
-    newErrors.cvFile = currentLanguage === 'pl' ? 'Musisz załadować plik CV lub wkleić tekst' : 'You must upload CV file or paste text';
-}
+  // Zapisz TEKST w sessionStorage (nie File object!)
+  sessionStorage.setItem('pendingCV', cvText);
+  sessionStorage.setItem('pendingJob', formData.jobText || '');
+  sessionStorage.setItem('pendingEmail', formData.email);
+  sessionStorage.setItem('pendingPlan', selectedPlan || 'basic');
+  sessionStorage.setItem('originalFormat', formData.originalFormat || 'pdf'); // Zapisz format źródłowy
   
-  if (!formData.acceptTerms) {
-    newErrors.acceptTerms = currentLanguage === 'pl' ? 'Musisz zaakceptować regulamin' : 'You must accept terms';
-  }
-  
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
+  return true;
 };
 
-const handleNextStep = () => {
-  if (modalStep === 1 && validateStep1()) {
-    setModalStep(2);
-  }
-};
-
-const handlePrevStep = () => {
-  if (modalStep > 1) {
-    setModalStep(modalStep - 1);
-  }
-};
-
-const handleInputChange = (field, value) => {
-  setFormData(prev => ({
-    ...prev,
-    [field]: value
-  }));
-};
 
 // Show toast notification
 const showToast = (message, type = 'info') => {
