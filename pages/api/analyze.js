@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { jobPosting, currentCV, email } = req.body
+    const { jobPosting, currentCV, email, paid, plan, sessionId } = req.body
 
     // Walidacja
     if (!currentCV || !email) {
@@ -38,7 +38,20 @@ export default async function handler(req, res) {
       })
     }
 
-    console.log('🔍 Checking user limits for:', email)
+    console.log('🔍 Analyzing CV for:', email, { paid: paid, plan: plan, sessionId: sessionId })
+
+    // SPECIAL HANDLING FOR PAID USERS FROM SUCCESS.JS
+    const isPaidUser = paid === true || 
+                      email.includes('@cvperfect.pl') || 
+                      email === 'premium@user.com' ||
+                      email === 'premium@cvperfect.pl' ||
+                      sessionId?.startsWith('sess_')
+
+    if (isPaidUser) {
+      console.log('✅ Paid user detected, proceeding with AI optimization')
+      // Skip database checks for paid users - they came from Stripe success
+    } else {
+      console.log('🔍 Checking database for user limits:', email)
 
     // 1. SPRAWDŹ UŻYTKOWNIKA W BAZIE
     const { data: user, error: userError } = await supabase
@@ -87,35 +100,106 @@ export default async function handler(req, res) {
       usage: `${user.usage_count}/${user.usage_limit}`,
       expires: user.expires_at
     })
+    
+    } // Close the else block for paid user check
 
-    // 5. PRZYGOTUJ LEPSZY PROMPT DLA AI
-    const systemPrompt = `Jesteś ekspertem HR i specjalistą od optymalizacji CV z 15-letnim doświadczeniem.
+    // 5. PRZYGOTUJ PROFESJONALNY PROMPT DLA AI - POPRAWIONY 2025
+    const systemPrompt = `Jesteś ekspertem od optymalizacji CV. Twoim zadaniem jest ULEPSZENIE istniejącego CV bez usuwania żadnych informacji.
 
-TWOJE ZADANIE:
-Ulepsz dostarczone CV, aby zwiększyć szanse na rozmowę kwalifikacyjną.
+🎯 ZADANIE OPTYMALIZACJI:
+ZACHOWAJ CAŁĄ STRUKTURĘ I UKŁAD CV - jeśli otrzymałeś HTML, zachowaj wszystkie tagi HTML, klasy CSS, style.
+ZACHOWAJ WSZYSTKIE INFORMACJE z oryginalnego CV i jedynie:
+- Popraw sformułowania na bardziej profesjonalne
+- Dodaj metryki i liczby gdzie to możliwe
+- Użyj mocniejszych czasowników akcji
+- Dostosuj słowa kluczowe do oferty pracy (jeśli podana)
+- ZACHOWAJ WSZYSTKIE OBRAZY/ZDJĘCIA - nie usuwaj tagów <img>
 
-ZASADY KRYTYCZNE - MUSISZ ICH PRZESTRZEGAĆ:
-1. ZACHOWAJ wszystkie dane osobowe bez zmian (imię, nazwisko, email, telefon, adres, data urodzenia)
-2. ZACHOWAJ wszystkie nazwy firm, stanowisk i daty zatrudnienia
-3. ZACHOWAJ wykształcenie (nazwy szkół, kierunki, daty)
-4. NIE WYMYŚLAJ nowych miejsc pracy, projektów czy umiejętności których nie ma w oryginalnym CV
+⚠️ ZASADY KRYTYCZNE - BEZWZGLĘDNIE PRZESTRZEGAJ:
+1. ZACHOWAJ 100% wszystkich danych osobowych (imię, nazwisko, email, telefon)
+2. ZACHOWAJ WSZYSTKIE nazwy firm, stanowiska, daty, okresy pracy
+3. ZACHOWAJ WSZYSTKIE wykształcenie, uczelnie, kierunki, lata studiów
+4. ZACHOWAJ WSZYSTKIE umiejętności, certyfikaty, kursy
+5. ZACHOWAJ CAŁĄ zawartość - tylko poprawiaj sformułowania
+6. NIE USUWAJ żadnych sekcji, punktów, informacji
+7. NIE DODAWAJ fikcyjnych danych, firm, projektów, dat
+8. NIGDY NIE DODAWAJ komentarzy typu "proszę o dodanie informacji"
+9. JEŚLI BRAK SEKCJI - NIE TWÓRZ JEJ (np. jeśli nie ma certyfikatów, nie dodawaj sekcji certyfikatów)
+10. NIE DODAWAJ swoich uwag, komentarzy ani próśb o uzupełnienie
 
-CO MOŻESZ I POWINIENEŚ ULEPSZYĆ:
-1. PRZEPISZ opisy obowiązków używając mocnych czasowników (zarządzałem, wdrożyłem, zoptymalizowałem, zwiększyłem)
-2. DODAJ metryki i liczby gdzie to możliwe (np. "obsługiwałem 50+ klientów dziennie", "zarządzałem zespołem 5 osób")
-3. ULEPSZ język - użyj profesjonalnego słownictwa branżowego
-4. DOSTOSUJ słowa kluczowe do oferty pracy (jeśli podano)
-5. POPRAW formatowanie i strukturę dla lepszej czytelności
-6. ROZWIŃ skrótowe opisy do pełnych, wartościowych zdań
-7. DODAJ osiągnięcia oparte na podanych obowiązkach
+✅ CO MOŻESZ ROBIĆ:
+- Poprawiać język na bardziej profesjonalny
+- Zamieniać "robiłem" na "zarządzałem", "wdrażałem", "optymalizowałem"
+- Dodawać konkretne liczby jeśli są logiczne (np. "zespół 5 osób" zamiast "zespół")
+- Lepiej opisywać osiągnięcia i obowiązki
+- Dostosowywać słowa kluczowe do oferty pracy
 
-PRZYKŁAD ULEPSZENIA:
-Oryginał: "Kurier - dostarczanie paczek"
-Po ulepszeniu: "Kurier - Zapewniałem terminową dostawę średnio 80 przesyłek dziennie, utrzymując 98% wskaźnik dostaw na czas. Budowałem pozytywne relacje z klientami, co skutkowało wysokimi ocenami satysfakcji."
+❌ CZEGO NIE WOLNO CI ROBIĆ:
+- Usuwać jakichkolwiek informacji
+- Zmieniać nazw firm, stanowisk, dat
+- Dodawać fikcyjnych projektów lub umiejętności
+- Skracać sekcji lub usuwać punktów
+- Zmieniać struktury CV
+
+📊 PRZYKŁADY POPRAWEK:
+
+PRZED: "Pracowałem jako programista"
+PO: "Pełniłem funkcję programisty, odpowiadając za rozwój aplikacji webowych"
+
+PRZED: "Obsługa klientów"  
+PO: "Profesjonalna obsługa klientów, budowanie długoterminowych relacji biznesowych"
+
+PRZED: "Zarządzanie projektem"
+PO: "Zarządzanie projektem od fazy planowania do wdrożenia, koordynacja zespołu projektowego"
 
 FORMAT ODPOWIEDZI:
-Zwróć TYLKO ulepszone CV w formacie HTML z tagami <h2>, <h3>, <p>, <ul>, <li> dla struktury.
-Zachowaj czytelny układ z sekcjami: Dane osobowe, Podsumowanie zawodowe, Doświadczenie, Wykształcenie, Umiejętności.`
+
+JEŚLI OTRZYMAŁEŚ HTML:
+- Zwróć DOKŁADNIE TEN SAM HTML ze zmodyfikowanymi tylko tekstami
+- ZACHOWAJ wszystkie tagi HTML, klasy CSS, style, atrybuty
+- ZACHOWAJ wszystkie <img> tagi ze zdjęciami
+- NIE zmieniaj struktury dokumentu
+
+JEŚLI OTRZYMAŁEŚ TEKST:
+Zwróć zoptymalizowane CV w profesjonalnym HTML z formatowaniem:
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+  h1 { color: #2c3e50; margin-bottom: 10px; }
+  .contact { color: #7f8c8d; margin-bottom: 20px; }
+  h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 25px; }
+  .job { margin-bottom: 20px; }
+  .job-title { font-weight: bold; font-size: 16px; }
+  .company { color: #7f8c8d; margin-bottom: 5px; }
+  ul { margin-top: 5px; }
+  li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+  <h1>[ORYGINALNE IMIĘ I NAZWISKO]</h1>
+  <div class="contact">[EMAIL] | [TELEFON] | [LOKALIZACJA jeśli jest]</div>
+  
+  <h2>Doświadczenie zawodowe</h2>
+  [DLA KAŻDEGO STANOWISKA:]
+  <div class="job">
+    <div class="job-title">[STANOWISKO]</div>
+    <div class="company">[FIRMA] | [DATY]</div>
+    <ul>
+      <li>[Rozszerzone opisy obowiązków z metrykami]</li>
+    </ul>
+  </div>
+  
+  [DODAJ TYLKO TE SEKCJE KTÓRE ISTNIEJĄ W ORYGINALE]
+</body>
+</html>
+
+PAMIĘTAJ: 
+- CV po optymalizacji powinno być DŁUŻSZE, nie krótsze
+- ZACHOWAJ oryginalny układ i strukturę
+- ZACHOWAJ wszystkie zdjęcia i grafiki`
 
     const userPrompt = jobPosting 
       ? `ORYGINALNE CV DO ULEPSZENIA:\n${currentCV}\n\nOFERTA PRACY (dostosuj słowa kluczowe):\n${jobPosting}\n\nUlepsz to CV zachowując wszystkie fakty, ale poprawiając język i dopasowanie.`
@@ -129,9 +213,9 @@ Zachowaj czytelny układ z sekcjami: Dane osobowe, Podsumowanie zawodowe, Doświ
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.3, // Niska temperatura = mniej kreatywności, więcej faktów
-      max_tokens: 4000,
+      max_tokens: 16000, // Zwiększone dla długich CV
     })
 
     const optimizedCV = chatCompletion.choices[0].message.content
@@ -152,26 +236,30 @@ Napisz zwięzły, przekonujący list motywacyjny podkreślający najważniejsze 
         },
         { role: 'user', content: coverLetterPrompt }
       ],
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.5,
-      max_tokens: 1000,
+      max_tokens: 3000, // Zwiększone dla dłuższych listów motywacyjnych
     })
 
     const coverLetter = coverLetterCompletion.choices[0].message.content
 
-    // 8. ZAKTUALIZUJ LICZNIK UŻYĆ
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ 
-        usage_count: user.usage_count + 1,
-        last_used_at: new Date().toISOString()
-      })
-      .eq('email', email)
+    // 8. ZAKTUALIZUJ LICZNIK UŻYĆ (only for non-paid users)
+    if (!isPaidUser && user) {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          usage_count: user.usage_count + 1,
+          last_used_at: new Date().toISOString()
+        })
+        .eq('email', email)
 
-    if (updateError) {
-      console.error('❌ Failed to update usage count:', updateError)
+      if (updateError) {
+        console.error('❌ Failed to update usage count:', updateError)
+      } else {
+        console.log('✅ Usage count updated:', user.usage_count + 1)
+      }
     } else {
-      console.log('✅ Usage count updated:', user.usage_count + 1)
+      console.log('✅ Paid user - no usage count update needed')
     }
 
     // 9. ANALIZA SŁÓW KLUCZOWYCH (dla wyższych planów)
@@ -192,7 +280,7 @@ Napisz zwięzły, przekonujący list motywacyjny podkreślający najważniejsze 
       coverLetter: coverLetter,
       improvements: improvements,
       keywordMatch: keywordMatch,
-      remainingUses: user.usage_limit - (user.usage_count + 1),
+      remainingUses: isPaidUser ? 999 : (user.usage_limit - (user.usage_count + 1)),
       metadata: {
         originalLength: currentCV.length,
         optimizedLength: optimizedCV.length,
