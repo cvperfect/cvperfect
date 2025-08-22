@@ -59,6 +59,18 @@ export default async function handler(req, res) {
         mode: session.mode
       })
 
+      // IDEMPOTENCY CHECK - sprawdź czy już przetworzyliśmy tę sesję
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('stripe_session_id')
+        .eq('stripe_session_id', session.id)
+        .single()
+
+      if (existingUser) {
+        console.log('⚠️ Session already processed, skipping:', session.id)
+        return res.status(200).json({ received: true, message: 'Already processed' })
+      }
+
       // Pobierz email (Stripe może go przechowywać w różnych miejscach)
       const email = session.customer_email || session.customer_details?.email
       
@@ -67,30 +79,33 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Brak emaila' })
       }
 
-      // Określ plan na podstawie kwoty
+      // Określ plan na podstawie kwoty i typu płatności
       const amountPLN = session.amount_total / 100
       let plan = 'basic'
       let usageLimit = 1
       let planType = 'one_time'
       let expiresAt = null
 
-      // Dopasuj plan do ceny
-      if (amountPLN === 19.99 || (amountPLN >= 19 && amountPLN < 49)) {
-        plan = 'basic'
-        usageLimit = 1
-        planType = 'one_time'
-        // Basic nie wygasa lub bardzo długi okres
-        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 rok
-      } else if (amountPLN === 49 || (amountPLN >= 49 && amountPLN < 79)) {
-        plan = 'gold'
-        usageLimit = 10
-        planType = 'subscription'
-        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dni
-      } else if (amountPLN === 79 || amountPLN >= 79) {
-        plan = 'premium'
-        usageLimit = 25
-        planType = 'subscription'
-        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dni
+      // Sprawdź czy to subskrypcja czy płatność jednorazowa
+      if (session.mode === 'subscription' && session.subscription) {
+        // SUBSKRYPCJE MIESIĘCZNE
+        if (amountPLN === 49) {
+          plan = 'gold'
+          usageLimit = 10 // resetuje się co miesiąc
+          planType = 'subscription'
+        } else if (amountPLN === 79) {
+          plan = 'premium'
+          usageLimit = 25 // resetuje się co miesiąc
+          planType = 'subscription'
+        }
+      } else {
+        // PŁATNOŚCI JEDNORAZOWE
+        if (amountPLN === 19.99 || (amountPLN >= 19 && amountPLN < 49)) {
+          plan = 'basic'
+          usageLimit = 1
+          planType = 'one_time'
+          expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 rok
+        }
       }
 
       // Sprawdź czy to subskrypcja

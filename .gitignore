@@ -27,3 +27,11 @@ pids
 # OS files
 .DS_Store
 Thumbs.db
+
+# Claude Code local settings (keep team settings in repo)
+.claude/settings.local.json
+.claude/logs/
+
+# Screenshots and test files (optional - uncomment if not needed in repo)
+# screenshot-*.png
+# test-*.js

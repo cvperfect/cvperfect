@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-08-21T17:28:59.152Z",
+  "homepage": {
+    "accessible": true,
+    "title": "CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+    "buttons": 13,
+    "premiumButtons": 1,
+    "fileUpload": false
+  },
+  "api": {
+    "endpoint": "/api/create-checkout-session",
+    "status": 200,
+    "working": true,
+    "stripeUrlGenerated": true
+  },
+  "validation": "COMPLETE",
+  "status": "PAYMENT_SYSTEM_OPERATIONAL"
+}

@@ -1,0 +1,12 @@
+{
+  "sessionId": "test_session_1755797550602",
+  "email": "test@example.com",
+  "plan": "basic",
+  "template": "modern",
+  "cvData": "\nJan Kowalski\nemail: jan.kowalski@example.com\ntelefon: 123-456-789\n\nDOŚWIADCZENIE ZAWODOWE:\n2020-2023: Specjalista IT w ABC Sp. z o.o.\n- Administracja serwerami\n- Wsparcie użytkowników\n- Zarządzanie bazami danych\n\nWYKSZTAŁCENIE:\n2016-2020: Informatyka, Uniwersytet Warszawski\n\nUMIEJĘTNOŚCI:\n- Python, JavaScript\n- SQL, PostgreSQL\n- Linux, Windows\n",
+  "jobPosting": "\nPoszukujemy programisty JavaScript z doświadczeniem w React i Node.js.\nWymagania:\n- Minimum 2 lata doświadczenia\n- Znajomość JavaScript ES6+\n- Doświadczenie z React.js\n- Znajomość Node.js i Express\n- Praca z bazami danych (PostgreSQL, MongoDB)\n",
+  "photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...",
+  "timestamp": "2025-08-21T17:32:30.635Z",
+  "processed": false,
+  "createdAt": 1755797550635
+}

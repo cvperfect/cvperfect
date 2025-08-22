@@ -1,0 +1,277 @@
+{
+  "summary": {
+    "passed": 37,
+    "failed": 0,
+    "warnings": 1,
+    "successRate": "97.4",
+    "timestamp": "2025-08-21T17:32:38.830Z"
+  },
+  "details": [
+    {
+      "endpoint": "/api/analyze",
+      "status": "PASS",
+      "message": "Valid paid user request successful",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:27.235Z"
+    },
+    {
+      "endpoint": "/api/analyze",
+      "status": "PASS",
+      "message": "Response contains all required fields",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:27.235Z"
+    },
+    {
+      "endpoint": "/api/analyze",
+      "status": "PASS",
+      "message": "AI optimization produced substantial content",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:27.235Z"
+    },
+    {
+      "endpoint": "/api/analyze",
+      "status": "PASS",
+      "message": "Correctly rejected request missing CV",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:27.239Z"
+    },
+    {
+      "endpoint": "/api/analyze",
+      "status": "PASS",
+      "message": "Correctly rejected unpaid user",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:28.128Z"
+    },
+    {
+      "endpoint": "/api/analyze",
+      "status": "PASS",
+      "message": "CORS OPTIONS request handled correctly",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:28.131Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "Valid checkout session created",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:28.737Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "Valid Stripe URL returned",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:28.737Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "Plan 'basic' handled correctly",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:29.080Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "Plan 'premium' handled correctly",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:29.427Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "Plan 'gold' handled correctly",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:29.773Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "Plan 'pro' handled correctly",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.105Z"
+    },
+    {
+      "endpoint": "/api/create-checkout-session",
+      "status": "PASS",
+      "message": "GET request handled (redirect expected)",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.602Z"
+    },
+    {
+      "endpoint": "/api/save-session",
+      "status": "PASS",
+      "message": "Session data saved successfully",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.636Z"
+    },
+    {
+      "endpoint": "/api/save-session",
+      "status": "PASS",
+      "message": "Correctly rejected incomplete request",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.639Z"
+    },
+    {
+      "endpoint": "/api/save-session",
+      "status": "PASS",
+      "message": "CORS OPTIONS handled correctly",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.641Z"
+    },
+    {
+      "endpoint": "/api/get-session-data",
+      "status": "PASS",
+      "message": "Session data retrieved successfully",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.681Z"
+    },
+    {
+      "endpoint": "/api/get-session-data",
+      "status": "PASS",
+      "message": "Session data has correct structure",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.681Z"
+    },
+    {
+      "endpoint": "/api/get-session-data",
+      "status": "PASS",
+      "message": "CV data preserved without truncation",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.681Z"
+    },
+    {
+      "endpoint": "/api/get-session-data",
+      "status": "PASS",
+      "message": "Correctly rejected request missing session ID",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.683Z"
+    },
+    {
+      "endpoint": "/api/get-session-data",
+      "status": "PASS",
+      "message": "Correctly handled non-existent session",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:30.867Z"
+    },
+    {
+      "endpoint": "/api/parse-cv",
+      "status": "PASS",
+      "message": "Correctly rejected GET request",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:31.129Z"
+    },
+    {
+      "endpoint": "/api/parse-cv",
+      "status": "PASS",
+      "message": "Correctly rejected request without file",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:31.133Z"
+    },
+    {
+      "endpoint": "/api/parse-cv",
+      "status": "WARN",
+      "message": "File upload test requires actual file implementation",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:31.174Z"
+    },
+    {
+      "endpoint": "/api/contact",
+      "status": "PASS",
+      "message": "Contact form submitted successfully",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:32.769Z"
+    },
+    {
+      "endpoint": "/api/contact",
+      "status": "PASS",
+      "message": "Premium contact form handled",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.785Z"
+    },
+    {
+      "endpoint": "/api/contact",
+      "status": "PASS",
+      "message": "Correctly rejected GET request",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.788Z"
+    },
+    {
+      "endpoint": "/api/stripe-webhook",
+      "status": "PASS",
+      "message": "Correctly rejected GET request",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.835Z"
+    },
+    {
+      "endpoint": "/api/stripe-webhook",
+      "status": "PASS",
+      "message": "Correctly rejected request without signature",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.839Z"
+    },
+    {
+      "endpoint": "/api/stripe-webhook",
+      "status": "PASS",
+      "message": "Correctly rejected fake signature",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.842Z"
+    },
+    {
+      "endpoint": "Integration",
+      "status": "PASS",
+      "message": "Step 1: Session saved successfully",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.848Z"
+    },
+    {
+      "endpoint": "Integration",
+      "status": "PASS",
+      "message": "Step 2: Session retrieved successfully",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.852Z"
+    },
+    {
+      "endpoint": "Integration",
+      "status": "PASS",
+      "message": "Step 3: CV data integrity preserved",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:33.852Z"
+    },
+    {
+      "endpoint": "Integration",
+      "status": "PASS",
+      "message": "Step 4: Complete integration flow successful",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:37.410Z"
+    },
+    {
+      "endpoint": "Performance",
+      "status": "PASS",
+      "message": "/api/analyze responded in 4ms",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:37.415Z"
+    },
+    {
+      "endpoint": "Performance",
+      "status": "PASS",
+      "message": "/api/save-session responded in 3ms",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:37.418Z"
+    },
+    {
+      "endpoint": "Performance",
+      "status": "PASS",
+      "message": "/api/get-session-data?session_id=nonexistent responded in 191ms",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:37.609Z"
+    },
+    {
+      "endpoint": "Performance",
+      "status": "PASS",
+      "message": "/api/contact responded in 1221ms",
+      "details": null,
+      "timestamp": "2025-08-21T17:32:38.830Z"
+    }
+  ]
+}

@@ -1,0 +1,465 @@
+{
+  "timestamp": "2025-08-21T17:26:01.175Z",
+  "apiTests": [
+    {
+      "url": "http://localhost:3007/api/save-session",
+      "method": "OPTIONS",
+      "description": "CORS preflight for save-session",
+      "status": 0,
+      "statusText": "Network Error",
+      "ok": false,
+      "data": null,
+      "headers": {},
+      "error": "body used already for: http://localhost:3007/api/save-session",
+      "timestamp": "2025-08-21T17:26:01.337Z"
+    },
+    {
+      "url": "http://localhost:3007/api/get-session-data",
+      "method": "OPTIONS",
+      "description": "CORS preflight for get-session-data",
+      "status": 0,
+      "statusText": "Network Error",
+      "ok": false,
+      "data": null,
+      "headers": {},
+      "error": "body used already for: http://localhost:3007/api/get-session-data",
+      "timestamp": "2025-08-21T17:26:01.395Z"
+    },
+    {
+      "url": "http://localhost:3007/api/create-checkout-session",
+      "method": "GET",
+      "description": "GET method support for checkout",
+      "status": 0,
+      "statusText": "Network Error",
+      "ok": false,
+      "data": null,
+      "headers": {},
+      "error": "body used already for: https://checkout.stripe.com/c/pay/cs_test_a1PQpvcEnjulhFRUjl1Ev7ZNofK90wPdkGUR5q9jnXlV2DZwoSRkPbY9zs#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+      "timestamp": "2025-08-21T17:26:02.335Z"
+    },
+    {
+      "url": "http://localhost:3007/api/save-session",
+      "method": "POST",
+      "description": "Save session data before payment",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "message": "Session data saved successfully",
+        "sessionId": "test_session_1755797162335",
+        "dataLength": 605
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "118",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:02 GMT",
+        "etag": "\"1671zs8a18k3a\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:02.343Z"
+    },
+    {
+      "url": "http://localhost:3007/api/get-session-data?session_id=test_session_1755797162335",
+      "method": "GET",
+      "description": "Retrieve saved session data",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "session": {
+          "id": "test_session_1755797162335",
+          "customer_email": "test.user@example.com",
+          "metadata": {
+            "plan": "basic",
+            "template": "simple",
+            "cv": "Jan Kowalski\nSoftware Developer\n\nDOŚWIADCZENIE ZAWODOWE:\n• Senior Developer w TechCorp (2021-2024)\n  - Rozwój aplikacji webowych w React i Node.js\n  - Zarządzanie zespołem 5 programistów\n\n• Mid-level Developer w StartupXYZ (2019-2021)\n  - Tworzenie API REST w Node.js i Express\n  - Praca z bazami danych MongoDB i PostgreSQL\n\nWYKSZTAŁCENIE:\n• Informatyka, Politechnika Warszawska (2015-2019)\n  - Specjalizacja: Inżynieria Oprogramowania\n\nUMIEJĘTNOŚCI TECHNICZNE:\n• Języki programowania: JavaScript, Python, TypeScript\n• Frameworki: React, Vue.js, Angular, Express\n• Bazy danych: MongoDB, PostgreSQL, Redis",
+            "job": "Poszukujemy Senior Full-Stack Developer:\n• Min. 5 lat doświadczenia w JavaScript/TypeScript\n• Znajomość React, Node.js, i baz danych\n• Doświadczenie z systemami płatności online",
+            "photo": null,
+            "processed": false,
+            "timestamp": "2025-08-21T17:26:02.340Z"
+          }
+        }
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-encoding": "gzip",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:02 GMT",
+        "etag": "\"twwu3yqkt1sy\"",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:02.347Z"
+    },
+    {
+      "url": "http://localhost:3007/api/save-session",
+      "method": "POST",
+      "description": "Save session for basic plan",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "message": "Session data saved successfully",
+        "sessionId": "checkout_session_1755797162347_basic",
+        "dataLength": 605
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "128",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:02 GMT",
+        "etag": "\"11hwehspng33k\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:02.356Z"
+    },
+    {
+      "url": "http://localhost:3007/api/create-checkout-session",
+      "method": "POST",
+      "description": "Create Stripe checkout for basic",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "id": "cs_test_a16ZYAoiqjJNpAmiRQjunHHpg1Wt3NhByBtBfgDNteLqmuXXI5rx4OmwRa",
+        "url": "https://checkout.stripe.com/c/pay/cs_test_a16ZYAoiqjJNpAmiRQjunHHpg1Wt3NhByBtBfgDNteLqmuXXI5rx4OmwRa#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+        "success": true
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "482",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:02 GMT",
+        "etag": "\"qis46m6h4ede\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:02.691Z"
+    },
+    {
+      "url": "http://localhost:3007/api/get-session-data?session_id=cs_test_a16ZYAoiqjJNpAmiRQjunHHpg1Wt3NhByBtBfgDNteLqmuXXI5rx4OmwRa",
+      "method": "GET",
+      "description": "Retrieve Stripe session for basic",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "session": {
+          "id": "cs_test_a16ZYAoiqjJNpAmiRQjunHHpg1Wt3NhByBtBfgDNteLqmuXXI5rx4OmwRa",
+          "customer_email": "test.payment@example.com",
+          "payment_status": "unpaid",
+          "metadata": {
+            "cv": "Jan Kowalski\nSoftware Developer\n\nDOŚWIADCZENIE ZAWODOWE:\n• Senior Developer w TechCorp (2021-2024)\n  - Rozwój aplikacji webowych w React i Node.js\n  - Zarządzanie zespołem 5 programistów\n\n• Mid-level Developer w StartupXYZ (2019-2021)\n  - Tworzenie API REST w Node.js i Express\n  - Praca z bazami danych MongoDB i PostgreSQL\n\nWYKSZTAŁCENIE:\n• Informatyka, Politechnika Warszawska (2015-2019)\n  - Spec",
+            "email": "test.payment@example.com",
+            "fullSessionId": "checkout_session_1755797162347_basic",
+            "job": "Poszukujemy Senior Full-Stack Developer:\n• Min. 5 lat doświadczenia w JavaScript/TypeScript\n• Znajomość React, Node.js, i baz danych\n• Doświadczenie z systemami płatności online",
+            "plan": "basic",
+            "timestamp": "1755797162358",
+            "userId": "user_pd0vi7i5l"
+          }
+        }
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "979",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:02 GMT",
+        "etag": "\"j0dmjo66ziqj\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:02.895Z"
+    },
+    {
+      "url": "http://localhost:3007/api/save-session",
+      "method": "POST",
+      "description": "Save session for gold plan",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "message": "Session data saved successfully",
+        "sessionId": "checkout_session_1755797162895_gold",
+        "dataLength": 605
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "127",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:02 GMT",
+        "etag": "\"nynhumgwis3j\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:02.899Z"
+    },
+    {
+      "url": "http://localhost:3007/api/create-checkout-session",
+      "method": "POST",
+      "description": "Create Stripe checkout for gold",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "id": "cs_test_a1mTz6Ix0W9PQc8SEKJBUJ1N4TZkpuBNWC2L2DOn9Rrt9sCrfnAnZVcNgm",
+        "url": "https://checkout.stripe.com/c/pay/cs_test_a1mTz6Ix0W9PQc8SEKJBUJ1N4TZkpuBNWC2L2DOn9Rrt9sCrfnAnZVcNgm#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+        "success": true
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "482",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:03 GMT",
+        "etag": "\"qcjfqfh45ode\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:03.249Z"
+    },
+    {
+      "url": "http://localhost:3007/api/get-session-data?session_id=cs_test_a1mTz6Ix0W9PQc8SEKJBUJ1N4TZkpuBNWC2L2DOn9Rrt9sCrfnAnZVcNgm",
+      "method": "GET",
+      "description": "Retrieve Stripe session for gold",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "session": {
+          "id": "cs_test_a1mTz6Ix0W9PQc8SEKJBUJ1N4TZkpuBNWC2L2DOn9Rrt9sCrfnAnZVcNgm",
+          "customer_email": "test.payment@example.com",
+          "payment_status": "unpaid",
+          "metadata": {
+            "cv": "Jan Kowalski\nSoftware Developer\n\nDOŚWIADCZENIE ZAWODOWE:\n• Senior Developer w TechCorp (2021-2024)\n  - Rozwój aplikacji webowych w React i Node.js\n  - Zarządzanie zespołem 5 programistów\n\n• Mid-level Developer w StartupXYZ (2019-2021)\n  - Tworzenie API REST w Node.js i Express\n  - Praca z bazami danych MongoDB i PostgreSQL\n\nWYKSZTAŁCENIE:\n• Informatyka, Politechnika Warszawska (2015-2019)\n  - Spec",
+            "email": "test.payment@example.com",
+            "fullSessionId": "checkout_session_1755797162895_gold",
+            "job": "Poszukujemy Senior Full-Stack Developer:\n• Min. 5 lat doświadczenia w JavaScript/TypeScript\n• Znajomość React, Node.js, i baz danych\n• Doświadczenie z systemami płatności online",
+            "plan": "gold",
+            "timestamp": "1755797162901",
+            "userId": "user_o09chlmaw"
+          }
+        }
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "977",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:03 GMT",
+        "etag": "\"luuwq2fx8aqh\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:03.453Z"
+    },
+    {
+      "url": "http://localhost:3007/api/save-session",
+      "method": "POST",
+      "description": "Save session for premium plan",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "message": "Session data saved successfully",
+        "sessionId": "checkout_session_1755797163453_premium",
+        "dataLength": 605
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "POST, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "130",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:03 GMT",
+        "etag": "\"hbts58vgq63m\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:03.458Z"
+    },
+    {
+      "url": "http://localhost:3007/api/create-checkout-session",
+      "method": "POST",
+      "description": "Create Stripe checkout for premium",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "id": "cs_test_a1342uOBoBBQVtEdeFcV9gYDUtRAwOHiFQXd0q51UiFwseK1VGCE7Lp31T",
+        "url": "https://checkout.stripe.com/c/pay/cs_test_a1342uOBoBBQVtEdeFcV9gYDUtRAwOHiFQXd0q51UiFwseK1VGCE7Lp31T#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+        "success": true
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "482",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:03 GMT",
+        "etag": "\"b2ipl18siede\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:03.852Z"
+    },
+    {
+      "url": "http://localhost:3007/api/get-session-data?session_id=cs_test_a1342uOBoBBQVtEdeFcV9gYDUtRAwOHiFQXd0q51UiFwseK1VGCE7Lp31T",
+      "method": "GET",
+      "description": "Retrieve Stripe session for premium",
+      "status": 200,
+      "statusText": "OK",
+      "ok": true,
+      "data": {
+        "success": true,
+        "session": {
+          "id": "cs_test_a1342uOBoBBQVtEdeFcV9gYDUtRAwOHiFQXd0q51UiFwseK1VGCE7Lp31T",
+          "customer_email": "test.payment@example.com",
+          "payment_status": "unpaid",
+          "metadata": {
+            "cv": "Jan Kowalski\nSoftware Developer\n\nDOŚWIADCZENIE ZAWODOWE:\n• Senior Developer w TechCorp (2021-2024)\n  - Rozwój aplikacji webowych w React i Node.js\n  - Zarządzanie zespołem 5 programistów\n\n• Mid-level Developer w StartupXYZ (2019-2021)\n  - Tworzenie API REST w Node.js i Express\n  - Praca z bazami danych MongoDB i PostgreSQL\n\nWYKSZTAŁCENIE:\n• Informatyka, Politechnika Warszawska (2015-2019)\n  - Spec",
+            "email": "test.payment@example.com",
+            "fullSessionId": "checkout_session_1755797163453_premium",
+            "job": "Poszukujemy Senior Full-Stack Developer:\n• Min. 5 lat doświadczenia w JavaScript/TypeScript\n• Znajomość React, Node.js, i baz danych\n• Doświadczenie z systemami płatności online",
+            "plan": "premium",
+            "timestamp": "1755797163460",
+            "userId": "user_eh66peckt"
+          }
+        }
+      },
+      "headers": {
+        "access-control-allow-headers": "Content-Type",
+        "access-control-allow-methods": "GET, OPTIONS",
+        "access-control-allow-origin": "*",
+        "connection": "keep-alive",
+        "content-length": "983",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:04 GMT",
+        "etag": "\"icgd0wi253qn\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:04.051Z"
+    },
+    {
+      "url": "http://localhost:3007/api/stripe-webhook",
+      "method": "POST",
+      "description": "Test webhook endpoint accessibility",
+      "status": 400,
+      "statusText": "Bad Request",
+      "ok": false,
+      "data": {
+        "error": "Brak podpisu"
+      },
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "24",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Thu, 21 Aug 2025 17:26:04 GMT",
+        "etag": "\"oahifzjbdyo\"",
+        "keep-alive": "timeout=5",
+        "vary": "Accept-Encoding"
+      },
+      "error": null,
+      "timestamp": "2025-08-21T17:26:04.223Z"
+    }
+  ],
+  "paymentFlowTests": [
+    {
+      "plan": "basic",
+      "price": "19.99 zł",
+      "sessionId": "checkout_session_1755797162347_basic",
+      "checkoutSuccess": true,
+      "stripeUrl": "https://checkout.stripe.com/c/pay/cs_test_a16ZYAoiqjJNpAmiRQjunHHpg1Wt3NhByBtBfgDNteLqmuXXI5rx4OmwRa#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+      "stripeSessionId": "cs_test_a16ZYAoiqjJNpAmiRQjunHHpg1Wt3NhByBtBfgDNteLqmuXXI5rx4OmwRa",
+      "error": null
+    },
+    {
+      "plan": "gold",
+      "price": "49 zł",
+      "sessionId": "checkout_session_1755797162895_gold",
+      "checkoutSuccess": true,
+      "stripeUrl": "https://checkout.stripe.com/c/pay/cs_test_a1mTz6Ix0W9PQc8SEKJBUJ1N4TZkpuBNWC2L2DOn9Rrt9sCrfnAnZVcNgm#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+      "stripeSessionId": "cs_test_a1mTz6Ix0W9PQc8SEKJBUJ1N4TZkpuBNWC2L2DOn9Rrt9sCrfnAnZVcNgm",
+      "error": null
+    },
+    {
+      "plan": "premium",
+      "price": "79 zł",
+      "sessionId": "checkout_session_1755797163453_premium",
+      "checkoutSuccess": true,
+      "stripeUrl": "https://checkout.stripe.com/c/pay/cs_test_a1342uOBoBBQVtEdeFcV9gYDUtRAwOHiFQXd0q51UiFwseK1VGCE7Lp31T#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+      "stripeSessionId": "cs_test_a1342uOBoBBQVtEdeFcV9gYDUtRAwOHiFQXd0q51UiFwseK1VGCE7Lp31T",
+      "error": null
+    }
+  ],
+  "sessionTests": [
+    {
+      "sessionId": "test_session_1755797162335",
+      "saveSuccess": true,
+      "getSuccess": true,
+      "dataIntegrity": true
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "totalApiTests": 15,
+    "successfulApiTests": 11,
+    "failedApiTests": 4,
+    "paymentFlowTests": 3,
+    "successfulPaymentFlows": 3,
+    "sessionTests": 1,
+    "totalErrors": 0
+  },
+  "analysis": {
+    "apiEndpointsWorking": true,
+    "sessionManagementWorking": true,
+    "paymentCreationWorking": true,
+    "commonErrors": [
+      "0: Network Error",
+      "400: Bad Request"
+    ]
+  },
+  "recommendations": [
+    "Fix API endpoint errors to ensure payment flow reliability",
+    "Test with real Stripe test cards for complete payment flow validation",
+    "Implement proper error handling and user feedback for failed payments",
+    "Add logging and monitoring for payment transactions"
+  ]
+}

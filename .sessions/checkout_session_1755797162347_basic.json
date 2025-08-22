@@ -1,0 +1,12 @@
+{
+  "sessionId": "checkout_session_1755797162347_basic",
+  "email": "test.payment@example.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Jan Kowalski\nSoftware Developer\n\nDOŚWIADCZENIE ZAWODOWE:\n• Senior Developer w TechCorp (2021-2024)\n  - Rozwój aplikacji webowych w React i Node.js\n  - Zarządzanie zespołem 5 programistów\n\n• Mid-level Developer w StartupXYZ (2019-2021)\n  - Tworzenie API REST w Node.js i Express\n  - Praca z bazami danych MongoDB i PostgreSQL\n\nWYKSZTAŁCENIE:\n• Informatyka, Politechnika Warszawska (2015-2019)\n  - Specjalizacja: Inżynieria Oprogramowania\n\nUMIEJĘTNOŚCI TECHNICZNE:\n• Języki programowania: JavaScript, Python, TypeScript\n• Frameworki: React, Vue.js, Angular, Express\n• Bazy danych: MongoDB, PostgreSQL, Redis",
+  "jobPosting": "Poszukujemy Senior Full-Stack Developer:\n• Min. 5 lat doświadczenia w JavaScript/TypeScript\n• Znajomość React, Node.js, i baz danych\n• Doświadczenie z systemami płatności online",
+  "photo": null,
+  "timestamp": "2025-08-21T17:26:02.351Z",
+  "processed": false,
+  "createdAt": 1755797162351
+}

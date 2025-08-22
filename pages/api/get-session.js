@@ -16,7 +16,7 @@ export default async function handler(req, res) {
    const session = await stripe.checkout.sessions.retrieve(session_id)
    
    if (session.payment_status === 'paid') {
-     res.status(200).json({
+     return res.status(200).json({
        success: true,
        session: {
          id: session.id,
@@ -26,14 +26,14 @@ export default async function handler(req, res) {
        }
      })
    } else {
-     res.status(400).json({ 
+     return res.status(400).json({ 
        success: false,
        error: 'Payment not completed' 
      })
    }
  } catch (error) {
    console.error('Error retrieving session:', error)
-   res.status(500).json({ 
+   return res.status(500).json({ 
      success: false,
      error: 'Failed to retrieve session' 
    })

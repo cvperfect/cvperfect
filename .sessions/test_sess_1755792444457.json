@@ -1,0 +1,12 @@
+{
+  "sessionId": "test_sess_1755792444457",
+  "email": "anna.kowalska@example.com",
+  "plan": "premium",
+  "template": "simple",
+  "cvData": "Anna Kowalska\nEmail: anna.kowalska@example.com\nTelefon: +48 123 456 789\n\nDOŚWIADCZENIE ZAWODOWE:\n- Senior Developer w TechCorp (2021-2024)\n- Frontend Developer w StartupXYZ (2019-2021)  \n- Junior Developer w WebAgency (2018-2019)\n\nWYKSZTAŁCENIE:\n- Informatyka - AGH Kraków (2014-2018)\n- Certyfikat React Developer (2020)\n\nUMIEJĘTNOŚCI:\nJavaScript, React, Node.js, Python, AWS, Docker",
+  "jobPosting": "Senior Frontend Developer position",
+  "photo": null,
+  "timestamp": "2025-08-21T16:07:24.465Z",
+  "processed": false,
+  "createdAt": 1755792444465
+}

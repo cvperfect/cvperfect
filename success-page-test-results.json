@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-08-21T17:16:29.408Z",
+  "tests": [],
+  "findings": [
+    {
+      "step": "Test Error",
+      "error": "page.waitForTimeout is not a function",
+      "stack": "TypeError: page.waitForTimeout is not a function\n    at testSuccessPageFunctionality (C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\test-success-page-functionality.js:117:16)"
+    }
+  ],
+  "templateTests": [],
+  "functionalityTests": [],
+  "screenshots": [
+    "screenshot-success-page-load.png",
+    "screenshot-success-test-error.png"
+  ]
+}

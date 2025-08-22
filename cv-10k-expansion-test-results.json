@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-08-22T07:14:39.980Z",
+  "tests": {},
+  "errors": [
+    {
+      "message": "page.waitForTimeout is not a function",
+      "stack": "TypeError: page.waitForTimeout is not a function\n    at runComprehensiveTest (C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\test-10k-cv-expansion.js:55:16)",
+      "timestamp": "2025-08-22T07:14:44.285Z"
+    }
+  ],
+  "screenshots": []
+}

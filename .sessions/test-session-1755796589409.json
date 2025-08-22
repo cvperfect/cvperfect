@@ -1,0 +1,12 @@
+{
+  "sessionId": "test-session-1755796589409",
+  "email": "test@cvperfect.pl",
+  "plan": "premium",
+  "template": "tech",
+  "cvData": "CURRICULUM VITAE\n\nJan Kowalski\nEmail: jan.kowalski@example.com\nTelefon: +48 123 456 789\nAdres: ul. Przykładowa 123, 00-000 Warszawa\n\n[ZDJĘCIE PROFILOWE]\n\nPROFIL ZAWODOWY\nDoświadczony Senior Full-Stack Developer z 6+ letnim doświadczeniem w tworzeniu skalowalnych aplikacji webowych i mobilnych. Specjalista w React, Node.js, Python. Lider zespołów, mentor deweloperów.\n\nDOŚWIADCZENIE ZAWODOWE\n\nSenior Full-Stack Developer | TechCorp Poland\n03/2020 - obecnie (4 lata)\n• Rozwój platformy e-commerce (100,000+ użytkowników/miesiąc)\n• Implementacja mikrousług Node.js (+40% wydajności)\n• Liderowanie zespołu 8 deweloperów (projekty 2.5M PLN)\n• Wdrożenie CI/CD (-60% czasu deploymentu)\n• Mentoring 12 junior deweloperów (8 awansów)\n\nMid-Level Developer | StartupXYZ\n08/2018 - 02/2020\n• Rozwój PWA w React.js (50,000+ użytkowników)\n• API Python/Django (1M+ requestów/dzień)\n• Systemy płatności Stripe/PayU (99.9% uptime)\n• Architektura mikroserwisowa Docker/K8s\n\nWYKSZTAŁCENIE\nMagister Informatyki - Politechnika Warszawska (2017)\nInżynier Informatyki - Uniwersytet Gdański (2015)\n\nUMIEJĘTNOŚCI\nFrontend: JavaScript, React.js, Vue.js, TypeScript\nBackend: Node.js, Python, Django, PHP\nBazy: PostgreSQL, MongoDB, Redis\nDevOps: Docker, AWS, Kubernetes, CI/CD\n\nJĘZYKI\nAngielski - C1, Niemiecki - B2\n\nCERTYFIKATY\nAWS Developer (2022), ScrumMaster (2021), Google Cloud (2021)",
+  "jobPosting": "Senior Full-Stack Developer requiring React, Node.js, AWS experience",
+  "photo": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAAAAAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+  "timestamp": "2025-08-21T17:16:29.444Z",
+  "processed": false,
+  "createdAt": 1755796589444
+}

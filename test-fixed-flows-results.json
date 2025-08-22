@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-08-21T17:56:25.433Z",
+  "tests": [
+    {
+      "name": "Main CTA Button",
+      "success": false,
+      "details": "this.page.waitForTimeout is not a function",
+      "timestamp": "2025-08-21T17:56:27.352Z"
+    },
+    {
+      "name": "Plan Button Data Attributes",
+      "success": false,
+      "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button[contains(text(), \"Dalej\")]' is not a valid selector.",
+      "timestamp": "2025-08-21T17:56:27.356Z"
+    },
+    {
+      "name": "Usage Limits Display",
+      "success": false,
+      "details": "Basic plan usage limit (1 use) not clearly displayed",
+      "timestamp": "2025-08-21T17:56:27.356Z"
+    },
+    {
+      "name": "Demo AI Optimization Endpoint",
+      "success": false,
+      "details": "Demo optimize endpoint failed: 500",
+      "timestamp": "2025-08-21T17:56:27.681Z"
+    },
+    {
+      "name": "Long CV Processing",
+      "success": true,
+      "details": "Processed 180053 → 180050 chars",
+      "timestamp": "2025-08-21T17:56:31.128Z"
+    },
+    {
+      "name": "Stripe Integration",
+      "success": true,
+      "details": "API responding correctly with fixed URLs",
+      "timestamp": "2025-08-21T17:56:31.681Z"
+    },
+    {
+      "name": "Security Basics",
+      "success": true,
+      "details": "No secrets exposed in client-side code",
+      "timestamp": "2025-08-21T17:56:31.690Z"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 4
+  }
+}

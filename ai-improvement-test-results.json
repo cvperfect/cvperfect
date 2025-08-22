@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-08-21T19:51:54.340Z",
+  "success": true,
+  "originalLength": 1002,
+  "optimizedLength": 2191,
+  "lengthChange": 1189,
+  "dataPreservation": {
+    "Imię i nazwisko": true,
+    "Email": true,
+    "Telefon": true,
+    "Nazwa firmy ABC": true,
+    "Nazwa firmy XYZ": true,
+    "Uniwersytet Warszawski": true,
+    "Politechnika Warszawska": true,
+    "Python": true,
+    "SQL": true,
+    "Certyfikat Azure": true,
+    "Daty pracy 2021-2024": true,
+    "Szczegóły doświadczenia": true
+  },
+  "allChecksPass": true,
+  "optimizedCV": "Oto zoptymalizowane CV:\n\n<h1>Konrad Jakóbczak</h1>\n<div class=\"contact\">konrad1181@wp.pl | 570 625 008</div>\n<h2>Doświadczenie zawodowe</h2>\n\n**Senior Data Analyst | ABC Analytics | 2021-2024**\n• Przeprowadziłem kompleksowe analizy danych dla 15+ projektów biznesowych, identyfikując kluczowe trendy i wzorce.\n• Wdrożyłem innowacyjną automatyzację raportowania, która skróciła czas generowania raportów o 60%, zwiększając efektywność procesu.\n• Pełniłem funkcję lidera zespołu 3 analityków danych, zapewniając skuteczną koordynację i zarządzanie projektami.\n• Optymalizowałem bazy danych SQL, zwiększając wydajność o 40% i poprawiając jakość danych.\n\n**Data Analyst | XYZ Corp | 2019-2021**\n• Projektowałem i implementowałem dashboardy w Power BI dla managementu, zapewniając dostęp do danych w czasie rzeczywistym.\n• Analizowałem trendy sprzedażowe i rynkowe, identyfikując możliwości wzrostu i optymalizacji.\n• Przygotowywałem i przedstawiał raporty miesięczne dla zarządu, zapewniając informacje niezbędne do podejmowania decyzji.\n\n<h2>Wykształcenie</h2>\n\n**Magister Informatyki | Uniwersytet Warszawski | 2017-2019**\n**Licencjat Matematyki | Politechnika Warszawska | 2014-2017**\n\n<h2>Umiejętności techniczne</h2>\n\n• **Python**: umiejętności w zakresie bibliotek pandas, NumPy, scikit-learn, zapewniających efektywną analizę danych.\n• **SQL**: doświadczenie w obsłudze baz danych PostgreSQL, MySQL, Oracle, zapewniające efektywną zarządzanie danymi.\n• **Power BI, Tableau, Excel**: umiejętności w zakresie tworzenia i analizowania danych w tych narzędziach.\n• **Machine Learning, Deep Learning**: doświadczenie w zakresie modelowania i wizji maszynowej.\n• **Git, Docker, AWS**: umiejętności w zakresie zarządzania kodem, wdrożenia aplikacji i infrastruktury chmurowej.\n\n<h2>Certyfikaty i kursy</h2>\n\n• **Microsoft Azure Data Scientist Associate (2023)**: certyfikat potwierdzający kompetencje w zakresie nauki danych i wizji maszynowej.\n• **Google Analytics Certified (2022)**: certyfikat potwierdzający umiejętności w zakresie analizy danych i marketingu online.\n• **Kurs Machine Learning - Coursera (2021)**: kurs potwierdzający doświadczenie w zakresie modelowania i wizji maszynowej."
+}

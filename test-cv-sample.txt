@@ -1,0 +1,58 @@
+Jan Kowalski
+
+Email: jan.kowalski@email.com
+Telefon: +48 123 456 789
+Adres: ul. Przykładowa 123, 00-000 Warszawa
+
+PROFIL ZAWODOWY
+Doświadczony specjalista IT z 5-letnim doświadczeniem w zarządzaniu projektami i rozwoju oprogramowania. Specjalizuję się w technologiach webowych i mobilnych.
+
+DOŚWIADCZENIE ZAWODOWE
+
+Senior Developer - ABC Tech Sp. z o.o.
+01/2020 - obecnie
+- Rozwój aplikacji webowych w React.js
+- Współpraca z zespołem 8 deweloperów
+- Wdrożenie nowych rozwiązań technologicznych
+- Mentoring młodszych programistów
+- Zarządzanie projektami o wartości do 500,000 PLN
+
+Junior Developer - XYZ Software
+06/2018 - 12/2019
+- Programowanie w JavaScript i Python
+- Tworzenie interfejsów użytkownika
+- Testowanie aplikacji
+- Praca w metodologii Agile
+
+WYKSZTAŁCENIE
+
+Magister Informatyki
+Uniwersytet Warszawski
+2016-2018
+
+Licencjat Informatyki  
+Politechnika Warszawska
+2013-2016
+
+UMIEJĘTNOŚCI TECHNICZNE
+- JavaScript, React.js, Node.js
+- Python, Django, Flask
+- HTML5, CSS3, SASS
+- MySQL, PostgreSQL, MongoDB
+- Git, Docker, AWS
+- Metodyki Agile, Scrum
+
+JĘZYKI OBCE
+- Angielski - poziom B2
+- Niemiecki - poziom A2
+
+CERTYFIKATY
+- AWS Certified Developer (2021)
+- Scrum Master Certification (2020)
+- Google Analytics Certified (2019)
+
+ZAINTERESOWANIA
+- Fotografia cyfrowa
+- Podróże
+- Programowanie open source
+- Sporty górskie

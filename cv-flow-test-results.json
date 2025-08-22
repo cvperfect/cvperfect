@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-08-21T17:11:09.108Z",
+  "tests": [],
+  "errors": [
+    "Waiting for selector `[data-testid=\"cv-upload\"], .upload-area, input[type=\"file\"]` failed"
+  ],
+  "screenshots": [
+    "screenshot-cv-flow-start.png",
+    "screenshot-cv-flow-error.png"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-08-21T17:12:53.492Z",
+  "tests": [],
+  "findings": [
+    {
+      "step": "Test Error",
+      "error": "Waiting for selector `button` failed",
+      "stack": "TimeoutError: Waiting for selector `button` failed\n    at CSSQueryHandler.waitFor (C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\node_modules\\puppeteer-core\\lib\\cjs\\puppeteer\\common\\QueryHandler.js:214:46)\n    at async CdpFrame.waitForSelector (C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\node_modules\\puppeteer-core\\lib\\cjs\\puppeteer\\api\\Frame.js:548:21)\n    at async CdpPage.waitForSelector (C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\node_modules\\puppeteer-core\\lib\\cjs\\puppeteer\\api\\Page.js:1382:20)\n    at async testCVUploadFlow (C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\test-cv-upload-flow.js:41:5)"
+    }
+  ],
+  "dataFlow": [],
+  "screenshots": [
+    "screenshot-homepage.png"
+  ]
+}

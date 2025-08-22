@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-08-21T17:27:22.263Z",
+  "uiTests": [
+    {
+      "test": "page_structure_analysis",
+      "success": true,
+      "details": {
+        "buttons": [
+          {
+            "text": "🇵🇱 PL",
+            "className": "jsx-8f6adc763247366f lang-btn active",
+            "id": "",
+            "visible": true
+          },
+          {
+            "text": "🇬🇧 EN",
+            "className": "jsx-8f6adc763247366f lang-btn ",
+            "id": "",
+            "visible": true
+          },
+          {
+            "text": "🎯 Zoptymalizuj CV teraz ⚡",
+            "className": "jsx-8f6adc763247366f nav-cta",
+            "id": "",
+            "visible": true
+          },
+          {
+            "text": "🔍 Sprawdź swoje CV",
+            "className": "jsx-8f6adc763247366f hero-button primary",
+            "id": "",
+            "visible": true
+          },
+          {
+            "text": "Rozpocznij teraz🚀",
+            "className": "jsx-8f6adc763247366f timeline-button premium-button",
+            "id": "",
+            "visible": true
+          },
+          {
+            "text": "Zwiększ swoje szanse 🚀",
+            "className": "jsx-8f6adc763247366f testimonials-button",
+            "id": "",
+            "visible": true
+          },
+          {
+            "text": "Wypróbuj za darmo ⚡",
+            "className": "jsx-8f6adc763247366f faq-button",
+            "id": "",
+            "visible": true
+          }
+        ],
+        "forms": [],
+        "paymentLinks": [],
+        "totalElements": {
+          "buttons": 7,
+          "forms": 0,
+          "inputs": 0,
+          "modals": 0
+        }
+      }
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "01-homepage",
+      "filename": "screenshot-stripe-ui-01-homepage.png",
+      "description": "Homepage loaded"
+    },
+    {
+      "name": "07-page-analysis",
+      "filename": "screenshot-stripe-ui-07-page-analysis.png",
+      "description": "Page structure analysis complete"
+    },
+    {
+      "name": "03-looking-for-payment",
+      "filename": "screenshot-stripe-ui-03-looking-for-payment.png",
+      "description": "Looking for payment buttons"
+    },
+    {
+      "name": "06-success-page",
+      "filename": "screenshot-stripe-ui-06-success-page.png",
+      "description": "Success page loaded"
+    }
+  ],
+  "paymentFlows": [
+    {
+      "modalFound": false,
+      "plansVisible": false,
+      "clickSuccess": true,
+      "redirectToStripe": false,
+      "stripeFormVisible": false,
+      "error": "this.page.waitForTimeout is not a function"
+    }
+  ],
+  "errors": [
+    "Success page: SyntaxError: Failed to execute 'querySelector' on 'Document': '[class*=\"download\"], button:contains(\"Pobierz\")' is not a valid selector."
+  ],
+  "summary": {
+    "totalUiTests": 1,
+    "successfulUiTests": 1,
+    "paymentFlowTests": 1,
+    "screenshotCount": 4,
+    "totalErrors": 1
+  },
+  "analysis": {
+    "homepageAccessible": true,
+    "paymentButtonsFound": true,
+    "stripeIntegrationWorking": false,
+    "successPageAccessible": false
+  },
+  "recommendations": [
+    "Stripe checkout integration needs verification - users may not reach payment page",
+    "Success page may have issues - verify post-payment user experience",
+    "Test payment flow with real Stripe test cards",
+    "Add clearer payment button labels and visual indicators",
+    "Implement loading states during payment processing"
+  ]
+}

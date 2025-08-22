@@ -158,6 +158,14 @@ const Footer = ({ currentLanguage }) => {
           .footer-description {
             max-width: 100%;
           }
+          
+          .footer-links a {
+            padding: 12px 8px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+          }
         }
       `}</style>
     </footer>

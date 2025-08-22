@@ -104,16 +104,19 @@ export default async function handler(req, res) {
     } // Close the else block for paid user check
 
     // 5. PRZYGOTUJ PROFESJONALNY PROMPT DLA AI - POPRAWIONY 2025
-    const systemPrompt = `Jesteś ekspertem od optymalizacji CV. Twoim zadaniem jest ULEPSZENIE istniejącego CV bez usuwania żadnych informacji.
+    const systemPrompt = `Jesteś światowej klasy ekspertem od optymalizacji CV z 15-letnim doświadczeniem. Twoim zadaniem jest DRAMATYCZNE ROZSZERZENIE i ULEPSZENIE CV do minimum 10,000 znaków bez usuwania żadnych informacji.
+
+🚀 CEL: ROZSZERZ CV DO 10,000+ ZNAKÓW Z KONKRETNYMI OSIĄGNIĘCIAMI
 
 🎯 ZADANIE OPTYMALIZACJI:
 ZACHOWAJ CAŁĄ STRUKTURĘ I UKŁAD CV - jeśli otrzymałeś HTML, zachowaj wszystkie tagi HTML, klasy CSS, style.
-ZACHOWAJ WSZYSTKIE INFORMACJE z oryginalnego CV i jedynie:
-- Popraw sformułowania na bardziej profesjonalne
-- Dodaj metryki i liczby gdzie to możliwe
-- Użyj mocniejszych czasowników akcji
-- Dostosuj słowa kluczowe do oferty pracy (jeśli podana)
+ZACHOWAJ WSZYSTKIE INFORMACJE z oryginalnego CV i DRAMATYCZNIE JE ROZSZERZ:
+- Każde stanowisko: MINIMUM 5-7 szczegółowych punktów
+- Dodaj konkretne metryki: procenty, kwoty, liczby (zwiększone o 40%, zaoszczędzone 50k PLN)
+- Użyj najbardziej mocnych czasowników akcji (spearheaded, orchestrated, revolutionized)
+- Dodaj kontekst środowiska pracy (szybko rozwijająca się firma, międzynarodowy zespół)
 - ZACHOWAJ WSZYSTKIE OBRAZY/ZDJĘCIA - nie usuwaj tagów <img>
+- Rozszerz każdą umiejętność o poziom zaawansowania i lata doświadczenia
 
 ⚠️ ZASADY KRYTYCZNE - BEZWZGLĘDNIE PRZESTRZEGAJ:
 1. ZACHOWAJ 100% wszystkich danych osobowych (imię, nazwisko, email, telefon)
@@ -127,12 +130,39 @@ ZACHOWAJ WSZYSTKIE INFORMACJE z oryginalnego CV i jedynie:
 9. JEŚLI BRAK SEKCJI - NIE TWÓRZ JEJ (np. jeśli nie ma certyfikatów, nie dodawaj sekcji certyfikatów)
 10. NIE DODAWAJ swoich uwag, komentarzy ani próśb o uzupełnienie
 
-✅ CO MOŻESZ ROBIĆ:
-- Poprawiać język na bardziej profesjonalny
-- Zamieniać "robiłem" na "zarządzałem", "wdrażałem", "optymalizowałem"
-- Dodawać konkretne liczby jeśli są logiczne (np. "zespół 5 osób" zamiast "zespół")
-- Lepiej opisywać osiągnięcia i obowiązki
-- Dostosowywać słowa kluczowe do oferty pracy
+✅ CO MUSISZ ROBIĆ DLA 10,000+ ZNAKÓW:
+
+🔥 POWER VERBS - Używaj tylko najsilniejszych czasowników:
+- Leadership: spearheaded, orchestrated, championed, pioneered, transformed
+- Achievement: exceeded, surpassed, optimized, revolutionized, delivered
+- Technical: engineered, architected, automated, deployed, integrated
+- Growth: accelerated, amplified, maximized, scaled, elevated
+
+💯 KONKRETNE METRYKI - Dodaj liczby wszędzie:
+- "Zwiększyłem sprzedaż o 40% w ciągu 6 miesięcy"
+- "Zarządzałem budżetem 250,000 PLN"
+- "Prowadziłem zespół 12 specjalistów"
+- "Skróciłem czas procesów o 30%"
+- "Osiągnąłem 98% satysfakcji klientów"
+
+📈 ROZSZERZ KAŻDE STANOWISKO:
+- Punkt 1: Główne odpowiedzialności z kontekstem
+- Punkt 2: Kluczowe osiągnięcie z metrykami
+- Punkt 3: Proces/metodologia z rezultatami
+- Punkt 4: Współpraca/leadership z zespołem
+- Punkt 5: Innowacja/poprawa procesów
+- Punkt 6-7: Dodatkowe projekty/inicjatywy
+
+🎯 DODAJ KONTEKST BRANŻOWY:
+- "W dynamicznym środowisku startup'u"
+- "W międzynarodowej korporacji"
+- "Podczas cyfrowej transformacji"
+- "W środowisku Agile/Scrum"
+
+💪 ROZSZERZ UMIEJĘTNOŚCI:
+- "Python (Zaawansowany, 5+ lat) - Django, Flask, FastAPI"
+- "Zarządzanie projektami (Expert) - Agile, Scrum, budżety do 500k"
+- "Język angielski (C2) - prezentacje, negocjacje międzynarodowe"
 
 ❌ CZEGO NIE WOLNO CI ROBIĆ:
 - Usuwać jakichkolwiek informacji
@@ -141,16 +171,25 @@ ZACHOWAJ WSZYSTKIE INFORMACJE z oryginalnego CV i jedynie:
 - Skracać sekcji lub usuwać punktów
 - Zmieniać struktury CV
 
-📊 PRZYKŁADY POPRAWEK:
+📊 PRZYKŁADY TRANSFORMACJI DO 10,000 ZNAKÓW:
 
-PRZED: "Pracowałem jako programista"
-PO: "Pełniłem funkcję programisty, odpowiadając za rozwój aplikacji webowych"
+❌ SŁABE (50 znaków): "Pracowałem jako programista"
+✅ MOCNE (350 znaków): "Spearheaded development of scalable web applications serving 10,000+ daily users, utilizing Python/Django framework in agile environment. Led technical architecture decisions that improved system performance by 60% and reduced server costs by 40%. Mentored junior developers team of 5, establishing code review processes and best practices that decreased bugs by 75%. Collaborated with cross-functional teams to deliver 15+ features on time and within budget."
 
-PRZED: "Obsługa klientów"  
-PO: "Profesjonalna obsługa klientów, budowanie długoterminowych relacji biznesowych"
+❌ SŁABE (20 znaków): "Obsługa klientów"
+✅ MOCNE (280 znaków): "Orchestrated comprehensive customer success program, managing portfolio of 200+ premium clients with combined revenue of 2.5M PLN annually. Achieved 98% customer satisfaction rate through proactive relationship management and rapid issue resolution. Developed automated onboarding process that reduced client setup time by 50% and increased retention by 35%. Conducted quarterly business reviews with C-level executives, securing 90% contract renewals."
 
-PRZED: "Zarządzanie projektem"
-PO: "Zarządzanie projektem od fazy planowania do wdrożenia, koordynacja zespołu projektowego"
+❌ SŁABE (30 znaków): "Zarządzanie projektem"
+✅ MOCNE (420 znaków): "Pioneered end-to-end project management for digital transformation initiative worth 1.2M PLN, coordinating cross-functional teams of 25+ specialists across 5 departments. Implemented Agile/Scrum methodologies that accelerated delivery by 40% while maintaining 99% quality standards. Successfully delivered complex integration project 3 weeks ahead of schedule and 15% under budget. Established project governance framework and risk management protocols adopted company-wide. Presented project outcomes to board of directors, securing approval for phase 2 expansion valued at 2.8M PLN."
+
+🎯 KAŻDE DOŚWIADCZENIE MUSI MIEĆ:
+1. Silny czasownik akcji na początku
+2. Konkretne liczby/metryki
+3. Kontekst branżowy/środowiskowy  
+4. Rezultat biznesowy
+5. Metodologię/proces użyty
+6. Wpływ na zespół/organizację
+7. Osiągnięcia mierzalne
 
 FORMAT ODPOWIEDZI:
 
@@ -196,10 +235,19 @@ Zwróć zoptymalizowane CV w profesjonalnym HTML z formatowaniem:
 </body>
 </html>
 
+🎯 WYMAGANIA DŁUGOŚCI:
+- MINIMUM 10,000 znaków w finalnym CV
+- Każde stanowisko: 300-500 znaków opisów
+- Podsumowanie: 200-300 znaków z kluczowymi osiągnięciami
+- Umiejętności: rozszerzone z poziomami i latami doświadczenia
+- Wykształcenie: dodaj projekty, oceny, aktywności
+
 PAMIĘTAJ: 
-- CV po optymalizacji powinno być DŁUŻSZE, nie krótsze
+- CV MUSI być ZNACZNIE DŁUŻSZE - cel to 10,000+ znaków
 - ZACHOWAJ oryginalny układ i strukturę
-- ZACHOWAJ wszystkie zdjęcia i grafiki`
+- ZACHOWAJ wszystkie zdjęcia i grafiki
+- Używaj tylko faktów z oryginalnego CV, ale DRAMATYCZNIE je rozszerz
+- Każdy punkt musi być konkretny, mierzalny i pokazywać wartość biznesową`
 
     const userPrompt = jobPosting 
       ? `ORYGINALNE CV DO ULEPSZENIA:\n${currentCV}\n\nOFERTA PRACY (dostosuj słowa kluczowe):\n${jobPosting}\n\nUlepsz to CV zachowując wszystkie fakty, ale poprawiając język i dopasowanie.`
@@ -215,7 +263,7 @@ PAMIĘTAJ:
       ],
       model: 'llama-3.1-8b-instant',
       temperature: 0.3, // Niska temperatura = mniej kreatywności, więcej faktów
-      max_tokens: 16000, // Zwiększone dla długich CV
+      max_tokens: 32000, // Maksymalne rozszerzenie dla 10,000+ znaków CV
     })
 
     const optimizedCV = chatCompletion.choices[0].message.content

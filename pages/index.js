@@ -71,6 +71,7 @@ const [dragActive, setDragActive] = useState(false);
 const [uploadProgress, setUploadProgress] = useState(0);
 
 const [savedCV, setSavedCV] = useState('');
+const [showTemplateModal, setShowTemplateModal] = useState(false);
 
 const [errors, setErrors] = useState({});
 // Modal state control
@@ -503,6 +504,69 @@ useEffect(() => {
   }
 }, []);
 
+// Funkcja do parsowania plików CV
+const parseFileContent = async (file) => {
+  try {
+    console.log('📄 Parsing file:', file.name);
+    
+    const formData = new FormData();
+    formData.append('cv', file);
+
+    const response = await fetch('/api/parse-cv', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      setSavedCV(result.extractedText);
+      
+      // Save photo if extracted from CV
+      if (result.extractedPhoto) {
+        sessionStorage.setItem('pendingPhoto', result.extractedPhoto);
+        console.log('📸 Photo extracted and saved');
+      }
+      
+      console.log('✅ File parsed successfully:', {
+        textLength: result.extractedText.length,
+        hasPhoto: result.hasPhoto,
+        wordCount: result.wordCount
+      });
+      
+      // Pokaż sukces użytkownikowi
+      setToasts(prev => [...prev, {
+        id: Date.now(),
+        message: currentLanguage === 'pl' 
+          ? `✅ Plik ${result.fileName} został odczytany` 
+          : `✅ File ${result.fileName} parsed successfully`,
+        type: 'success'
+      }]);
+      
+    } else {
+      console.error('❌ Parsing failed:', result.error);
+      alert(currentLanguage === 'pl' 
+        ? `❌ ${result.error}` 
+        : `❌ Error: ${result.error}`
+      );
+      
+      // Reset file input
+      setFormData(prev => ({
+        ...prev,
+        cvFile: null,
+        cvFileName: ''
+      }));
+      setSavedCV('');
+    }
+  } catch (error) {
+    console.error('❌ Parse error:', error);
+    alert(currentLanguage === 'pl' 
+      ? '❌ Wystąpił błąd podczas odczytywania pliku' 
+      : '❌ Error reading file'
+    );
+  }
+};
+
 const handleFileInputChange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -539,12 +603,8 @@ const handleFileInputChange = (e) => {
     cvFileName: file.name
   }));
   
-  // Czytaj zawartość pliku
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    setSavedCV(event.target.result);
-  };
-  reader.readAsText(file);
+  // Parsuj zawartość pliku przez API
+  parseFileContent(file);
 };
 
 const handleDrag = (e) => {
@@ -594,11 +654,8 @@ const handleDrop = (e) => {
       cvFileName: file.name
     }));
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSavedCV(event.target.result);
-    };
-    reader.readAsText(file);
+    // Parsuj zawartość pliku przez API
+    parseFileContent(file);
   }
 };
 
@@ -617,11 +674,15 @@ const handleOptimizeNow = () => {
   setModalStep(1);
   setFormData({
     email: '',
+    cvFile: null,
+    cvFileName: '',
     cvText: '',
     jobText: '',
     acceptTerms: false
   });
   setErrors({});
+  setSavedCV(''); // Wyczyść zapisane CV
+  setUploadProgress(0); // Zresetuj progress
   document.body.style.overflow = 'hidden';
 };
 
@@ -775,7 +836,7 @@ showToast(
   }
 };
 
-const handlePlanSelect = (plan) => {
+const handlePlanSelect = async (plan) => {
   // Zapisz wybrany plan
   sessionStorage.setItem('pendingPlan', plan);
   
@@ -794,7 +855,7 @@ const handlePlanSelect = (plan) => {
   sessionStorage.setItem('selectedTemplate', 'pending'); // oznaczymy jako "do wyboru"
   
   console.log('📤 Przekierowuję do Stripe dla planu:', plan);
-  proceedToCheckout(plan, 'pending');
+  await proceedToCheckout(plan, 'pending');
 };
 
 const handlePayment = async (plan) => {
@@ -836,26 +897,85 @@ const handlePayment = async (plan) => {
   if (plan === 'basic') {
     // Basic - od razu do płatności z domyślnym szablonem
     sessionStorage.setItem('selectedTemplate', 'simple');
-    proceedToCheckout(plan, 'simple');
+    await proceedToCheckout(plan, 'simple');
   } else {
     // Pro/Premium - pokaż modal z szablonami
-    setShowMainModal(true); // Zamknij modal z cenami
+    setShowMainModal(false); // Zamknij modal z cenami
     setShowTemplateModal(true); // Otwórz modal z szablonami
   }
 };
 
+// Template selection handler
+const handleTemplateSelect = async (template) => {
+  const plan = sessionStorage.getItem('pendingPlan');
+  console.log('🎨 Template selected:', template, 'for plan:', plan);
+  
+  // Close template modal
+  setShowTemplateModal(false);
+  
+  // Save selected template
+  sessionStorage.setItem('selectedTemplate', template);
+  
+  // Proceed to checkout with selected template
+  await proceedToCheckout(plan, template);
+};
 
-// 2. DODAJ nową funkcję do przejścia do płatności:
-const proceedToCheckout = (plan, template) => {
+// 2. ENHANCED CHECKOUT - saves full CV data before Stripe
+const proceedToCheckout = async (plan, template) => {
   const email = sessionStorage.getItem('pendingEmail');
   const cvText = sessionStorage.getItem('pendingCV');
   const jobPosting = sessionStorage.getItem('pendingJob') || '';
+  const photoData = sessionStorage.getItem('pendingPhoto') || null;
   
-  const cvPreview = cvText.substring(0, 400);
-  const jobPreview = jobPosting.substring(0, 200);
+  console.log('🚀 Proceeding to checkout:', {
+    plan: plan,
+    email: email,
+    cvLength: cvText?.length || 0,
+    hasJob: !!jobPosting,
+    hasPhoto: !!photoData,
+    template: template
+  });
+
+  // Generate unique session ID for full data storage
+  const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   
-  // Przekieruj do Stripe (template ustawimy w success.js)
-  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}`;
+  try {
+    // Save FULL CV data before going to Stripe (no character limits!)
+    const response = await fetch('/api/save-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        cvData: cvText, // FULL CV TEXT - no truncation!
+        jobPosting: jobPosting,
+        email: email,
+        plan: plan,
+        template: template,
+        photo: photoData // Photo data preserved
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('✅ Full CV data saved, proceeding to Stripe...');
+      
+      // For Stripe metadata, use just preview (due to limits)
+      const cvPreview = cvText?.substring(0, 400) || '';
+      const jobPreview = jobPosting.substring(0, 200);
+      
+      // Pass our session ID to Stripe for later retrieval
+      window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}&fullSessionId=${sessionId}`;
+      
+    } else {
+      console.error('❌ Failed to save CV data:', result.error);
+      alert('Błąd podczas zapisywania danych. Spróbuj ponownie.');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error saving CV data:', error);
+    alert('Błąd podczas zapisywania danych. Spróbuj ponownie.');
+  }
 };
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
@@ -1180,7 +1300,7 @@ style={{
       🇬🇧 EN
     </button>
   </div>
-<button className="nav-cta" onClick={handleOptimizeNow}>
+<button className="nav-cta" onClick={handleOptimizeNow} data-testid="main-cta">
     {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
   </button>
 
@@ -1654,11 +1774,12 @@ style={{
           <div className="step-form">
             {/* EMAIL */}
             <div className="form-group">
-              <label className="form-label">
+              <label htmlFor="customerEmail" className="form-label">
                 {currentLanguage === 'pl' ? 'Email *' : 'Email *'}
               </label>
               <input
                 type="email"
+                id="customerEmail"
                 className={`email-input ${errors.email ? 'error' : ''}`}
                 placeholder={currentLanguage === 'pl' ? 'twoj@email.pl' : 'your@email.com'}
                 value={formData.email}
@@ -1778,10 +1899,11 @@ style={{
 
             {/* JOB POSTING (opcjonalne) */}
             <div className="form-group">
-              <label className="form-label">
+              <label htmlFor="jobPosting" className="form-label">
                 {currentLanguage === 'pl' ? 'Oferta pracy (opcjonalne)' : 'Job posting (optional)'}
               </label>
               <textarea
+                id="jobPosting"
                 className="job-textarea"
                 placeholder={currentLanguage === 'pl' 
                   ? 'Wklej ogłoszenie o pracę (opcjonalne)...' 
@@ -1826,13 +1948,17 @@ style={{
                 <div className="plan-name">Basic</div>
                 <div className="plan-price">19,99 zł</div>
                 <ul className="plan-features-compact">
-                  <li>✅ Optymalizacja CV</li>
+                  <li>✅ 1 optymalizacja CV</li>
                   <li>✅ 1 szablon</li>
                   <li>✅ Format PDF</li>
+                  <li>✅ Jednorazowa płatność</li>
                 </ul>
                 <button 
                   className="select-plan-button" 
                   onClick={() => handlePlanSelect('basic')}
+                  data-plan="basic"
+                  data-price="19.99"
+                  data-testid="plan-basic"
                 >
                   Wybierz Basic
                 </button>
@@ -1842,9 +1968,9 @@ style={{
               <div className="plan-card-compact gold">
                 <div className="popular-badge">POPULARNY</div>
                 <div className="plan-name">Gold</div>
-                <div className="plan-price">49 zł</div>
+                <div className="plan-price">49 zł/mies</div>
                 <ul className="plan-features-compact">
-                  <li>✅ Wszystko z Basic</li>
+                  <li>✅ 10 optymalizacji/miesiąc</li>
                   <li>✅ 3 szablony</li>
                   <li>✅ List motywacyjny</li>
                   <li>✅ PDF + DOCX</li>
@@ -1852,6 +1978,9 @@ style={{
                 <button 
                   className="select-plan-button gold" 
                   onClick={() => handlePlanSelect('gold')}
+                  data-plan="gold"
+                  data-price="49"
+                  data-testid="plan-gold"
                 >
                   Wybierz Gold
                 </button>
@@ -1860,16 +1989,19 @@ style={{
               {/* PREMIUM */}
               <div className="plan-card-compact premium">
                 <div className="plan-name">Premium</div>
-                <div className="plan-price">79 zł</div>
+                <div className="plan-price">79 zł/mies</div>
                 <ul className="plan-features-compact">
-                  <li>✅ Wszystko z Gold</li>
+                  <li>✅ 25 optymalizacji/miesiąc</li>
                   <li>✅ 7 szablonów</li>
                   <li>✅ LinkedIn profil</li>
-                  <li>✅ Priorytet support</li>
+                  <li>✅ Anuluj w każdej chwili</li>
                 </ul>
                 <button 
                   className="select-plan-button premium" 
                   onClick={() => handlePlanSelect('premium')}
+                  data-plan="premium"
+                  data-price="79"
+                  data-testid="plan-premium"
                 >
                   Wybierz Premium
                 </button>
@@ -1881,6 +2013,79 @@ style={{
     </div>
   </div>
 )}
+
+{/* Template Selection Modal */}
+{showTemplateModal && (
+  <div className="modal-overlay" onClick={() => setShowTemplateModal(false)} style={{zIndex: 999999}}>
+    <div className="modal-content template-modal" onClick={(e) => e.stopPropagation()}>
+      <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
+      
+      <div className="template-header">
+        <h2>{currentLanguage === 'pl' ? '🎨 Wybierz szablon' : '🎨 Choose template'}</h2>
+        <p>{currentLanguage === 'pl' ? 'Wybierz profesjonalny szablon dla swojego CV' : 'Choose a professional template for your CV'}</p>
+      </div>
+
+      <div className="modal-body">
+        <div className="templates-grid">
+          {/* Simple Template - Always available */}
+          <div className="template-card" onClick={() => handleTemplateSelect('simple')}>
+            <div className="template-icon">📄</div>
+            <h3>{currentLanguage === 'pl' ? 'Klasyczny' : 'Classic'}</h3>
+            <p>{currentLanguage === 'pl' ? 'Prosty i elegancki' : 'Simple and elegant'}</p>
+          </div>
+
+          {/* Modern Template */}
+          <div className="template-card" onClick={() => handleTemplateSelect('modern')}>
+            <div className="template-icon">💼</div>
+            <h3>{currentLanguage === 'pl' ? 'Nowoczesny' : 'Modern'}</h3>
+            <p>{currentLanguage === 'pl' ? 'Współczesny design' : 'Contemporary design'}</p>
+          </div>
+
+          {/* Executive Template */}
+          <div className="template-card" onClick={() => handleTemplateSelect('executive')}>
+            <div className="template-icon">👔</div>
+            <h3>{currentLanguage === 'pl' ? 'Kierowniczy' : 'Executive'}</h3>
+            <p>{currentLanguage === 'pl' ? 'Dla menedżerów' : 'For managers'}</p>
+          </div>
+
+          {/* Creative Template */}
+          <div className="template-card" onClick={() => handleTemplateSelect('creative')}>
+            <div className="template-icon">🎨</div>
+            <h3>{currentLanguage === 'pl' ? 'Kreatywny' : 'Creative'}</h3>
+            <p>{currentLanguage === 'pl' ? 'Dla branż kreatywnych' : 'For creative industries'}</p>
+          </div>
+
+          {/* Premium Templates (only for premium plan) */}
+          {sessionStorage.getItem('pendingPlan') === 'premium' && (
+            <>
+              <div className="template-card premium" onClick={() => handleTemplateSelect('tech')}>
+                <div className="template-badge">PREMIUM</div>
+                <div className="template-icon">💻</div>
+                <h3>{currentLanguage === 'pl' ? 'Tech' : 'Tech'}</h3>
+                <p>{currentLanguage === 'pl' ? 'Dla IT i technologii' : 'For IT and tech'}</p>
+              </div>
+
+              <div className="template-card premium" onClick={() => handleTemplateSelect('luxury')}>
+                <div className="template-badge">PREMIUM</div>
+                <div className="template-icon">💎</div>
+                <h3>{currentLanguage === 'pl' ? 'Luksusowy' : 'Luxury'}</h3>
+                <p>{currentLanguage === 'pl' ? 'Ekskluzywny design' : 'Exclusive design'}</p>
+              </div>
+
+              <div className="template-card premium" onClick={() => handleTemplateSelect('minimal')}>
+                <div className="template-badge">PREMIUM</div>
+                <div className="template-icon">⚪</div>
+                <h3>{currentLanguage === 'pl' ? 'Minimalistyczny' : 'Minimal'}</h3>
+                <p>{currentLanguage === 'pl' ? 'Czysty i prosty' : 'Clean and simple'}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
         {/* FAQ Section */}
         <div className="faq-section" id="faq">
           <div className="faq-container">
@@ -2633,6 +2838,13 @@ html {
   .nav-links.show .language-switcher {
     display: flex;
   }
+  
+  .lang-btn {
+    padding: 12px 20px !important;
+    min-height: 44px !important;
+    min-width: 60px !important;
+    font-size: 15px !important;
+  }
 }
 
 .nav-link {
@@ -3059,10 +3271,14 @@ html {
 .cv-preview {
   display: flex;
   align-items: center;
-  gap: 50px;
+  justify-content: center;
+  gap: 20px;
   perspective: 1200px;
   animation: fadeInUp 0.8s ease 0.5s both;
   transform-style: preserve-3d;
+  max-width: 100%;
+  overflow: visible;
+  flex-wrap: wrap;
 }
 
 .cv-before, .cv-after {
@@ -3070,14 +3286,16 @@ html {
   backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
-  padding: 32px;
-  width: 300px;
+  padding: 24px;
+  width: 280px;
+  max-width: calc(50vw - 30px);
   color: white;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-style: preserve-3d;
   position: relative;
   overflow: hidden;
+  flex-shrink: 1;
 }
 
 .cv-before:hover, .cv-after:hover {
@@ -3085,20 +3303,6 @@ html {
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.4);
 }
 
-.cv-before, .cv-after {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 32px;
-  width: 280px;
-  color: white;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  transition: all 0.4s ease;
-  transform-style: preserve-3d;
-  position: relative;
-  overflow: hidden;
-}
 
 .cv-before::before, .cv-after::before {
   content: '';
@@ -6299,6 +6503,33 @@ html {
   }
 }
 
+@media (max-width: 1024px) {
+  .cv-preview {
+    gap: 15px;
+    max-width: 90vw;
+    overflow: hidden;
+  }
+  
+  .cv-before, .cv-after {
+    max-width: calc(45vw - 20px);
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cv-preview {
+    flex-direction: column;
+    gap: 20px;
+    max-width: 100%;
+  }
+  
+  .cv-before, .cv-after {
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+  }
+}
+
 @media (max-width: 480px) {
   .hero-title {
     font-size: 32px;
@@ -6314,7 +6545,11 @@ html {
   }
   
   .cv-preview {
-    transform: scale(0.7);
+    transform: scale(0.9);
+  }
+  
+  .cv-before, .cv-after {
+    padding: 16px;
   }
 }
   
@@ -6574,6 +6809,19 @@ button:focus {
   
   .step-label {
     display: none;
+  }
+  
+  /* Minimum font sizes for accessibility */
+  span, small, .badge, .label {
+    font-size: 14px !important;
+    min-height: auto;
+  }
+  
+  /* Touch targets minimum size */
+  button, a, [role="button"], input[type="checkbox"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
   }
 }
 

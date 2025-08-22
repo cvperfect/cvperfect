@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "puppeteer": {
+      "command": "npm",
+      "args": ["run", "mcp-puppeteer"],
+      "env": {
+        "PUPPETEER_HEADLESS": "true",
+        "PUPPETEER_TIMEOUT": "30000",
+        "PUPPETEER_DEVTOOLS": "false"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx:*)",
+      "Bash(npm:*)", 
+      "Bash(node:*)",
+      "mcp__puppeteer__*",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "ui": {
+    "showMcpTools": false,
+    "showMcpStatus": false
+  }
+}

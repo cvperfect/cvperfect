@@ -1,0 +1,12 @@
+{
+  "sessionId": "test_audit_1755794360774",
+  "email": "test@audit.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Test CV data",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-21T16:39:20.781Z",
+  "processed": false,
+  "createdAt": 1755794360781
+}

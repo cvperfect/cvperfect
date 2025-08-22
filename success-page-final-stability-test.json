@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-08-21T20:03:07.636Z",
+  "testDuration": 10.013,
+  "apiCallsTotal": 0,
+  "apiCallsPerSecond": 0,
+  "cvContentDisplayed": true,
+  "templateCardsFound": 7,
+  "jsErrors": 0,
+  "stability": "STABLE",
+  "requests": []
+}

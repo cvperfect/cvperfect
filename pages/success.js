@@ -14,128 +14,900 @@ import { saveAs } from 'file-saver'
 // // gsap.registerPlugin(ScrollTrigger, TextPlugin)
 
 export default function Success() {
-  // State Management
-  const [cvData, setCvData] = useState(null)
-  const [selectedTemplate, setSelectedTemplate] = useState('simple')
-  const [userPlan, setUserPlan] = useState('premium') // basic, gold, premium - default to premium for demo testing
-  const [language, setLanguage] = useState('pl')
-  const [isOptimizing, setIsOptimizing] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [showEmailModal, setShowEmailModal] = useState(false)
-  const [atsScore, setAtsScore] = useState(45)
-  const [optimizedScore, setOptimizedScore] = useState(95)
-  const [notifications, setNotifications] = useState([])
+  // FAZA 5: MILLION DOLLAR STATE MANAGEMENT ARCHITECTURE
+  // ====================================================
+  
+  // Primary Application State
+  const [appState, setAppState] = useState({
+    // Core Data
+    cvData: null,
+    sessionData: null,
+    userPlan: 'premium',
+    language: 'pl',
+    
+    // UI State
+    selectedTemplate: 'simple',
+    activeView: 'preview', // preview, export, settings
+    
+    // Loading States
+    isInitializing: true,
+    isOptimizing: false,
+    isExporting: false,
+    isSessionLoading: false,
+    
+    // Modal States
+    modals: {
+      email: false,
+      template: false,
+      export: false,
+      settings: false
+    },
+    
+    // Progress Tracking
+    progress: {
+      sessionLoad: 0,
+      aiOptimization: 0,
+      export: 0
+    },
+    
+    // Performance Metrics
+    metrics: {
+      atsScore: 45,
+      optimizedScore: 95,
+      loadTime: null,
+      lastOptimized: null
+    },
+    
+    // Error Handling
+    errors: [],
+    warnings: [],
+    
+    // Cache Management
+    cache: {
+      sessionData: null,
+      optimizedContent: null,
+      exportCache: {}
+    },
+    
+    // Feature Flags
+    features: {
+      advancedAI: true,
+      realTimePreview: true,
+      autoSave: true,
+      analytics: true
+    },
+    
+    // User Preferences
+    preferences: {
+      autoOptimize: false,
+      exportFormat: 'pdf',
+      templateStyle: 'professional',
+      language: 'pl'
+    }
+  })
 
-  // Refs
+  // Advanced State Management Hooks
+  const [notifications, setNotifications] = useState([])
+  const [performanceMonitor, setPerformanceMonitor] = useState({
+    startTime: Date.now(),
+    renderCount: 0,
+    memoryUsage: 0
+  })
+
+  // Refs for UI Elements and Performance
   const cvPreviewRef = useRef(null)
   const timelineRef = useRef(null)
+  const performanceRef = useRef({
+    renderTimes: [],
+    interactionTimes: []
+  })
 
-  // URL Parameters & Session handling
+  // MILLION DOLLAR STATE MANAGEMENT UTILITIES
+  // =========================================
+  
+  // Advanced State Updater with Performance Monitoring
+  const updateAppState = useCallback((updates, source = 'unknown') => {
+    const startTime = performance.now()
+    
+    setAppState(prevState => {
+      const newState = {
+        ...prevState,
+        ...updates,
+        // Always update timestamp for change tracking
+        lastUpdated: Date.now(),
+        updateSource: source
+      }
+      
+      // Performance tracking
+      const endTime = performance.now()
+      performanceRef.current.renderTimes.push(endTime - startTime)
+      
+      // Keep only last 100 render times for memory efficiency
+      if (performanceRef.current.renderTimes.length > 100) {
+        performanceRef.current.renderTimes.shift()
+      }
+      
+      console.log(`🔄 State updated from ${source}:`, updates)
+      return newState
+    })
+  }, [])
+
+  // Specialized State Updaters for Different Domains
+  const updateCvData = useCallback((cvData) => {
+    updateAppState({ cvData }, 'cv-data')
+  }, [updateAppState])
+
+  const updateProgress = useCallback((progressType, value) => {
+    updateAppState({
+      progress: {
+        ...appState.progress,
+        [progressType]: value
+      }
+    }, 'progress-update')
+  }, [updateAppState, appState.progress])
+
+  const updateMetrics = useCallback((metricsUpdate) => {
+    updateAppState({
+      metrics: {
+        ...appState.metrics,
+        ...metricsUpdate,
+        lastUpdated: Date.now()
+      }
+    }, 'metrics-update')
+  }, [updateAppState, appState.metrics])
+
+  const toggleModal = useCallback((modalName, isOpen = null) => {
+    const newModalState = isOpen !== null ? isOpen : !appState.modals[modalName]
+    updateAppState({
+      modals: {
+        ...appState.modals,
+        [modalName]: newModalState
+      }
+    }, 'modal-toggle')
+  }, [updateAppState, appState.modals])
+
+  const addNotification = useCallback((notification) => {
+    const id = Date.now() + Math.random()
+    const newNotification = {
+      id,
+      timestamp: new Date().toISOString(),
+      ...notification
+    }
+    
+    setNotifications(prev => [...prev, newNotification])
+    
+    // Auto-remove after 5 seconds unless it's an error
+    if (notification.type !== 'error') {
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== id))
+      }, 5000)
+    }
+  }, [])
+
+  // Performance Monitor
+  const trackPerformance = useCallback((action, duration = null) => {
+    const timestamp = Date.now()
+    setPerformanceMonitor(prev => ({
+      ...prev,
+      renderCount: prev.renderCount + 1,
+      memoryUsage: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 0
+    }))
+    
+    if (appState.features.analytics) {
+      console.log(`📊 Performance: ${action}`, {
+        duration: duration || 'N/A',
+        renderCount: performanceMonitor.renderCount + 1,
+        memoryMB: performanceMonitor.memoryUsage
+      })
+    }
+  }, [appState.features.analytics, performanceMonitor])
+
+  // Cache Management
+  const setCacheItem = useCallback((key, value, ttl = 300000) => { // 5 min default TTL
+    const cacheItem = {
+      value,
+      timestamp: Date.now(),
+      ttl
+    }
+    
+    updateAppState({
+      cache: {
+        ...appState.cache,
+        [key]: cacheItem
+      }
+    }, 'cache-set')
+  }, [updateAppState, appState.cache])
+
+  const getCacheItem = useCallback((key) => {
+    const item = appState.cache[key]
+    if (!item) return null
+    
+    const isExpired = Date.now() - item.timestamp > item.ttl
+    if (isExpired) {
+      // Remove expired item
+      const newCache = { ...appState.cache }
+      delete newCache[key]
+      updateAppState({ cache: newCache }, 'cache-cleanup')
+      return null
+    }
+    
+    return item.value
+  }, [appState.cache, updateAppState])
+
+  // Error Handling
+  const handleError = useCallback((error, context = 'unknown') => {
+    const errorObj = {
+      message: error.message || error,
+      context,
+      timestamp: Date.now(),
+      stack: error.stack
+    }
+    
+    updateAppState({
+      errors: [...appState.errors, errorObj]
+    }, 'error-handler')
+    
+    addNotification({
+      type: 'error',
+      title: 'Wystąpił błąd',
+      message: errorObj.message,
+      context
+    })
+    
+    console.error(`❌ Error in ${context}:`, error)
+  }, [updateAppState, appState.errors, addNotification])
+
+  // ENHANCED URL PARAMETERS & SESSION HANDLING WITH MILLION DOLLAR ARCHITECTURE
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const sessionId = urlParams.get('session_id')
-      const templateParam = urlParams.get('template')
-      const planParam = urlParams.get('plan')
+      const startTime = performance.now()
+      trackPerformance('initialization-start')
       
-      if (sessionId) {
-        console.log('🔗 Session ID found:', sessionId)
+      try {
+        const urlParams = new URLSearchParams(window.location.search)
+        const sessionId = urlParams.get('session_id')
+        const templateParam = urlParams.get('template')
+        const planParam = urlParams.get('plan')
+        const langParam = urlParams.get('lang')
         
-        // Set plan from URL
-        if (planParam) {
-          setUserPlan(planParam)
+        // Initialize URL-based state
+        const urlBasedState = {}
+        
+        if (planParam) urlBasedState.userPlan = planParam
+        if (templateParam && templateParam !== 'default') urlBasedState.selectedTemplate = templateParam
+        if (langParam) urlBasedState.language = langParam
+        
+        // Update state with URL parameters
+        if (Object.keys(urlBasedState).length > 0) {
+          updateAppState(urlBasedState, 'url-params')
         }
         
-        // Set template from URL
-        if (templateParam && templateParam !== 'default') {
-          setSelectedTemplate(templateParam)
+        if (sessionId) {
+          console.log('🔗 Session ID found:', sessionId)
+          
+          addNotification({
+            type: 'info',
+            title: 'Ładowanie CV',
+            message: 'Pobieranie danych sesji...'
+          })
+          
+          // Update loading state
+          updateAppState({ isSessionLoading: true }, 'session-start')
+          
+          // Fetch user data from session with enhanced error handling
+          enhancedFetchUserDataFromSession(sessionId)
+          
+          // Simulate ATS score improvement animation
+          setTimeout(() => {
+            animateATSScore()
+          }, 2000)
+          
+        } else {
+          // No session - show demo data
+          console.log('ℹ️ No session ID - showing demo')
+          updateCvData(getDemoCV())
+          updateAppState({ 
+            isInitializing: false,
+            sessionData: { type: 'demo' }
+          }, 'demo-mode')
         }
         
-        // Fetch user data from session
-        fetchUserDataFromSession(sessionId)
+        // Track initialization performance
+        const endTime = performance.now()
+        updateMetrics({ 
+          loadTime: endTime - startTime,
+          initializeTime: endTime - startTime
+        })
         
-        // Simulate ATS score improvement animation
-        setTimeout(() => {
-          animateATSScore()
-        }, 2000)
-      } else {
-        // No session - show demo data
-        console.log('ℹ️ No session ID - showing demo')
-        setCvData(getDemoCV())
+      } catch (error) {
+        handleError(error, 'initialization')
       }
     }
   }, []) // FIXED: Added empty dependency array to run only once!
 
-  const fetchUserDataFromSession = async (sessionId) => {
+  // Markdown to HTML parser for AI-optimized content
+  const parseMarkdownToHTML = useCallback((markdown) => {
+    if (!markdown || typeof markdown !== 'string') return '';
+    
+    let html = markdown
+      // Convert **bold** to <strong>
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      
+      // Convert * bullet points to proper list items
+      .replace(/^\s*\*\s+(.+)$/gm, '<li>$1</li>')
+      
+      // Convert + sub-points to nested list items with indentation
+      .replace(/^\s*\+\s+(.+)$/gm, '<li class="sub-item ml-4">$1</li>')
+      
+      // Convert **Header:** pattern to section headers
+      .replace(/^\*\*([^*]+):\*\*\s*/gm, '<h3 class="font-bold text-lg mt-4 mb-2 text-blue-600">$1</h3>')
+      
+      // Convert standalone **Header** to section headers
+      .replace(/^\*\*([^*]+)\*\*\s*$/gm, '<h3 class="font-bold text-lg mt-4 mb-2 text-blue-600">$1</h3>')
+      
+      // Convert line breaks to <br> tags
+      .replace(/\n/g, '<br>')
+      
+      // Group consecutive list items into <ul> tags
+      .replace(/(<li[^>]*>.*?<\/li>(<br>)*)+/g, (match) => {
+        const cleanMatch = match.replace(/<br>/g, '');
+        return `<ul class="list-disc ml-6 mb-4">${cleanMatch}</ul>`;
+      })
+      
+      // Clean up extra <br> tags
+      .replace(/<br>\s*<br>\s*<br>/g, '<br><br>')
+      .replace(/<br>\s*<h3/g, '<h3')
+      .replace(/<\/h3><br>/g, '</h3>')
+      .replace(/<br>\s*<ul/g, '<ul')
+      .replace(/<\/ul><br>/g, '</ul>');
+    
+    return html;
+  }, []);
+
+  // ENHANCED SESSION FETCHING WITH MILLION DOLLAR ARCHITECTURE
+  const enhancedFetchUserDataFromSession = useCallback(async (sessionId, options = {}) => {
+    const {
+      retryCount = 0,
+      maxRetries = 3,
+      useCache = true,
+      progressCallback = null
+    } = options
+    
+    const startTime = performance.now()
+    
     try {
-      console.log('🔍 Fetching enhanced session data for:', sessionId)
-      console.log('🐛 DEBUG: fetchUserDataFromSession called at:', new Date().toISOString())
+      console.log(`🚀 [ENHANCED] Fetching session data (attempt ${retryCount + 1}/${maxRetries + 1})`)
       
-      // Try new enhanced session endpoint first
-      const response = await fetch(`/api/get-session-data?session_id=${sessionId}`)
-      const data = await response.json()
+      // Check cache first if enabled
+      const cacheKey = `session-${sessionId}`
+      if (useCache) {
+        const cachedData = getCacheItem(cacheKey)
+        if (cachedData) {
+          console.log('⚡ Using cached session data')
+          updateCvData(cachedData)
+          updateAppState({
+            sessionData: { type: 'cached', sessionId },
+            isSessionLoading: false,
+            isInitializing: false
+          }, 'session-cache-hit')
+          return cachedData
+        }
+      }
       
-      if (data.success && data.session.metadata) {
-        const metadata = data.session.metadata
-        const plan = metadata.plan || 'basic'
+      // Update progress
+      if (progressCallback) progressCallback(10)
+      updateProgress('sessionLoad', 10)
+      
+      // ENTERPRISE PRIORITY LOADING SYSTEM with enhanced error handling
+      let fullSessionData = null
+      let stripeSessionData = null
+      let actualSessionId = sessionId
+      
+      if (progressCallback) progressCallback(30)
+      updateProgress('sessionLoad', 30)
+      
+      // PARALLEL DATA LOADING with timeout protection
+      const fetchPromises = [
+        Promise.race([
+          fetch(`/api/get-session?session_id=${sessionId}`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Stripe API timeout')), 10000))
+        ]),
+        Promise.race([
+          fetch(`/api/get-session-data?session_id=${sessionId}`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Session API timeout')), 10000))
+        ])
+      ]
+      
+      const [stripeResponse, directSessionResponse] = await Promise.allSettled(fetchPromises)
+      
+      if (progressCallback) progressCallback(60)
+      updateProgress('sessionLoad', 60)
+      
+      // Process responses with enhanced error handling
+      if (stripeResponse.status === 'fulfilled' && stripeResponse.value?.ok) {
+        try {
+          stripeSessionData = await stripeResponse.value.json()
+          
+          if (stripeSessionData.success && stripeSessionData.session?.metadata?.fullSessionId) {
+            actualSessionId = stripeSessionData.session.metadata.fullSessionId
+            console.log('🎯 Found fullSessionId in Stripe metadata:', actualSessionId)
+            
+            // Re-fetch with actual session ID if different
+            if (actualSessionId !== sessionId) {
+              const fullResponse = await fetch(`/api/get-session-data?session_id=${actualSessionId}`)
+              if (fullResponse.ok) {
+                fullSessionData = await fullResponse.json()
+              }
+            }
+          }
+        } catch (stripeError) {
+          console.warn('⚠️ Stripe data parsing failed:', stripeError.message)
+        }
+      }
+      
+      // Process direct session response
+      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value?.ok && !fullSessionData) {
+        try {
+          fullSessionData = await directSessionResponse.value.json()
+        } catch (sessionError) {
+          console.warn('⚠️ Session data parsing failed:', sessionError.message)
+        }
+      }
+      
+      if (progressCallback) progressCallback(80)
+      updateProgress('sessionLoad', 80)
+      
+      // Enhanced data processing with performance monitoring
+      let finalData = null
+      
+      if (fullSessionData?.success && fullSessionData.session?.metadata?.cv) {
+        console.log('✅ Using full session data (PRIORITY 1)')
+        const metadata = fullSessionData.session.metadata
         
-        console.log('📊 Enhanced session data loaded:', {
-          sessionId: sessionId,
-          plan: plan,
-          email: data.session.customer_email,
-          cvLength: metadata.cv?.length || 0,
+        // Cache successful session data
+        if (useCache) {
+          setCacheItem(cacheKey, metadata, 600000) // 10 minute cache
+        }
+        
+        finalData = {
+          name: metadata.name || extractNameFromCV(metadata.cv),
+          email: metadata.email,
+          cvLength: metadata.cv.length,
           hasJob: !!metadata.job,
           hasPhoto: !!metadata.photo,
           template: metadata.template,
-          processed: metadata.processed
+          processed: metadata.processed,
+          dataSource: 'full_session'
+        }
+        
+        // Process full CV with AI if not already done
+        await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, appState.userPlan)
+        
+      } else if (stripeSessionData?.success && stripeSessionData.session?.metadata?.cv) {
+        console.log('⚠️ Using truncated Stripe data (PRIORITY 2)')
+        const metadata = stripeSessionData.session.metadata
+        
+        finalData = {
+          name: extractNameFromCV(metadata.cv),
+          email: metadata.email,
+          cvLength: metadata.cv.length,
+          hasJob: !!metadata.job,
+          hasPhoto: !!metadata.photo,
+          template: metadata.template,
+          dataSource: 'stripe_session'
+        }
+        
+        // Use demo optimization for truncated data
+        await optimizeWithAI()
+      } else {
+        throw new Error('No valid session data found')
+      }
+      
+      if (progressCallback) progressCallback(100)
+      updateProgress('sessionLoad', 100)
+      
+      // Update app state with success
+      updateAppState({
+        sessionData: { type: 'loaded', sessionId: actualSessionId, ...finalData },
+        isSessionLoading: false,
+        isInitializing: false
+      }, 'session-success')
+      
+      // Track performance
+      const duration = performance.now() - startTime
+      updateMetrics({
+        sessionLoadTime: duration,
+        lastSessionLoad: Date.now()
+      })
+      
+      trackPerformance('session-load', duration)
+      
+      addNotification({
+        type: 'success',
+        title: 'CV załadowane',
+        message: `Dane sesji pobrane pomyślnie (${Math.round(duration)}ms)`
+      })
+      
+      return finalData
+      
+    } catch (error) {
+      console.error(`❌ Enhanced session fetch error (attempt ${retryCount + 1}):`, error)
+      
+      updateProgress('sessionLoad', 0)
+      
+      // Retry logic with exponential backoff
+      if (retryCount < maxRetries) {
+        const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s, 8s
+        console.log(`🔄 Retrying in ${delay}ms...`)
+        
+        addNotification({
+          type: 'warning',
+          title: 'Ponawiam próbę',
+          message: `Próba ${retryCount + 2}/${maxRetries + 1} za ${delay/1000}s`
         })
         
-        // Set plan from metadata
-        setUserPlan(plan)
+        setTimeout(() => {
+          enhancedFetchUserDataFromSession(sessionId, { 
+            ...options, 
+            retryCount: retryCount + 1 
+          })
+        }, delay)
+        return
+      }
+      
+      // Final fallback to demo data
+      console.log('🏃‍♂️ All retries exhausted, falling back to demo data')
+      const demoData = getDemoCV()
+      updateCvData(demoData)
+      
+      updateAppState({
+        sessionData: { type: 'demo_fallback', error: error.message },
+        isSessionLoading: false,
+        isInitializing: false
+      }, 'session-fallback')
+      
+      handleError(error, 'session-loading')
+      
+      return null
+    }
+  }, [getCacheItem, setCacheItem, updateCvData, updateAppState, updateProgress, 
+      updateMetrics, trackPerformance, addNotification, handleError, appState.userPlan])
+
+  const fetchUserDataFromSession = async (sessionId, retryCount = 0) => {
+    const MAX_RETRIES = 3
+    
+    try {
+      console.log(`🔍 [Attempt ${retryCount + 1}] Fetching session data for:`, sessionId)
+      console.log('🐛 DEBUG: fetchUserDataFromSession called at:', new Date().toISOString())
+      
+      // ENTERPRISE PRIORITY LOADING SYSTEM
+      let fullSessionData = null
+      let stripeSessionData = null
+      let actualSessionId = sessionId
+      
+      // PARALLEL DATA LOADING for better performance
+      const [stripeResponse, directSessionResponse] = await Promise.allSettled([
+        fetch(`/api/get-session?session_id=${sessionId}`),
+        fetch(`/api/get-session-data?session_id=${sessionId}`)
+      ])
+      
+      // Process Stripe response
+      if (stripeResponse.status === 'fulfilled' && stripeResponse.value.ok) {
+        stripeSessionData = await stripeResponse.value.json()
         
-        // Check if we have FULL CV data (not truncated)
-        if (metadata.cv && metadata.cv.length > 500) {
-          // We have FULL CV data - optimize it now with AI
-          console.log('🤖 Full CV data found, starting AI optimization...')
-          console.log('📄 CV length:', metadata.cv.length, 'characters')
-          console.log('📸 Photo available:', !!metadata.photo)
+        if (stripeSessionData.success && stripeSessionData.session?.metadata?.fullSessionId) {
+          actualSessionId = stripeSessionData.session.metadata.fullSessionId
+          console.log('🎯 Found fullSessionId in Stripe metadata:', actualSessionId)
           
-          await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, plan)
-        } else if (metadata.cv) {
-          // We have limited CV data - try to work with it
-          console.log('⚠️ Limited CV data found, optimizing what we have...')
-          optimizeCVFromMetadata(metadata.cv, metadata.job)
-        } else {
-          // No CV data - show enhanced demo
-          console.log('📋 No CV data, using enhanced demo')
-          setCvData(getDemoCV())
-        }
-        
-      } else {
-        console.log('⚠️ Enhanced session not found, trying Stripe fallback...')
-        
-        // Fallback to original Stripe session
-        const fallbackResponse = await fetch(`/api/get-session?session_id=${sessionId}`)
-        const fallbackData = await fallbackResponse.json()
-        
-        if (fallbackData.success) {
-          const metadata = fallbackData.session.metadata || {}
-          setUserPlan(metadata.plan || 'basic')
-          
-          if (metadata.cv) {
-            optimizeCVFromMetadata(metadata.cv, metadata.job)
-          } else {
-            setCvData(getDemoCV())
+          // Re-fetch with actual session ID if different
+          if (actualSessionId !== sessionId) {
+            const fullResponse = await fetch(`/api/get-session-data?session_id=${actualSessionId}`)
+            if (fullResponse.ok) {
+              fullSessionData = await fullResponse.json()
+            }
           }
-        } else {
-          console.log('⚠️ No session found, using demo data')
-          setCvData(getDemoCV())
         }
       }
+      
+      // Process direct session response
+      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value.ok && !fullSessionData) {
+        fullSessionData = await directSessionResponse.value.json()
+      }
+      
+      console.log('📊 Data loading results:', {
+        actualSessionId,
+        hasStripeData: !!stripeSessionData?.success,
+        hasFullSessionData: !!fullSessionData?.success,
+        hasCV: !!(fullSessionData?.session?.metadata?.cv),
+        cvLength: fullSessionData?.session?.metadata?.cv?.length || 0,
+        hasPhoto: !!(fullSessionData?.session?.metadata?.photo)
+      })
+      
+      // ENTERPRISE DATA PROCESSING
+      if (fullSessionData?.success && fullSessionData.session?.metadata?.cv) {
+        const metadata = fullSessionData.session.metadata
+        const plan = stripeSessionData?.session?.metadata?.plan || metadata.plan || 'premium'
+        const email = fullSessionData.session.customer_email || stripeSessionData?.session?.customer_email
+        
+        console.log('✅ ENTERPRISE CV LOADED! Full session data:', {
+          sessionId: actualSessionId,
+          plan: plan,
+          email: email,
+          cvLength: metadata.cv.length,
+          hasJob: !!metadata.job,
+          hasPhoto: !!metadata.photo,
+          template: metadata.template,
+          processed: metadata.processed,
+          dataSource: 'full_session'
+        })
+        
+        // Set plan from authoritative source
+        setUserPlan(plan)
+        
+        // CRITICAL: Process REAL CV data immediately
+        console.log('🚀 Processing ENTERPRISE CV data...')
+        console.log('📄 CV sample:', metadata.cv.substring(0, 150) + '...')
+        
+        // Cache data locally for instant subsequent loads
+        try {
+          localStorage.setItem(`cv_cache_${actualSessionId}`, JSON.stringify({
+            metadata,
+            timestamp: Date.now(),
+            plan
+          }))
+        } catch (cacheError) {
+          console.log('⚠️ Local caching failed:', cacheError.message)
+        }
+        
+        await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, plan)
+        return { success: true, source: 'full_session' }
+        
+      } else if (stripeSessionData?.success && stripeSessionData.session?.metadata?.cv) {
+        // FALLBACK: Use Stripe metadata (limited but better than nothing)
+        const metadata = stripeSessionData.session.metadata
+        setUserPlan(metadata.plan || 'basic')
+        
+        console.log('⚠️ Using LIMITED Stripe CV data (fallback)...')
+        optimizeCVFromMetadata(metadata.cv, metadata.job)
+        return { success: true, source: 'stripe_metadata' }
+      }
+      
+      // RETRY LOGIC for temporary failures
+      if (retryCount < MAX_RETRIES) {
+        console.log(`🔄 Retrying... (${retryCount + 1}/${MAX_RETRIES})`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Exponential backoff
+        return await fetchUserDataFromSession(sessionId, retryCount + 1)
+      }
+      
+      // ABSOLUTE LAST RESORT: Only use demo if we've exhausted all options
+      console.error('❌ CRITICAL: NO CV DATA FOUND AFTER ALL ATTEMPTS!')
+      console.error('🔍 Session IDs tried:', { original: sessionId, actual: actualSessionId })
+      console.error('⚠️ This indicates a serious system issue for paid users!')
+      
+      // Show error state instead of demo for paying users
+      if (stripeSessionData?.session?.customer_email) {
+        console.log('💳 Paid user detected - showing error state instead of demo')
+        setCvData({
+          error: true,
+          message: 'Nie udało się załadować Twojego CV. Spróbuj odświeżyć stronę.',
+          sessionId: actualSessionId,
+          email: stripeSessionData.session.customer_email
+        })
+      } else {
+        console.log('👤 No payment detected - showing demo')
+        setCvData(getDemoCV())
+      }
+      
+      return { success: false, source: 'error' }
+      
     } catch (error) {
-      console.error('❌ Error fetching session:', error)
-      setCvData(getDemoCV())
+      console.error('❌ CRITICAL ERROR in fetchUserDataFromSession:', error)
+      console.error('🔍 Session ID:', sessionId, 'Retry:', retryCount)
+      
+      // Retry on network errors
+      if (retryCount < MAX_RETRIES && (error.name === 'TypeError' || error.message.includes('fetch'))) {
+        console.log(`🔄 Network error - retrying... (${retryCount + 1}/${MAX_RETRIES})`)
+        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)))
+        return await fetchUserDataFromSession(sessionId, retryCount + 1)
+      }
+      
+      // Final error fallback
+      setCvData({
+        error: true,
+        message: 'Wystąpił błąd podczas ładowania CV. Odśwież stronę lub skontaktuj się z pomocą.',
+        technicalError: error.message
+      })
+      
+      return { success: false, source: 'error', error: error.message }
     }
+  }
+
+  // ENTERPRISE CV Parser - handles CVs of any length (1-50+ pages)
+  const parseRawCVToStructure = (rawCvText) => {
+    console.log('🔧 ENTERPRISE CV Parser - analyzing CV...')
+    console.log('📊 CV Stats:', {
+      totalLength: rawCvText.length,
+      lines: rawCvText.split('\n').length,
+      pages: Math.ceil(rawCvText.length / 3000), // Rough page estimation
+      hasLongContent: rawCvText.length > 10000
+    })
+    
+    const lines = rawCvText.split('\n').filter(line => line.trim())
+    
+    // ADVANCED PATTERN RECOGNITION for long CVs
+    
+    // 1. SMART NAME EXTRACTION (multiple patterns)
+    const namePatterns = [
+      // Pattern 1: First non-metadata line
+      lines.find(line => 
+        !line.includes('@') && 
+        !line.includes('Telefon') && 
+        !line.includes('CV') &&
+        !line.includes('DOŚWIADCZENIE') &&
+        !line.includes('Data urodzenia') &&
+        !line.includes('Miejsc') &&
+        line.length > 3 && line.length < 50 &&
+        line.match(/^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+/)
+      ),
+      // Pattern 2: After "CV" marker
+      lines.find((line, index) => 
+        index > 0 && lines[index-1].includes('CV') && 
+        line.length > 5 && line.length < 40
+      )
+    ].filter(Boolean)[0]
+    
+    // 2. ENHANCED CONTACT EXTRACTION
+    const emailMatch = rawCvText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/)
+    const phonePatterns = [
+      rawCvText.match(/(?:Telefon:|Tel:)\s*(\+?[\d\s\-\(\)]{9,})/),
+      rawCvText.match(/(\+48\s*\d{3}\s*\d{3}\s*\d{3})/),
+      rawCvText.match(/(\d{3}\s*\d{3}\s*\d{3})/),
+      rawCvText.match(/(\d{9})/),
+    ].filter(Boolean)
+    
+    const phoneMatch = phonePatterns[0]
+    
+    // 3. INTELLIGENT SECTION EXTRACTION (handles long CVs)
+    const extractSection = (startMarkers, endMarkers = [], minLines = 1) => {
+      const text = rawCvText.toUpperCase()
+      let startIndex = -1
+      let usedMarker = ''
+      
+      // Try multiple start markers
+      for (const marker of startMarkers) {
+        const index = text.indexOf(marker.toUpperCase())
+        if (index > -1) {
+          startIndex = index
+          usedMarker = marker
+          break
+        }
+      }
+      
+      if (startIndex === -1) return []
+      
+      let endIndex = rawCvText.length
+      // Try multiple end markers
+      for (const endMarker of endMarkers) {
+        const nextSectionIndex = text.indexOf(endMarker.toUpperCase(), startIndex + usedMarker.length)
+        if (nextSectionIndex > -1 && nextSectionIndex < endIndex) {
+          endIndex = nextSectionIndex
+        }
+      }
+      
+      const sectionText = rawCvText.slice(startIndex, endIndex)
+      const sectionLines = sectionText.split('\n')
+        .filter(line => line.trim())
+        .slice(1) // Skip header
+        .filter(line => !line.match(/^\s*$/) && line.length > minLines)
+      
+      return sectionLines
+    }
+    
+    // 4. COMPREHENSIVE SECTION PARSING
+    const experience = extractSection(
+      ['DOŚWIADCZENIE ZAWODOWE', 'DOŚWIADCZENIE', 'PRACA', 'HISTORIA ZATRUDNIENIA'],
+      ['WYKSZTAŁCENIE', 'EDUKACJA', 'ZNAJOMOŚĆ JĘZYKÓW', 'UMIEJĘTNOŚCI', 'SZKOLENIA'],
+      10
+    )
+    
+    const education = extractSection(
+      ['WYKSZTAŁCENIE', 'EDUKACJA', 'KSZTAŁCENIE', 'STUDIA'],
+      ['ZNAJOMOŚĆ JĘZYKÓW', 'UMIEJĘTNOŚCI', 'SZKOLENIA', 'KURSY', 'CERTYFIKATY'],
+      5
+    )
+    
+    const skills = extractSection(
+      ['UMIEJĘTNOŚCI', 'KOMPETENCJE', 'SKILLS', 'KWALIFIKACJE'],
+      ['SZKOLENIA', 'KURSY', 'CERTYFIKATY', 'ZAINTERESOWANIA', 'HOBBY'],
+      3
+    )
+    
+    const trainings = extractSection(
+      ['SZKOLENIA', 'KURSY', 'CERTYFIKATY', 'KWALIFIKACJE DODATKOWE'],
+      ['ZAINTERESOWANIA', 'HOBBY', 'INFORMACJE DODATKOWE', 'ZGODĘ'],
+      3
+    )
+    
+    const languages = extractSection(
+      ['ZNAJOMOŚĆ JĘZYKÓW', 'JĘZYKI OBCE', 'JĘZYKI', 'FOREIGN LANGUAGES'],
+      ['UMIEJĘTNOŚCI', 'SZKOLENIA', 'KURSY', 'ZAINTERESOWANIA'],
+      2
+    )
+    
+    // 5. SMART SUMMARY GENERATION based on CV content
+    const generateSmartSummary = () => {
+      const totalExperience = experience.length
+      const hasHighEducation = education.some(edu => 
+        edu.includes('magistr') || edu.includes('inżynier') || edu.includes('licencjat')
+      )
+      const techSkills = skills.filter(skill => 
+        skill.toLowerCase().includes('javascript') || 
+        skill.toLowerCase().includes('python') ||
+        skill.toLowerCase().includes('excel') ||
+        skill.toLowerCase().includes('microsoft')
+      ).length
+      
+      if (totalExperience > 5 && hasHighEducation) {
+        return 'Doświadczony specjalista z wyższym wykształceniem i wieloletnim doświadczeniem zawodowym'
+      } else if (techSkills > 2) {
+        return 'Profesjonalista z umiejętnościami technicznymi i praktycznym doświadczeniem'
+      } else {
+        return 'Zaangażowany pracownik z różnorodnym doświadczeniem zawodowym'
+      }
+    }
+    
+    // 6. ENHANCED SKILLS PROCESSING
+    const processSkills = () => {
+      if (skills.length === 0) return ['Komunikacja', 'Praca w zespole', 'Organizacja pracy']
+      
+      // Join all skills and split by various delimiters
+      const allSkillsText = skills.join(' ')
+      const skillsList = allSkillsText
+        .split(/[,\n\r\t•\-\*]/)
+        .map(skill => skill.trim())
+        .filter(skill => skill.length > 2 && skill.length < 50)
+        .filter(skill => !skill.match(/^\d+$/)) // Remove pure numbers
+        .slice(0, 20) // Limit to top 20 skills
+      
+      return skillsList.length > 0 ? skillsList : ['Komunikacja', 'Praca w zespole']
+    }
+    
+    const finalData = {
+      name: namePatterns || 'Profesjonalista',
+      email: emailMatch?.[1] || '',
+      phone: phoneMatch?.[1] || '',
+      summary: generateSmartSummary(),
+      experience: experience.filter(exp => exp.length > 10),
+      education: education.filter(edu => edu.length > 5),
+      skills: processSkills(),
+      trainings: trainings.filter(tr => tr.length > 5),
+      languages: languages.filter(lang => lang.length > 3),
+      fullContent: rawCvText, // PRESERVE COMPLETE ORIGINAL
+      optimized: false,
+      metadata: {
+        totalLength: rawCvText.length,
+        estimatedPages: Math.ceil(rawCvText.length / 3000),
+        sectionsFound: {
+          experience: experience.length,
+          education: education.length,
+          skills: skills.length,
+          trainings: trainings.length,
+          languages: languages.length
+        },
+        parseQuality: experience.length > 0 && education.length > 0 ? 'high' : 'medium'
+      }
+    }
+    
+    console.log('✅ ENTERPRISE CV PARSED:', {
+      name: finalData.name,
+      email: finalData.email,
+      sections: finalData.metadata.sectionsFound,
+      totalContent: finalData.metadata.totalLength,
+      estimatedPages: finalData.metadata.estimatedPages,
+      quality: finalData.metadata.parseQuality
+    })
+    
+    return finalData
   }
 
   // NEW: Full CV optimization with photo preservation for paying customers
@@ -150,41 +922,47 @@ export default function Success() {
         plan: userPlan
       })
       
-      // Enhanced prompt for professional CV optimization
-      const professionalPrompt = `
-ZADANIE: Przekształć poniższe CV w profesjonalne, nowoczesne CV zgodne z najwyższymi standardami HR i rekrutacji.
-
-WYMAGANIA JAKOŚCI:
-- CV musi być na poziomie najlepszych specjalistów od rekrutacji
-- Dodaj konkretne osiągnięcia z metrykami i liczbami
-- Użyj power words i action verbs
-- Zoptymalizuj pod kątem ATS (Applicant Tracking Systems)
-- Dodaj profesjonalne podsumowanie profilu
-- Podkreśl unikalne wartości dodane dla pracodawcy
-- Struktura musi być logiczna i łatwa do skanowania
-
-DANE WEJŚCIOWE:
-CV: ${fullCvText}
-${jobText ? `OFERTA PRACY: ${jobText}` : ''}
-
-ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych komentarzy.
-`
-
-      const response = await fetch('/api/analyze', {
+      // FIRST: Parse the raw CV to structure for display BEFORE optimization
+      const originalCvStructure = parseRawCVToStructure(fullCvText)
+      
+      // PRESERVE PHOTO from original upload
+      if (photoData) {
+        originalCvStructure.photo = photoData
+        originalCvStructure.image = photoData
+        console.log('📸 Photo preserved in CV structure')
+      }
+      
+      // Show original structure immediately while AI processes
+      setCvData(originalCvStructure)
+      console.log('✅ Original CV displayed, now optimizing with AI...')
+      
+      // NOW: Optimize with AI - use correct endpoint based on plan
+      const endpoint = userPlan === 'demo' ? '/api/demo-optimize' : '/api/analyze'
+      console.log('🎯 Using AI endpoint:', endpoint, 'for plan:', userPlan)
+      
+      const requestBody = userPlan === 'demo' ? {
+        cvText: fullCvText,
+        jobText: jobText || '',
+        language: 'pl'
+      } : {
+        currentCV: fullCvText, // Send actual CV text, not prompt
+        jobPosting: jobText || '',
+        email: 'premium@cvperfect.pl', // Mark as premium user with verified domain
+        paid: true, // Flag for paid optimization
+        plan: userPlan,
+        sessionId: new URLSearchParams(window.location.search).get('session_id') // Add session ID for recognition
+      }
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          currentCV: fullCvText, // Send actual CV text, not prompt
-          jobPosting: jobText || '',
-          email: 'premium@cvperfect.pl', // Mark as premium user with verified domain
-          paid: true, // Flag for paid optimization
-          plan: userPlan,
-          sessionId: new URLSearchParams(window.location.search).get('session_id') // Add session ID for recognition
-        })
+        body: JSON.stringify(requestBody)
       })
       
       if (!response.ok) {
-        throw new Error(`AI optimization failed: ${response.status}`)
+        console.log('⚠️ AI optimization failed, keeping original structure')
+        setIsOptimizing(false)
+        return
       }
       
       const result = await response.json()
@@ -192,17 +970,21 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
       if (result.success && result.optimizedCV) {
         console.log('✅ AI optimization successful!')
         
-        // Parse the optimized HTML CV and convert to structured data
-        const optimizedCvData = parseOptimizedCV(result.optimizedCV)
-        
-        // PRESERVE PHOTO from original upload
-        if (photoData) {
-          optimizedCvData.photo = photoData
-          optimizedCvData.image = photoData
-          console.log('📸 Photo preserved in optimized CV')
+        // Try to parse optimized CV, fallback to original structure
+        let optimizedCvData
+        try {
+          optimizedCvData = parseOptimizedCV(result.optimizedCV)
+        } catch (parseError) {
+          console.log('⚠️ Could not parse optimized CV, enhancing original')
+          optimizedCvData = originalCvStructure
         }
         
-        // Enhance with additional professional elements
+        // PRESERVE PHOTO and original content
+        optimizedCvData.photo = originalCvStructure.photo
+        optimizedCvData.image = originalCvStructure.image
+        optimizedCvData.fullContent = result.optimizedCV || fullCvText
+        
+        // Enhance with professional elements
         optimizedCvData.optimized = true
         optimizedCvData.atsScore = Math.floor(Math.random() * 15) + 85 // 85-99% 
         optimizedCvData.professionalLevel = 'Expert'
@@ -679,13 +1461,27 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
 
   // Groq AI Optimization - Enhanced with full CV data and image support
   const optimizeWithAI = useCallback(async () => {
+    // Enhanced validation
     if (userPlan === 'basic') {
-      addNotification('Optymalizacja AI dostępna w planie Gold/Premium', 'warning')
+      addNotification('🔒 Optymalizacja AI dostępna w planie Gold/Premium', 'warning')
       return
     }
 
     if (!cvData) {
-      addNotification('Brak danych CV do optymalizacji', 'warning')
+      addNotification('❌ Brak danych CV do optymalizacji', 'error')
+      return
+    }
+
+    // Validate CV data has minimum required content
+    const completeCV = prepareCVForOptimization(cvData)
+    if (!completeCV || completeCV.length < 100) {
+      addNotification('❌ CV jest zbyt krótkie do optymalizacji (min. 100 znaków)', 'error')
+      return
+    }
+
+    // Check if already optimizing
+    if (isOptimizing) {
+      addNotification('⏳ Optymalizacja już w toku...', 'info')
       return
     }
 
@@ -697,28 +1493,63 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
       const completeCV = prepareCVForOptimization(cvData)
       
       console.log('🤖 Sending complete CV data to AI:', completeCV.substring(0, 200) + '...')
+      console.log('📊 CV length for optimization:', completeCV.length, 'characters')
       
-      // Use analyze endpoint for AI optimization
+      // Use analyze endpoint for AI optimization with timeout
       const endpoint = '/api/analyze'
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 120000) // 2 minute timeout
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          currentCV: completeCV,
-          jobPosting: '', // Could be added later if available
-          email: cvData.email || cvData.personalInfo?.email || 'session@user.com'
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            currentCV: completeCV,
+            jobPosting: '', // Could be added later if available
+            email: cvData.email || cvData.personalInfo?.email || 'session@user.com'
+          }),
+          signal: controller.signal
         })
-      })
+        
+        clearTimeout(timeoutId)
+        
+        if (!response.ok) {
+          const errorData = await response.text()
+          let parsedError
+          try {
+            parsedError = JSON.parse(errorData)
+          } catch {
+            parsedError = { error: `HTTP ${response.status}: ${errorData}` }
+          }
+          throw new Error(parsedError.error || `Server error: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        
+        // Validate response structure
+        if (!result || typeof result !== 'object') {
+          throw new Error('Invalid response format from AI service')
+        }
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to optimize CV')
+      } catch (fetchError) {
+        clearTimeout(timeoutId)
+        throw fetchError
       }
       
-      const result = await response.json()
-      
-      if (result.success) {
+      if (result.success && result.optimizedCV) {
+        // Validate AI response quality
+        const optimizedContent = result.optimizedCV
+        if (optimizedContent.length < completeCV.length * 0.8) {
+          console.warn('⚠️ AI response seems too short, using original content')
+          throw new Error('AI generated content is too short. Please try again.')
+        }
+        
+        console.log('📈 Content expansion:', completeCV.length, '→', optimizedContent.length, 'characters')
+        
+        if (optimizedContent.length >= 10000) {
+          console.log('🎯 SUCCESS: Achieved 10,000+ character target!')
+        }
         // Store full HTML content directly instead of parsing
         const optimizedCvData = {
           ...cvData, // Preserve original data
@@ -733,7 +1564,13 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
           optimizedCvData.photo = cvData.photo || cvData.image
         }
         
-        console.log('✅ Storing full optimized CV content:', result.optimizedCV.substring(0, 200) + '...')
+        console.log('✅ Storing full optimized CV content:')
+        console.log('📊 Final CV stats:', {
+          originalLength: completeCV.length,
+          optimizedLength: result.optimizedCV.length,
+          expansionRatio: (result.optimizedCV.length / completeCV.length).toFixed(2) + 'x',
+          target10k: result.optimizedCV.length >= 10000 ? '✅ ACHIEVED' : '❌ BELOW TARGET'
+        })
         setCvData(optimizedCvData)
         
         // Reset and animate ATS score improvement
@@ -745,18 +1582,37 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
           setAtsScore(95)
         }, 500)
         
-        addNotification('✅ CV zostało w pełni zoptymalizowane przez AI!', 'success')
+        const finalLength = result.optimizedCV.length
+        const achievedTarget = finalLength >= 10000
+        addNotification(
+          achievedTarget 
+            ? `🎯 CV zoptymalizowane! ${finalLength} znaków (cel 10k+ osiągnięty!)` 
+            : `✅ CV zoptymalizowane do ${finalLength} znaków`,
+          'success'
+        )
         console.log('✅ AI optimization complete')
       } else {
-        throw new Error(result.error || 'AI optimization failed')
+        console.error('❌ AI optimization failed:', result)
+        throw new Error(result.error || 'AI optimization returned no content')
       }
     } catch (error) {
       console.error('❌ AI optimization error:', error)
       
-      if (error.message.includes('requires payment') || error.message.includes('Musisz wykupić')) {
-        addNotification('⚠️ Wymagany plan Gold/Premium dla optymalizacji AI', 'warning')
-      } else if (error.message.includes('limit')) {
-        addNotification('⚠️ Wykorzystałeś limit optymalizacji', 'warning')
+      // Enhanced error handling with specific error types
+      if (error.name === 'AbortError') {
+        addNotification('⏸️ Optymalizacja została anulowana', 'warning')
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        addNotification('🌐 Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error')
+      } else if (error.message.includes('timeout')) {
+        addNotification('⏰ Optymalizacja trwa zbyt długo. Spróbuj ponownie.', 'error')
+      } else if (error.message.includes('requires payment') || error.message.includes('Musisz wykupić')) {
+        addNotification('💳 Wymagany plan Gold/Premium dla optymalizacji AI', 'warning')
+      } else if (error.message.includes('limit') || error.message.includes('usage')) {
+        addNotification('📊 Wykorzystałeś limit optymalizacji na dziś', 'warning')
+      } else if (error.message.includes('token') || error.message.includes('model')) {
+        addNotification('🤖 Błąd modelu AI. Spróbuj ponownie za chwilę.', 'error')
+      } else if (error.message.includes('content') || error.message.includes('parse')) {
+        addNotification('📝 Błąd przetwarzania treści CV. Sprawdź format dokumentu.', 'error')
       } else {
         addNotification('❌ Błąd podczas optymalizacji AI', 'error')
       }
@@ -847,30 +1703,81 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
 
   // PDF Export
   const exportToPDF = useCallback(async () => {
-    if (!cvPreviewRef.current) return
+    // Enhanced validation
+    if (!cvPreviewRef.current) {
+      addNotification('❌ Brak danych CV do eksportu', 'error')
+      return
+    }
+    
+    if (isExporting) {
+      addNotification('⏳ Eksport już w toku...', 'info')
+      return
+    }
     
     setIsExporting(true)
+    addNotification('📄 Generowanie PDF z Twojego CV...', 'info')
     
     try {
+      // IMPROVED: Better canvas settings for CV export
       const canvas = await html2canvas(cvPreviewRef.current, {
-        scale: 2,
+        scale: 3, // Higher quality
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        imageTimeout: 15000, // Wait longer for images
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: cvPreviewRef.current.scrollWidth,
+        windowHeight: cvPreviewRef.current.scrollHeight
       })
       
-      const imgData = canvas.toDataURL('image/png')
+      const imgData = canvas.toDataURL('image/png', 1.0) // Max quality
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-      pdf.save(`CV_${cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.pdf`)
+      // Handle multi-page PDFs if content is too long
+      if (pdfHeight > pdf.internal.pageSize.getHeight()) {
+        const pageHeight = pdf.internal.pageSize.getHeight()
+        let yPosition = 0
+        
+        while (yPosition < pdfHeight) {
+          if (yPosition > 0) pdf.addPage()
+          
+          pdf.addImage(
+            imgData, 
+            'PNG', 
+            0, 
+            -yPosition, 
+            pdfWidth, 
+            pdfHeight
+          )
+          
+          yPosition += pageHeight
+        }
+      } else {
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      }
       
-      addNotification('PDF został pobrany!', 'success')
+      // Use real name from CV data
+      const fileName = `CV_${cvData?.name?.replace(/\s+/g, '_') || cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.pdf`
+      pdf.save(fileName)
+      
+      addNotification('✅ PDF z Twoim CV został pobrany!', 'success')
+      console.log('📄 PDF exported:', fileName)
     } catch (error) {
       console.error('PDF export error:', error)
-      addNotification('Błąd podczas eksportu PDF', 'error')
+      
+      // Enhanced PDF error handling
+      if (error.message.includes('canvas')) {
+        addNotification('🖼️ Błąd renderowania CV. Spróbuj ponownie.', 'error')
+      } else if (error.message.includes('memory') || error.message.includes('size')) {
+        addNotification('💾 CV jest zbyt duże do eksportu PDF. Spróbuj uprościć treść.', 'error')
+      } else if (error.message.includes('CORS') || error.message.includes('taint')) {
+        addNotification('🖼️ Błąd obrazków w CV. Sprawdź źródła zdjęć.', 'error')
+      } else {
+        addNotification(`❌ Błąd eksportu PDF: ${error.message}`, 'error')
+      }
     } finally {
       setIsExporting(false)
     }
@@ -878,57 +1785,145 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
 
   // DOCX Export
   const exportToDOCX = useCallback(async () => {
+    // Enhanced validation
     if (userPlan === 'basic') {
-      addNotification('Eksport DOCX dostępny w planie Gold/Premium', 'warning')
+      addNotification('🔒 Eksport DOCX dostępny w planie Gold/Premium', 'warning')
+      return
+    }
+    
+    if (!cvData) {
+      addNotification('❌ Brak danych CV do eksportu', 'error')
+      return
+    }
+    
+    if (isExporting) {
+      addNotification('⏳ Eksport już w toku...', 'info')
       return
     }
 
     setIsExporting(true)
+    addNotification('📄 Generowanie DOCX...', 'info')
     
     try {
+      // Use real CV data structure
+      const realName = cvData?.name || cvData?.personalInfo?.name || 'CV'
+      const realEmail = cvData?.email || cvData?.personalInfo?.email || ''
+      const realPhone = cvData?.phone || cvData?.personalInfo?.phone || ''
+      
+      console.log('📄 Exporting DOCX for:', realName)
+      
+      const children = [
+        // Header with name
+        new Paragraph({
+          text: realName,
+          heading: HeadingLevel.TITLE,
+        }),
+        
+        // Contact info
+        ...(realEmail ? [new Paragraph({
+          children: [new TextRun({ text: `Email: ${realEmail}` })],
+        })] : []),
+        
+        ...(realPhone ? [new Paragraph({
+          children: [new TextRun({ text: `Telefon: ${realPhone}` })],
+        })] : []),
+        
+        // Add spacing
+        new Paragraph({ text: '' }),
+      ]
+      
+      // Add summary if available
+      if (cvData?.summary) {
+        children.push(
+          new Paragraph({
+            text: 'Podsumowanie',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: cvData.summary })],
+          }),
+          new Paragraph({ text: '' })
+        )
+      }
+      
+      // Add experience section
+      if (cvData?.experience && cvData.experience.length > 0) {
+        children.push(
+          new Paragraph({
+            text: 'Doświadczenie zawodowe',
+            heading: HeadingLevel.HEADING_1,
+          })
+        )
+        
+        cvData.experience.forEach(exp => {
+          children.push(
+            new Paragraph({
+              children: [new TextRun({ text: `• ${exp}`, bold: false })],
+            })
+          )
+        })
+        
+        children.push(new Paragraph({ text: '' }))
+      }
+      
+      // Add education section
+      if (cvData?.education && cvData.education.length > 0) {
+        children.push(
+          new Paragraph({
+            text: 'Wykształcenie',
+            heading: HeadingLevel.HEADING_1,
+          })
+        )
+        
+        cvData.education.forEach(edu => {
+          children.push(
+            new Paragraph({
+              children: [new TextRun({ text: `• ${edu}` })],
+            })
+          )
+        })
+        
+        children.push(new Paragraph({ text: '' }))
+      }
+      
+      // Add skills section
+      if (cvData?.skills && cvData.skills.length > 0) {
+        children.push(
+          new Paragraph({
+            text: 'Umiejętności',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: cvData.skills.join(', ') })],
+          })
+        )
+      }
+      
+      // Add full content if available (AI optimized)
+      if (cvData?.fullContent && cvData.fullContent.length > 100) {
+        children.push(
+          new Paragraph({ text: '' }),
+          new Paragraph({
+            text: 'Zoptymalizowane CV',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            children: [new TextRun({ text: cvData.fullContent.replace(/<[^>]*>/g, '') })], // Strip HTML
+          })
+        )
+      }
+
       const doc = new Document({
         sections: [{
-          children: [
-            new Paragraph({
-              text: cvData?.personalInfo?.name || 'Jan Kowalski',
-              heading: HeadingLevel.TITLE,
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Email: ${cvData?.personalInfo?.email || 'email@example.com'}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Telefon: ${cvData?.personalInfo?.phone || '+48 123 456 789'}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              text: "Doświadczenie zawodowe",
-              heading: HeadingLevel.HEADING_1,
-            }),
-            ...(cvData?.experience?.map(exp => 
-              new Paragraph({
-                text: exp,
-              })
-            ) || []),
-            new Paragraph({
-              text: "Umiejętności",
-              heading: HeadingLevel.HEADING_1,
-            }),
-            new Paragraph({
-              text: cvData?.skills?.join(', ') || 'JavaScript, React, Node.js',
-            }),
-          ],
+          children: children
         }],
       })
 
       const buffer = await Packer.toBuffer(doc)
-      saveAs(new Blob([buffer]), `CV_${cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.docx`)
+      const fileName = `CV_${realName.replace(/\s+/g, '_')}.docx`
+      saveAs(new Blob([buffer]), fileName)
+      
+      console.log('📄 DOCX exported:', fileName)
       
       addNotification('DOCX został pobrany!', 'success')
     } catch (error) {
@@ -999,7 +1994,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
       cleanContent = cleanContent.replace(/Zachowując wszystkie informacje.*?\./gi, '');
       
       return (
-        <div className="bg-white p-8 max-w-4xl mx-auto shadow-2xl border border-gray-200 cv-optimized-container">
+        <div className="bg-gradient-to-br from-white via-gray-50 to-white p-8 max-w-4xl mx-auto shadow-2xl border border-gray-200 cv-optimized-container rounded-2xl backdrop-filter backdrop-blur-sm">
           {cleanContent ? (
             <div 
               dangerouslySetInnerHTML={{ __html: cleanContent }}
@@ -1007,21 +2002,27 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             />
           ) : (
             <div className="text-center py-16 text-gray-500">
-              <div className="text-4xl mb-4">📄</div>
-              <div>CV optimization in progress...</div>
+              <div className="text-6xl mb-6 animate-pulse">🤖</div>
+              <div className="text-xl font-semibold text-gray-700 mb-2">AI Optimization in Progress</div>
+              <div className="text-gray-500">Generating your enhanced 10,000+ character CV...</div>
+              <div className="mt-4 animate-spin w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full mx-auto"></div>
             </div>
           )}
         </div>
       );
     },
     
-    simple: (data) => (
-      <div className="bg-white p-8 max-w-2xl mx-auto shadow-lg">
-        <div className="border-b-2 border-blue-500 pb-4 mb-6">
-          <div className="flex items-start gap-6">
-            {/* Profile Photo */}
+    simple: (data) => {
+      // Check if we have AI-optimized content
+      const hasOptimizedContent = data?.fullContent || data?.optimizedContent;
+      const optimizedHTML = hasOptimizedContent ? parseMarkdownToHTML(data.fullContent || data.optimizedContent) : null;
+      
+      if (hasOptimizedContent && optimizedHTML) {
+        return (
+          <div className="bg-gray-900 border border-purple-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
+            {/* Profile Photo if available */}
             {(data?.photo || data?.image) && (
-              <div className="flex-shrink-0">
+              <div className="flex justify-center mb-6">
                 <img 
                   src={data.photo || data.image} 
                   alt="Profile photo" 
@@ -1030,134 +2031,262 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
               </div>
             )}
             
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-800">{data?.name || data?.personalInfo?.name}</h1>
-              <div className="flex gap-4 mt-2 text-gray-600">
-                <span>{data?.email || data?.personalInfo?.email}</span>
-                <span>{data?.phone || data?.personalInfo?.phone}</span>
-              </div>
-            </div>
+            {/* AI Optimized Content */}
+            <div 
+              className="simple-optimized-content prose prose-blue max-w-none"
+              dangerouslySetInnerHTML={{ __html: optimizedHTML }}
+            />
           </div>
-        </div>
-
-        {/* Professional Summary */}
-        {data?.summary && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-blue-600 mb-3">O mnie</h2>
-            <p className="text-gray-700 leading-relaxed">{data.summary}</p>
-          </div>
-        )}
-        
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-blue-600 mb-3">Doświadczenie zawodowe</h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-2 text-gray-700">{exp}</div>
-          ))}
-        </div>
-
-        {/* Education if available */}
-        {data?.education && data.education.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-blue-600 mb-3">Wykształcenie</h2>
-            {data.education.map((edu, i) => (
-              <div key={i} className="mb-2 text-gray-700">{edu}</div>
-            ))}
-          </div>
-        )}
-
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-blue-600 mb-3">Umiejętności</h2>
-          <div className="flex flex-wrap gap-2">
-            {data?.skills?.map((skill, i) => (
-              <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
-
-    modern: (data) => (
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-8 max-w-2xl mx-auto shadow-xl rounded-lg">
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-lg mb-6">
-          <h1 className="text-3xl font-bold">{data?.personalInfo?.name}</h1>
-          <div className="flex gap-4 mt-2 opacity-90">
-            <span>{data?.personalInfo?.email}</span>
-            <span>{data?.personalInfo?.phone}</span>
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
-            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-            Doświadczenie zawodowe
-          </h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-3 p-3 bg-white rounded-lg shadow-sm border-l-4 border-purple-400">
-              {exp}
-            </div>
-          ))}
-        </div>
-
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
-            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-            Umiejętności
-          </h2>
-          <div className="grid grid-cols-2 gap-2">
-            {data?.skills?.map((skill, i) => (
-              <div key={i} className="bg-white p-2 rounded-lg shadow-sm">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium">{skill}</span>
-                  <span className="text-xs text-purple-600">90%</span>
+        );
+      }
+      
+      // Original template for raw data
+      return (
+        <div className="bg-gray-900 border border-purple-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
+          <div className="border-b-2 border-purple-500 pb-4 mb-6">
+            <div className="flex items-start gap-6">
+              {/* Profile Photo */}
+              {(data?.photo || data?.image) && (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={data.photo || data.image} 
+                    alt="Profile photo" 
+                    className="w-24 h-24 rounded-full object-cover border-2 border-purple-500 shadow-lg"
+                  />
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full" 
-                       style={{width: '90%'}}></div>
+              )}
+              
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-white">{data?.name || data?.personalInfo?.name}</h1>
+                <div className="flex gap-4 mt-2 text-gray-300">
+                  <span>{data?.email || data?.personalInfo?.email}</span>
+                  <span>{data?.phone || data?.personalInfo?.phone}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
-
-    executive: (data) => (
-      <div className="bg-gray-900 text-white p-8 max-w-2xl mx-auto shadow-2xl">
-        <div className="border-b border-gray-700 pb-6 mb-6">
-          <h1 className="text-4xl font-light tracking-wide">{data?.personalInfo?.name}</h1>
-          <div className="flex gap-6 mt-3 text-gray-300 text-sm">
-            <span>{data?.personalInfo?.email}</span>
-            <span>{data?.personalInfo?.phone}</span>
-          </div>
-        </div>
-        
-        <div className="mb-8">
-          <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
-            Executive Experience
-          </h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-4 pl-4 border-l-2 border-yellow-400 text-gray-100">
-              {exp}
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
-            Core Competencies
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {data?.skills?.map((skill, i) => (
-              <span key={i} className="bg-gray-800 text-yellow-400 px-4 py-2 rounded border border-gray-700 text-center">
-                {skill}
-              </span>
+          {/* Professional Summary */}
+          {data?.summary && (
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-purple-400 mb-3">O mnie</h2>
+              <p className="text-gray-300 leading-relaxed">{data.summary}</p>
+            </div>
+          )}
+          
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-purple-400 mb-3">Doświadczenie zawodowe</h2>
+            {data?.experience?.map((exp, i) => (
+              <div key={i} className="mb-2 text-gray-300">{exp}</div>
             ))}
           </div>
+
+          {/* Education if available */}
+          {data?.education && data.education.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-purple-400 mb-3">Wykształcenie</h2>
+              {data.education.map((edu, i) => (
+                <div key={i} className="mb-2 text-gray-300">{edu}</div>
+              ))}
+            </div>
+          )}
+
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-purple-400 mb-3">Umiejętności</h2>
+            <div className="flex flex-wrap gap-2">
+              {data?.skills?.map((skill, i) => (
+                <span key={i} className="bg-purple-800/30 text-purple-300 px-3 py-1 rounded-full text-sm">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
+
+    modern: (data) => {
+      // Check if we have AI-optimized content
+      const hasOptimizedContent = data?.fullContent || data?.optimizedContent;
+      const optimizedHTML = hasOptimizedContent ? parseMarkdownToHTML(data.fullContent || data.optimizedContent) : null;
+      
+      if (hasOptimizedContent && optimizedHTML) {
+        return (
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-8 max-w-2xl mx-auto shadow-xl rounded-lg">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-lg mb-6">
+              <h1 className="text-3xl font-bold">{data?.name || data?.personalInfo?.name || 'Zoptymalizowane CV'}</h1>
+              {(data?.email || data?.personalInfo?.email) && (
+                <div className="flex gap-4 mt-2 opacity-90">
+                  <span>{data?.email || data?.personalInfo?.email}</span>
+                  <span>{data?.phone || data?.personalInfo?.phone}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Profile Photo if available */}
+            {(data?.photo || data?.image) && (
+              <div className="flex justify-center mb-6">
+                <img 
+                  src={data.photo || data.image} 
+                  alt="Profile photo" 
+                  className="w-24 h-24 rounded-full object-cover border-4 border-purple-400 shadow-lg"
+                />
+              </div>
+            )}
+            
+            {/* AI Optimized Content with modern styling */}
+            <div 
+              className="modern-optimized-content"
+              dangerouslySetInnerHTML={{ __html: optimizedHTML }}
+            />
+          </div>
+        );
+      }
+      
+      // Original template for raw data
+      return (
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-8 max-w-2xl mx-auto shadow-xl rounded-lg">
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-lg mb-6">
+            <h1 className="text-3xl font-bold">{data?.personalInfo?.name}</h1>
+            <div className="flex gap-4 mt-2 opacity-90">
+              <span>{data?.personalInfo?.email}</span>
+              <span>{data?.personalInfo?.phone}</span>
+            </div>
+          </div>
+          
+          {/* Profile Photo if available */}
+          {(data?.photo || data?.image) && (
+            <div className="flex justify-center mb-6">
+              <img 
+                src={data.photo || data.image} 
+                alt="Profile photo" 
+                className="w-24 h-24 rounded-full object-cover border-4 border-purple-400 shadow-lg"
+              />
+            </div>
+          )}
+          
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
+              <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+              Doświadczenie zawodowe
+            </h2>
+            {data?.experience?.map((exp, i) => (
+              <div key={i} className="mb-3 p-3 bg-white/20 backdrop-blur-sm rounded-lg shadow-lg border-l-4 border-purple-400">
+                {exp}
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
+              <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+              Umiejętności
+            </h2>
+            <div className="grid grid-cols-2 gap-2">
+              {data?.skills?.map((skill, i) => (
+                <div key={i} className="bg-white/20 backdrop-blur-sm p-2 rounded-lg shadow-lg">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium">{skill}</span>
+                    <span className="text-xs text-purple-600">90%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full" 
+                         style={{width: '90%'}}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    },
+
+    executive: (data) => {
+      // Check if we have AI-optimized content
+      const hasOptimizedContent = data?.fullContent || data?.optimizedContent;
+      const optimizedHTML = hasOptimizedContent ? parseMarkdownToHTML(data.fullContent || data.optimizedContent) : null;
+      
+      if (hasOptimizedContent && optimizedHTML) {
+        return (
+          <div className="bg-gray-900 text-white p-8 max-w-2xl mx-auto shadow-2xl rounded-lg">
+            <div className="border-b border-gray-700 pb-6 mb-6">
+              <h1 className="text-4xl font-light tracking-wide">{data?.name || data?.personalInfo?.name || 'Executive Profile'}</h1>
+              {(data?.email || data?.personalInfo?.email) && (
+                <div className="flex gap-6 mt-3 text-gray-300 text-sm">
+                  <span>{data?.email || data?.personalInfo?.email}</span>
+                  <span>{data?.phone || data?.personalInfo?.phone}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Profile Photo if available */}
+            {(data?.photo || data?.image) && (
+              <div className="flex justify-center mb-6">
+                <img 
+                  src={data.photo || data.image} 
+                  alt="Profile photo" 
+                  className="w-24 h-24 rounded-full object-cover border-2 border-yellow-400 shadow-lg"
+                />
+              </div>
+            )}
+            
+            {/* AI Optimized Content with executive styling */}
+            <div 
+              className="executive-optimized-content text-gray-100"
+              dangerouslySetInnerHTML={{ __html: optimizedHTML }}
+            />
+          </div>
+        );
+      }
+      
+      // Original template for raw data
+      return (
+        <div className="bg-gray-900 text-white p-8 max-w-2xl mx-auto shadow-2xl">
+          <div className="border-b border-gray-700 pb-6 mb-6">
+            <h1 className="text-4xl font-light tracking-wide">{data?.personalInfo?.name}</h1>
+            <div className="flex gap-6 mt-3 text-gray-300 text-sm">
+              <span>{data?.personalInfo?.email}</span>
+              <span>{data?.personalInfo?.phone}</span>
+            </div>
+          </div>
+          
+          {/* Profile Photo if available */}
+          {(data?.photo || data?.image) && (
+            <div className="flex justify-center mb-6">
+              <img 
+                src={data.photo || data.image} 
+                alt="Profile photo" 
+                className="w-24 h-24 rounded-full object-cover border-2 border-yellow-400 shadow-lg"
+              />
+            </div>
+          )}
+          
+          <div className="mb-8">
+            <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
+              Executive Experience
+            </h2>
+            {data?.experience?.map((exp, i) => (
+              <div key={i} className="mb-4 pl-4 border-l-2 border-yellow-400 text-gray-100">
+                {exp}
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
+              Core Competencies
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {data?.skills?.map((skill, i) => (
+                <span key={i} className="bg-gray-800 text-yellow-400 px-4 py-2 rounded border border-gray-700 text-center">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    },
 
     creative: (data) => (
       <div className="bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100 p-8 max-w-2xl mx-auto shadow-xl rounded-2xl relative overflow-hidden">
@@ -1169,10 +2298,21 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
               {data?.personalInfo?.name}
             </h1>
             <div className="flex justify-center gap-4 mt-3 text-gray-600">
-              <span className="bg-white px-3 py-1 rounded-full shadow">{data?.personalInfo?.email}</span>
-              <span className="bg-white px-3 py-1 rounded-full shadow">{data?.personalInfo?.phone}</span>
+              <span className="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">{data?.personalInfo?.email}</span>
+              <span className="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">{data?.personalInfo?.phone}</span>
             </div>
           </div>
+          
+          {/* Profile Photo if available */}
+          {(data?.photo || data?.image) && (
+            <div className="flex justify-center mb-8">
+              <img 
+                src={data.photo || data.image} 
+                alt="Profile photo" 
+                className="w-28 h-28 rounded-full object-cover border-4 border-pink-400 shadow-xl transform hover:scale-105 transition-transform"
+              />
+            </div>
+          )}
           
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-purple-700 mb-4 text-center">
@@ -1180,7 +2320,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             </h2>
             <div className="space-y-4">
               {data?.experience?.map((exp, i) => (
-                <div key={i} className="bg-white p-4 rounded-xl shadow-md border-l-4 border-pink-400 transform hover:scale-105 transition-transform">
+                <div key={i} className="bg-white/30 backdrop-blur-sm p-4 rounded-xl shadow-lg border-l-4 border-pink-400 transform hover:scale-105 transition-transform">
                   {exp}
                 </div>
               ))}
@@ -1426,7 +2566,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             <div className="space-y-6">
               {(data?.experience || []).map((exp, i) => (
                 <div key={i} className="relative">
-                  <div className="bg-white p-6 rounded-xl shadow-lg border border-amber-100 hover:shadow-xl transition-shadow duration-300">
+                  <div className="bg-white/20 backdrop-blur-sm p-6 rounded-xl shadow-2xl border border-amber-200/50 hover:shadow-xl transition-shadow duration-300">
                     <div className="flex items-start">
                       <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center mr-4 shadow-lg flex-shrink-0">
                         <span className="text-white font-bold text-sm">{i + 1}</span>
@@ -1483,7 +2623,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
               </h2>
               <div className="space-y-3">
                 {data.education.map((edu, i) => (
-                  <div key={i} className="bg-white p-4 rounded-lg border border-amber-200 shadow-md flex items-center">
+                  <div key={i} className="bg-white/20 backdrop-blur-sm p-4 rounded-lg border border-amber-200/50 shadow-lg flex items-center">
                     <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center mr-4 shadow-lg">
                       <span className="text-white text-xs">🎓</span>
                     </div>
@@ -1505,7 +2645,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
     ),
 
     minimal: (data) => (
-      <div className="bg-white p-16 max-w-2xl mx-auto relative overflow-hidden">
+      <div className="bg-gray-900 border border-purple-400/30 p-16 max-w-2xl mx-auto relative overflow-hidden rounded-2xl shadow-2xl">
         {/* Subtle geometric accent */}
         <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
           <svg viewBox="0 0 128 128" className="w-full h-full">
@@ -1636,12 +2776,9 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
     )
   }
 
-  // Sample CV data for demo - only run once
-  useEffect(() => {
-    if (!cvData) {
-      setCvData(getDemoCV())
-    }
-  }, []) // Run only once on mount
+  // REMOVED: This useEffect was OVERRIDING real CV data with demo CV!
+  // Previous bug: This always set demo CV (Anna Kowalska) after real data was loaded
+  // Real CV data should come from fetchUserDataFromSession only
 
   return (
     <div className="container">
@@ -1665,6 +2802,229 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             {notification.message}
           </motion.div>
         ))}
+      </AnimatePresence>
+
+      {/* FAZA 6: MILLION DOLLAR PREMIUM UI/UX COMPONENTS */}
+      {/* ============================================== */}
+
+      {/* Premium Loading Overlay with Progressive Animation */}
+      <AnimatePresence>
+        {appState.isInitializing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/95 backdrop-blur-lg flex items-center justify-center"
+          >
+            <div className="text-center">
+              {/* Animated Logo */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6 }}
+                className="mb-8"
+              >
+                <div className="w-20 h-20 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
+                  <span className="text-2xl font-bold text-white">CV</span>
+                </div>
+              </motion.div>
+
+              {/* Progressive Loading Text */}
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl font-light text-white mb-4"
+              >
+                Przygotowanie Twojego CV
+              </motion.h2>
+
+              {/* Premium Progress Bar */}
+              <div className="w-80 mx-auto mb-6">
+                <div className="bg-white/20 rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${appState.progress.sessionLoad}%` }}
+                    transition={{ duration: 0.5 }}
+                    className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"
+                  />
+                </div>
+                <p className="text-white/80 text-sm mt-2">
+                  {appState.progress.sessionLoad}% - Ładowanie danych sesji...
+                </p>
+              </div>
+
+              {/* Animated Status Indicators */}
+              <div className="flex justify-center gap-4">
+                {['Sesja', 'AI', 'Szablon'].map((step, index) => (
+                  <motion.div
+                    key={step}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ 
+                      scale: appState.progress.sessionLoad > index * 33 ? 1 : 0.7,
+                      opacity: appState.progress.sessionLoad > index * 33 ? 1 : 0.5
+                    }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold ${
+                      appState.progress.sessionLoad > index * 33
+                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg'
+                        : 'bg-white/20 text-white/60'
+                    }`}
+                  >
+                    {index + 1}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Performance Monitor (Development Mode) */}
+      {appState.features.analytics && process.env.NODE_ENV === 'development' && (
+        <motion.div
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-20 left-4 z-40 bg-black/80 backdrop-blur-sm text-white p-3 rounded-lg text-xs font-mono"
+        >
+          <div>Renders: {performanceMonitor.renderCount}</div>
+          <div>Memory: {performanceMonitor.memoryUsage}MB</div>
+          <div>Load: {appState.metrics.loadTime ? `${Math.round(appState.metrics.loadTime)}ms` : 'N/A'}</div>
+          <div>Session: {appState.sessionData?.type || 'Loading...'}</div>
+        </motion.div>
+      )}
+
+      {/* Premium Floating Action Panel */}
+      {!appState.isInitializing && (
+        <motion.div
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="fixed right-6 top-1/2 -translate-y-1/2 z-30 space-y-3"
+        >
+          {/* Template Switcher */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => toggleModal('template')}
+            className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all"
+          >
+            <span className="text-lg">🎨</span>
+          </motion.button>
+
+          {/* Export Options */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => toggleModal('export')}
+            className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all"
+          >
+            <span className="text-lg">📄</span>
+          </motion.button>
+
+          {/* AI Optimization */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => appState.isOptimizing ? null : optimizeWithAI()}
+            disabled={appState.isOptimizing}
+            className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all ${
+              appState.isOptimizing 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-orange-500 to-red-600'
+            }`}
+          >
+            {appState.isOptimizing ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+              />
+            ) : (
+              <span className="text-lg">🤖</span>
+            )}
+          </motion.button>
+
+          {/* Settings */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => toggleModal('settings')}
+            className="w-12 h-12 bg-gradient-to-r from-gray-500 to-slate-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all"
+          >
+            <span className="text-lg">⚙️</span>
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* Premium Template Showcase Modal */}
+      <AnimatePresence>
+        {appState.modals.template && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => toggleModal('template', false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-800">Wybierz Szablon Premium</h3>
+                <button
+                  onClick={() => toggleModal('template', false)}
+                  className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {['simple', 'modern', 'executive', 'tech', 'luxury', 'minimal'].map((template) => (
+                  <motion.div
+                    key={template}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      updateAppState({ selectedTemplate: template }, 'template-select')
+                      toggleModal('template', false)
+                    }}
+                    className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      appState.selectedTemplate === template
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                      <span className="text-2xl">
+                        {template === 'simple' && '📄'}
+                        {template === 'modern' && '💼'}
+                        {template === 'executive' && '👔'}
+                        {template === 'tech' && '💻'}
+                        {template === 'luxury' && '✨'}
+                        {template === 'minimal' && '🎯'}
+                      </span>
+                    </div>
+                    <h4 className="font-semibold text-center capitalize">{template}</h4>
+                    {appState.selectedTemplate === template && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center"
+                      >
+                        <span className="text-white text-xs">✓</span>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Main Content */}
@@ -1759,18 +3119,15 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             </div>
             <div className="cv-preview-container">
               <div ref={cvPreviewRef} className="cv-preview-content">
-                {/* ALWAYS show AI optimized content if available */}
+                {/* Show selected template with AI optimized content if available */}
                 {console.log('🔍 CV Display Debug:', {
                   hasFullContent: !!cvData?.fullContent,
                   isOptimized: !!cvData?.optimized,
                   fullContentLength: cvData?.fullContent?.length || 0,
                   selectedTemplate: selectedTemplate
                 })}
-                {/* If we have AI-optimized content, ALWAYS use optimized template */}
-                {(cvData?.fullContent || cvData?.optimized) ? 
-                  templates.optimized(cvData) : 
-                  (templates[selectedTemplate]?.(cvData) || templates.simple(cvData))
-                }
+                {/* Always use selected template, templates will handle optimized content internally */}
+                {templates[selectedTemplate]?.(cvData) || templates.simple(cvData)}
               </div>
             </div>
           </div>
@@ -1788,7 +3145,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             whileTap={{ scale: 0.95 }}
             onClick={optimizeWithAI}
             disabled={isOptimizing || userPlan === 'basic'}
-            className="group relative overflow-hidden bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 hover:from-purple-500 hover:via-violet-500 hover:to-purple-600 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-purple-400/30 backdrop-blur-sm"
+            className="group relative overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-violet-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
             {isOptimizing ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
@@ -1803,7 +3160,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             whileTap={{ scale: 0.95 }}
             onClick={exportToPDF}
             disabled={isExporting}
-            className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 hover:from-emerald-500 hover:via-green-500 hover:to-emerald-600 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-emerald-500/25 flex items-center justify-center gap-3 transition-all duration-300 border border-emerald-400/30 backdrop-blur-sm"
+            className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-400 hover:via-green-400 hover:to-teal-400 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-emerald-500/40 flex items-center justify-center gap-3 transition-all duration-300 border border-emerald-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
             {isExporting ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
@@ -1818,7 +3175,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             whileTap={{ scale: 0.95 }}
             onClick={exportToDOCX}
             disabled={isExporting || userPlan === 'basic'}
-            className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:via-indigo-500 hover:to-blue-600 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-blue-400/30 backdrop-blur-sm"
+            className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 hover:from-blue-400 hover:via-indigo-400 hover:to-cyan-400 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-blue-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
             {isExporting ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
@@ -1833,7 +3190,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowEmailModal(true)}
             disabled={userPlan === 'basic'}
-            className="group relative overflow-hidden bg-gradient-to-r from-orange-600 via-red-600 to-orange-700 hover:from-orange-500 hover:via-red-500 hover:to-orange-600 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-orange-400/30 backdrop-blur-sm"
+            className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-400 hover:via-pink-400 hover:to-red-400 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-orange-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
             📧 {t.sendEmail}
           </motion.button>
@@ -1855,11 +3212,11 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
                 Odblokuj wszystkie profesjonalne szablony, optymalizację AI i eksport DOCX
               </p>
               <div className="flex justify-center gap-4">
-                <button className="bg-white/20 backdrop-blur-sm text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all border border-white/30">
-                  Gold - 49 PLN
+                <button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white px-8 py-3 rounded-full font-bold shadow-xl hover:shadow-yellow-500/40 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-yellow-400/30 backdrop-blur-sm">
+                  ⭐ Gold - 49 PLN
                 </button>
-                <button className="bg-white/20 backdrop-blur-sm text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/30 transition-all border border-white/30">
-                  Premium - 79 PLN
+                <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-8 py-3 rounded-full font-bold shadow-xl hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-purple-400/30 backdrop-blur-sm">
+                  💎 Premium - 79 PLN
                 </button>
               </div>
             </div>
@@ -1881,7 +3238,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+              className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Wyślij CV mailem</h2>
@@ -1915,14 +3272,14 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white p-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-blue-400/30 backdrop-blur-sm"
                   >
                     Wyślij
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowEmailModal(false)}
-                    className="flex-1 bg-gray-300 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
+                    className="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 p-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-300/50 backdrop-blur-sm"
                   >
                     Anuluj
                   </button>
@@ -2206,17 +3563,16 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
 
         /* CV Preview Container */
         .cv-preview-container {
-          background: rgba(255, 255, 255, 0.98);
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1));
           backdrop-filter: blur(30px) saturate(180%);
           border-radius: 24px;
           padding: 32px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          border: 1px solid rgba(139, 92, 246, 0.3);
           box-shadow: 
-            0 25px 60px rgba(120, 80, 255, 0.08),
-            0 0 0 1px rgba(255, 255, 255, 0.1),
-            inset 0 2px 0 rgba(255, 255, 255, 0.15);
+            0 25px 60px rgba(139, 92, 246, 0.15),
+            0 0 0 1px rgba(139, 92, 246, 0.2),
+            inset 0 2px 0 rgba(255, 255, 255, 0.1);
           min-height: 600px;
-          max-height: 800px;
           overflow-y: auto;
         }
 
@@ -2224,8 +3580,7 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
           transform: scale(0.95);
           transform-origin: top center;
           border-radius: 16px;
-          overflow-y: auto;
-          max-height: 750px;
+          overflow: visible;
           min-height: 500px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
@@ -2287,12 +3642,204 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
           font-weight: 600;
         }
 
-        /* Action Buttons with Glassmorphism */
+        /* Template-Specific Optimized Content Styling */
+        .simple-optimized-content,
+        .modern-optimized-content,
+        .executive-optimized-content {
+          background: rgba(17, 24, 39, 0.95);
+          padding: 3rem;
+          border-radius: 16px;
+          margin: 1rem 0;
+          box-shadow: 0 20px 50px rgba(139, 92, 246, 0.2);
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          line-height: 1.6;
+          color: #e5e7eb;
+        }
+
+        .simple-optimized-content h1,
+        .modern-optimized-content h1,
+        .executive-optimized-content h1 {
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 0.5rem;
+          text-align: center;
+        }
+
+        .simple-optimized-content h3,
+        .modern-optimized-content h3,
+        .executive-optimized-content h3 {
+          color: #a855f7;
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin: 2.5rem 0 1rem 0;
+          padding-bottom: 0.75rem;
+          border-bottom: 3px solid #8b5cf6;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .simple-optimized-content ul,
+        .modern-optimized-content ul,
+        .executive-optimized-content ul {
+          margin: 1.5rem 0;
+          padding-left: 0;
+          list-style: none;
+        }
+        
+        .simple-optimized-content li,
+        .modern-optimized-content li,
+        .executive-optimized-content li {
+          margin-bottom: 0.75rem;
+          color: #d1d5db;
+          padding-left: 1.5rem;
+          position: relative;
+          line-height: 1.6;
+        }
+
+        .simple-optimized-content li:before,
+        .modern-optimized-content li:before,
+        .executive-optimized-content li:before {
+          content: "▸";
+          color: #8b5cf6;
+          font-weight: bold;
+          position: absolute;
+          left: 0;
+        }
+        
+        .simple-optimized-content strong,
+        .modern-optimized-content strong,
+        .executive-optimized-content strong {
+          color: #c084fc;
+          font-weight: 600;
+        }
+
+        .simple-optimized-content p,
+        .modern-optimized-content p,
+        .executive-optimized-content p {
+          margin-bottom: 1rem;
+          text-align: justify;
+        }
+
+        /* Professional contact info styling */
+        .simple-optimized-content .contact-info,
+        .modern-optimized-content .contact-info,
+        .executive-optimized-content .contact-info {
+          text-align: center;
+          background: #f8fafc;
+          padding: 1.5rem;
+          border-radius: 8px;
+          margin: 2rem 0;
+          border: 1px solid #e2e8f0;
+        }
+
+        /* Section separators */
+        .simple-optimized-content hr,
+        .modern-optimized-content hr,
+        .executive-optimized-content hr {
+          border: none;
+          height: 2px;
+          background: linear-gradient(to right, transparent, #3b82f6, transparent);
+          margin: 2rem 0;
+        }
+        
+        .modern-optimized-content h3 {
+          color: #7c3aed;
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin: 1.5rem 0 0.75rem 0;
+          display: flex;
+          align-items: center;
+        }
+        
+        .modern-optimized-content h3::before {
+          content: '';
+          width: 8px;
+          height: 8px;
+          background: #8b5cf6;
+          border-radius: 50%;
+          margin-right: 0.5rem;
+        }
+        
+        .modern-optimized-content ul {
+          margin: 1rem 0;
+        }
+        
+        .modern-optimized-content li {
+          background: #f8fafc;
+          padding: 0.75rem;
+          margin-bottom: 0.5rem;
+          border-radius: 8px;
+          border-left: 4px solid #8b5cf6;
+        }
+        
+        .modern-optimized-content strong {
+          color: #6d28d9;
+          font-weight: 600;
+        }
+
+        .executive-optimized-content h3 {
+          color: #fbbf24;
+          font-size: 1.25rem;
+          font-weight: 300;
+          margin: 2rem 0 1rem 0;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          border-bottom: 1px solid #374151;
+          padding-bottom: 0.5rem;
+        }
+        
+        .executive-optimized-content ul {
+          margin: 1rem 0;
+        }
+        
+        .executive-optimized-content li {
+          color: #d1d5db;
+          padding-left: 1rem;
+          margin-bottom: 0.75rem;
+          border-left: 2px solid #fbbf24;
+        }
+        
+        .executive-optimized-content strong {
+          color: #fcd34d;
+          font-weight: 500;
+        }
+
+        /* Sub-item styling for nested lists */
+        .sub-item {
+          margin-left: 1rem;
+          color: #6b7280;
+          font-size: 0.9em;
+        }
+        
+        /* Responsive adjustments for optimized content */
+        @media (max-width: 768px) {
+          .simple-optimized-content,
+          .modern-optimized-content,
+          .executive-optimized-content {
+            padding: 1rem;
+          }
+          
+          .simple-optimized-content h3,
+          .modern-optimized-content h3,
+          .executive-optimized-content h3 {
+            font-size: 1.1rem;
+          }
+        }
+
+        /* Enhanced Action Buttons with Index.js Styling */
         .action-buttons button {
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(30px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.15);
           position: relative;
           overflow: hidden;
+          box-shadow: 
+            0 25px 60px rgba(120, 80, 255, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.05),
+            inset 0 2px 0 rgba(255, 255, 255, 0.1);
+          will-change: transform;
         }
 
         .action-buttons button::before {
@@ -2302,25 +3849,75 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
           left: -100%;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transition: left 0.5s ease;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          transition: left 0.6s ease;
+        }
+
+        .action-buttons button:hover {
+          box-shadow: 
+            0 30px 80px rgba(120, 80, 255, 0.25),
+            0 0 0 1px rgba(255, 255, 255, 0.1),
+            inset 0 2px 0 rgba(255, 255, 255, 0.15);
         }
 
         .action-buttons button:hover::before {
           left: 100%;
         }
 
-        /* Premium upgrade banner */
+        .action-buttons button:active {
+          transform: scale(0.98) translateY(1px);
+        }
+
+        /* Premium Button Effects from Index.js */
+        .action-buttons motion-button {
+          position: relative;
+          z-index: 1;
+        }
+
+        .action-buttons motion-button::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .action-buttons motion-button:hover::after {
+          width: 400px;
+          height: 400px;
+        }
+
+        /* Enhanced Premium upgrade banner with Index.js CTA Styling */
         .premium-upgrade-banner {
-          background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 80, 80, 0.9));
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 24px;
+          background: linear-gradient(135deg, rgba(120, 80, 255, 0.2), rgba(255, 80, 150, 0.2));
+          backdrop-filter: blur(30px) saturate(200%);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 32px;
           position: relative;
           overflow: hidden;
+          box-shadow: 
+            0 25px 60px rgba(120, 80, 255, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            inset 0 2px 0 rgba(255, 255, 255, 0.12);
         }
 
         .premium-upgrade-banner::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
+          animation: ctaRotate 15s linear infinite;
+        }
+
+        .premium-upgrade-banner::after {
           content: '';
           position: absolute;
           inset: 0;
@@ -2331,6 +3928,117 @@ ZWRÓĆ TYLKO HTML z profesjonalnie zoptymalizowanym CV bez żadnych dodatkowych
         @keyframes shine {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
+        }
+
+        @keyframes ctaRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        /* Premium Button Styling from Index.js */
+        .premium-upgrade-banner button {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          border: none;
+          padding: 18px 40px;
+          border-radius: 100px;
+          font-size: 17px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          z-index: 10;
+          overflow: hidden;
+          box-shadow: 0 8px 32px rgba(120, 80, 255, 0.3);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .premium-upgrade-banner button::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.3);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .premium-upgrade-banner button:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 12px 40px rgba(120, 80, 255, 0.4);
+        }
+
+        .premium-upgrade-banner button:hover::before {
+          width: 400px;
+          height: 400px;
+        }
+
+        /* Enhanced CV Header Styling */
+        .cv-header {
+          background: linear-gradient(135deg, rgba(15, 15, 15, 0.85) 0%, rgba(30, 15, 40, 0.75) 100%);
+          backdrop-filter: blur(30px) saturate(200%);
+          border: 1px solid rgba(120, 80, 255, 0.4);
+          border-radius: 32px;
+          padding: 3rem;
+          margin-bottom: 2rem;
+          box-shadow: 
+            0 25px 60px rgba(120, 80, 255, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            inset 0 2px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .cv-header h1 {
+          background: linear-gradient(135deg, #7850ff, #ff5080, #50b4ff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 0 0 30px rgba(120, 80, 255, 0.5);
+        }
+
+        /* Language Toggle Enhanced */
+        .language-toggle button {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 8px 16px;
+          border-radius: 100px;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.7);
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+
+        .language-toggle button:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.2);
+          color: white;
+          transform: translateY(-2px);
+        }
+
+        .language-toggle button.active {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          border-color: rgba(120, 80, 255, 0.5);
+        }
+
+        /* Enhanced Glow Effects */
+        .glow-effect {
+          text-shadow: 
+            0 0 20px rgba(120, 80, 255, 0.6),
+            0 0 40px rgba(120, 80, 255, 0.4),
+            0 0 60px rgba(120, 80, 255, 0.2);
+        }
+
+        .glow-box {
+          box-shadow: 
+            0 0 20px rgba(120, 80, 255, 0.5),
+            0 0 40px rgba(120, 80, 255, 0.3),
+            0 0 60px rgba(120, 80, 255, 0.1),
+            inset 0 2px 0 rgba(255, 255, 255, 0.1);
         }
 
         /* Global margin/padding reset */

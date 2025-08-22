@@ -6,8 +6,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' })
   }
   
-  // Pobierz parametry z POST lub GET
-  const { plan, email, priceId, cv, job } = req.method === 'POST' ? req.body : req.query
+  // Pobierz parametry z POST lub GET  
+  const { plan, email, priceId, cv, job, fullSessionId } = req.method === 'POST' ? req.body : req.query
   
   let finalPriceId
   let mode = 'payment'
@@ -24,12 +24,14 @@ export default async function handler(req, res) {
           mode = 'payment'
           break
         case 'premium':
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 19.99 zł jednorazowo (tymczasowo ta sama cena)
-          mode = 'payment'
+          // SUBSKRYPCJA 79 PLN/miesiąc
+          finalPriceId = process.env.STRIPE_PRICE_PREMIUM_79 || 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł/miesiąc
+          mode = 'subscription'
           break
         case 'gold':
         case 'pro':
-          finalPriceId = 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł miesięcznie (musisz zmienić na właściwy price ID)
+          // SUBSKRYPCJA 49 PLN/miesiąc
+          finalPriceId = process.env.STRIPE_PRICE_GOLD_49 || 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł/miesiąc
           mode = 'subscription'
           break
         case 'premium-monthly':
@@ -42,12 +44,37 @@ export default async function handler(req, res) {
       }
     }
     
+    // WALIDACJA: Sprawdź czy price ID nie jest placeholder
+    if (finalPriceId.includes('PLACEHOLDER')) {
+      console.error('❌ BŁĄD KONFIGURACJI: Brak właściwego price ID dla planu:', plan)
+      return res.status(500).json({ 
+        error: 'Błąd konfiguracji płatności. Skontaktuj się z pomocą techniczną.',
+        success: false 
+      })
+    }
+    
+    // WALIDACJA: Sprawdź zgodność planu z typem płatności
+    const expectedModes = {
+      'basic': 'payment',    // 19.99 PLN jednorazowo
+      'gold': 'subscription', // 49 PLN/miesiąc
+      'premium': 'subscription' // 79 PLN/miesiąc
+    }
+    
+    if (expectedModes[plan] && expectedModes[plan] !== mode) {
+      console.error('❌ BŁĘDNY TYP PŁATNOŚCI: Plan', plan, 'oczekuje', expectedModes[plan], 'ale ustawiono', mode)
+      return res.status(500).json({ 
+        error: 'Błąd konfiguracji typu płatności.',
+        success: false 
+      })
+    }
+    
     // Przygotuj metadata z CV i job posting
     const metadata = {
       plan: plan || 'direct',
       email: email || '',
       timestamp: Date.now().toString(),
-      userId: 'user_' + Math.random().toString(36).substr(2, 9)
+      userId: 'user_' + Math.random().toString(36).substr(2, 9),
+      fullSessionId: fullSessionId || null // Our session ID for full data retrieval
     }
     
     // Dodaj CV do metadata jeśli istnieje (Stripe ma limit 500 znaków per pole)
@@ -62,13 +89,34 @@ export default async function handler(req, res) {
       metadata.job = job.substring(0, 200)
     }
     
+    // Determine base URL with proper fallback priority
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                    process.env.BASE_URL || 
+                    req.headers.origin || 
+                    (req.headers.host ? `https://${req.headers.host}` : null) ||
+                    'http://localhost:3000'
+    
+    const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}`
+    const cancelUrl = `${baseUrl}/`
+    
     console.log('🎯 Creating checkout session:', {
       plan: plan,
       email: email,
       mode: mode,
       hasCV: !!cv,
-      hasJob: !!job
+      hasJob: !!job,
+      baseUrl: baseUrl,
+      successUrl: successUrl
     })
+    
+    // Validate URLs
+    if (!baseUrl.startsWith('http')) {
+      console.error('❌ Invalid base URL:', baseUrl)
+      return res.status(500).json({ 
+        error: 'Invalid configuration - base URL missing',
+        success: false 
+      })
+    }
     
     // Utwórz sesję Stripe
     const session = await stripe.checkout.sessions.create({
@@ -80,8 +128,8 @@ export default async function handler(req, res) {
       mode: mode,
       customer_email: email,
       metadata: metadata,
-      success_url: `http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}`,
-      cancel_url: `http://localhost:3000/`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       // Dodaj opis produktu dla lepszego UX
       locale: 'pl', // Polski język w Stripe Checkout
       payment_intent_data: mode === 'payment' ? {

@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-08-21T19:39:58.344Z",
+  "testDuration": 15.571,
+  "apiCallsTotal": 0,
+  "apiCallsPerSecond": 0,
+  "cvContentDisplayed": true,
+  "templateCardsFound": 25,
+  "jsErrors": 0,
+  "stability": "STABLE",
+  "requests": [
+    {
+      "url": "http://localhost:3000/api/get-session-data?session_id=cs_test_a1QxhoclyLRRSH2v9nbZOlblzW4ptUJEbxiL2yKhX5j4RYsVBZ",
+      "method": "GET",
+      "timestamp": "2025-08-21T19:39:39.198Z"
+    },
+    {
+      "url": "http://localhost:3000/api/get-session-data?session_id=cs_test_a1QxhoclyLRRSH2v9nbZOlblzW4ptUJEbxiL2yKhX5j4RYsVBZ",
+      "method": "GET",
+      "timestamp": "2025-08-21T19:39:39.201Z"
+    },
+    {
+      "url": "http://localhost:3000/api/get-session?session_id=cs_test_a1QxhoclyLRRSH2v9nbZOlblzW4ptUJEbxiL2yKhX5j4RYsVBZ",
+      "method": "GET",
+      "timestamp": "2025-08-21T19:39:39.390Z"
+    },
+    {
+      "url": "http://localhost:3000/api/get-session?session_id=cs_test_a1QxhoclyLRRSH2v9nbZOlblzW4ptUJEbxiL2yKhX5j4RYsVBZ",
+      "method": "GET",
+      "timestamp": "2025-08-21T19:39:39.591Z"
+    }
+  ]
+}
