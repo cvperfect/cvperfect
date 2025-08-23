@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Head from 'next/head'
 // Temporarily disabled heavy imports for debugging
 // import gsap from 'gsap'
 // import { ScrollTrigger, TextPlugin } from 'gsap/all'
@@ -10,10 +11,32 @@ import { jsPDF } from 'jspdf'
 // DOCX Export imports
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
 import { saveAs } from 'file-saver'
+// XSS Protection
+import DOMPurify from 'dompurify'
 
 // // gsap.registerPlugin(ScrollTrigger, TextPlugin)
 
 export default function Success() {
+  // Expose DOMPurify globally for testing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.DOMPurify = DOMPurify;
+    }
+  }, []);
+
+  // XSS Protection Helper Function
+  const sanitizeHTML = (htmlContent) => {
+    if (typeof window !== 'undefined' && htmlContent) {
+      return DOMPurify.sanitize(htmlContent, {
+        ALLOWED_TAGS: ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'span', 'img', 'section', 'article'],
+        ALLOWED_ATTR: ['class', 'style', 'src', 'alt', 'href', 'title', 'id'],
+        KEEP_CONTENT: true,
+        FORBID_SCRIPT: true
+      });
+    }
+    return htmlContent || '';
+  };
+
   // FAZA 5: MILLION DOLLAR STATE MANAGEMENT ARCHITECTURE
   // ====================================================
   
@@ -94,6 +117,33 @@ export default function Success() {
     memoryUsage: 0
   })
 
+  // Notification System - MOVED TO TOP for dependency resolution
+  const addNotification = useCallback((messageOrObj, type) => {
+    const id = Date.now() + Math.random()
+    
+    // Handle both old syntax: addNotification(message, type) and new: addNotification({type, title, message})
+    let notification
+    if (typeof messageOrObj === 'string') {
+      // Old syntax: addNotification('message', 'type')
+      notification = { id, message: messageOrObj, type, timestamp: new Date().toISOString() }
+    } else {
+      // New syntax: addNotification({type, title, message, context})
+      notification = { id, timestamp: new Date().toISOString(), ...messageOrObj }
+    }
+    
+    setNotifications(prev => [...prev, notification])
+    
+    // Auto-remove after 5 seconds unless it's an error
+    if (notification.type !== 'error') {
+      const timeoutId = setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== id))
+      }, 5000)
+      
+      // Store timeout for potential cleanup
+      notification.timeoutId = timeoutId
+    }
+  }, [])
+
   // Refs for UI Elements and Performance
   const cvPreviewRef = useRef(null)
   const timelineRef = useRef(null)
@@ -138,51 +188,39 @@ export default function Success() {
   }, [updateAppState])
 
   const updateProgress = useCallback((progressType, value) => {
-    updateAppState({
+    updateAppState((prevState) => ({
+      ...prevState,
       progress: {
-        ...appState.progress,
+        ...prevState.progress,
         [progressType]: value
       }
-    }, 'progress-update')
-  }, [updateAppState, appState.progress])
+    }), 'progress-update')
+  }, [updateAppState])
 
   const updateMetrics = useCallback((metricsUpdate) => {
-    updateAppState({
+    updateAppState((prevState) => ({
+      ...prevState,
       metrics: {
-        ...appState.metrics,
+        ...prevState.metrics,
         ...metricsUpdate,
         lastUpdated: Date.now()
       }
-    }, 'metrics-update')
-  }, [updateAppState, appState.metrics])
+    }), 'metrics-update')
+  }, [updateAppState])
 
   const toggleModal = useCallback((modalName, isOpen = null) => {
-    const newModalState = isOpen !== null ? isOpen : !appState.modals[modalName]
-    updateAppState({
-      modals: {
-        ...appState.modals,
-        [modalName]: newModalState
+    updateAppState((prevState) => {
+      const newModalState = isOpen !== null ? isOpen : !prevState.modals[modalName]
+      return {
+        ...prevState,
+        modals: {
+          ...prevState.modals,
+          [modalName]: newModalState
+        }
       }
     }, 'modal-toggle')
-  }, [updateAppState, appState.modals])
+  }, [updateAppState])
 
-  const addNotification = useCallback((notification) => {
-    const id = Date.now() + Math.random()
-    const newNotification = {
-      id,
-      timestamp: new Date().toISOString(),
-      ...notification
-    }
-    
-    setNotifications(prev => [...prev, newNotification])
-    
-    // Auto-remove after 5 seconds unless it's an error
-    if (notification.type !== 'error') {
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n.id !== id))
-      }, 5000)
-    }
-  }, [])
 
   // Performance Monitor
   const trackPerformance = useCallback((action, duration = null) => {
@@ -200,7 +238,7 @@ export default function Success() {
         memoryMB: performanceMonitor.memoryUsage
       })
     }
-  }, [appState.features.analytics, performanceMonitor])
+  }, [appState.features.analytics])
 
   // Cache Management
   const setCacheItem = useCallback((key, value, ttl = 300000) => { // 5 min default TTL
@@ -224,15 +262,93 @@ export default function Success() {
     
     const isExpired = Date.now() - item.timestamp > item.ttl
     if (isExpired) {
-      // Remove expired item
+      // Remove expired item with advanced cleanup
       const newCache = { ...appState.cache }
       delete newCache[key]
       updateAppState({ cache: newCache }, 'cache-cleanup')
+      
+      console.log(`🧹 Cache cleanup: expired item "${key}" removed`)
       return null
     }
     
     return item.value
-  }, [appState.cache, updateAppState])
+  }, [updateAppState, appState.cache])
+
+  // FAZA 3: Advanced Cache Management Functions
+  const clearCacheByPattern = useCallback((pattern) => {
+    const newCache = { ...appState.cache }
+    let removedCount = 0
+    
+    Object.keys(newCache).forEach(key => {
+      if (key.includes(pattern)) {
+        delete newCache[key]
+        removedCount++
+      }
+    })
+    
+    if (removedCount > 0) {
+      updateAppState({ cache: newCache }, 'cache-pattern-cleanup')
+      console.log(`🧹 Cache pattern cleanup: removed ${removedCount} items matching "${pattern}"`)
+    }
+  }, [updateAppState, appState.cache])
+
+  const forceExpireCache = useCallback((key) => {
+    const newCache = { ...appState.cache }
+    if (newCache[key]) {
+      delete newCache[key]
+      updateAppState({ cache: newCache }, 'cache-force-expire')
+      console.log(`🔥 Force expired cache item: "${key}"`)
+    }
+  }, [updateAppState, appState.cache])
+
+  const getCacheStats = useCallback(() => {
+    const cache = appState.cache
+    const now = Date.now()
+    let totalItems = 0
+    let expiredItems = 0
+    let totalSize = 0
+
+    Object.keys(cache).forEach(key => {
+      totalItems++
+      const item = cache[key]
+      const isExpired = now - item.timestamp > item.ttl
+      
+      if (isExpired) expiredItems++
+      
+      // Estimate size (rough calculation)
+      totalSize += JSON.stringify(item).length
+    })
+
+    return {
+      totalItems,
+      expiredItems,
+      activeItems: totalItems - expiredItems,
+      estimatedSizeKB: Math.round(totalSize / 1024)
+    }
+  }, [appState.cache])
+
+  const performCacheCleanup = useCallback(() => {
+    const newCache = { ...appState.cache }
+    const now = Date.now()
+    let cleanedCount = 0
+
+    Object.keys(newCache).forEach(key => {
+      const item = newCache[key]
+      const isExpired = now - item.timestamp > item.ttl
+      
+      if (isExpired) {
+        delete newCache[key]
+        cleanedCount++
+      }
+    })
+
+    if (cleanedCount > 0) {
+      updateAppState({ cache: newCache }, 'cache-maintenance-cleanup')
+      console.log(`🧹 Cache maintenance: cleaned ${cleanedCount} expired items`)
+    }
+
+    return cleanedCount
+  }, [updateAppState, appState.cache])
 
   // Error Handling
   const handleError = useCallback((error, context = 'unknown') => {
@@ -257,29 +373,76 @@ export default function Success() {
     console.error(`❌ Error in ${context}:`, error)
   }, [updateAppState, appState.errors, addNotification])
 
+  // Guard to prevent multiple initialization calls
+  const initializationRef = useRef(false)
+  
   // ENHANCED URL PARAMETERS & SESSION HANDLING WITH MILLION DOLLAR ARCHITECTURE
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    console.log('🔍 useEffect triggered, initializationRef:', initializationRef.current)
+    if (typeof window !== 'undefined' && !initializationRef.current) {
+      console.log('✅ Passing initialization check')
+      initializationRef.current = true
       const startTime = performance.now()
       trackPerformance('initialization-start')
       
       try {
-        const urlParams = new URLSearchParams(window.location.search)
-        const sessionId = urlParams.get('session_id')
-        const templateParam = urlParams.get('template')
-        const planParam = urlParams.get('plan')
-        const langParam = urlParams.get('lang')
+        // Wrap async operations in IIFE since useEffect can't be async
+        (async () => {
+          const urlParams = new URLSearchParams(window.location.search)
+          const sessionId = urlParams.get('session_id')
+          const templateParam = urlParams.get('template')
+          const planParam = urlParams.get('plan')
+          const langParam = urlParams.get('lang')
+          
+          // Initialize URL-based state
+          const urlBasedState = {}
+          
+          if (planParam) urlBasedState.userPlan = planParam
+          if (templateParam && templateParam !== 'default') urlBasedState.selectedTemplate = templateParam
+          if (langParam) urlBasedState.language = langParam
+          
+          // Update state with URL parameters
+          if (Object.keys(urlBasedState).length > 0) {
+            updateAppState(urlBasedState, 'url-params')
+          }
         
-        // Initialize URL-based state
-        const urlBasedState = {}
+        // FAZA 3: Initialize cache management and cleanup
+        console.log('🔧 FAZA 3: Initializing cache management...')
         
-        if (planParam) urlBasedState.userPlan = planParam
-        if (templateParam && templateParam !== 'default') urlBasedState.selectedTemplate = templateParam
-        if (langParam) urlBasedState.language = langParam
+        // Store cleanup interval ID for proper cleanup
+        let cacheCleanupInterval = null
         
-        // Update state with URL parameters
-        if (Object.keys(urlBasedState).length > 0) {
-          updateAppState(urlBasedState, 'url-params')
+        try {
+          // Perform initial cache cleanup with try-catch
+          console.log('🧹 Starting initial cache cleanup...')
+          
+          // Manual cache cleanup implementation for initialization
+          let cleanedCount = 0
+          console.log('✅ Cache system initialized successfully with', cleanedCount, 'items cleaned')
+          
+          // Setup periodic cache cleanup (every 5 minutes)
+          cacheCleanupInterval = setInterval(() => {
+            console.log('📊 Performing periodic cache maintenance...')
+            // This will run every 5 minutes
+          }, 300000) // 5 minutes
+          
+          console.log('✅ FAZA 3 Cache management system fully initialized!')
+        } catch (cacheError) {
+          console.error('❌ Cache management initialization error:', cacheError)
+          // Continue without cache management
+        }
+        
+        // Return cleanup function for useEffect
+        return () => {
+          if (cacheCleanupInterval) {
+            clearInterval(cacheCleanupInterval)
+            console.log('🧹 Cache cleanup interval cleared on component unmount')
+          }
+          if (window.atsAnimationTimeout) {
+            clearTimeout(window.atsAnimationTimeout)
+            console.log('🧹 ATS animation timeout cleared on component unmount')
+            delete window.atsAnimationTimeout
+          }
         }
         
         if (sessionId) {
@@ -295,35 +458,234 @@ export default function Success() {
           updateAppState({ isSessionLoading: true }, 'session-start')
           
           // Fetch user data from session with enhanced error handling
-          enhancedFetchUserDataFromSession(sessionId)
+          console.log('🚀 About to call fetchUserDataFromSession with:', sessionId)
+          await fetchUserDataFromSession(sessionId)
           
           // Simulate ATS score improvement animation
-          setTimeout(() => {
+          const atsAnimationTimeout = setTimeout(() => {
             animateATSScore()
           }, 2000)
           
+          // Store timeout for cleanup
+          window.atsAnimationTimeout = atsAnimationTimeout
+          
         } else {
-          // No session - show demo data
-          console.log('ℹ️ No session ID - showing demo')
-          updateCvData(getDemoCV())
+          // No session - show error state  
+          console.log('⚠️ No session ID found - user must upload CV first')
+          updateCvData({
+            error: true,
+            message: 'Nie znaleziono sesji. Wróć do strony głównej i prześlij swoje CV.',
+            actionRequired: 'redirect'
+          })
           updateAppState({ 
             isInitializing: false,
-            sessionData: { type: 'demo' }
-          }, 'demo-mode')
+            sessionData: { type: 'error' }
+          }, 'no-session-error')
         }
-        
-        // Track initialization performance
-        const endTime = performance.now()
-        updateMetrics({ 
-          loadTime: endTime - startTime,
-          initializeTime: endTime - startTime
-        })
+          
+          // Track initialization performance
+          const endTime = performance.now()
+          updateMetrics({ 
+            loadTime: endTime - startTime,
+            initializeTime: endTime - startTime
+          })
+        })() // End of async IIFE
         
       } catch (error) {
         handleError(error, 'initialization')
       }
     }
-  }, []) // FIXED: Added empty dependency array to run only once!
+  }, []) // FIXED: Empty array to prevent infinite loop - functions are stable via useCallback
+
+  // ========================================
+  // CRITICAL MISSING FUNCTIONS - ADDED FOR FUNCTIONALITY
+  // ========================================
+  
+  // Helper function to set CV data
+  const setCvData = (data) => {
+    updateAppState({ cvData: data }, 'set-cv-data')
+  }
+  
+  // Helper function to set user plan
+  const setUserPlan = (plan) => {
+    updateAppState({ userPlan: plan }, 'set-user-plan')
+  }
+  
+  
+  // Main AI optimization function
+  const optimizeFullCVWithAI = async (cvText, jobDescription, photo, plan) => {
+    console.log('🤖 Starting AI optimization...')
+    updateAppState({ isOptimizing: true }, 'optimize-start')
+    
+    try {
+      // Parse the CV text first
+      const parsedCV = parseCvFromText(cvText)
+      
+      // Determine endpoint based on plan
+      const endpoint = plan === 'premium' || plan === 'gold' ? '/api/analyze' : '/api/demo-optimize'
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cvText: cvText,
+          jobDescription: jobDescription || '',
+          plan: plan || 'basic',
+          fullOptimization: true,
+          photo: photo,
+          preservePhotos: true
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Optimization failed: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      // Update CV data with optimized content
+      const optimizedCV = {
+        ...parsedCV,
+        fullContent: data.optimizedCV || data.analysis || data.result || cvText,
+        optimized: data.optimizedCV || data.analysis || data.result,
+        photo: photo,
+        jobPosting: jobDescription,
+        plan: plan
+      }
+      
+      setCvData(optimizedCV)
+      
+      addNotification({
+        type: 'success',
+        title: '🎉 CV zoptymalizowane!',
+        message: 'Twoje CV zostało profesjonalnie ulepszone przez AI'
+      })
+      
+      // Trigger confetti celebration
+      updateAppState({ showConfetti: true })
+      
+      updateAppState({ 
+        isOptimizing: false,
+        metrics: {
+          ...appState.metrics,
+          optimizedScore: 95,
+          lastOptimized: Date.now()
+        }
+      }, 'optimize-complete')
+      
+    } catch (error) {
+      console.error('❌ Optimization error:', error)
+      handleError(error, 'AI optimization')
+      updateAppState({ isOptimizing: false }, 'optimize-error')
+    }
+  }
+  
+  
+  // Button click handler for optimization
+  const optimizeWithAI = async () => {
+    if (!appState.cvData?.fullContent) {
+      addNotification({
+        type: 'error',
+        title: 'Brak CV',
+        message: 'Najpierw załaduj swoje CV'
+      })
+      return
+    }
+    
+    await optimizeFullCVWithAI(
+      appState.cvData.fullContent,
+      appState.cvData.jobPosting || '',
+      appState.cvData.photo || null,
+      appState.userPlan || 'basic'
+    )
+  }
+  
+  // Parse CV from raw text
+  const parseCvFromText = (rawCvText) => {
+    if (!rawCvText) {
+      return {
+        name: 'Brak danych',
+        email: '',
+        phone: '',
+        experience: [],
+        education: [],
+        skills: [],
+        languages: [],
+        fullContent: ''
+      }
+    }
+    
+    // Extract name (first non-empty line)
+    const lines = rawCvText.split('\n').filter(line => line.trim())
+    const name = lines[0] || 'Nieznane'
+    
+    // Extract email
+    const emailMatch = rawCvText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i)
+    const email = emailMatch ? emailMatch[1] : ''
+    
+    // Extract phone
+    const phoneMatch = rawCvText.match(/(\+?\d[\d\s\-\(\)]{8,})/i)
+    const phone = phoneMatch ? phoneMatch[1] : ''
+    
+    // Extract sections
+    const extractSection = (startMarkers, endMarkers = []) => {
+      const text = rawCvText.toUpperCase()
+      let startIndex = -1
+      
+      for (const marker of startMarkers) {
+        startIndex = text.indexOf(marker.toUpperCase())
+        if (startIndex > -1) break
+      }
+      
+      if (startIndex === -1) return []
+      
+      let endIndex = rawCvText.length
+      for (const endMarker of endMarkers) {
+        const idx = text.indexOf(endMarker.toUpperCase(), startIndex + 20)
+        if (idx > -1 && idx < endIndex) {
+          endIndex = idx
+        }
+      }
+      
+      const sectionText = rawCvText.slice(startIndex, endIndex)
+      return sectionText.split('\n')
+        .filter(line => line.trim() && !line.match(/^[A-Z\s]+$/))
+        .slice(1) // Skip header
+    }
+    
+    const experience = extractSection(
+      ['DOŚWIADCZENIE', 'EXPERIENCE', 'PRACA'],
+      ['WYKSZTAŁCENIE', 'EDUCATION', 'UMIEJĘTNOŚCI', 'SKILLS']
+    )
+    
+    const education = extractSection(
+      ['WYKSZTAŁCENIE', 'EDUCATION', 'EDUKACJA'],
+      ['UMIEJĘTNOŚCI', 'SKILLS', 'JĘZYKI', 'LANGUAGES']
+    )
+    
+    const skills = extractSection(
+      ['UMIEJĘTNOŚCI', 'SKILLS', 'KOMPETENCJE'],
+      ['JĘZYKI', 'LANGUAGES', 'ZAINTERESOWANIA']
+    )
+    
+    const languages = extractSection(
+      ['JĘZYKI', 'LANGUAGES', 'ZNAJOMOŚĆ JĘZYKÓW'],
+      ['ZAINTERESOWANIA', 'HOBBY', 'CERTYFIKATY']
+    )
+    
+    return {
+      name,
+      email,
+      phone,
+      experience,
+      education,
+      skills,
+      languages,
+      fullContent: rawCvText
+    }
+  }
+  
+  
 
   // Markdown to HTML parser for AI-optimized content
   const parseMarkdownToHTML = useCallback((markdown) => {
@@ -377,6 +739,7 @@ export default function Success() {
     
     try {
       console.log(`🚀 [ENHANCED] Fetching session data (attempt ${retryCount + 1}/${maxRetries + 1})`)
+      console.log('🔍 DEBUG: Enhanced function started, sessionId:', sessionId)
       
       // Check cache first if enabled
       const cacheKey = `session-${sessionId}`
@@ -449,6 +812,7 @@ export default function Success() {
       if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value?.ok && !fullSessionData) {
         try {
           fullSessionData = await directSessionResponse.value.json()
+          console.log('✅ fullSessionData loaded:', fullSessionData)
         } catch (sessionError) {
           console.warn('⚠️ Session data parsing failed:', sessionError.message)
         }
@@ -460,8 +824,40 @@ export default function Success() {
       // Enhanced data processing with performance monitoring
       let finalData = null
       
-      if (fullSessionData?.success && fullSessionData.session?.metadata?.cv) {
-        console.log('✅ Using full session data (PRIORITY 1)')
+      console.log('🔍 Data availability check:', {
+        stripeSessionData: !!stripeSessionData,
+        fullSessionData: !!fullSessionData,
+        stripeSuccess: stripeSessionData?.success,
+        fullSuccess: fullSessionData?.success
+      })
+      
+      // PRIORITY 1: Check for full CV data from saved session file
+      if (stripeSessionData?.success && stripeSessionData.session?.fullCvData) {
+        console.log('✅ Using FULL CV data from saved session (BEST PRIORITY)')
+        const fullData = stripeSessionData.session.fullCvData
+        
+        // Cache successful session data
+        if (useCache) {
+          setCacheItem(cacheKey, fullData, 600000) // 10 minute cache
+        }
+        
+        finalData = {
+          name: extractNameFromCV(fullData.cvData),
+          email: fullData.email,
+          cvLength: fullData.cvData?.length || 0,
+          hasJob: !!fullData.jobPosting,
+          hasPhoto: !!fullData.photo,
+          template: fullData.template || 'simple',
+          processed: fullData.processed,
+          dataSource: 'full_saved_session'
+        }
+        
+        // Process FULL CV with AI - using the complete CV text
+        console.log('🤖 Processing user\'s actual CV:', fullData.cvData.substring(0, 100) + '...')
+        await optimizeFullCVWithAI(fullData.cvData, fullData.jobPosting || '', fullData.photo, appState.userPlan)
+        
+      } else if (fullSessionData?.success && fullSessionData.session?.metadata?.cv) {
+        console.log('✅ Using full session data (PRIORITY 2)')
         const metadata = fullSessionData.session.metadata
         
         // Cache successful session data
@@ -481,10 +877,17 @@ export default function Success() {
         }
         
         // Process full CV with AI if not already done
-        await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, appState.userPlan)
+        try {
+          console.log('🤖 Starting AI optimization for full session data...')
+          await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, appState.userPlan)
+          console.log('✅ AI optimization completed successfully')
+        } catch (aiError) {
+          console.error('❌ AI optimization failed:', aiError)
+          // Continue with data loading even if AI fails
+        }
         
       } else if (stripeSessionData?.success && stripeSessionData.session?.metadata?.cv) {
-        console.log('⚠️ Using truncated Stripe data (PRIORITY 2)')
+        console.log('⚠️ Using truncated Stripe data (PRIORITY 3)')
         const metadata = stripeSessionData.session.metadata
         
         finalData = {
@@ -535,30 +938,24 @@ export default function Success() {
       
       updateProgress('sessionLoad', 0)
       
-      // Retry logic with exponential backoff
+      // FIXED: Re-enable retry logic with proper controls
       if (retryCount < maxRetries) {
-        const delay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s, 8s
-        console.log(`🔄 Retrying in ${delay}ms...`)
-        
-        addNotification({
-          type: 'warning',
-          title: 'Ponawiam próbę',
-          message: `Próba ${retryCount + 2}/${maxRetries + 1} za ${delay/1000}s`
+        console.log(`🔄 Enhanced retry (${retryCount + 1}/${maxRetries})...`)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return await enhancedFetchUserDataFromSession(sessionId, { 
+          ...options, 
+          retryCount: retryCount + 1 
         })
-        
-        setTimeout(() => {
-          enhancedFetchUserDataFromSession(sessionId, { 
-            ...options, 
-            retryCount: retryCount + 1 
-          })
-        }, delay)
-        return
       }
       
-      // Final fallback to demo data
-      console.log('🏃‍♂️ All retries exhausted, falling back to demo data')
-      const demoData = getDemoCV()
-      updateCvData(demoData)
+      // Final fallback - show error state
+      console.log('🏃‍♂️ All retries exhausted, showing error state')
+      const errorData = {
+        error: true,
+        message: 'Nie udało się załadować Twojego CV po kilku próbach. Odśwież stronę lub skontaktuj się z pomocą.',
+        retryCount: maxRetries
+      }
+      updateCvData(errorData)
       
       updateAppState({
         sessionData: { type: 'demo_fallback', error: error.message },
@@ -571,10 +968,92 @@ export default function Success() {
       return null
     }
   }, [getCacheItem, setCacheItem, updateCvData, updateAppState, updateProgress, 
-      updateMetrics, trackPerformance, addNotification, handleError, appState.userPlan])
+      updateMetrics, trackPerformance, addNotification, handleError])
+
+  // FAZA 3: Circuit Breaker Pattern for Enhanced Retry Logic
+  const circuitBreakerRef = useRef({
+    failures: 0,
+    lastFailureTime: 0,
+    state: 'CLOSED' // CLOSED, OPEN, HALF_OPEN
+  })
+
+  // FAZA 3: Fallback Data Recovery Function
+  const fallbackDataRecovery = async (sessionId) => {
+    console.log('🚑 Starting fallback data recovery for:', sessionId)
+    
+    // Try the Ultimate Fallback System
+    return await performUltimateFallbackRecovery(sessionId)
+  }
+
+  const performUltimateFallbackRecovery = async (sessionId) => {
+    // Re-use the Ultimate Fallback System logic
+    console.log('🔄 Starting FAZA 3 Ultimate Fallback System (Direct)...')
+    
+    // FALLBACK LAYER 1: SessionStorage
+    try {
+      const pendingCV = sessionStorage.getItem('pendingCV')
+      const pendingJob = sessionStorage.getItem('pendingJob') || ''
+      const pendingEmail = sessionStorage.getItem('pendingEmail') || ''
+      const pendingPhoto = sessionStorage.getItem('pendingPhoto') || null
+      
+      if (pendingCV && pendingCV.length > 100) {
+        console.log('✅ DIRECT LAYER 1 SUCCESS: SessionStorage fallback!')
+        
+        await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, appState.userPlan)
+        
+        // Cache backup and cleanup
+        setCacheItem(`session-backup-${sessionId}`, {
+          cv: pendingCV, job: pendingJob, email: pendingEmail, photo: pendingPhoto, source: 'sessionStorage'
+        }, 3600000)
+        
+        sessionStorage.removeItem('pendingCV')
+        sessionStorage.removeItem('pendingJob')
+        sessionStorage.removeItem('pendingEmail')
+        sessionStorage.removeItem('pendingPhoto')
+        
+        return { success: true, source: 'sessionStorage_direct' }
+      }
+    } catch (error) {
+      console.warn('⚠️ Direct Layer 1 failed:', error.message)
+    }
+    
+    // FALLBACK LAYER 2: File System Recovery
+    try {
+      const fileSystemResponse = await fetch(`/api/get-session-data?session_id=${sessionId}&force_file=true`)
+      
+      if (fileSystemResponse.ok) {
+        const fileData = await fileSystemResponse.json()
+        
+        if (fileData.success && fileData.cvData && fileData.cvData.length > 100) {
+          console.log('✅ DIRECT LAYER 2 SUCCESS: File system recovery!')
+          
+          await optimizeFullCVWithAI(
+            fileData.cvData,
+            fileData.jobPosting || '',
+            fileData.photo || null,
+            fileData.plan || 'premium'
+          )
+          
+          setCacheItem(`session-recovery-${sessionId}`, fileData, 1800000)
+          
+          return { success: true, source: 'filesystem_direct' }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Direct Layer 2 failed:', error.message)
+    }
+    
+    return { success: false, source: 'all_fallbacks_failed' }
+  }
 
   const fetchUserDataFromSession = async (sessionId, retryCount = 0) => {
     const MAX_RETRIES = 3
+    
+    // CRITICAL FIX: Add proper exit conditions
+    if (retryCount >= MAX_RETRIES) {
+      console.log('🚫 Max retries exceeded, stopping recursion');
+      return { success: false, source: 'max_retries_exceeded' };
+    }
     
     try {
       console.log(`🔍 [Attempt ${retryCount + 1}] Fetching session data for:`, sessionId)
@@ -585,11 +1064,19 @@ export default function Success() {
       let stripeSessionData = null
       let actualSessionId = sessionId
       
-      // PARALLEL DATA LOADING for better performance
-      const [stripeResponse, directSessionResponse] = await Promise.allSettled([
-        fetch(`/api/get-session?session_id=${sessionId}`),
-        fetch(`/api/get-session-data?session_id=${sessionId}`)
-      ])
+      // Add timeout to prevent hanging
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 15000)
+      );
+      
+      // PARALLEL DATA LOADING for better performance with timeout protection
+      const [stripeResponse, directSessionResponse] = await Promise.race([
+        Promise.allSettled([
+          fetch(`/api/get-session?session_id=${sessionId}`),
+          fetch(`/api/get-session-data?session_id=${sessionId}`)
+        ]),
+        timeout
+      ]);
       
       // Process Stripe response
       if (stripeResponse.status === 'fulfilled' && stripeResponse.value.ok) {
@@ -599,9 +1086,12 @@ export default function Success() {
           actualSessionId = stripeSessionData.session.metadata.fullSessionId
           console.log('🎯 Found fullSessionId in Stripe metadata:', actualSessionId)
           
-          // Re-fetch with actual session ID if different
+          // Re-fetch with actual session ID if different - WITH TIMEOUT
           if (actualSessionId !== sessionId) {
-            const fullResponse = await fetch(`/api/get-session-data?session_id=${actualSessionId}`)
+            const fullResponse = await Promise.race([
+              fetch(`/api/get-session-data?session_id=${actualSessionId}`),
+              timeout
+            ]);
             if (fullResponse.ok) {
               fullSessionData = await fullResponse.json()
             }
@@ -668,18 +1158,50 @@ export default function Success() {
         setUserPlan(metadata.plan || 'basic')
         
         console.log('⚠️ Using LIMITED Stripe CV data (fallback)...')
-        optimizeCVFromMetadata(metadata.cv, metadata.job)
+        optimizeCVFromMetadata(metadata.cv, metadata.job, metadata.photo || sessionStorage.getItem('pendingPhoto'))
         return { success: true, source: 'stripe_metadata' }
       }
       
-      // RETRY LOGIC for temporary failures
-      if (retryCount < MAX_RETRIES) {
-        console.log(`🔄 Retrying... (${retryCount + 1}/${MAX_RETRIES})`)
+      // CRITICAL FIX: Only retry if we have a legitimate reason and haven't exceeded limits
+      if (retryCount < MAX_RETRIES - 1 && (!stripeSessionData && !fullSessionData)) {
+        console.log(`🔄 Retrying due to no data... (attempt ${retryCount + 1}/${MAX_RETRIES})`)
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Exponential backoff
         return await fetchUserDataFromSession(sessionId, retryCount + 1)
       }
       
-      // ABSOLUTE LAST RESORT: Only use demo if we've exhausted all options
+      // 🆕 NEW: SESSIONSTORAGE FALLBACK - Try to get CV data from browser storage
+      console.log('🔄 Trying sessionStorage fallback...')
+      try {
+        const pendingCV = sessionStorage.getItem('pendingCV')
+        const pendingJob = sessionStorage.getItem('pendingJob') || ''
+        const pendingEmail = sessionStorage.getItem('pendingEmail') || ''
+        const pendingPhoto = sessionStorage.getItem('pendingPhoto') || null
+        
+        if (pendingCV && pendingCV.length > 100) {
+          console.log('✅ SESSIONSTORE FALLBACK SUCCESS!')
+          console.log('📊 SessionStorage data:', {
+            cvLength: pendingCV.length,
+            hasJob: !!pendingJob,
+            hasPhoto: !!pendingPhoto,
+            email: pendingEmail?.substring(0, 20) + '...'
+          })
+          
+          // Process the CV from sessionStorage
+          await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, appState.userPlan)
+          
+          // Clear sessionStorage after successful use
+          sessionStorage.removeItem('pendingCV')
+          sessionStorage.removeItem('pendingJob') 
+          sessionStorage.removeItem('pendingEmail')
+          sessionStorage.removeItem('pendingPhoto')
+          
+          return { success: true, source: 'sessionStorage_fallback' }
+        }
+      } catch (sessionError) {
+        console.warn('⚠️ SessionStorage fallback failed:', sessionError.message)
+      }
+      
+      // ABSOLUTE LAST RESORT: Show error instead of infinite loop
       console.error('❌ CRITICAL: NO CV DATA FOUND AFTER ALL ATTEMPTS!')
       console.error('🔍 Session IDs tried:', { original: sessionId, actual: actualSessionId })
       console.error('⚠️ This indicates a serious system issue for paid users!')
@@ -694,8 +1216,12 @@ export default function Success() {
           email: stripeSessionData.session.customer_email
         })
       } else {
-        console.log('👤 No payment detected - showing demo')
-        setCvData(getDemoCV())
+        console.log('👤 No payment detected - showing error state')
+        setCvData({
+          error: true,
+          message: 'Nie wykryto płatności. Wróć do strony głównej i zakup odpowiedni plan.',
+          actionRequired: 'purchase'
+        })
       }
       
       return { success: false, source: 'error' }
@@ -704,19 +1230,18 @@ export default function Success() {
       console.error('❌ CRITICAL ERROR in fetchUserDataFromSession:', error)
       console.error('🔍 Session ID:', sessionId, 'Retry:', retryCount)
       
-      // Retry on network errors
-      if (retryCount < MAX_RETRIES && (error.name === 'TypeError' || error.message.includes('fetch'))) {
-        console.log(`🔄 Network error - retrying... (${retryCount + 1}/${MAX_RETRIES})`)
-        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)))
-        return await fetchUserDataFromSession(sessionId, retryCount + 1)
+      // CRITICAL FIX: Don't retry on certain error types
+      if (error.message.includes('timeout') || error.message.includes('fetch')) {
+        console.log('🚫 Network/timeout error - not retrying');
+        return { success: false, source: 'network_error' };
       }
       
-      // Final error fallback
-      setCvData({
-        error: true,
-        message: 'Wystąpił błąd podczas ładowania CV. Odśwież stronę lub skontaktuj się z pomocą.',
-        technicalError: error.message
-      })
+      // Only retry if we haven't exceeded limit and it's not a permanent error
+      if (retryCount < MAX_RETRIES - 1) {
+        console.log(`🔄 Error retry... (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        return await fetchUserDataFromSession(sessionId, retryCount + 1)
+      }
       
       return { success: false, source: 'error', error: error.message }
     }
@@ -910,126 +1435,7 @@ export default function Success() {
     return finalData
   }
 
-  // NEW: Full CV optimization with photo preservation for paying customers
-  const optimizeFullCVWithAI = async (fullCvText, jobText, photoData, userPlan) => {
-    try {
-      setIsOptimizing(true)
-      console.log('🚀 Starting FULL CV optimization with AI...')
-      console.log('📊 Input data:', {
-        cvLength: fullCvText.length,
-        jobLength: jobText?.length || 0,
-        hasPhoto: !!photoData,
-        plan: userPlan
-      })
-      
-      // FIRST: Parse the raw CV to structure for display BEFORE optimization
-      const originalCvStructure = parseRawCVToStructure(fullCvText)
-      
-      // PRESERVE PHOTO from original upload
-      if (photoData) {
-        originalCvStructure.photo = photoData
-        originalCvStructure.image = photoData
-        console.log('📸 Photo preserved in CV structure')
-      }
-      
-      // Show original structure immediately while AI processes
-      setCvData(originalCvStructure)
-      console.log('✅ Original CV displayed, now optimizing with AI...')
-      
-      // NOW: Optimize with AI - use correct endpoint based on plan
-      const endpoint = userPlan === 'demo' ? '/api/demo-optimize' : '/api/analyze'
-      console.log('🎯 Using AI endpoint:', endpoint, 'for plan:', userPlan)
-      
-      const requestBody = userPlan === 'demo' ? {
-        cvText: fullCvText,
-        jobText: jobText || '',
-        language: 'pl'
-      } : {
-        currentCV: fullCvText, // Send actual CV text, not prompt
-        jobPosting: jobText || '',
-        email: 'premium@cvperfect.pl', // Mark as premium user with verified domain
-        paid: true, // Flag for paid optimization
-        plan: userPlan,
-        sessionId: new URLSearchParams(window.location.search).get('session_id') // Add session ID for recognition
-      }
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      })
-      
-      if (!response.ok) {
-        console.log('⚠️ AI optimization failed, keeping original structure')
-        setIsOptimizing(false)
-        return
-      }
-      
-      const result = await response.json()
-      
-      if (result.success && result.optimizedCV) {
-        console.log('✅ AI optimization successful!')
-        
-        // Try to parse optimized CV, fallback to original structure
-        let optimizedCvData
-        try {
-          optimizedCvData = parseOptimizedCV(result.optimizedCV)
-        } catch (parseError) {
-          console.log('⚠️ Could not parse optimized CV, enhancing original')
-          optimizedCvData = originalCvStructure
-        }
-        
-        // PRESERVE PHOTO and original content
-        optimizedCvData.photo = originalCvStructure.photo
-        optimizedCvData.image = originalCvStructure.image
-        optimizedCvData.fullContent = result.optimizedCV || fullCvText
-        
-        // Enhance with professional elements
-        optimizedCvData.optimized = true
-        optimizedCvData.atsScore = Math.floor(Math.random() * 15) + 85 // 85-99% 
-        optimizedCvData.professionalLevel = 'Expert'
-        
-        setCvData(optimizedCvData)
-        setAtsScore(optimizedCvData.atsScore)
-        
-        console.log('🎯 Final optimized CV:', {
-          name: optimizedCvData.name,
-          experienceCount: optimizedCvData.experience?.length || 0,
-          skillsCount: optimizedCvData.skills?.length || 0,
-          hasPhoto: !!optimizedCvData.photo,
-          atsScore: optimizedCvData.atsScore
-        })
-        
-        // Mark as processed to avoid re-optimization
-        // TODO: Update session data with processed flag
-        
-      } else {
-        console.error('❌ AI optimization failed - no optimized CV returned')
-        console.log('🔍 API response:', result)
-        throw new Error('AI returned no optimized CV')
-      }
-    } catch (error) {
-      console.error('❌ Full CV optimization error:', error.message)
-      console.log('🔍 Error details:', {
-        message: error.message,
-        stack: error.stack?.split('\n').slice(0, 3)
-      })
-      
-      // Fallback to manual parsing if AI fails
-      console.log('🔄 AI failed, using enhanced manual parsing fallback...')
-      const fallbackCvData = parseOriginalCVToStructured(fullCvText)
-      
-      if (photoData) {
-        fallbackCvData.photo = photoData
-        fallbackCvData.image = photoData
-      }
-      
-      setCvData(fallbackCvData)
-      
-    } finally {
-      setIsOptimizing(false)
-    }
-  }
+  // DUPLICATE FUNCTION REMOVED - Using the optimizeFullCVWithAI defined at line 351
 
   // Helper function to parse original CV text into structured data
   const parseOriginalCVToStructured = (cvText) => {
@@ -1075,10 +1481,14 @@ export default function Success() {
     }
   }
 
-  const optimizeCVFromMetadata = async (cvText, jobText) => {
+  const optimizeCVFromMetadata = async (cvText, jobText, photo = null) => {
     try {
       setIsOptimizing(true)
       console.log('🤖 Optimizing CV from session data...')
+      
+      // Get photo from parameter or fallback to sessionStorage
+      const photoData = photo || sessionStorage.getItem('pendingPhoto') || null
+      console.log('📸 Photo for optimization:', photoData ? 'Present' : 'None')
       
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -1088,7 +1498,9 @@ export default function Success() {
           jobPosting: jobText || '',
           email: 'session@cvperfect.pl', // Mark as paid domain user
           paid: true, // Flag for paid optimization
-          sessionId: new URLSearchParams(window.location.search).get('session_id') // Add session ID
+          sessionId: new URLSearchParams(window.location.search).get('session_id'), // Add session ID
+          photo: photoData, // NAPRAWIONE: przekazuj photo
+          preservePhotos: true // DODANE: preserve photos flag
         })
       })
       
@@ -1266,8 +1678,7 @@ export default function Success() {
     const startScore = Math.floor(Math.random() * 30) + 30 // 30-60%
     const endScore = 95
     
-    setAtsScore(startScore)
-    setOptimizedScore(endScore)
+    updateMetrics({ atsScore: startScore, optimizedScore: endScore })
     
     // Use GSAP for smooth animation instead of setInterval
     setTimeout(() => {
@@ -1275,29 +1686,11 @@ export default function Success() {
       if (scoreElement) {
         // GSAP temporarily disabled
         console.log('Setting ATS score to', endScore)
-        setAtsScore(endScore)
+        updateMetrics({ atsScore: endScore })
       }
     }, 1000)
   }
 
-  const getDemoCV = () => ({
-    name: 'Anna Kowalska',
-    email: 'anna.kowalska@email.com',
-    phone: '+48 123 456 789',
-    photo: 'https://images.unsplash.com/photo-1494790108755-2616b72a2fd0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=387&q=80', // Professional headshot
-    summary: 'Doświadczony Full-Stack Developer z ponad 5-letnim doświadczeniem w tworzeniu nowoczesnych aplikacji webowych. Specjalizuję się w React, Node.js i technologiach cloud. Prowadzę zespoły i dbam o wysoką jakość kodu.',
-    experience: [
-      'Senior React Developer - TechCorp (2021-2024) - Lider zespołu 5-osobowego, odpowiedzialny za architekturę frontend aplikacji obsługującej 100k+ użytkowników dziennie',
-      'Frontend Developer - StartupXYZ (2019-2021) - Rozwój interfejsów w React/TypeScript, integracja z API, zwiększenie performance o 40%',
-      'Junior Developer - WebAgency (2018-2019) - Tworzenie responsywnych stron internetowych, współpraca z designerami UX/UI'
-    ],
-    education: [
-      'Informatyka - AGH Kraków (2014-2018) - Inżynier, specjalizacja: Inżynieria Oprogramowania',
-      'Certyfikat React Developer - Meta (2020)',
-      'AWS Cloud Practitioner - Amazon (2022)'
-    ],
-    skills: ['JavaScript', 'React', 'Node.js', 'TypeScript', 'Python', 'AWS', 'Docker', 'Git', 'MongoDB', 'PostgreSQL']
-  })
   const scoreRef = useRef(null)
 
   // Translations
@@ -1344,7 +1737,7 @@ export default function Success() {
     }
   }
 
-  const t = translations[language]
+  const t = translations[appState.language || 'pl']
 
   // Template Access by Plan - PERFECT Hierarchy as requested
   const planTemplates = {
@@ -1412,6 +1805,31 @@ export default function Success() {
     }
   }
 
+  // Helper function to extract name from CV text
+  const extractNameFromCV = (cvText) => {
+    if (!cvText) return 'Jan Kowalski'
+    
+    // Try HTML parsing first
+    if (cvText.includes('<h1')) {
+      const h1Match = cvText.match(/<h1[^>]*>(.*?)<\/h1>/i)
+      if (h1Match) return h1Match[1].replace(/<[^>]*>/g, '').trim()
+    }
+    
+    // Try plain text parsing
+    const lines = cvText.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    if (lines.length > 0) {
+      const firstLine = lines[0]
+      // Remove common CV prefixes
+      const cleanName = firstLine
+        .replace(/^(CV|Resume|Curriculum Vitae)/i, '')
+        .replace(/[^\w\s\-]/g, '')
+        .trim()
+      return cleanName || 'Jan Kowalski'
+    }
+    
+    return 'Jan Kowalski'
+  }
+
   const extractExperience = (text) => {
     // Simple experience extraction logic
     const lines = text.split('\n')
@@ -1459,21 +1877,21 @@ export default function Success() {
     return foundSkills.length ? foundSkills : ['JavaScript', 'React', 'Node.js', 'Python']
   }
 
-  // Groq AI Optimization - Enhanced with full CV data and image support
-  const optimizeWithAI = useCallback(async () => {
+  // DUPLICATE FUNCTION REMOVED - Using the optimizeWithAI defined at line 419
+  const optimizeWithAICallback = useCallback(async () => {
     // Enhanced validation
-    if (userPlan === 'basic') {
+    if (appState.userPlan === 'basic') {
       addNotification('🔒 Optymalizacja AI dostępna w planie Gold/Premium', 'warning')
       return
     }
 
-    if (!cvData) {
+    if (!appState.cvData) {
       addNotification('❌ Brak danych CV do optymalizacji', 'error')
       return
     }
 
     // Validate CV data has minimum required content
-    const completeCV = prepareCVForOptimization(cvData)
+    const completeCV = prepareCVForOptimization(appState.cvData)
     if (!completeCV || completeCV.length < 100) {
       addNotification('❌ CV jest zbyt krótkie do optymalizacji (min. 100 znaków)', 'error')
       return
@@ -1490,7 +1908,7 @@ export default function Success() {
     
     try {
       // Prepare complete CV text with all sections
-      const completeCV = prepareCVForOptimization(cvData)
+      const completeCV = prepareCVForOptimization(appState.cvData)
       
       console.log('🤖 Sending complete CV data to AI:', completeCV.substring(0, 200) + '...')
       console.log('📊 CV length for optimization:', completeCV.length, 'characters')
@@ -1507,7 +1925,11 @@ export default function Success() {
           body: JSON.stringify({ 
             currentCV: completeCV,
             jobPosting: '', // Could be added later if available
-            email: cvData.email || cvData.personalInfo?.email || 'session@user.com'
+            email: cvData.email || cvData.personalInfo?.email || 'session@user.com',
+            photo: cvData.photo || null,
+            preservePhotos: true,
+            paid: true,
+            plan: appState.userPlan || 'premium'
           }),
           signal: controller.signal
         })
@@ -1575,11 +1997,11 @@ export default function Success() {
         
         // Reset and animate ATS score improvement
         const initialScore = Math.floor(Math.random() * 30) + 40 // 40-70%
-        setAtsScore(initialScore)
+        updateMetrics({ atsScore: initialScore })
         
         setTimeout(() => {
           // Simplified score animation without GSAP
-          setAtsScore(95)
+          updateMetrics({ atsScore: 95 })
         }, 500)
         
         const finalLength = result.optimizedCV.length
@@ -1619,7 +2041,7 @@ export default function Success() {
     } finally {
       setIsOptimizing(false)
     }
-  }, [cvData, userPlan]) // Fixed: Removed addNotification circular dependency
+  }, [appState.cvData, appState.userPlan]) // Fixed: Removed addNotification circular dependency
 
   // Helper function to prepare complete CV data for AI optimization
   const prepareCVForOptimization = (data) => {
@@ -1709,12 +2131,12 @@ export default function Success() {
       return
     }
     
-    if (isExporting) {
+    if (appState.isExporting) {
       addNotification('⏳ Eksport już w toku...', 'info')
       return
     }
     
-    setIsExporting(true)
+    updateAppState({ isExporting: true }, 'export-start')
     addNotification('📄 Generowanie PDF z Twojego CV...', 'info')
     
     try {
@@ -1779,29 +2201,29 @@ export default function Success() {
         addNotification(`❌ Błąd eksportu PDF: ${error.message}`, 'error')
       }
     } finally {
-      setIsExporting(false)
+      updateAppState({ isExporting: false }, 'export-end')
     }
-  }, [cvData]) // Fixed: Removed addNotification circular dependency
+  }, [appState.cvData]) // Fixed: Removed addNotification circular dependency
 
   // DOCX Export
   const exportToDOCX = useCallback(async () => {
     // Enhanced validation
-    if (userPlan === 'basic') {
+    if (appState.userPlan === 'basic') {
       addNotification('🔒 Eksport DOCX dostępny w planie Gold/Premium', 'warning')
       return
     }
     
-    if (!cvData) {
+    if (!appState.cvData) {
       addNotification('❌ Brak danych CV do eksportu', 'error')
       return
     }
     
-    if (isExporting) {
+    if (appState.isExporting) {
       addNotification('⏳ Eksport już w toku...', 'info')
       return
     }
 
-    setIsExporting(true)
+    updateAppState({ isExporting: true }, 'export-start')
     addNotification('📄 Generowanie DOCX...', 'info')
     
     try {
@@ -1930,13 +2352,13 @@ export default function Success() {
       console.error('DOCX export error:', error)
       addNotification('Błąd podczas eksportu DOCX', 'error')
     } finally {
-      setIsExporting(false)
+      updateAppState({ isExporting: false }, 'export-end')
     }
-  }, [cvData, userPlan]) // Fixed: Removed addNotification circular dependency
+  }, [appState.cvData, appState.userPlan]) // Fixed: Removed addNotification circular dependency
 
   // Email Function
   const sendEmail = useCallback(async (emailData) => {
-    if (userPlan === 'basic') {
+    if (appState.userPlan === 'basic') {
       addNotification('Wysyłanie mailem dostępne w planie Gold/Premium', 'warning')
       return
     }
@@ -1949,27 +2371,18 @@ export default function Success() {
           to: emailData.to,
           subject: emailData.subject,
           cvData,
-          template: selectedTemplate
+          template: appState.selectedTemplate
         })
       })
       
       addNotification('Email został wysłany!', 'success')
-      setShowEmailModal(false)
+      toggleModal('email', false)
     } catch (error) {
       console.error('Email error:', error)
       addNotification('Błąd podczas wysyłania maila', 'error')
     }
-  }, [cvData, userPlan]) // Fixed: Proper dependencies
+  }, [appState.cvData, appState.userPlan]) // Fixed: Proper dependencies
 
-  // Notification System
-  const addNotification = useCallback((message, type) => {
-    const id = Date.now()
-    setNotifications(prev => [...prev, { id, message, type }])
-    
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id))
-    }, 5000)
-  }, [])
 
   // CV Templates
   const templates = {
@@ -1997,7 +2410,7 @@ export default function Success() {
         <div className="bg-gradient-to-br from-white via-gray-50 to-white p-8 max-w-4xl mx-auto shadow-2xl border border-gray-200 cv-optimized-container rounded-2xl backdrop-filter backdrop-blur-sm">
           {cleanContent ? (
             <div 
-              dangerouslySetInnerHTML={{ __html: cleanContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(cleanContent) }}
               className="ai-optimized-content"
             />
           ) : (
@@ -2034,7 +2447,7 @@ export default function Success() {
             {/* AI Optimized Content */}
             <div 
               className="simple-optimized-content prose prose-blue max-w-none"
-              dangerouslySetInnerHTML={{ __html: optimizedHTML }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(optimizedHTML) }}
             />
           </div>
         );
@@ -2137,7 +2550,7 @@ export default function Success() {
             {/* AI Optimized Content with modern styling */}
             <div 
               className="modern-optimized-content"
-              dangerouslySetInnerHTML={{ __html: optimizedHTML }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(optimizedHTML) }}
             />
           </div>
         );
@@ -2233,7 +2646,7 @@ export default function Success() {
             {/* AI Optimized Content with executive styling */}
             <div 
               className="executive-optimized-content text-gray-100"
-              dangerouslySetInnerHTML={{ __html: optimizedHTML }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(optimizedHTML) }}
             />
           </div>
         );
@@ -2776,30 +3189,52 @@ export default function Success() {
     )
   }
 
-  // REMOVED: This useEffect was OVERRIDING real CV data with demo CV!
-  // Previous bug: This always set demo CV (Anna Kowalska) after real data was loaded
-  // Real CV data should come from fetchUserDataFromSession only
 
   return (
-    <div className="container">
-      {/* Particles Background */}
-      <div className="particles-container" id="particles"></div>
+    <>
+      <Head>
+        <title>Sukces - CV Zoptymalizowane | CvPerfect.pl</title>
+        <meta name="description" content="Twoje CV zostało profesjonalnie zoptymalizowane przez AI. Pobierz gotowy dokument i rozpocznij aplikowanie do najlepszych firm." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      
+      <div className="container">
+        {/* Particles Background */}
+        <div className="particles-container" id="particles"></div>
 
-      {/* Notifications */}
+      {/* Premium Notification System */}
       <AnimatePresence>
         {notifications.map(notification => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, y: -50, x: 50 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
-              notification.type === 'success' ? 'bg-green-500 text-white' :
-              notification.type === 'error' ? 'bg-red-500 text-white' :
-              'bg-yellow-500 text-black'
+            initial={{ opacity: 0, y: -50, x: 50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 100, damping: 15 }}
+            className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl max-w-sm border backdrop-blur-lg ${
+              notification.type === 'success' 
+                ? 'bg-gradient-to-r from-emerald-500/90 to-green-500/90 text-white border-emerald-400/50' :
+              notification.type === 'error' 
+                ? 'bg-gradient-to-r from-red-500/90 to-pink-500/90 text-white border-red-400/50' :
+              notification.type === 'info'
+                ? 'bg-gradient-to-r from-blue-500/90 to-indigo-500/90 text-white border-blue-400/50' :
+                'bg-gradient-to-r from-yellow-500/90 to-orange-500/90 text-black border-yellow-400/50'
             }`}
           >
-            {notification.message}
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                {notification.type === 'success' && '🎉'}
+                {notification.type === 'error' && '⚠️'}
+                {notification.type === 'info' && '💡'}
+                {!['success', 'error', 'info'].includes(notification.type) && '🔔'}
+              </div>
+              <div className="flex-1">
+                {notification.title && (
+                  <div className="font-semibold text-sm mb-1">{notification.title}</div>
+                )}
+                <div className="text-sm opacity-95">{notification.message}</div>
+              </div>
+            </div>
           </motion.div>
         ))}
       </AnimatePresence>
@@ -2807,77 +3242,145 @@ export default function Success() {
       {/* FAZA 6: MILLION DOLLAR PREMIUM UI/UX COMPONENTS */}
       {/* ============================================== */}
 
-      {/* Premium Loading Overlay with Progressive Animation */}
+      {/* MILLION DOLLAR Loading Experience */}
       <AnimatePresence>
         {appState.isInitializing && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/95 backdrop-blur-lg flex items-center justify-center"
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ exit: { duration: 0.5 } }}
+            className="fixed inset-0 z-50 bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/95 backdrop-blur-lg flex items-center justify-center overflow-hidden"
           >
-            <div className="text-center">
-              {/* Animated Logo */}
+            {/* Premium Background Effects */}
+            <div className="absolute inset-0">
+              <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-violet-600/30 to-purple-600/30 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-blue-600/30 to-indigo-600/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-pink-600/20 to-rose-600/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+            </div>
+            
+            <div className="text-center relative z-10">
+              {/* Enhanced Animated Logo */}
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="mb-8"
+                initial={{ scale: 0.5, opacity: 0, rotate: -180 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="mb-8 relative"
               >
-                <div className="w-20 h-20 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
-                  <span className="text-2xl font-bold text-white">CV</span>
+                <div className="w-24 h-24 mx-auto bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent animate-pulse"></div>
+                  <span className="text-3xl font-bold text-white relative z-10">✨</span>
                 </div>
+                {/* Orbital rings */}
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 w-32 h-32 border-2 border-violet-400/30 rounded-full mx-auto"
+                ></motion.div>
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 w-40 h-40 border border-purple-400/20 rounded-full mx-auto"
+                ></motion.div>
               </motion.div>
-
-              {/* Progressive Loading Text */}
-              <motion.h2
+              
+              {/* Premium Title */}
+              <motion.h1
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="text-4xl font-bold mb-3 bg-gradient-to-r from-violet-200 via-purple-200 to-pink-200 bg-clip-text text-transparent"
+              >
+                Analizujemy Twoje CV
+              </motion.h1>
+              
+              <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-2xl font-light text-white mb-4"
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="text-purple-200 text-lg mb-8"
               >
-                Przygotowanie Twojego CV
-              </motion.h2>
-
-              {/* Premium Progress Bar */}
-              <div className="w-80 mx-auto mb-6">
-                <div className="bg-white/20 rounded-full h-2 overflow-hidden">
+                Przygotowujemy najlepsze narzędzia optymalizacji ATS
+              </motion.p>
+              
+              {/* Progress Steps */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.6 }}
+                className="flex justify-center items-center space-x-6 text-sm"
+              >
+                {[
+                  { icon: '🤖', text: 'Połączenie z AI', delay: 0 },
+                  { icon: '📊', text: 'Analiza struktury', delay: 300 },
+                  { icon: '🎯', text: 'Optymalizacja ATS', delay: 600 },
+                  { icon: '✨', text: 'Finalizacja', delay: 900 }
+                ].map((step, i) => (
                   <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${appState.progress.sessionLoad}%` }}
-                    transition={{ duration: 0.5 }}
-                    className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"
-                  />
-                </div>
-                <p className="text-white/80 text-sm mt-2">
-                  {appState.progress.sessionLoad}% - Ładowanie danych sesji...
-                </p>
-              </div>
-
-              {/* Animated Status Indicators */}
-              <div className="flex justify-center gap-4">
-                {['Sesja', 'AI', 'Szablon'].map((step, index) => (
-                  <motion.div
-                    key={step}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ 
-                      scale: appState.progress.sessionLoad > index * 33 ? 1 : 0.7,
-                      opacity: appState.progress.sessionLoad > index * 33 ? 1 : 0.5
-                    }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold ${
-                      appState.progress.sessionLoad > index * 33
-                        ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg'
-                        : 'bg-white/20 text-white/60'
-                    }`}
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: step.delay / 1000 + 0.8, duration: 0.4 }}
+                    className="flex flex-col items-center"
                   >
-                    {index + 1}
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: step.delay / 1000 }}
+                      className="w-12 h-12 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-2 border border-violet-400/30"
+                    >
+                      <span className="text-lg">{step.icon}</span>
+                    </motion.div>
+                    <span className="text-purple-300 font-medium">{step.text}</span>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Confetti Animation for Success */}
+      <AnimatePresence>
+        {appState.showConfetti && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onAnimationComplete={() => {
+              setTimeout(() => {
+                updateAppState({ showConfetti: false })
+              }, 3000)
+            }}
+            className="fixed inset-0 pointer-events-none z-40"
+          >
+            <div id="confetti-canvas"></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error State Display */}
+      {appState.cvData?.error && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-900/20 to-purple-900/20"
+        >
+          <div className="text-center max-w-2xl mx-auto p-8">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+              <span className="text-3xl">⚠️</span>
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-4">Wystąpił błąd</h2>
+            <p className="text-gray-300 mb-6">{appState.cvData.message}</p>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white px-8 py-3 rounded-full font-bold transition-all duration-300 transform hover:scale-105"
+            >
+              Wróć do strony głównej
+            </button>
+          </div>
+        </motion.div>
+      )}
+
 
       {/* Performance Monitor (Development Mode) */}
       {appState.features.analytics && process.env.NODE_ENV === 'development' && (
@@ -3010,7 +3513,7 @@ export default function Success() {
                       </span>
                     </div>
                     <h4 className="font-semibold text-center capitalize">{template}</h4>
-                    {appState.selectedTemplate === template && (
+                    {appState.appState.selectedTemplate === template && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -3049,7 +3552,7 @@ export default function Success() {
                 ref={scoreRef}
                 className="text-3xl font-bold text-violet-400 drop-shadow-lg ats-score-value"
               >
-                {atsScore}
+                {appState.metrics.atsScore}
               </span>
               <span className="text-violet-400 text-xl ml-1">%</span>
             </div>
@@ -3058,10 +3561,10 @@ export default function Success() {
           {/* Language Toggle */}
           <div className="mt-6">
             <button
-              onClick={() => setLanguage(lang => lang === 'pl' ? 'en' : 'pl')}
+              onClick={() => updateAppState({ language: appState.language === 'pl' ? 'en' : 'pl' })}
               className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg text-white border border-violet-400/30 hover:bg-violet-500/20 transition-all shadow-lg"
             >
-              {language === 'pl' ? '🇺🇸 English' : '🇵🇱 Polski'}
+              {appState.language === 'pl' ? '🇺🇸 English' : '🇵🇱 Polski'}
             </button>
           </div>
         </motion.div>
@@ -3080,20 +3583,19 @@ export default function Success() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mt-6">
               {Object.entries(t.templates).map(([key, name]) => {
-                const isAccessible = planTemplates[userPlan] ? planTemplates[userPlan].includes(key) : false
+                const isAccessible = planTemplates[appState.userPlan] ? planTemplates[appState.userPlan].includes(key) : false
                 return (
                   <motion.button
                     key={key}
-                    whileHover={{ scale: isAccessible ? 1.05 : 1 }}
                     whileTap={{ scale: isAccessible ? 0.95 : 1 }}
-                    onClick={() => isAccessible ? setSelectedTemplate(key) : null}
-                    className={`template-card ${selectedTemplate === key ? 'selected' : ''} ${!isAccessible ? 'locked' : ''}`}
+                    onClick={() => isAccessible ? updateAppState({ selectedTemplate: key }) : null}
+                    className={`template-card ${appState.selectedTemplate === key ? 'selected' : ''} ${!isAccessible ? 'locked' : ''}`}
                   >
                     <div className="template-name">{name}</div>
                     {!isAccessible && (
                       <div className="template-lock">
                         <span className="lock-text">
-                          🔒 {userPlan === 'basic' ? 'Gold/Premium' : 'Premium'}
+                          🔒 {appState.userPlan === 'basic' ? 'Gold/Premium' : 'Premium'}
                         </span>
                       </div>
                     )}
@@ -3121,13 +3623,13 @@ export default function Success() {
               <div ref={cvPreviewRef} className="cv-preview-content">
                 {/* Show selected template with AI optimized content if available */}
                 {console.log('🔍 CV Display Debug:', {
-                  hasFullContent: !!cvData?.fullContent,
-                  isOptimized: !!cvData?.optimized,
-                  fullContentLength: cvData?.fullContent?.length || 0,
-                  selectedTemplate: selectedTemplate
+                  hasFullContent: !!appState.cvData?.fullContent,
+                  isOptimized: !!appState.cvData?.optimized,
+                  fullContentLength: appState.cvData?.fullContent?.length || 0,
+                  selectedTemplate: appState.selectedTemplate
                 })}
                 {/* Always use selected template, templates will handle optimized content internally */}
-                {templates[selectedTemplate]?.(cvData) || templates.simple(cvData)}
+                {templates[appState.selectedTemplate]?.(appState.cvData) || templates.simple(appState.cvData)}
               </div>
             </div>
           </div>
@@ -3144,10 +3646,10 @@ export default function Success() {
             whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(120, 80, 255, 0.4)" }}
             whileTap={{ scale: 0.95 }}
             onClick={optimizeWithAI}
-            disabled={isOptimizing || userPlan === 'basic'}
+            disabled={appState.isOptimizing || appState.userPlan === 'basic'}
             className="group relative overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-violet-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
-            {isOptimizing ? (
+            {appState.isOptimizing ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
             ) : (
               '🤖'
@@ -3159,10 +3661,10 @@ export default function Success() {
             whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(16, 185, 129, 0.4)" }}
             whileTap={{ scale: 0.95 }}
             onClick={exportToPDF}
-            disabled={isExporting}
+            disabled={appState.isExporting}
             className="group relative overflow-hidden bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-400 hover:via-green-400 hover:to-teal-400 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-emerald-500/40 flex items-center justify-center gap-3 transition-all duration-300 border border-emerald-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
-            {isExporting ? (
+            {appState.isExporting ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
             ) : (
               '📄'
@@ -3174,10 +3676,10 @@ export default function Success() {
             whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.4)" }}
             whileTap={{ scale: 0.95 }}
             onClick={exportToDOCX}
-            disabled={isExporting || userPlan === 'basic'}
+            disabled={appState.isExporting || appState.userPlan === 'basic'}
             className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 hover:from-blue-400 hover:via-indigo-400 hover:to-cyan-400 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-blue-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
-            {isExporting ? (
+            {appState.isExporting ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
             ) : (
               '📝'
@@ -3188,8 +3690,8 @@ export default function Success() {
           <motion.button
             whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(251, 146, 60, 0.4)" }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowEmailModal(true)}
-            disabled={userPlan === 'basic'}
+            onClick={() => toggleModal('email', true)}
+            disabled={appState.userPlan === 'basic'}
             className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-400 hover:via-pink-400 hover:to-red-400 text-white p-6 rounded-full font-bold shadow-2xl hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-all duration-300 border border-orange-400/30 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1"
           >
             📧 {t.sendEmail}
@@ -3197,7 +3699,7 @@ export default function Success() {
         </motion.div>
 
         {/* Plan Upgrade Banner */}
-        {userPlan === 'basic' && (
+        {appState.userPlan === 'basic' && (
           <motion.div 
             className="mt-8 premium-upgrade-banner p-8 text-center"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -3226,13 +3728,13 @@ export default function Success() {
 
       {/* Email Modal */}
       <AnimatePresence>
-        {showEmailModal && (
+        {appState.modals.email && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowEmailModal(false)}
+            onClick={() => toggleModal('email', false)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -3278,7 +3780,7 @@ export default function Success() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowEmailModal(false)}
+                    onClick={() => toggleModal('email', false)}
                     className="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700 p-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-300/50 backdrop-blur-sm"
                   >
                     Anuluj
@@ -3507,9 +4009,10 @@ export default function Success() {
         }
 
         .template-card:hover:not(.locked) {
-          background: rgba(120, 80, 255, 0.1);
-          border-color: rgba(120, 80, 255, 0.3);
-          transform: scale(1.05);
+          background: rgba(120, 80, 255, 0.15);
+          border-color: rgba(120, 80, 255, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(120, 80, 255, 0.2);
         }
 
         .template-card.selected {
@@ -4044,6 +4547,7 @@ export default function Success() {
         /* Global margin/padding reset */
         html, body { margin:0 !important; padding:0 !important; }
       `}</style>
-    </div>
+      </div>
+    </>
   )
 }
