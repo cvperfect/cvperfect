@@ -1,12 +1,11 @@
 // API endpoint to save full CV session data before Stripe payment
-export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+import { handleCORSPreflight } from '../../lib/cors'
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
+export default async function handler(req, res) {
+  // Secure CORS handling
+  const shouldContinue = handleCORSPreflight(req, res)
+  if (!shouldContinue) {
+    return // CORS preflight handled
   }
 
   if (req.method !== 'POST') {

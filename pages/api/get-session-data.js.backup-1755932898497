@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { session_id, force_file } = req.query
+    const { session_id } = req.query
 
     if (!session_id) {
       return res.status(400).json({
@@ -25,8 +25,7 @@ export default async function handler(req, res) {
       })
     }
 
-    const isForceFileMode = force_file === 'true'
-    console.log('🔍 Retrieving session data for:', session_id, isForceFileMode ? '(FORCE FILE MODE)' : '')
+    console.log('🔍 Retrieving session data for:', session_id)
 
     // Try to load from file system first
     const fs = require('fs').promises
@@ -52,16 +51,9 @@ export default async function handler(req, res) {
         processed: sessionData.processed
       })
 
-      // Return full session data (ENHANCED for FAZA 3)
+      // Return full session data
       return res.status(200).json({
         success: true,
-        source: 'filesystem',
-        cvData: sessionData.cvData, // Direct access for fallback system
-        email: sessionData.email,
-        plan: sessionData.plan,
-        jobPosting: sessionData.jobPosting || '',
-        photo: sessionData.photo || null,
-        processed: sessionData.processed,
         session: {
           id: sessionData.sessionId,
           customer_email: sessionData.email,
@@ -78,19 +70,7 @@ export default async function handler(req, res) {
       })
 
     } catch (fileError) {
-      console.log('📝 Session file not found...')
-      
-      // If force_file mode is enabled, don't try Stripe
-      if (isForceFileMode) {
-        console.log('🚫 Force file mode - skipping Stripe fallback')
-        return res.status(404).json({
-          success: false,
-          source: 'filesystem',
-          error: 'Session file not found (force file mode)'
-        })
-      }
-      
-      console.log('🔄 Trying Stripe fallback...')
+      console.log('📝 Session file not found, trying Stripe fallback...')
       
       // Fallback to Stripe session lookup
       const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)

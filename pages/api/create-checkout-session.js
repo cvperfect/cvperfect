@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
   
   // Pobierz parametry z POST lub GET  
-  const { plan, email, priceId, cv, job, fullSessionId } = req.method === 'POST' ? req.body : req.query
+  const { plan, email, priceId, cv, job, photo, fullSessionId } = req.method === 'POST' ? req.body : req.query
   
   let finalPriceId
   let mode = 'payment'
@@ -87,6 +87,13 @@ export default async function handler(req, res) {
     if (job) {
       // Ogranicz do 200 znaków
       metadata.job = job.substring(0, 200)
+    }
+    
+    // Dodaj photo marker do metadata jeśli istnieje (nie zapisujemy całego base64 w Stripe)
+    if (photo) {
+      // Tylko flaga że photo istnieje - pełne dane są w sessionStorage/database
+      metadata.hasPhoto = 'true'
+      metadata.photoSize = photo.length.toString()
     }
     
     // Determine base URL with proper fallback priority

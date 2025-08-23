@@ -15,6 +15,8 @@
       "Bash(npx:*)",
       "Bash(npm:*)", 
       "Bash(node:*)",
+      "Bash(.claude/hooks/*)",
+      "Bash(.claude/test-snapshots/*)",
       "mcp__puppeteer__*",
       "WebSearch"
     ],
@@ -24,5 +26,67 @@
   "ui": {
     "showMcpTools": false,
     "showMcpStatus": false
+  },
+  "safety": {
+    "regressionPrevention": {
+      "enabled": true,
+      "blockOnCriticalFailure": true,
+      "requireTestsBeforeCommit": true,
+      "snapshotOnSuccess": true,
+      "maxFailedTests": 2,
+      "criticalTests": ["build", "lint", "smoke_test"],
+      "autoRollbackThreshold": 5
+    },
+    "fileProtection": {
+      "criticalFiles": [
+        "pages/index.js",
+        "pages/success.js",
+        "pages/api/*.js",
+        ".claude/settings.json",
+        "package.json"
+      ],
+      "requireConfirmation": true,
+      "createBackups": true
+    }
+  },
+  "hooks": {
+    "session-start": {
+      "command": "node start-agents-system.js && node claude-cvperfect-integration.js",
+      "timeout": 15000,
+      "background": true,
+      "description": "Auto-start CVPerfect agents system and Claude integration"
+    },
+    "task-execute": {
+      "command": "node -e \"const {processTask} = require('./claude-cvperfect-integration'); processTask(process.argv[1]).then(r => console.log(JSON.stringify(r)));\"",
+      "timeout": 30000,
+      "description": "Process task through CVPerfect agents if applicable"
+    },
+    "pre-edit": {
+      "command": "bash .claude/hooks/pre-edit.sh",
+      "timeout": 120000,
+      "background": false,
+      "description": "Run regression prevention checks before file edits",
+      "on": "file-edit"
+    },
+    "post-edit": {
+      "command": "bash .claude/hooks/post-edit.sh",
+      "timeout": 180000,
+      "background": false,
+      "description": "Validate changes and detect regressions after file edits",
+      "on": "file-edit-complete"
+    },
+    "pre-commit": {
+      "command": "bash .claude/hooks/regression-guard.sh",
+      "timeout": 300000,
+      "background": false,
+      "description": "Comprehensive regression analysis before git commits",
+      "on": "git-commit"
+    },
+    "regression-guard": {
+      "command": "node .claude/test-snapshots/snapshot-manager.js validate",
+      "timeout": 240000,
+      "background": false,
+      "description": "Manual regression validation command"
+    }
   }
 }

@@ -1,18 +1,16 @@
 // Demo CV optimization endpoint for testing and long CV processing
 import Groq from 'groq-sdk'
+import { handleCORSPreflight } from '../../lib/cors'
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 })
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
+  // Secure CORS handling
+  const shouldContinue = handleCORSPreflight(req, res)
+  if (!shouldContinue) {
+    return // CORS preflight handled
   }
 
   if (req.method !== 'POST') {
@@ -23,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { cvText, jobText = '', language = 'pl' } = req.body
+    const { cvText, jobText = '', language = 'pl', photo, preservePhotos = true } = req.body
 
     // Validation
     if (!cvText) {
@@ -33,10 +31,25 @@ export default async function handler(req, res) {
       })
     }
 
+    // Extract and preserve photo information
+    let photoData = photo || null
+    let hasEmbeddedPhoto = false
+    
+    // Check if CV already contains photo/image tags
+    if (cvText.includes('<img') || cvText.includes('data:image') || cvText.includes('base64')) {
+      hasEmbeddedPhoto = true
+      console.log('📸 Photo detected in CV content')
+    }
+    
+    if (photoData) {
+      console.log('📸 Photo data provided for preservation')
+    }
+
     console.log('🔍 Demo CV optimization:', {
       cvLength: cvText.length,
       hasJob: !!jobText,
-      language: language
+      language: language,
+      hasPhoto: !!photoData || hasEmbeddedPhoto
     })
 
     // Handle very long CVs by chunking if necessary
@@ -74,7 +87,7 @@ export default async function handler(req, res) {
         console.log(`🤖 Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`)
         
         try {
-          const optimizedChunk = await optimizeChunk(chunk, jobText, language, i === 0)
+          const optimizedChunk = await optimizeChunk(chunk, jobText, language, i === 0, photoData, preservePhotos)
           optimizedChunks.push(optimizedChunk)
           
           // Rate limiting - small delay between chunks
@@ -91,7 +104,28 @@ export default async function handler(req, res) {
       processedCV = optimizedChunks.join('\n\n')
     } else {
       // Standard processing for normal-sized CVs
-      processedCV = await optimizeChunk(cvText, jobText, language, true)
+      processedCV = await optimizeChunk(cvText, jobText, language, true, photoData, preservePhotos)
+    }
+
+    // Post-processing: Ensure photo preservation
+    if (preservePhotos && photoData && !processedCV.includes('<img') && !processedCV.includes('data:image')) {
+      console.log('📸 Injecting photo into optimized CV...')
+      
+      const photoHTML = `
+        <div class="profile-photo-container" style="text-align: center; margin: 20px 0;">
+          <img src="${photoData}" alt="Profile Photo" class="profile-photo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #3498db; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+        </div>
+      `
+      
+      if (processedCV.includes('<body>')) {
+        processedCV = processedCV.replace('<body>', '<body>' + photoHTML)
+      } else if (processedCV.includes('<h1')) {
+        processedCV = processedCV.replace('<h1', photoHTML + '<h1')
+      } else {
+        processedCV = photoHTML + processedCV
+      }
+      
+      console.log('✅ Photo successfully injected into optimized CV')
     }
 
     // Validate the result
@@ -99,19 +133,29 @@ export default async function handler(req, res) {
       throw new Error('Optimization resulted in unexpectedly short output')
     }
 
+    // Validate photo preservation
+    const photoPreserved = preservePhotos && (processedCV.includes('<img') || processedCV.includes('data:image'))
+    if (preservePhotos && (hasEmbeddedPhoto || photoData) && !photoPreserved) {
+      console.log('⚠️ WARNING: Photo may have been lost during optimization')
+    }
+
     console.log('✅ Demo optimization completed:', {
       originalLength: cvText.length,
       optimizedLength: processedCV.length,
-      improvement: processedCV.length > cvText.length ? 'Enhanced' : 'Refined'
+      improvement: processedCV.length > cvText.length ? 'Enhanced' : 'Refined',
+      photoPreserved: photoPreserved
     })
 
     return res.status(200).json({
       success: true,
       optimizedCV: processedCV,
+      photoPreserved: photoPreserved,
       stats: {
         originalLength: cvText.length,
         optimizedLength: processedCV.length,
-        processedAt: new Date().toISOString()
+        processedAt: new Date().toISOString(),
+        hasPhoto: hasEmbeddedPhoto || !!photoData,
+        photoPreserved: photoPreserved
       }
     })
 
@@ -126,51 +170,79 @@ export default async function handler(req, res) {
   }
 }
 
-async function optimizeChunk(cvText, jobText, language, isFirstChunk) {
+async function optimizeChunk(cvText, jobText, language, isFirstChunk, photoData = null, preservePhotos = true) {
   const systemPrompt = language === 'pl' ? 
-    `Jesteś ekspertem od optymalizacji CV. Twoim zadaniem jest DELIKATNE ULEPSZENIE oryginalnego CV poprzez rozszerzenie opisów stanowisk i dodanie osiągnięć.
+    `Jesteś ekspertem od optymalizacji CV i rekrutacji. Twoim zadaniem jest PROFESJONALNA OPTYMALIZACJA CV pod kątem systemów ATS i najlepszych firm rekrutacyjnych.
 
-KRYTYCZNE ZASADY:
-1. ZACHOWAJ DOKŁADNIE oryginalną strukturę CV - nie zmieniaj kolejności sekcji
-2. ZACHOWAJ oryginalne nagłówki sekcji (bez emoji, bez separatorów)
-3. TYLKO rozszerz opisy stanowisk o szczegóły i osiągnięcia
-4. NIE dodawaj nowych sekcji, które nie były w oryginale
-5. Jeśli sekcja była w oryginale - rozszerz ją. Jeśli nie było - nie dodawaj
+GŁÓWNY CEL: Maksymalizacja ATS Score (85-95%) poprzez strategiczne wykorzystanie słów kluczowych i struktury CV.
 
-DOZWOLONE ULEPSZENIA:
-- Rozszerzenie opisów stanowisk o konkretne osiągnięcia i metryki
-- Dodanie słów kluczowych branżowych
-- Użycie mocnych czasowników akcji (kierowałem, wdrożyłem, zwiększyłem)
-- Dodanie konkretnych liczb (% poprawy, kwoty, iłości)
+📸 KRYTYCZNE: ZACHOWANIE ZDJĘĆ I OBRAZÓW
+- JEŚLI CV zawiera tagi <img>, ZACHOWAJ JE W 100%
+- JEŚLI CV zawiera data:image/base64, ZACHOWAJ DOKŁADNIE
+- NIGDY nie usuwaj, nie zmieniaj ani nie modyfikuj tagów <img>
+- ZACHOWAJ wszystkie atrybuty obrazów (src, alt, class, style)
+- Zdjęcia profilowe są KLUCZOWE dla ATS i rekruterów
 
-ZABRONIONE:
-- Emoji w nagłówkach (🎯, 💼, 🎓)  
-- Linie separujące (═══)
-- Zmiana kolejności sekcji
-- Dodawanie nowych sekcji
-- Zmiana stylu nagłówków
+KRYTYCZNE ZASADY ATS:
+1. ZACHOWAJ oryginalną strukturę CV ale popraw formatowanie
+2. Dodaj BRANŻOWE słowa kluczowe w kontekście doświadczenia 
+3. KWANTYFIKUJ osiągnięcia (liczby, %, wartości, okresy)
+4. Użyj SILNYCH czasowników akcji (zarządzałem, wdrożyłem, zwiększyłem, optymalizowałem)
+5. Dopasuj terminologię do oferty pracy (jeśli podana)
 
-PRZYKŁAD TRANSFORMACJI:
+STRATEGIA OPTYMALIZACJI:
+- Rozszerz opisy stanowisk o konkretne osiągnięcia i metryki
+- Dodaj słowa kluczowe branżowe naturalnie w kontekście
+- Uzupełnij umiejętności o poszukiwane technologie/kompetencje
+- Dodaj osiągnięcia biznesowe (wzrost sprzedaży, optymalizacja procesów, oszczędności)
+- Uwzględnij soft skills w opisach doświadczeń
+
+PRZYKŁAD TRANSFORMACJI ATS:
 ORYGINAŁ:
 Kurier w UPS - Dostarczanie paczek
 
-ULEPSZONY:
-Kurier w UPS - Odpowiedzialny za dostarczanie paczek na terenie Zamościa, osiągnąłem 95% terminowość dostaw, współpracowałem z zespołem 5 kurierów, obsługiwałem dziennie 50-80 przesyłek.
+ZOPTYMALIZOWANY POD ATS:
+Kurier/Specjalista Logistyczny w UPS
+• Zarządzałem dostarczaniem 50-80 przesyłek dziennie na terenie Zamościa z 95% terminowością
+• Optymalizowałem trasy dostaw, co przyczyniło się do 15% redukcji czasu dostawy  
+• Współpracowałem z zespołem 5 kurierów, wdrażając system komunikacji zwiększający efektywność o 20%
+• Obsługiwałem system CRM do śledzenia przesyłek i kontaktu z klientami
+• Rozwiązywałem problemy logistyczne, osiągając 98% satysfakcji klientów
 
 FORMAT ODPOWIEDZI:
-Zwróć TYLKO zoptymalizowane CV w dokładnie tej samej strukturze co oryginał, używając **pogrubień** dla nagłówków i * dla punktów.` :
-    `You are a CV optimization and recruitment expert. Your task is to improve the CV to make it more attractive to employers and ATS systems.
+Zwróć TYLKO zoptymalizowane CV używając **pogrubień** dla nagłówków i • dla punktów wypunktowań.` :
+    `You are a professional CV optimization and recruitment expert. Your task is to PROFESSIONALLY OPTIMIZE this CV for ATS systems and top recruitment companies.
 
-OPTIMIZATION RULES:
-1. PRESERVE all true information from the CV
-2. DO NOT ADD new experiences, certifications, or skills
-3. Improve formatting and structure
-4. Use stronger action words
-5. Optimize for ATS
-6. If job posting provided, adjust keywords accordingly
+PRIMARY GOAL: Maximize ATS Score (85-95%) through strategic keyword usage and CV structure optimization.
+
+CRITICAL ATS RULES:
+1. PRESERVE original CV structure but improve formatting
+2. Add INDUSTRY-SPECIFIC keywords within experience context
+3. QUANTIFY achievements (numbers, percentages, values, timeframes)
+4. Use STRONG action verbs (managed, implemented, increased, optimized, led)
+5. Adapt terminology to job posting requirements (if provided)
+
+OPTIMIZATION STRATEGY:
+- Expand role descriptions with concrete achievements and metrics
+- Naturally integrate industry keywords within context
+- Supplement skills with in-demand technologies/competencies
+- Add business achievements (sales growth, process optimization, cost savings)
+- Include soft skills within experience descriptions
+
+ATS TRANSFORMATION EXAMPLE:
+ORIGINAL:
+Delivery driver at UPS - Delivering packages
+
+ATS-OPTIMIZED:
+Logistics Specialist/Delivery Driver at UPS
+• Managed delivery of 50-80 packages daily across city territory with 95% on-time performance
+• Optimized delivery routes, contributing to 15% reduction in delivery time
+• Collaborated with 5-member courier team, implementing communication system that increased efficiency by 20%
+• Operated CRM system for package tracking and customer communication
+• Resolved logistics challenges, achieving 98% customer satisfaction rating
 
 RESPONSE FORMAT:
-Return ONLY the optimized CV without additional comments.`
+Return ONLY the optimized CV using **bold** for headers and • for bullet points.`
 
   const userPrompt = language === 'pl' ? 
     `${jobText ? `OFERTA PRACY:\n${jobText}\n\n` : ''}CV DO OPTYMALIZACJI:\n${cvText}` :

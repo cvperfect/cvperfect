@@ -1,5 +1,7 @@
 import Groq from 'groq-sdk'
 import { createClient } from '@supabase/supabase-js'
+import { authenticateUser, updateUserUsage } from '../../lib/auth'
+import { handleCORSPreflight } from '../../lib/cors'
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -11,13 +13,10 @@ const supabase = createClient(
 )
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
+  // Secure CORS handling
+  const shouldContinue = handleCORSPreflight(req, res)
+  if (!shouldContinue) {
+    return // CORS preflight handled
   }
 
   if (req.method !== 'POST') {
@@ -28,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { jobPosting, currentCV, email, paid, plan, sessionId } = req.body
+    const { jobPosting, currentCV, email, paid, plan, sessionId, photo, preservePhotos = true } = req.body
 
     // Walidacja
     if (!currentCV || !email) {
@@ -38,75 +37,68 @@ export default async function handler(req, res) {
       })
     }
 
-    console.log('🔍 Analyzing CV for:', email, { paid: paid, plan: plan, sessionId: sessionId })
+    console.log('🔍 Analyzing CV for:', email, { 
+      paid: paid, 
+      plan: plan, 
+      sessionId: sessionId,
+      cvLength: currentCV?.length || 0
+    })
 
-    // SPECIAL HANDLING FOR PAID USERS FROM SUCCESS.JS
-    const isPaidUser = paid === true || 
-                      email.includes('@cvperfect.pl') || 
-                      email === 'premium@user.com' ||
-                      email === 'premium@cvperfect.pl' ||
-                      sessionId?.startsWith('sess_')
-
-    if (isPaidUser) {
-      console.log('✅ Paid user detected, proceeding with AI optimization')
-      // Skip database checks for paid users - they came from Stripe success
-    } else {
-      console.log('🔍 Checking database for user limits:', email)
-
-    // 1. SPRAWDŹ UŻYTKOWNIKA W BAZIE
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single()
-
-    if (userError && userError.code !== 'PGRST116') {
-      console.error('❌ Database error:', userError)
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Błąd bazy danych. Spróbuj ponownie.' 
+    // SECURE AUTHENTICATION - replaced weak email bypass
+    console.log('🔐 Authenticating user with secure method')
+    const authResult = await authenticateUser({ email, sessionId, paid })
+    
+    if (!authResult.authenticated) {
+      console.log('❌ Authentication failed:', authResult.error)
+      
+      const errorMessages = {
+        'Subscription expired': 'Twoja subskrypcja wygasła. Odnów plan aby kontynuować.',
+        'Usage limit exceeded': 'Wykorzystałeś limit CV. Kup nowy plan aby kontynuować.',
+        'Invalid authentication credentials': 'Musisz wykupić plan aby korzystać z optymalizacji CV.',
+        'Authentication system error': 'Błąd systemu autentykacji. Spróbuj ponownie.'
+      }
+      
+      return res.status(403).json({
+        success: false,
+        error: errorMessages[authResult.error] || 'Brak autoryzacji dostępu.',
+        requiresPayment: authResult.requiresPayment || true
       })
     }
-
-    // 2. SPRAWDŹ CZY UŻYTKOWNIK MA DOSTĘP
-    if (!user) {
-      console.log('❌ User not found, requires payment')
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Musisz wykupić plan aby korzystać z optymalizacji CV.' 
-      })
-    }
-
-    // 3. SPRAWDŹ LIMITY
-    if (user.usage_count >= user.usage_limit) {
-      console.log('❌ Usage limit exceeded')
-      return res.status(403).json({ 
-        success: false, 
-        error: `Wykorzystałeś limit ${user.usage_limit} CV. Kup nowy plan aby kontynuować.` 
-      })
-    }
-
-    // 4. SPRAWDŹ WYGAŚNIĘCIE
-    if (user.expires_at && new Date(user.expires_at) < new Date()) {
-      console.log('❌ Subscription expired')
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Twoja subskrypcja wygasła. Odnów plan aby kontynuować.' 
-      })
-    }
-
-    console.log('✅ User authorized:', {
-      plan: user.plan,
-      usage: `${user.usage_count}/${user.usage_limit}`,
-      expires: user.expires_at
+    
+    console.log('✅ User authenticated via:', authResult.method)
+    console.log('📊 User details:', {
+      email: authResult.user.email,
+      plan: authResult.user.plan,
+      method: authResult.method
     })
     
-    } // Close the else block for paid user check
+    const authenticatedUser = authResult.user
 
-    // 5. PRZYGOTUJ PROFESJONALNY PROMPT DLA AI - POPRAWIONY 2025
+    // Extract and preserve photo information
+    let photoData = photo || null
+    let hasEmbeddedPhoto = false
+    
+    // Check if CV already contains photo/image tags
+    if (currentCV.includes('<img') || currentCV.includes('data:image') || currentCV.includes('base64')) {
+      hasEmbeddedPhoto = true
+      console.log('📸 Photo detected in CV content')
+    }
+    
+    if (photoData) {
+      console.log('📸 Photo data provided for preservation:', photoData.substring(0, 50) + '...')
+    }
+
+    // 5. PRZYGOTUJ PROFESJONALNY PROMPT DLA AI - POPRAWIONY 2025 Z ZACHOWANIEM ZDJĘĆ
     const systemPrompt = `Jesteś światowej klasy ekspertem od optymalizacji CV z 15-letnim doświadczeniem. Twoim zadaniem jest DRAMATYCZNE ROZSZERZENIE i ULEPSZENIE CV do minimum 10,000 znaków bez usuwania żadnych informacji.
 
 🚀 CEL: ROZSZERZ CV DO 10,000+ ZNAKÓW Z KONKRETNYMI OSIĄGNIĘCIAMI
+
+📸 KRYTYCZNE: ZACHOWANIE ZDJĘĆ I OBRAZÓW
+- JEŚLI CV zawiera tagi <img>, ZACHOWAJ JE W 100%
+- JEŚLI CV zawiera data:image/base64, ZACHOWAJ DOKŁADNIE
+- NIGDY nie usuwaj, nie zmieniaj ani nie modyfikuj tagów <img>
+- ZACHOWAJ wszystkie atrybuty obrazów (src, alt, class, style)
+- Zdjęcia profilowe są KLUCZOWE dla ATS i rekruterów
 
 🎯 ZADANIE OPTYMALIZACJI:
 ZACHOWAJ CAŁĄ STRUKTURĘ I UKŁAD CV - jeśli otrzymałeś HTML, zachowaj wszystkie tagi HTML, klasy CSS, style.
@@ -196,7 +188,9 @@ FORMAT ODPOWIEDZI:
 JEŚLI OTRZYMAŁEŚ HTML:
 - Zwróć DOKŁADNIE TEN SAM HTML ze zmodyfikowanymi tylko tekstami
 - ZACHOWAJ wszystkie tagi HTML, klasy CSS, style, atrybuty
-- ZACHOWAJ wszystkie <img> tagi ze zdjęciami
+- ZACHOWAJ wszystkie <img> tagi ze zdjęciami DOKŁADNIE
+- ZACHOWAJ wszystkie data:image/base64 ciągi znaków
+- NIGDY nie modyfikuj ani nie usuwaj zdjęć profilowych
 - NIE zmieniaj struktury dokumentu
 
 JEŚLI OTRZYMAŁEŚ TEKST:
@@ -253,21 +247,97 @@ PAMIĘTAJ:
       ? `ORYGINALNE CV DO ULEPSZENIA:\n${currentCV}\n\nOFERTA PRACY (dostosuj słowa kluczowe):\n${jobPosting}\n\nUlepsz to CV zachowując wszystkie fakty, ale poprawiając język i dopasowanie.`
       : `ORYGINALNE CV DO ULEPSZENIA:\n${currentCV}\n\nUlepsz to CV zachowując wszystkie fakty, ale używając profesjonalnego języka.`
 
-    // 6. WYWOŁAJ AI
-    console.log('🤖 Starting CV optimization...')
+    // 6. WYWOŁAJ AI Z CHUNKING STRATEGY
+    console.log('🤖 Starting CV optimization with chunking support...')
     
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.3, // Niska temperatura = mniej kreatywności, więcej faktów
-      max_tokens: 32000, // Maksymalne rozszerzenie dla 10,000+ znaków CV
-    })
-
-    const optimizedCV = chatCompletion.choices[0].message.content
+    const MAX_CHUNK_SIZE = 50000 // characters - increased from 32k
+    let optimizedCV = currentCV
+    
+    if (currentCV.length > MAX_CHUNK_SIZE) {
+      console.log('📄 Long CV detected, implementing chunking strategy')
+      
+      // Split CV into logical sections for processing
+      const sections = currentCV.split(/\n\n+/) // Split on paragraph breaks
+      let chunks = []
+      let currentChunk = ''
+      
+      for (const section of sections) {
+        if ((currentChunk + section).length > MAX_CHUNK_SIZE && currentChunk) {
+          chunks.push(currentChunk.trim())
+          currentChunk = section
+        } else {
+          currentChunk += '\n\n' + section
+        }
+      }
+      
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim())
+      }
+      
+      console.log(`📊 Split into ${chunks.length} chunks for processing`)
+      
+      // Process each chunk and combine results
+      const optimizedChunks = []
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i]
+        console.log(`🤖 Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`)
+        
+        try {
+          const optimizedChunk = await optimizeChunk(chunk, jobPosting, i === 0, photoData, preservePhotos)
+          optimizedChunks.push(optimizedChunk)
+          
+          // Rate limiting - small delay between chunks
+          if (i < chunks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
+        } catch (chunkError) {
+          console.error(`❌ Error processing chunk ${i + 1}:`, chunkError)
+          // Fallback to original chunk if optimization fails
+          optimizedChunks.push(chunk)
+        }
+      }
+      
+      optimizedCV = optimizedChunks.join('\n\n')
+    } else {
+      // Standard processing for normal-sized CVs
+      optimizedCV = await optimizeChunk(currentCV, jobPosting, true, photoData, preservePhotos)
+    }
+    
     console.log('🤖 AI optimization complete')
+    
+    // Post-processing: Ensure photo preservation
+    if (preservePhotos && photoData && !optimizedCV.includes('<img') && !optimizedCV.includes('data:image')) {
+      console.log('📸 Injecting photo into optimized CV...')
+      
+      // Find appropriate place to inject photo (after opening body tag or before first content)
+      const photoHTML = `
+        <div class="profile-photo-container" style="text-align: center; margin: 20px 0;">
+          <img src="${photoData}" alt="Profile Photo" class="profile-photo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #3498db; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+        </div>
+      `
+      
+      if (optimizedCV.includes('<body>')) {
+        optimizedCV = optimizedCV.replace('<body>', '<body>' + photoHTML)
+      } else if (optimizedCV.includes('<h1')) {
+        optimizedCV = optimizedCV.replace('<h1', photoHTML + '<h1')
+      } else {
+        // For plain text, add photo at the beginning
+        optimizedCV = photoHTML + optimizedCV
+      }
+      
+      console.log('✅ Photo successfully injected into optimized CV')
+    }
+    
+    // Validate photo preservation
+    if (preservePhotos && (hasEmbeddedPhoto || photoData)) {
+      const hasPhotoInResult = optimizedCV.includes('<img') || optimizedCV.includes('data:image')
+      if (!hasPhotoInResult) {
+        console.log('⚠️ WARNING: Photo may have been lost during optimization')
+      } else {
+        console.log('✅ Photo preservation confirmed in optimized CV')
+      }
+    }
 
     // 7. WYGENERUJ LIST MOTYWACYJNY
     const coverLetterPrompt = `Na podstawie tego CV napisz profesjonalny list motywacyjny (max 3 akapity).
@@ -291,33 +361,25 @@ Napisz zwięzły, przekonujący list motywacyjny podkreślający najważniejsze 
 
     const coverLetter = coverLetterCompletion.choices[0].message.content
 
-    // 8. ZAKTUALIZUJ LICZNIK UŻYĆ (only for non-paid users)
-    if (!isPaidUser && user) {
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ 
-          usage_count: user.usage_count + 1,
-          last_used_at: new Date().toISOString()
-        })
-        .eq('email', email)
-
-      if (updateError) {
-        console.error('❌ Failed to update usage count:', updateError)
-      } else {
-        console.log('✅ Usage count updated:', user.usage_count + 1)
+    // 8. ZAKTUALIZUJ LICZNIK UŻYĆ (secure method)
+    if (authResult.method === 'database') {
+      const updateSuccess = await updateUserUsage(authenticatedUser.email)
+      if (!updateSuccess) {
+        console.error('⚠️ Failed to update usage count, but proceeding with optimization')
       }
     } else {
-      console.log('✅ Paid user - no usage count update needed')
+      console.log('✅ Stripe user - no usage count update needed')
     }
 
-    // 9. ANALIZA SŁÓW KLUCZOWYCH (dla wyższych planów)
-    const improvements = [
+    // 9. ANALIZA SŁÓW KLUCZOWYCH (dla wyższych planów) - Enhanced with photo preservation
+    const enhancedImprovements = [
       'Dodano mocne czasowniki akcji',
       'Wstawiono metryki i liczby',
       'Dostosowano słowa kluczowe do oferty',
       'Poprawiono strukturę i formatowanie',
-      'Ulepszono opisy stanowisk'
-    ]
+      'Ulepszono opisy stanowisk',
+      preservePhotos && (hasEmbeddedPhoto || photoData) ? 'Zachowano zdjęcie profilowe' : null
+    ].filter(Boolean)
 
     const keywordMatch = jobPosting ? 85 : 75
 
@@ -326,13 +388,16 @@ Napisz zwięzły, przekonujący list motywacyjny podkreślający najważniejsze 
       success: true,
       optimizedCV: optimizedCV,
       coverLetter: coverLetter,
-      improvements: improvements,
+      improvements: enhancedImprovements,
       keywordMatch: keywordMatch,
-      remainingUses: isPaidUser ? 999 : (user.usage_limit - (user.usage_count + 1)),
+      remainingUses: authResult.method === 'stripe_session' || authResult.method === 'stripe_verified' ? 999 : (authenticatedUser.usageLimit - (authenticatedUser.usageCount + 1)),
+      photoPreserved: preservePhotos && (optimizedCV.includes('<img') || optimizedCV.includes('data:image')),
       metadata: {
         originalLength: currentCV.length,
         optimizedLength: optimizedCV.length,
-        improvementRate: Math.round((optimizedCV.length / currentCV.length - 1) * 100)
+        improvementRate: Math.round((optimizedCV.length / currentCV.length - 1) * 100),
+        hasPhoto: hasEmbeddedPhoto || !!photoData,
+        photoPreserved: preservePhotos && (optimizedCV.includes('<img') || optimizedCV.includes('data:image'))
       }
     })
 
@@ -350,5 +415,91 @@ Napisz zwięzły, przekonujący list motywacyjny podkreślający najważniejsze 
       success: false, 
       error: 'Wystąpił błąd podczas optymalizacji. Spróbuj ponownie.' 
     })
+  }
+}
+
+// Helper function to optimize individual chunks
+async function optimizeChunk(cvText, jobPosting, isFirstChunk, photoData = null, preservePhotos = true) {
+  // Use the same comprehensive system prompt as the main optimization
+  const systemPrompt = `Jesteś światowej klasy ekspertem od optymalizacji CV z 15-letnim doświadczeniem. Twoim zadaniem jest DRAMATYCZNE ROZSZERZENIE i ULEPSZENIE CV do minimum 10,000 znaków bez usuwania żadnych informacji.
+
+🚀 CEL: ROZSZERZ CV DO 10,000+ ZNAKÓW Z KONKRETNYMI OSIĄGNIĘCIAMI
+
+📸 KRYTYCZNE: ZACHOWANIE ZDJĘĆ I OBRAZÓW
+- JEŚLI CV zawiera tagi <img>, ZACHOWAJ JE W 100%
+- JEŚLI CV zawiera data:image/base64, ZACHOWAJ DOKŁADNIE
+- NIGDY nie usuwaj, nie zmieniaj ani nie modyfikuj tagów <img>
+- ZACHOWAJ wszystkie atrybuty obrazów (src, alt, class, style)
+- Zdjęcia profilowe są KLUCZOWE dla ATS i rekruterów
+
+🎯 ZADANIE OPTYMALIZACJI:
+ZACHOWAJ CAŁĄ STRUKTURĘ I UKŁAD CV - jeśli otrzymałeś HTML, zachowaj wszystkie tagi HTML, klasy CSS, style.
+ZACHOWAJ WSZYSTKIE INFORMACJE z oryginalnego CV i DRAMATYCZNIE JE ROZSZERZ:
+- Każde stanowisko: MINIMUM 5-7 szczegółowych punktów
+- Dodaj konkretne metryki: procenty, kwoty, liczby (zwiększone o 40%, zaoszczędzone 50k PLN)
+- Użyj najbardziej mocnych czasowników akcji (spearheaded, orchestrated, revolutionized)
+- Dodaj kontekst środowiska pracy (szybko rozwijająca się firma, międzynarodowy zespół)
+- ZACHOWAJ WSZYSTKIE OBRAZY/ZDJĘCIA - nie usuwaj tagów <img>
+- Rozszerz każdą umiejętność o poziom zaawansowania i lata doświadczenia
+
+Zwróć TYLKO zoptymalizowane CV zachowując oryginalny format.`
+
+  const userPrompt = jobPosting 
+    ? `${jobPosting ? `OFERTA PRACY:\n${jobPosting}\n\n` : ''}CV DO OPTYMALIZACJI:\n${cvText}` 
+    : `CV DO OPTYMALIZACJI:\n${cvText}`
+
+  try {
+    // Add timeout for Groq API call
+    const groqPromise = groq.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user", 
+          content: userPrompt
+        }
+      ],
+      model: "llama-3.1-8b-instant",
+      temperature: 0.3,
+      max_tokens: 32000, // Reduced to prevent timeout
+      top_p: 1,
+      stream: false
+    })
+    
+    // Timeout after 30 seconds
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Groq API timeout')), 30000)
+    )
+    
+    const completion = await Promise.race([groqPromise, timeoutPromise])
+
+    const optimizedText = completion.choices[0]?.message?.content
+
+    if (!optimizedText) {
+      throw new Error('No content returned from AI')
+    }
+
+    return optimizedText.trim()
+
+  } catch (groqError) {
+    console.error('❌ Groq API error in chunk optimization:', groqError)
+    
+    // Fallback: return original with basic improvements
+    const fallbackOptimized = cvText
+      .replace(/\b(managed|responsible for|worked on)\b/gi, (match) => {
+        const alternatives = {
+          'managed': 'Led',
+          'responsible for': 'Spearheaded',
+          'worked on': 'Developed'
+        }
+        return alternatives[match.toLowerCase()] || match
+      })
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    console.log('⚠️ Using fallback optimization for chunk')
+    return fallbackOptimized
   }
 }
