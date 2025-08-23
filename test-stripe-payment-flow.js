@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const path = require('path');
 
-const BASE_URL = 'http://localhost:3007';
+const BASE_URL = 'http://localhost:3005';
 const SCREENSHOT_DIR = './';
 
 // Test CV content for payment flow
@@ -157,7 +157,7 @@ class StripePaymentFlowTester {
         console.log('📄 Starting CV upload process...');
         
         // Look for CV upload elements
-        await this.page.waitForSelector('[accept=".pdf,.docx"]', { timeout: 10000 });
+        await new Promise(resolve => setTimeout(resolveSelector('[accept=".pdf,.docx"]', { timeout: 10000 });
         
         // Create a temporary CV file
         const tempFile = path.join(process.cwd(), 'temp-cv-test.txt');
@@ -170,7 +170,7 @@ class StripePaymentFlowTester {
         await this.takeScreenshot('02-cv-uploaded', 'CV file uploaded');
         
         // Wait for processing
-        await this.page.waitForTimeout(2000);
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Clean up temp file
         await fs.unlink(tempFile);
@@ -255,7 +255,7 @@ class StripePaymentFlowTester {
             testResult.steps.push('Payment button clicked');
             
             // Wait for any modals or payment forms
-            await this.page.waitForTimeout(3000);
+            await new Promise(resolve => setTimeout(resolve, 3000));
             await this.takeScreenshot(`05-${planName}-payment-modal`, `Payment modal/form for ${planName}`);
 
             // Test session saving before payment
@@ -309,7 +309,7 @@ class StripePaymentFlowTester {
                 await this.takeScreenshot(`06-${planName}-stripe-checkout`, `Stripe checkout page for ${planName}`);
                 
                 // Test Stripe page elements
-                await this.page.waitForTimeout(3000);
+                await new Promise(resolve => setTimeout(resolve, 3000));
                 
                 // Check if we're on Stripe
                 const isStripe = await this.page.evaluate(() => {
@@ -372,7 +372,7 @@ class StripePaymentFlowTester {
             const paymentButton = await this.page.$('button[class*="premium"], button[class*="payment"]');
             if (paymentButton) {
                 await paymentButton.click();
-                await this.page.waitForTimeout(2000);
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 // Look for cancel/close buttons
                 const cancelSelectors = [
@@ -416,7 +416,7 @@ class StripePaymentFlowTester {
             await this.takeScreenshot('08-success-page', 'Success page with test session');
             
             // Check for success page elements
-            await this.page.waitForTimeout(3000);
+            await new Promise(resolve => setTimeout(resolve, 3000));
             
             const successElements = await this.page.evaluate(() => {
                 return {
@@ -447,7 +447,7 @@ class StripePaymentFlowTester {
 
         for (const plan of plans) {
             await this.testPaymentPlan(plan.name, plan.price);
-            await this.page.waitForTimeout(2000); // Brief pause between tests
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Brief pause between tests
         }
 
         // Test payment cancellation
