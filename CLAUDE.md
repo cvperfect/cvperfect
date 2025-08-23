@@ -12,11 +12,22 @@ Przed rozpoczęciem każdej ważnej sesji kodowania, zapoznaj się z plikiem `CL
 
 ## Development Commands
 
+**Core Development:**
 - `npm run dev` - Start Next.js development server on localhost:3000
 - `npm run build` - Build production bundle (required before deployment)
 - `npm run start` - Start production server
 - `npm run lint` - Run Next.js linting
+
+**Automation & Testing:**
 - `npm run mcp-puppeteer` - Start Puppeteer MCP server for browser automation
+- `node start-agents-system.js` - Start CVPerfect 40-agent system
+- `node test-agents-integration.js` - Verify agent system functionality
+- `node comprehensive-test.js` - Run full end-to-end test suite
+
+**Common Development Patterns:**
+- **Port conflicts**: Use localhost:3001 if port 3000 is occupied
+- **Build validation**: Always run `npm run build` and `npm run lint` before commits
+- **Testing sequence**: `npm run lint` → `npm run build` → test scripts → git commit
 
 ## Architecture Overview
 
@@ -45,10 +56,18 @@ Przed rozpoczęciem każdej ważnej sesji kodowania, zapoznaj się z plikiem `CL
 
 **Core Endpoints:**
 - `/api/analyze` - Main CV analysis using Groq AI (Llama model)
-- `/api/demo-optimize` - Demo AI optimization endpoint for testing (no user auth required)
-- `/api/create-checkout-session` - Stripe payment initialization  
+- `/api/demo-optimize` - Demo AI optimization endpoint for testing (no user auth required)  
+- `/api/create-checkout-session` - Stripe payment initialization
 - `/api/stripe-webhook` - Payment completion handling
 - `/api/contact` - Email notifications via Nodemailer
+- `/api/get-session-data` - Session data retrieval for success page
+- `/api/save-session` - Session data persistence during payment flow
+- `/api/parse-cv` - CV file parsing (PDF/DOCX to text)
+
+**Critical Data Flow:**
+1. `index.js` → `/api/parse-cv` → `/api/save-session` → Stripe Checkout
+2. Stripe → `/api/stripe-webhook` → Session update → `success.js`
+3. `success.js` → `/api/get-session-data` → AI optimization → Template rendering
 
 **External Services:**
 - **Groq SDK** - AI processing using Llama 3.1-70B model
@@ -136,11 +155,25 @@ GMAIL_PASS=
 
 ```
 pages/
-├── index.js          # Main SPA (6000+ lines)
-├── success.js        # Post-payment success page
-├── kontakt.js        # Contact page  
-├── api/              # Backend endpoints
-└── [legal pages]     # Privacy, terms, GDPR
+├── index.js          # Main SPA (6000+ lines) - CV upload, payment flow
+├── success.js        # Post-payment CV optimization and templates
+├── kontakt.js        # Contact page
+├── api/
+│   ├── analyze.js           # Main AI CV analysis (production)
+│   ├── demo-optimize.js     # Demo AI endpoint (testing)
+│   ├── create-checkout-session.js  # Stripe payment init
+│   ├── stripe-webhook.js    # Payment completion handler
+│   ├── get-session-data.js  # Session retrieval for success page
+│   ├── save-session.js      # Session persistence during flow
+│   └── parse-cv.js          # PDF/DOCX file parsing
+└── [legal pages]     # Privacy, terms, GDPR (regulamin.js, etc.)
+
+agents/                # 40-agent system for specialized tasks
+├── orchestration/     # Master orchestrators and coordinators
+├── core/              # Backend, frontend, DevOps agents  
+├── ai_optimization/   # CV analysis, ATS scoring, content
+├── debug/             # 3-agent debug system (File Reader, Bug Fixer, Supervisor)
+└── [specialized]/     # Security, performance, business, quality agents
 
 components/
 ├── CVAnalysisDashboard.js  # Results display

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
+import Script from 'next/script'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
 
-
+// === Stripe Configuration ===
+const STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 // === Live stats (deterministyczne, bez backendu) ===
 const LAUNCH_DATE = '2025-08-11'; // dzisiejsza data -> brak historycznych skoków
@@ -41,6 +43,28 @@ const [currentLanguage, setCurrentLanguage] = useState('pl')
 useEffect(() => {
   if (locale) setCurrentLanguage(locale)
 }, [locale])
+
+// Validate Stripe configuration on component mount
+useEffect(() => {
+  if (!STRIPE_PUBLISHABLE_KEY) {
+    console.error('⚠️ STRIPE_PUBLISHABLE_KEY is missing from environment variables');
+  } else {
+    console.log('✅ Stripe configuration loaded successfully');
+  }
+  
+  // Validate Stripe.js loaded
+  if (typeof window !== 'undefined') {
+    const checkStripe = () => {
+      if (window.Stripe) {
+        console.log('✅ Stripe.js loaded successfully');
+      } else {
+        console.warn('⚠️ Stripe.js not loaded yet, will retry...');
+        setTimeout(checkStripe, 1000);
+      }
+    };
+    checkStripe();
+  }
+}, [])
   const [jobPosting, setJobPosting] = useState('')
   const [currentCV, setCurrentCV] = useState('')
   const [uploadMethod, setUploadMethod] = useState('upload')
@@ -74,6 +98,171 @@ const [savedCV, setSavedCV] = useState('');
 const [showTemplateModal, setShowTemplateModal] = useState(false);
 
 const [errors, setErrors] = useState({});
+const [selectedPlan, setSelectedPlan] = useState('basic');
+const [sessionId, setSessionId] = useState(null);
+
+// Handle plan selection and payment
+const handlePlanSelect = async (plan) => {
+  console.log('💳 [DEBUG] Plan selected:', plan);
+  console.log('📊 [DEBUG] Current data state:', {
+    hasFile: !!formData.cvFile,
+    hasSavedCV: !!savedCV,
+    hasCurrentCV: !!currentCV,
+    email: formData.email || userEmail,
+    cvLength: savedCV ? savedCV.length : (currentCV ? currentCV.length : 0)
+  });
+  
+  setSelectedPlan(plan);
+  
+  // Check if we have CV data
+  if (!formData.cvFile && !savedCV && !currentCV) {
+    console.log('❌ [DEBUG] No CV data found - showing alert');
+    showToast('Najpierw wgraj swoje CV!', 'error');
+    setShowMainModal(true);
+    return;
+  }
+
+  // Generate session ID
+  const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  setSessionId(newSessionId);
+  
+  // Save CV data to sessionStorage
+  const cvContent = savedCV || currentCV || '';
+  sessionStorage.setItem('pendingCV', cvContent);
+  sessionStorage.setItem('pendingEmail', formData.email || userEmail);
+  sessionStorage.setItem('pendingJob', jobPosting);
+  sessionStorage.setItem('pendingPlan', plan);
+  
+  // Handle template selection logic
+  if (plan === 'basic') {
+    // Basic plan uses simple template by default - proceed directly to payment
+    sessionStorage.setItem('selectedTemplate', 'simple');
+    
+    // Save to backend and proceed to payment
+    try {
+      console.log('💾 [DEBUG] Saving session to backend...', {
+        sessionId: newSessionId,
+        cvLength: cvContent.length,
+        email: formData.email || userEmail,
+        plan: plan
+      });
+      
+      const saveResponse = await fetch('/api/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: newSessionId,
+          cvData: cvContent,
+          email: formData.email || userEmail,
+          jobPosting: jobPosting,
+          plan: plan,
+          template: 'simple',
+          photo: null
+        })
+      });
+      
+      if (!saveResponse.ok) {
+        console.error('❌ [DEBUG] Failed to save session, status:', saveResponse.status);
+        showToast('Błąd podczas zapisywania sesji', 'error');
+      } else {
+        console.log('✅ [DEBUG] Session saved successfully');
+      }
+      
+      // Create Stripe checkout session
+      console.log('💳 [DEBUG] Creating Stripe checkout session...', {
+        plan: plan,
+        email: formData.email || userEmail,
+        cvLength: cvContent.length
+      });
+      
+      const checkoutResponse = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: plan,
+          email: formData.email || userEmail,
+          cv: cvContent,
+          job: jobPosting,
+          photo: null,
+          fullSessionId: newSessionId,
+          metadata: {
+            sessionId: newSessionId,
+            fullSessionId: newSessionId,
+            email: formData.email || userEmail,
+            cvLength: cvContent.length,
+            plan: plan
+          },
+          successUrl: `${window.location.origin}/success?session_id=${newSessionId}`,
+          cancelUrl: window.location.origin
+        })
+      });
+      
+      if (checkoutResponse.ok) {
+        const { sessionId: stripeSessionId, url } = await checkoutResponse.json();
+        console.log('🎯 [DEBUG] Stripe checkout response received:', { stripeSessionId, hasUrl: !!url });
+        
+        // Redirect to Stripe checkout
+        if (url) {
+          console.log('🚀 [DEBUG] Redirecting to Stripe checkout URL');
+          window.location.href = url;
+        } else {
+          console.log('🔄 [DEBUG] Using fallback Stripe redirect');
+          // Fallback for older Stripe integration
+          const stripe = window.Stripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+          await stripe.redirectToCheckout({ sessionId: stripeSessionId });
+        }
+      } else {
+        console.error('❌ [DEBUG] Checkout response not OK, status:', checkoutResponse.status);
+        const errorText = await checkoutResponse.text();
+        console.error('❌ [DEBUG] Checkout error details:', errorText);
+        throw new Error(`Failed to create checkout session: ${checkoutResponse.status}`);
+      }
+      
+    } catch (error) {
+      console.error('💥 [DEBUG] Payment error caught:', error);
+      showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
+    }
+  } else {
+    // Gold/Premium plans - show template selection modal first
+    setShowMainModal(false);
+    setShowTemplateModal(true);
+  }
+};
+
+// Helper function to get Stripe price ID
+const getPriceId = (plan) => {
+  // Używaj prawdziwych Stripe price IDs z API
+  const priceIds = {
+    basic: 'price_1Rwooh4FWb3xY5tDRxqQ4y69', // 19.99 zł jednorazowo
+    gold: 'price_1RxuK64FWb3xY5tDOjAPfwRX', // 49 zł/miesiąc subskrypcja
+    premium: 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł/miesiąc subskrypcja
+  };
+  return priceIds[plan] || priceIds.basic;
+};
+
+// Handle CV file upload
+const handleFileUpload = (file) => {
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    setSavedCV(content);
+    setCurrentCV(content);
+    
+    // Save to sessionStorage immediately
+    sessionStorage.setItem('pendingCV', content);
+    sessionStorage.setItem('pendingEmail', formData.email || userEmail);
+    
+    setFormData(prev => ({
+      ...prev,
+      cvFile: file,
+      cvFileName: file.name
+    }));
+  };
+  reader.readAsText(file);
+};
+
 // Modal state control
 useEffect(() => {
   if (showMainModal) {
@@ -669,6 +858,8 @@ const removeFile = () => {
   setSavedCV('');
 };
 
+
+
 const handleOptimizeNow = () => {
   setShowMainModal(true);
   setModalStep(1);
@@ -693,27 +884,60 @@ const closeModal = () => {
 };
 
 const validateStep1 = () => {
+  console.log('🔍 [DEBUG] validateStep1 called, current form state:', {
+    email: formData.email,
+    hasFile: !!formData.cvFile,
+    hasSavedCV: !!savedCV,
+    acceptTerms: formData.acceptTerms
+  });
+  
   const newErrors = {};
   
   if (!formData.email || !formData.email.includes('@')) {
     newErrors.email = currentLanguage === 'pl' ? 'Podaj prawidłowy email' : 'Enter valid email';
+    console.log('❌ [DEBUG] Email validation failed:', formData.email);
   }
   
-if (!formData.cvFile && !savedCV) {
+  if (!formData.cvFile && !savedCV) {
     newErrors.cvFile = currentLanguage === 'pl' ? 'Musisz załadować plik CV lub wkleić tekst' : 'You must upload CV file or paste text';
-}
+    console.log('❌ [DEBUG] CV validation failed - no file or saved CV');
+  }
   
   if (!formData.acceptTerms) {
     newErrors.acceptTerms = currentLanguage === 'pl' ? 'Musisz zaakceptować regulamin' : 'You must accept terms';
+    console.log('❌ [DEBUG] Terms acceptance validation failed');
   }
   
+  console.log('📋 [DEBUG] Validation errors found:', Object.keys(newErrors));
+  
   setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
+  const isValid = Object.keys(newErrors).length === 0;
+  console.log('✅ [DEBUG] Overall validation result:', isValid);
+  
+  return isValid;
 };
 
 const handleNextStep = () => {
-  if (modalStep === 1 && validateStep1()) {
-    setModalStep(2);
+  console.log('🚀 [DEBUG] handleNextStep called, current step:', modalStep);
+  
+  if (modalStep === 1) {
+    const isValid = validateStep1();
+    console.log('✅ [DEBUG] Step 1 validation result:', isValid);
+    
+    if (isValid) {
+      console.log('📝 [DEBUG] Form data:', {
+        email: formData.email,
+        cvLength: formData.cvFile ? formData.cvFile.name : (savedCV ? savedCV.length : 'no CV'),
+        jobPosting: jobPosting ? jobPosting.substring(0, 50) + '...' : 'none'
+      });
+      
+      setModalStep(2);
+      console.log('➡️ [DEBUG] Moving to step 2 (plan selection)');
+    } else {
+      console.log('❌ [DEBUG] Step 1 validation failed, staying on current step');
+    }
+  } else {
+    console.log('⚠️ [DEBUG] Not on step 1, current step:', modalStep);
   }
 };
 
@@ -836,74 +1060,7 @@ showToast(
   }
 };
 
-const handlePlanSelect = async (plan) => {
-  // Zapisz wybrany plan
-  sessionStorage.setItem('pendingPlan', plan);
-  
-  // Przygotuj dane do płatności
-  const email = formData.email;
-  const cvText = savedCV || formData.cvText || '';
-  const jobPosting = formData.jobText || '';
-  
-  // Zapisz w sessionStorage
-  sessionStorage.setItem('pendingEmail', email);
-  sessionStorage.setItem('pendingCV', cvText);
-  sessionStorage.setItem('pendingJob', jobPosting);
-  
-  // Dla wszystkich planów - od razu do płatności
-  // Wybór szablonu będzie w success.js po płatności
-  sessionStorage.setItem('selectedTemplate', 'pending'); // oznaczymy jako "do wyboru"
-  
-  console.log('📤 Przekierowuję do Stripe dla planu:', plan);
-  await proceedToCheckout(plan, 'pending');
-};
 
-const handlePayment = async (plan) => {
-  const email = (userEmail || document.getElementById('paywallEmail')?.value || document.getElementById('customerEmail')?.value || '').trim();
-  const jobTextarea = document.querySelector('.job-textarea');
-  const jobPosting = jobTextarea?.value || '';
-  const cvText = savedCV;
-
-  if (!email || !email.includes('@')) {
-    alert(currentLanguage === 'pl' ? 'Proszę podać prawidłowy adres email' : 'Please enter a valid email address');
-    return;
-  }
-
-  if (!cvText || cvText.trim().length < 50) {
-    alert(currentLanguage === 'pl' ? 'Błąd: Nie znaleziono CV. Wróć do pierwszego kroku.' : 'Error: CV not found. Go back to first step.');
-    setShowMainModal(true);
-    setModalStep(1);
-    return;
-  }
-
-  console.log('📤 Przygotowanie do płatności:', {
-    plan: plan,
-    hasCV: !!cvText,
-    hasJob: !!jobPosting,
-    email: email
-  });
-
-  // Zapisz dane w sessionStorage
-  sessionStorage.setItem('pendingCV', cvText);
-  sessionStorage.setItem('pendingJob', jobPosting);
-  sessionStorage.setItem('pendingEmail', email);
-  sessionStorage.setItem('pendingPlan', plan);
-  
-  // LOGIKA SZABLONÓW:
-  // Basic - brak wyboru, domyślny szablon "simple"
-  // Pro/Gold - wybór z 3 szablonów
-  // Premium - wybór z 7 szablonów
-  
-  if (plan === 'basic') {
-    // Basic - od razu do płatności z domyślnym szablonem
-    sessionStorage.setItem('selectedTemplate', 'simple');
-    await proceedToCheckout(plan, 'simple');
-  } else {
-    // Pro/Premium - pokaż modal z szablonami
-    setShowMainModal(false); // Zamknij modal z cenami
-    setShowTemplateModal(true); // Otwórz modal z szablonami
-  }
-};
 
 // Template selection handler
 const handleTemplateSelect = async (template) => {
@@ -916,67 +1073,10 @@ const handleTemplateSelect = async (template) => {
   // Save selected template
   sessionStorage.setItem('selectedTemplate', template);
   
-  // Proceed to checkout with selected template
-  await proceedToCheckout(plan, template);
+  // Use unified payment flow
+  await handlePlanSelect(plan);
 };
 
-// 2. ENHANCED CHECKOUT - saves full CV data before Stripe
-const proceedToCheckout = async (plan, template) => {
-  const email = sessionStorage.getItem('pendingEmail');
-  const cvText = sessionStorage.getItem('pendingCV');
-  const jobPosting = sessionStorage.getItem('pendingJob') || '';
-  const photoData = sessionStorage.getItem('pendingPhoto') || null;
-  
-  console.log('🚀 Proceeding to checkout:', {
-    plan: plan,
-    email: email,
-    cvLength: cvText?.length || 0,
-    hasJob: !!jobPosting,
-    hasPhoto: !!photoData,
-    template: template
-  });
-
-  // Generate unique session ID for full data storage
-  const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  
-  try {
-    // Save FULL CV data before going to Stripe (no character limits!)
-    const response = await fetch('/api/save-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: sessionId,
-        cvData: cvText, // FULL CV TEXT - no truncation!
-        jobPosting: jobPosting,
-        email: email,
-        plan: plan,
-        template: template,
-        photo: photoData // Photo data preserved
-      })
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log('✅ Full CV data saved, proceeding to Stripe...');
-      
-      // For Stripe metadata, use just preview (due to limits)
-      const cvPreview = cvText?.substring(0, 400) || '';
-      const jobPreview = jobPosting.substring(0, 200);
-      
-      // Pass our session ID to Stripe for later retrieval
-      window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}&fullSessionId=${sessionId}`;
-      
-    } else {
-      console.error('❌ Failed to save CV data:', result.error);
-      alert('Błąd podczas zapisywania danych. Spróbuj ponownie.');
-    }
-    
-  } catch (error) {
-    console.error('❌ Error saving CV data:', error);
-    alert('Błąd podczas zapisywania danych. Spróbuj ponownie.');
-  }
-};
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
 const testimonialsBase = [
@@ -1169,8 +1269,12 @@ const floatingNotifications = currentLanguage === 'pl'
   <link rel="icon" href="/favicon.ico" />
 </Head>
 
+<Script
+  src="https://js.stripe.com/v3/"
+  strategy="beforeInteractive"
+  onLoad={() => console.log('✅ Stripe.js loaded via next/script')}
+/>
 
-	
 {/* Toast Notifications */}
 <div className="toast-container" id="toastContainer">
   {toasts.map(toast => (
@@ -1200,10 +1304,13 @@ const floatingNotifications = currentLanguage === 'pl'
           </div>
         ))}
       </div>
-<div className="container" style={{ paddingTop: '76px' }}>
-
-  {/* Particles Background */}
-  <div className="particles-container" id="particles"></div>  
+  <header role="banner">
+    {/* Navigation and header content will be added here if needed */}
+  </header>
+  
+  <main role="main" className="container" style={{ paddingTop: '76px' }}>
+    {/* Particles Background */}
+    <div className="particles-container" id="particles"></div>  
   
 {/* Scroll Indicator (fixed, cały czas widoczny) */}
 <div
@@ -1329,7 +1436,7 @@ style={{
     : <>Trusted across Europe. <strong>95% ATS pass rate</strong> and up to <strong>410% more interviews</strong>. From <strong>≈ €4.40</strong>.</>}
 </p>
 <h1 className="hero-title">
-  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki ' : 'Boost your chances with '}
+  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki AI CV ' : 'Boost your chances with AI CV '}
   <br />
   <span className="typing-block">
     <span className="typing-safe-zone">
@@ -1767,6 +1874,29 @@ style={{
             : (currentLanguage === 'pl' ? 'Krok 2 z 2' : 'Step 2 of 2')
           }
         </p>
+        
+        {/* Progress Bar */}
+        <div className="progress-container">
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{
+                width: modalStep === 1 ? '50%' : '100%',
+                transition: 'width 0.3s ease'
+              }}
+            ></div>
+          </div>
+          <div className="progress-steps">
+            <div className={`progress-step ${modalStep >= 1 ? 'active' : ''}`}>
+              <span>1</span>
+              <label>{currentLanguage === 'pl' ? 'Dane' : 'Data'}</label>
+            </div>
+            <div className={`progress-step ${modalStep >= 2 ? 'active' : ''}`}>
+              <span>2</span>
+              <label>{currentLanguage === 'pl' ? 'Plan' : 'Plan'}</label>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="modal-body">
@@ -1873,13 +2003,8 @@ style={{
   {errors.cvFile && <div className="error-message">{errors.cvFile}</div>}
 </div>
 
-
-
-{/* Alternatywa - wklej tekst */}
+{/* CV Content Input */}
 <div className="form-group">
-  <div className="text-divider">
-    <span>{currentLanguage === 'pl' ? 'LUB' : 'OR'}</span>
-  </div>
   <label className="form-label">
     {currentLanguage === 'pl' ? 'Wklej treść CV' : 'Paste CV content'}
   </label>
@@ -2150,9 +2275,9 @@ style={{
 </button>
             </div>
           </div>
-</div>
+        </div>
         <Footer currentLanguage={currentLanguage} />
-      </div>
+      </main>
 
 
 
@@ -6671,6 +6796,8 @@ button:focus {
   background: rgba(20, 20, 20, 0.9);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: 600;
   padding: 16px 24px;
   border-radius: 100px;
   display: flex;
@@ -6693,8 +6820,9 @@ button:focus {
 }
 
 .toast.success {
-  border-color: rgba(0, 255, 136, 0.3);
-  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.5);
+  background: rgba(0, 255, 136, 0.15);
+  color: #fff;
 }
 
 .toast.warning {
@@ -7282,6 +7410,72 @@ html, body { margin:0 !important; padding:0 !important; }
 .optimize-modal .modal-header p {
   font-size: 18px;
   opacity: 0.9;
+  margin-bottom: 24px;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  height: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #00ff88, #50b4ff);
+  height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active {
+  opacity: 1;
+}
+
+.progress-step span {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active span {
+  background: linear-gradient(135deg, #00ff88, #50b4ff);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+
+.progress-step label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .optimize-modal .modal-body {
@@ -7722,6 +7916,7 @@ html, body { margin:0 !important; padding:0 !important; }
   font-size: 10px;
   font-weight: 700;
 }
+
 	`}</style>
     </>
   )
