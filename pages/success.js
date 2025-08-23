@@ -1134,9 +1134,31 @@ export default function Success() {
         // Set plan from authoritative source
         setUserPlan(plan)
         
-        // CRITICAL: Process REAL CV data immediately
-        console.log('🚀 Processing ENTERPRISE CV data...')
+        // CRITICAL: Show CV data IMMEDIATELY (before optimization)
+        console.log('🚀 Displaying original CV data immediately...')
         console.log('📄 CV sample:', metadata.cv.substring(0, 150) + '...')
+        
+        // Parse and display original CV data first
+        const originalCV = parseCvFromText(metadata.cv)
+        const initialCvData = {
+          ...originalCV,
+          fullContent: metadata.cv,
+          photo: metadata.photo,
+          jobPosting: metadata.job || '',
+          plan: plan,
+          isOriginal: true // Flag to indicate this is pre-optimization
+        }
+        
+        // Show original CV immediately
+        setCvData(initialCvData)
+        
+        // Update UI state to show CV is loaded
+        updateAppState({ 
+          isInitializing: false,
+          cvData: initialCvData
+        }, 'immediate-cv-display')
+        
+        console.log('✅ Original CV displayed, starting optimization...')
         
         // Cache data locally for instant subsequent loads
         try {
@@ -1149,15 +1171,40 @@ export default function Success() {
           console.log('⚠️ Local caching failed:', cacheError.message)
         }
         
+        // THEN start AI optimization (this will update the CV with optimized version)
         await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, plan)
         return { success: true, source: 'full_session' }
         
       } else if (stripeSessionData?.success && stripeSessionData.session?.metadata?.cv) {
         // FALLBACK: Use Stripe metadata (limited but better than nothing)
         const metadata = stripeSessionData.session.metadata
-        setUserPlan(metadata.plan || 'basic')
+        const plan = metadata.plan || 'basic'
+        setUserPlan(plan)
         
         console.log('⚠️ Using LIMITED Stripe CV data (fallback)...')
+        
+        // Show original CV immediately (even if from Stripe metadata)
+        const originalCV = parseCvFromText(metadata.cv)
+        const initialCvData = {
+          ...originalCV,
+          fullContent: metadata.cv,
+          photo: metadata.photo || sessionStorage.getItem('pendingPhoto'),
+          jobPosting: metadata.job || '',
+          plan: plan,
+          isOriginal: true,
+          source: 'stripe_fallback'
+        }
+        
+        // Display immediately
+        setCvData(initialCvData)
+        updateAppState({ 
+          isInitializing: false,
+          cvData: initialCvData
+        }, 'stripe-fallback-display')
+        
+        console.log('✅ Stripe CV data displayed, starting optimization...')
+        
+        // THEN optimize
         optimizeCVFromMetadata(metadata.cv, metadata.job, metadata.photo || sessionStorage.getItem('pendingPhoto'))
         return { success: true, source: 'stripe_metadata' }
       }
@@ -1186,7 +1233,28 @@ export default function Success() {
             email: pendingEmail?.substring(0, 20) + '...'
           })
           
-          // Process the CV from sessionStorage
+          // Show CV from sessionStorage immediately
+          const originalCV = parseCvFromText(pendingCV)
+          const initialCvData = {
+            ...originalCV,
+            fullContent: pendingCV,
+            photo: pendingPhoto,
+            jobPosting: pendingJob,
+            plan: appState.userPlan,
+            isOriginal: true,
+            source: 'sessionStorage_fallback'
+          }
+          
+          // Display immediately
+          setCvData(initialCvData)
+          updateAppState({ 
+            isInitializing: false,
+            cvData: initialCvData
+          }, 'sessionstorage-fallback-display')
+          
+          console.log('✅ SessionStorage CV displayed, starting optimization...')
+          
+          // THEN process the CV optimization
           await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, appState.userPlan)
           
           // Clear sessionStorage after successful use
