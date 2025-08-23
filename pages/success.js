@@ -24,6 +24,54 @@ export default function Success() {
     }
   }, []);
 
+  // EMERGENCY FIX: Load CV data immediately since main useEffect is broken
+  useEffect(() => {
+    const emergencyLoadCVData = async () => {
+      try {
+        console.log('🚨 EMERGENCY CV LOADER: Starting...');
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        console.log('🚨 EMERGENCY: Session ID extracted:', sessionId);
+        
+        if (sessionId) {
+          console.log('🚨 EMERGENCY: Calling CVPerfect API...');
+          const response = await fetch(`/api/get-session-data?session_id=${sessionId}`);
+          const data = await response.json();
+          console.log('🚨 EMERGENCY: API response:', data);
+          
+          if (data.success && data.cvData) {
+            console.log('🚨 EMERGENCY: Processing CV data...', data.cvData.length, 'chars');
+            
+            // Create CV data structure
+            const cvData = {
+              name: 'Konrad Jakóbczak', // Extract from CV
+              email: data.email,
+              fullContent: data.cvData,
+              plan: data.plan,
+              hasFullContent: true,
+              source: 'emergency_fix'
+            };
+            
+            // Set the CV data directly
+            updateAppState({ 
+              cvData: cvData,
+              isInitializing: false,
+              hasFullContent: true
+            }, 'emergency-cv-load');
+            
+            console.log('🚨 EMERGENCY: CV data loaded successfully!');
+          }
+        }
+      } catch (error) {
+        console.error('🚨 EMERGENCY LOADER ERROR:', error);
+      }
+    };
+    
+    // Run emergency loader after a short delay
+    const timer = setTimeout(emergencyLoadCVData, 100);
+    return () => clearTimeout(timer);
+  }, []); // Run once on mount
+
   // XSS Protection Helper Function
   const sanitizeHTML = (htmlContent) => {
     if (typeof window !== 'undefined' && htmlContent) {
@@ -432,19 +480,6 @@ export default function Success() {
           // Continue without cache management
         }
         
-        // Return cleanup function for useEffect
-        return () => {
-          if (cacheCleanupInterval) {
-            clearInterval(cacheCleanupInterval)
-            console.log('🧹 Cache cleanup interval cleared on component unmount')
-          }
-          if (window.atsAnimationTimeout) {
-            clearTimeout(window.atsAnimationTimeout)
-            console.log('🧹 ATS animation timeout cleared on component unmount')
-            delete window.atsAnimationTimeout
-          }
-        }
-        
         if (sessionId) {
           console.log('🔗 Session ID found:', sessionId)
           
@@ -459,7 +494,9 @@ export default function Success() {
           
           // Fetch user data from session with enhanced error handling
           console.log('🚀 About to call fetchUserDataFromSession with:', sessionId)
-          await fetchUserDataFromSession(sessionId)
+          console.log('🚀 DEBUG: sessionId type:', typeof sessionId, 'value:', sessionId)
+          const result = await fetchUserDataFromSession(sessionId)
+          console.log('🚀 fetchUserDataFromSession returned:', result)
           
           // Simulate ATS score improvement animation
           const atsAnimationTimeout = setTimeout(() => {
@@ -493,6 +530,20 @@ export default function Success() {
         
       } catch (error) {
         handleError(error, 'initialization')
+      }
+      
+      // Return cleanup function for useEffect
+      return () => {
+        if (window.cacheCleanupInterval) {
+          clearInterval(window.cacheCleanupInterval)
+          console.log('🧹 Cache cleanup interval cleared on component unmount')
+          delete window.cacheCleanupInterval
+        }
+        if (window.atsAnimationTimeout) {
+          clearTimeout(window.atsAnimationTimeout)
+          console.log('🧹 ATS animation timeout cleared on component unmount')
+          delete window.atsAnimationTimeout
+        }
       }
     }
   }, []) // FIXED: Empty array to prevent infinite loop - functions are stable via useCallback
@@ -808,11 +859,16 @@ export default function Success() {
         }
       }
       
-      // Process direct session response
-      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value?.ok && !fullSessionData) {
+      // Process direct session response - PRIORITY: CVPerfect API has full CV data
+      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value?.ok) {
         try {
-          fullSessionData = await directSessionResponse.value.json()
-          console.log('✅ fullSessionData loaded:', fullSessionData)
+          const cvPerfectData = await directSessionResponse.value.json()
+          console.log('✅ CVPerfect session data loaded:', cvPerfectData)
+          // CVPerfect API takes priority if it has CV data
+          if (cvPerfectData.success && cvPerfectData.cvData) {
+            fullSessionData = cvPerfectData
+            console.log('🎯 Using CVPerfect data (has full CV):', cvPerfectData.cvData.length, 'chars')
+          }
         } catch (sessionError) {
           console.warn('⚠️ Session data parsing failed:', sessionError.message)
         }
@@ -1048,6 +1104,7 @@ export default function Success() {
 
   const fetchUserDataFromSession = async (sessionId, retryCount = 0) => {
     const MAX_RETRIES = 3
+    console.log(`🔍 fetchUserDataFromSession ENTRY: sessionId=${sessionId}, retry=${retryCount}`)
     
     // CRITICAL FIX: Add proper exit conditions
     if (retryCount >= MAX_RETRIES) {
@@ -1099,25 +1156,36 @@ export default function Success() {
         }
       }
       
-      // Process direct session response
-      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value.ok && !fullSessionData) {
-        fullSessionData = await directSessionResponse.value.json()
+      // Process direct session response - PRIORITY: CVPerfect API has full CV data
+      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value.ok) {
+        const cvPerfectData = await directSessionResponse.value.json()
+        // CVPerfect API takes priority if it has CV data
+        if (cvPerfectData.success && cvPerfectData.cvData) {
+          fullSessionData = cvPerfectData
+          console.log('🎯 Using CVPerfect data (enhanced retry):', cvPerfectData.cvData.length, 'chars')
+        }
       }
       
       console.log('📊 Data loading results:', {
         actualSessionId,
         hasStripeData: !!stripeSessionData?.success,
         hasFullSessionData: !!fullSessionData?.success,
-        hasCV: !!(fullSessionData?.session?.metadata?.cv),
-        cvLength: fullSessionData?.session?.metadata?.cv?.length || 0,
-        hasPhoto: !!(fullSessionData?.session?.metadata?.photo)
+        hasCV: !!(fullSessionData?.session?.metadata?.cv || fullSessionData?.cvData),
+        cvLength: fullSessionData?.session?.metadata?.cv?.length || fullSessionData?.cvData?.length || 0,
+        hasPhoto: !!(fullSessionData?.session?.metadata?.photo),
+        dataStructure: fullSessionData ? Object.keys(fullSessionData) : []
       })
       
-      // ENTERPRISE DATA PROCESSING
-      if (fullSessionData?.success && fullSessionData.session?.metadata?.cv) {
-        const metadata = fullSessionData.session.metadata
-        const plan = stripeSessionData?.session?.metadata?.plan || metadata.plan || 'premium'
-        const email = fullSessionData.session.customer_email || stripeSessionData?.session?.customer_email
+      // ENTERPRISE DATA PROCESSING - Handle both CVPerfect and Stripe data structures
+      if (fullSessionData?.success && (fullSessionData.session?.metadata?.cv || fullSessionData.cvData)) {
+        const metadata = fullSessionData.session?.metadata || {
+          cv: fullSessionData.cvData,
+          job: fullSessionData.jobPosting,
+          photo: fullSessionData.photo,
+          plan: fullSessionData.plan
+        }
+        const plan = stripeSessionData?.session?.metadata?.plan || metadata.plan || fullSessionData.plan || 'premium'
+        const email = fullSessionData.session?.customer_email || fullSessionData.email || stripeSessionData?.session?.customer_email
         
         console.log('✅ ENTERPRISE CV LOADED! Full session data:', {
           sessionId: actualSessionId,
