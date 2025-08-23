@@ -1551,7 +1551,7 @@ export default function Success() {
 
   const optimizeCVFromMetadata = async (cvText, jobText, photo = null) => {
     try {
-      setIsOptimizing(true)
+      updateAppState({ isOptimizing: true }, 'optimize-metadata-start')
       console.log('🤖 Optimizing CV from session data...')
       
       // Get photo from parameter or fallback to sessionStorage
@@ -1604,7 +1604,7 @@ export default function Success() {
       console.log('🔄 Using enhanced fallback parsing...')
       setCvData(parseOriginalCV(cvText))
     } finally {
-      setIsOptimizing(false)
+      updateAppState({ isOptimizing: false }, 'optimize-metadata-complete')
     }
   }
 
@@ -1971,7 +1971,7 @@ export default function Success() {
       return
     }
 
-    setIsOptimizing(true)
+    updateAppState({ isOptimizing: true }, 'optimize-enterprise-start')
     addNotification('🤖 AI optymalizuje całe CV...', 'info')
     
     try {
@@ -2107,7 +2107,7 @@ export default function Success() {
         addNotification('❌ Błąd podczas optymalizacji AI', 'error')
       }
     } finally {
-      setIsOptimizing(false)
+      updateAppState({ isOptimizing: false }, 'optimize-enterprise-complete')
     }
   }, [appState.cvData, appState.userPlan]) // Fixed: Removed addNotification circular dependency
 
