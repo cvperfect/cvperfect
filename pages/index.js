@@ -223,9 +223,99 @@ const handlePlanSelect = async (plan) => {
       showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
     }
   } else {
-    // Gold/Premium plans - show template selection modal first
-    setShowMainModal(false);
-    setShowTemplateModal(true);
+    // Gold/Premium plans - check if template already selected
+    const selectedTemplate = sessionStorage.getItem('selectedTemplate');
+    console.log('🎯 [PLAN DEBUG] Gold/Premium plan selected:', plan);
+    console.log('🎯 [PLAN DEBUG] Checking for existing template selection:', selectedTemplate);
+    
+    if (selectedTemplate) {
+      // Template already selected - proceed to payment directly
+      console.log('🎯 [PLAN DEBUG] Template already selected, proceeding to payment with:', selectedTemplate);
+      
+      // Save to backend and proceed to payment
+      try {
+        console.log('💾 [DEBUG] Saving session to backend for Gold/Premium...', {
+          sessionId: newSessionId,
+          cvLength: cvContent.length,
+          email: formData.email || userEmail,
+          plan: plan,
+          template: selectedTemplate
+        });
+        
+        const saveResponse = await fetch('/api/save-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: newSessionId,
+            cvData: cvContent,
+            email: formData.email || userEmail,
+            jobPosting: jobPosting,
+            plan: plan,
+            template: selectedTemplate,
+            photo: null
+          })
+        });
+        
+        if (!saveResponse.ok) {
+          console.error('❌ [DEBUG] Failed to save session for Gold/Premium, status:', saveResponse.status);
+          showToast('Błąd podczas zapisywania sesji', 'error');
+          return;
+        } else {
+          console.log('✅ [DEBUG] Session saved successfully for Gold/Premium');
+        }
+        
+        // Create Stripe checkout session
+        console.log('💳 [DEBUG] Creating Stripe checkout session for Gold/Premium...', {
+          plan: plan,
+          email: formData.email || userEmail,
+          priceId: getPriceId(plan)
+        });
+        
+        const checkoutResponse = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            priceId: getPriceId(plan),
+            email: formData.email || userEmail,
+            sessionId: newSessionId,
+            successUrl: `${window.location.origin}/success?session_id=${newSessionId}`,
+            cancelUrl: window.location.origin
+          })
+        });
+        
+        if (checkoutResponse.ok) {
+          const { sessionId: stripeSessionId, url } = await checkoutResponse.json();
+          console.log('🎯 [DEBUG] Stripe checkout response for Gold/Premium:', { stripeSessionId, hasUrl: !!url });
+          
+          // Redirect to Stripe checkout
+          if (url) {
+            console.log('🚀 [DEBUG] Redirecting to Stripe checkout URL for Gold/Premium');
+            window.location.href = url;
+          } else {
+            console.log('🔄 [DEBUG] Using fallback Stripe redirect for Gold/Premium');
+            // Fallback for older Stripe integration
+            const stripe = window.Stripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+            await stripe.redirectToCheckout({ sessionId: stripeSessionId });
+          }
+        } else {
+          console.error('❌ [DEBUG] Gold/Premium checkout response not OK, status:', checkoutResponse.status);
+          const errorText = await checkoutResponse.text();
+          console.error('❌ [DEBUG] Gold/Premium checkout error details:', errorText);
+          throw new Error(`Failed to create checkout session: ${checkoutResponse.status}`);
+        }
+        
+      } catch (error) {
+        console.error('💥 [DEBUG] Gold/Premium payment error caught:', error);
+        showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
+      }
+      
+    } else {
+      // No template selected - show template selection modal
+      console.log('🎯 [PLAN DEBUG] No template selected, showing template modal');
+      setShowMainModal(false);
+      setShowTemplateModal(true);
+      console.log('🎯 [PLAN DEBUG] Template modal should now be visible');
+    }
   }
 };
 
@@ -1064,17 +1154,35 @@ showToast(
 
 // Template selection handler
 const handleTemplateSelect = async (template) => {
+  console.log('🎨 [TEMPLATE DEBUG] Template selection started');
+  console.log('🎨 [TEMPLATE DEBUG] Clicked template:', template);
+  
   const plan = sessionStorage.getItem('pendingPlan');
-  console.log('🎨 Template selected:', template, 'for plan:', plan);
+  console.log('🎨 [TEMPLATE DEBUG] Retrieved plan from sessionStorage:', plan);
+  
+  if (!plan) {
+    console.error('❌ [TEMPLATE DEBUG] No plan found in sessionStorage!');
+    showToast('Błąd: Nie znaleziono wybranego planu', 'error');
+    return;
+  }
   
   // Close template modal
+  console.log('🎨 [TEMPLATE DEBUG] Closing template modal');
   setShowTemplateModal(false);
   
   // Save selected template
+  console.log('🎨 [TEMPLATE DEBUG] Saving template to sessionStorage:', template);
   sessionStorage.setItem('selectedTemplate', template);
   
   // Use unified payment flow
-  await handlePlanSelect(plan);
+  console.log('🎨 [TEMPLATE DEBUG] Calling handlePlanSelect with plan:', plan);
+  try {
+    await handlePlanSelect(plan);
+    console.log('🎨 [TEMPLATE DEBUG] handlePlanSelect completed successfully');
+  } catch (error) {
+    console.error('❌ [TEMPLATE DEBUG] Error in handlePlanSelect:', error);
+    showToast('Wystąpił błąd podczas przejścia do płatności', 'error');
+  }
 };
 
 
