@@ -1,0 +1,417 @@
+{
+  "testStartTime": "2025-08-23T17:18:19.847Z",
+  "testResults": [
+    {
+      "testName": "Homepage Load",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.240Z",
+      "details": {
+        "message": "Missing critical elements or console errors",
+        "loadTime": 12899,
+        "elements": {
+          "titleExists": true,
+          "uploadAreaExists": false,
+          "ctaButtonExists": false
+        },
+        "consoleErrors": 27
+      }
+    },
+    {
+      "testName": "CV Upload Interaction",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.261Z",
+      "details": {
+        "message": "Upload interaction failed: Node is either not clickable or not an Element"
+      }
+    },
+    {
+      "testName": "Payment Button Interaction",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.322Z",
+      "details": {
+        "message": "Payment interaction failed: paymentElement.scrollIntoView is not a function"
+      }
+    },
+    {
+      "testName": "Stripe.js Loading",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:37.368Z",
+      "details": {
+        "message": "Stripe.js loaded successfully"
+      }
+    },
+    {
+      "testName": "Stripe Integration",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.369Z",
+      "details": {
+        "message": "Stripe integration test failed: process is not defined"
+      }
+    },
+    {
+      "testName": "Responsive - Mobile",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.378Z",
+      "details": {
+        "message": "Responsive test failed: this.page.waitForTimeout is not a function"
+      }
+    },
+    {
+      "testName": "Responsive - Tablet",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.381Z",
+      "details": {
+        "message": "Responsive test failed: this.page.waitForTimeout is not a function"
+      }
+    },
+    {
+      "testName": "Responsive - Desktop",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.382Z",
+      "details": {
+        "message": "Responsive test failed: this.page.waitForTimeout is not a function"
+      }
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "01-homepage-loaded",
+      "filename": "01-homepage-loaded-1755969517129.png",
+      "filepath": "test-screenshots\\01-homepage-loaded-1755969517129.png",
+      "timestamp": "2025-08-23T17:18:37.205Z"
+    },
+    {
+      "name": "02-upload-error",
+      "filename": "02-upload-error-1755969517262.png",
+      "filepath": "test-screenshots\\02-upload-error-1755969517262.png",
+      "timestamp": "2025-08-23T17:18:37.300Z"
+    },
+    {
+      "name": "04-payment-error",
+      "filename": "04-payment-error-1755969517322.png",
+      "filepath": "test-screenshots\\04-payment-error-1755969517322.png",
+      "timestamp": "2025-08-23T17:18:37.366Z"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:25.845Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:26.633Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:27.134Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:27.642Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:28.333Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:28.741Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:29.135Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:29.768Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:30.196Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:30.624Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:31.110Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:31.502Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:31.842Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:32.158Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:32.462Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:32.871Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:32.951Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:33.061Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:34.071Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:35.097Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.467Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.467Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.468Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.469Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.469Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.472Z"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "timestamp": "2025-08-23T17:18:36.474Z"
+    }
+  ],
+  "networkErrors": [
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:25.916Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:26.689Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:27.249Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:27.814Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:28.428Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:28.777Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:29.166Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:29.825Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:30.264Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:30.692Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:31.162Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:31.561Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:31.902Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:32.205Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:32.496Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/webpack/d28312a50cc39ad3.webpack.hot-update.json",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:32.950Z"
+    },
+    {
+      "url": "http://localhost:3003/",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.402Z"
+    },
+    {
+      "url": "http://localhost:3003/",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.403Z"
+    },
+    {
+      "url": "http://localhost:3003/",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.403Z"
+    },
+    {
+      "url": "http://localhost:3003/",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.403Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/chunks/webpack.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.474Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/chunks/react-refresh.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.475Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/chunks/main.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.475Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/chunks/pages/_app.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.475Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/chunks/pages/index.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.475Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/development/_buildManifest.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.475Z"
+    },
+    {
+      "url": "http://localhost:3003/_next/static/development/_ssgManifest.js?ts=1755969516328",
+      "errorText": "net::ERR_ABORTED",
+      "timestamp": "2025-08-23T17:18:36.476Z"
+    }
+  ],
+  "performanceMetrics": {},
+  "testEndTime": "2025-08-23T17:18:37.385Z",
+  "summary": {
+    "totalTests": 8,
+    "passedTests": 1,
+    "failedTests": 7,
+    "warningTests": 0,
+    "successRate": "13%"
+  },
+  "criticalIssues": [
+    {
+      "testName": "Homepage Load",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.240Z",
+      "details": {
+        "message": "Missing critical elements or console errors",
+        "loadTime": 12899,
+        "elements": {
+          "titleExists": true,
+          "uploadAreaExists": false,
+          "ctaButtonExists": false
+        },
+        "consoleErrors": 27
+      }
+    },
+    {
+      "testName": "CV Upload Interaction",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.261Z",
+      "details": {
+        "message": "Upload interaction failed: Node is either not clickable or not an Element"
+      }
+    },
+    {
+      "testName": "Payment Button Interaction",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.322Z",
+      "details": {
+        "message": "Payment interaction failed: paymentElement.scrollIntoView is not a function"
+      }
+    },
+    {
+      "testName": "Stripe Integration",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.369Z",
+      "details": {
+        "message": "Stripe integration test failed: process is not defined"
+      }
+    },
+    {
+      "testName": "Responsive - Mobile",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.378Z",
+      "details": {
+        "message": "Responsive test failed: this.page.waitForTimeout is not a function"
+      }
+    },
+    {
+      "testName": "Responsive - Tablet",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.381Z",
+      "details": {
+        "message": "Responsive test failed: this.page.waitForTimeout is not a function"
+      }
+    },
+    {
+      "testName": "Responsive - Desktop",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:37.382Z",
+      "details": {
+        "message": "Responsive test failed: this.page.waitForTimeout is not a function"
+      }
+    }
+  ]
+}

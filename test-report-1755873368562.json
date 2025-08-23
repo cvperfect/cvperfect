@@ -1,0 +1,119 @@
+{
+  "summary": {
+    "totalTests": 16,
+    "passed": 6,
+    "failed": 9,
+    "warnings": 1
+  },
+  "categories": {
+    "mainPage": [
+      {
+        "test": "Page loads with correct title",
+        "status": "PASS",
+        "details": "Title: CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+        "timestamp": "2025-08-22T14:36:06.186Z"
+      },
+      {
+        "test": "Language switching",
+        "status": "FAIL",
+        "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:has-text(\"EN\"), button:has-text(\"English\")' is not a valid selector.",
+        "timestamp": "2025-08-22T14:36:06.202Z"
+      },
+      {
+        "test": "File input element",
+        "status": "FAIL",
+        "details": "No file input found",
+        "timestamp": "2025-08-22T14:36:06.203Z"
+      },
+      {
+        "test": "Drag and drop zone",
+        "status": "WARNING",
+        "details": "Drop zone not clearly identified",
+        "timestamp": "2025-08-22T14:36:06.204Z"
+      },
+      {
+        "test": "Email input field",
+        "status": "FAIL",
+        "details": "No email input found",
+        "timestamp": "2025-08-22T14:36:06.205Z"
+      },
+      {
+        "test": "Pricing display",
+        "status": "FAIL",
+        "details": "No pricing information found",
+        "timestamp": "2025-08-22T14:36:06.213Z"
+      },
+      {
+        "test": "Payment flow initialization",
+        "status": "FAIL",
+        "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:has-text(\"Zapłać\"), button:has-text(\"Pay\"), .payment-btn, [data-testid=\"payment\"]' is not a valid selector.",
+        "timestamp": "2025-08-22T14:36:06.214Z"
+      }
+    ],
+    "navigation": [
+      {
+        "test": "Internal links functionality",
+        "status": "PASS",
+        "details": "Working: 0, Broken: 3",
+        "timestamp": "2025-08-22T14:36:07.310Z"
+      }
+    ],
+    "apiEndpoints": [
+      {
+        "test": "/api/demo-optimize responds",
+        "status": "PASS",
+        "details": "Status: 400",
+        "timestamp": "2025-08-22T14:36:07.497Z"
+      },
+      {
+        "test": "/api/analyze responds",
+        "status": "PASS",
+        "details": "Status: 400",
+        "timestamp": "2025-08-22T14:36:07.632Z"
+      },
+      {
+        "test": "/api/create-checkout-session responds",
+        "status": "PASS",
+        "details": "Status: 200",
+        "timestamp": "2025-08-22T14:36:08.371Z"
+      }
+    ],
+    "uiUx": [],
+    "dataFlow": [],
+    "responsive": [
+      {
+        "test": "Mobile responsive design",
+        "status": "FAIL",
+        "details": "page.waitForTimeout is not a function",
+        "timestamp": "2025-08-22T14:36:06.257Z"
+      },
+      {
+        "test": "Tablet responsive design",
+        "status": "FAIL",
+        "details": "page.waitForTimeout is not a function",
+        "timestamp": "2025-08-22T14:36:06.290Z"
+      },
+      {
+        "test": "Desktop responsive design",
+        "status": "FAIL",
+        "details": "page.waitForTimeout is not a function",
+        "timestamp": "2025-08-22T14:36:06.330Z"
+      }
+    ],
+    "errors": [
+      {
+        "test": "Console errors detected",
+        "status": "FAIL",
+        "details": "2 errors: Failed to load resource: the server responded with a status of 400 (Bad Request), Failed to load resource: the server responded with a status of 400 (Bad Request)",
+        "timestamp": "2025-08-22T14:36:08.371Z"
+      },
+      {
+        "test": "Console warnings",
+        "status": "PASS",
+        "details": "No console warnings",
+        "timestamp": "2025-08-22T14:36:08.371Z"
+      }
+    ]
+  },
+  "generatedAt": "2025-08-22T14:36:08.562Z"
+}

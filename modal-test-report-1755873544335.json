@@ -1,0 +1,12 @@
+{
+  "testType": "Modal Functionality Test",
+  "timestamp": "2025-08-22T14:39:04.334Z",
+  "issues": [
+    "Test execution error: page.waitForTimeout is not a function"
+  ],
+  "summary": {
+    "totalIssues": 1,
+    "criticalIssues": 0,
+    "warnings": 0
+  }
+}

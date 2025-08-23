@@ -1,0 +1,123 @@
+{
+  "timestamp": "2025-08-22T17:53:42.622Z",
+  "website": "https://cvperfect.pl",
+  "analysis": {
+    "performance": {
+      "loadTime": null,
+      "domContentLoaded": null,
+      "jsHeapUsedSize": 0,
+      "jsHeapTotalSize": 0,
+      "metrics": {
+        "Timestamp": 87488.688122,
+        "Documents": 2,
+        "Frames": 1,
+        "JSEventListeners": 0,
+        "Nodes": 8,
+        "LayoutCount": 2,
+        "RecalcStyleCount": 1,
+        "LayoutDuration": 0.000254,
+        "RecalcStyleDuration": 0.0001,
+        "ScriptDuration": 0,
+        "TaskDuration": 0.003663,
+        "JSHeapUsedSize": 667612,
+        "JSHeapTotalSize": 1310720
+      }
+    },
+    "functionality": {},
+    "technical": {
+      "seo": {
+        "title": "CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+        "metaDescription": "Pierwsza AI platforma do optymalizacji CV w Polsce. 95% ATS success rate, 410% więcej rozmów kwalifikacyjnych. Zoptymalizuj CV w 30 sekund za 19,99 zł.",
+        "h1Count": 1
+      },
+      "accessibility": {
+        "altMissingImages": 0
+      },
+      "consoleErrors": []
+    },
+    "issues": [
+      "Language switching button not found or not accessible",
+      "Functionality test error: SyntaxError: Failed to execute 'querySelector' on 'Document': 'button[contains(text(), \"Optymalizuj CV\")], button[contains(text(), \"Upload CV\")], .upload-button, [data-testid=\"cv-upload\"]' is not a valid selector.",
+      "10 touch targets smaller than 44px on Mobile",
+      "10 touch targets smaller than 44px on Tablet",
+      "CV Optimization test error: SyntaxError: Failed to execute 'querySelector' on 'Document': 'button[contains(text(), \"Demo\")], .demo-button, [data-testid=\"demo\"]' is not a valid selector."
+    ],
+    "recommendations": [
+      {
+        "category": "Performance",
+        "priority": "High",
+        "suggestions": [
+          "Implement Progressive Web App (PWA) features for offline functionality",
+          "Add service worker for caching and background sync",
+          "Optimize images with next-gen formats (WebP, AVIF)",
+          "Implement lazy loading for below-the-fold content",
+          "Add performance monitoring with Real User Monitoring (RUM)"
+        ]
+      },
+      {
+        "category": "CV Optimization Core",
+        "priority": "Critical",
+        "suggestions": [
+          "Fix photo preservation in CV optimization process",
+          "Implement content integrity checks to prevent truncation",
+          "Add ATS compatibility scoring system",
+          "Create before/after comparison view",
+          "Implement multi-format export (PDF, DOCX, HTML)",
+          "Add CV parsing accuracy validation"
+        ]
+      },
+      {
+        "category": "User Experience",
+        "priority": "High",
+        "suggestions": [
+          "Add real-time optimization progress indicator",
+          "Implement drag-and-drop CV upload with preview",
+          "Create interactive CV editor for post-optimization tweaks",
+          "Add testimonials and success stories section",
+          "Implement chatbot for instant customer support",
+          "Add CV templates gallery with preview functionality"
+        ]
+      },
+      {
+        "category": "Business Intelligence",
+        "priority": "Medium",
+        "suggestions": [
+          "Implement user analytics dashboard",
+          "Add A/B testing framework for conversion optimization",
+          "Create retention email campaigns",
+          "Add referral program with tracking",
+          "Implement usage analytics and reporting"
+        ]
+      },
+      {
+        "category": "Security & Compliance",
+        "priority": "High",
+        "suggestions": [
+          "Add comprehensive input validation",
+          "Implement rate limiting for API endpoints",
+          "Add GDPR compliance monitoring",
+          "Create secure file handling pipeline",
+          "Add security headers and CSP policies"
+        ]
+      },
+      {
+        "category": "Technical Excellence",
+        "priority": "Medium",
+        "suggestions": [
+          "Implement comprehensive error boundary system",
+          "Add automated testing pipeline",
+          "Create component documentation with Storybook",
+          "Implement code splitting for better performance",
+          "Add TypeScript for better code quality",
+          "Create comprehensive logging and monitoring"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "totalIssues": 5,
+    "criticalIssues": 2,
+    "performanceScore": 75,
+    "recommendationsCount": 33
+  }
+}

@@ -2,6 +2,14 @@ import Groq from 'groq-sdk'
 import { createClient } from '@supabase/supabase-js'
 import { authenticateUser, updateUserUsage } from '../../lib/auth'
 import { handleCORSPreflight } from '../../lib/cors'
+import { ensureEnvironmentVariables, getMaskedEnvVar } from '../../lib/env-validation'
+
+// Validate critical environment variables at startup
+try {
+  ensureEnvironmentVariables(['GROQ_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'])
+} catch (error) {
+  console.error('❌ CRITICAL: Environment variables missing for /api/analyze:', error.message)
+}
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -19,6 +27,20 @@ export default async function handler(req, res) {
     return // CORS preflight handled
   }
 
+  // Runtime environment validation
+  const requiredEnvVars = ['GROQ_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+  
+  if (missingVars.length > 0) {
+    console.error('❌ Missing environment variables at runtime:', missingVars)
+    return res.status(500).json({
+      success: false,
+      error: 'Server configuration error. Please contact support.',
+      code: 'MISSING_ENV_VARS',
+      details: process.env.NODE_ENV === 'development' ? `Missing: ${missingVars.join(', ')}` : undefined
+    })
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false,
@@ -27,6 +49,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Set proper JSON content type first
+    res.setHeader('Content-Type', 'application/json')
+    
     const { jobPosting, currentCV, email, paid, plan, sessionId, photo, preservePhotos = true } = req.body
 
     // Walidacja
@@ -34,6 +59,14 @@ export default async function handler(req, res) {
       return res.status(400).json({
         success: false,
         error: 'Brakuje wymaganych pól: CV i email są wymagane.'
+      })
+    }
+    
+    // Validate input types
+    if (typeof currentCV !== 'string' || typeof email !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid data types for CV or email'
       })
     }
 
@@ -404,16 +437,43 @@ Napisz zwięzły, przekonujący list motywacyjny podkreślający najważniejsze 
   } catch (error) {
     console.error('❌ API Error:', error)
     
-    if (error.message?.includes('Rate limit')) {
+    // Ensure we always return JSON, even on errors
+    res.setHeader('Content-Type', 'application/json')
+    
+    // Handle specific error types
+    if (error.message?.includes('Rate limit') || error.status === 429) {
       return res.status(429).json({ 
         success: false, 
-        error: 'Zbyt wiele żądań. Spróbuj ponownie za kilka sekund.' 
+        error: 'Zbyt wiele żądań. Spróbuj ponownie za kilka sekund.',
+        retryAfter: 60
+      })
+    }
+    
+    if (error.message?.includes('timeout') || error.code === 'ETIMEDOUT') {
+      return res.status(504).json({
+        success: false,
+        error: 'Przekroczono limit czasu przetwarzania. Spróbuj z krótszym CV.'
+      })
+    }
+    
+    if (error.message?.includes('GROQ_API_KEY') || error.message?.includes('Unauthorized')) {
+      return res.status(503).json({
+        success: false,
+        error: 'Serwis AI jest tymczasowo niedostępny. Spróbuj później.'
+      })
+    }
+    
+    if (error.name === 'SyntaxError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid JSON in request body'
       })
     }
     
     return res.status(500).json({ 
       success: false, 
-      error: 'Wystąpił błąd podczas optymalizacji. Spróbuj ponownie.' 
+      error: 'Wystąpił błąd podczas optymalizacji. Spróbuj ponownie.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     })
   }
 }

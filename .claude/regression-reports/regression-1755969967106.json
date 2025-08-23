@@ -1,0 +1,126 @@
+{
+  "timestamp": "2025-08-23T17:25:47.126Z",
+  "options": {
+    "quick": false,
+    "criticalOnly": true,
+    "compareWith": null,
+    "autoFix": false,
+    "verbose": false,
+    "reportOnly": false
+  },
+  "summary": {
+    "total": 7,
+    "pass": 3,
+    "fail": 1,
+    "skip": 3,
+    "critical_fail": 1
+  },
+  "categories": {
+    "critical": [
+      {
+        "id": "critical.build_process",
+        "name": "build_process",
+        "category": "critical",
+        "description": "Next.js build process",
+        "critical": true,
+        "status": "PASS",
+        "duration": 19130,
+        "details": "\n  ├ chunks/webpack-5cd005abd257587b.js     1.89 kB\n  └ css/106064256e4cf83e.css               8.97 kB\n\n○  (Static)   prerendered as static HTML\nλ  (Dynamic)  server-rendered on demand using Node.js\n\n",
+        "error": null
+      },
+      {
+        "id": "critical.lint_validation",
+        "name": "lint_validation",
+        "category": "critical",
+        "description": "ESLint validation",
+        "critical": true,
+        "status": "PASS",
+        "duration": 786,
+        "details": "\n> cvperfect@0.1.0 lint\n> next lint\n\n? How would you like to configure ESLint? https://nextjs.org/docs/basic-features/eslint\n\u001b[?25l❯  Strict (recommended)\n   Base\n   Cancel",
+        "error": null
+      },
+      {
+        "id": "critical.package_dependencies",
+        "name": "package_dependencies",
+        "category": "critical",
+        "description": "Critical package dependencies",
+        "critical": true,
+        "status": "PASS",
+        "duration": 0,
+        "details": "5 critical dependencies verified",
+        "error": null
+      }
+    ],
+    "functional": [
+      {
+        "id": "functional.main_page_functionality",
+        "name": "main_page_functionality",
+        "category": "functional",
+        "description": "Main page CV upload and processing",
+        "critical": true,
+        "status": "SKIP",
+        "duration": 0,
+        "details": "Script file not found: test-main-page.js",
+        "error": null
+      },
+      {
+        "id": "functional.payment_flow",
+        "name": "payment_flow",
+        "category": "functional",
+        "description": "Stripe payment integration",
+        "critical": true,
+        "status": "FAIL",
+        "duration": 57,
+        "details": "",
+        "error": {
+          "message": "Command failed: node test-stripe-payment-flow.js\nC:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\test-stripe-payment-flow.js:160\r\n        await new Promise(resolve => setTimeout(resolveSelector('[accept=\".pdf,.docx\"]', { timeout: 10000 });\r\n                                                                                                           ^\r\n\r\nSyntaxError: missing ) after argument list\r\n    at wrapSafe (node:internal/modules/cjs/loader:1662:18)\r\n    at Module._compile (node:internal/modules/cjs/",
+          "timeout": false,
+          "exitCode": 1
+        }
+      },
+      {
+        "id": "functional.success_page_functions",
+        "name": "success_page_functions",
+        "category": "functional",
+        "description": "Success page template and export functions",
+        "critical": true,
+        "status": "SKIP",
+        "duration": 0,
+        "details": "Script file not found: test-all-success-functions.js",
+        "error": null
+      },
+      {
+        "id": "functional.cv_optimization",
+        "name": "cv_optimization",
+        "category": "functional",
+        "description": "AI CV optimization with Groq",
+        "critical": true,
+        "status": "SKIP",
+        "duration": 0,
+        "details": "Script file not found: test-ai-optimization.js",
+        "error": null
+      }
+    ],
+    "integration": [],
+    "performance": []
+  },
+  "regressions": [],
+  "improvements": [],
+  "recommendations": [
+    {
+      "severity": "CRITICAL",
+      "message": "Critical tests are failing - immediate action required",
+      "actions": [
+        "Stop all development work",
+        "Run /rollback-to-safe if issues persist",
+        "Check build logs for specific errors",
+        "Verify environment variables are set correctly"
+      ]
+    }
+  ],
+  "git_context": {
+    "commit": "e5e01e1f3b48b49836f18b552d692463700b0f59",
+    "branch": "fix/template-data-flow",
+    "dirty": true
+  }
+}

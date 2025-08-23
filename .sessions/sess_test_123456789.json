@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_test_123456789",
+  "email": "test@example.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Test CV content for debugging purposes",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-23T17:26:13.126Z",
+  "processed": false,
+  "createdAt": 1755969973126
+}

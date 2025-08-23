@@ -1,0 +1,158 @@
+{
+  "summary": {
+    "totalTests": 21,
+    "passed": 16,
+    "failed": 3,
+    "warnings": 2
+  },
+  "testResults": [
+    {
+      "category": "mainPage",
+      "test": "Page loads with correct title",
+      "status": "PASS",
+      "details": "Title: CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+      "timestamp": "2025-08-22T14:37:21.314Z"
+    },
+    {
+      "category": "mainPage",
+      "test": "Language switcher found and clicked",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-22T14:37:22.445Z"
+    },
+    {
+      "category": "mainPage",
+      "test": "File input element",
+      "status": "FAIL",
+      "details": "No file input found",
+      "timestamp": "2025-08-22T14:37:24.984Z"
+    },
+    {
+      "category": "mainPage",
+      "test": "Upload button/area found",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-22T14:37:25.008Z"
+    },
+    {
+      "category": "mainPage",
+      "test": "Email input field",
+      "status": "FAIL",
+      "details": "No email input found",
+      "timestamp": "2025-08-22T14:37:25.010Z"
+    },
+    {
+      "category": "mainPage",
+      "test": "Form elements present",
+      "status": "PASS",
+      "details": "Found 0 form elements",
+      "timestamp": "2025-08-22T14:37:25.012Z"
+    },
+    {
+      "category": "mainPage",
+      "test": "Price information detected in content",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-22T14:37:25.036Z"
+    },
+    {
+      "category": "navigation",
+      "test": "Navigation structure exists",
+      "status": "PASS",
+      "details": "Found 1 nav elements",
+      "timestamp": "2025-08-22T14:37:25.041Z"
+    },
+    {
+      "category": "navigation",
+      "test": "Links present",
+      "status": "PASS",
+      "details": "Found 3 links",
+      "timestamp": "2025-08-22T14:37:25.045Z"
+    },
+    {
+      "category": "navigation",
+      "test": "Link functionality",
+      "status": "PASS",
+      "details": "Working: 1, Broken: 2",
+      "timestamp": "2025-08-22T14:37:28.531Z"
+    },
+    {
+      "category": "responsive",
+      "test": "Mobile layout",
+      "status": "PASS",
+      "details": "Body width: 367px, no horizontal overflow",
+      "timestamp": "2025-08-22T14:37:30.609Z"
+    },
+    {
+      "category": "responsive",
+      "test": "Tablet layout",
+      "status": "PASS",
+      "details": "Body width: 760px, no horizontal overflow",
+      "timestamp": "2025-08-22T14:37:33.280Z"
+    },
+    {
+      "category": "responsive",
+      "test": "Desktop layout",
+      "status": "PASS",
+      "details": "Body width: 1912px, no horizontal overflow",
+      "timestamp": "2025-08-22T14:37:37.410Z"
+    },
+    {
+      "category": "apiEndpoints",
+      "test": "/api/demo-optimize",
+      "status": "PASS",
+      "details": "Status: 400",
+      "timestamp": "2025-08-22T14:37:37.516Z"
+    },
+    {
+      "category": "apiEndpoints",
+      "test": "/api/analyze",
+      "status": "PASS",
+      "details": "Status: 400",
+      "timestamp": "2025-08-22T14:37:37.622Z"
+    },
+    {
+      "category": "apiEndpoints",
+      "test": "/api/create-checkout-session",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-22T14:37:38.171Z"
+    },
+    {
+      "category": "navigation",
+      "test": "Success page loads",
+      "status": "WARNING",
+      "details": "Title: ",
+      "timestamp": "2025-08-22T14:37:47.444Z"
+    },
+    {
+      "category": "navigation",
+      "test": "Success page content",
+      "status": "WARNING",
+      "details": "No clear success elements found",
+      "timestamp": "2025-08-22T14:37:48.378Z"
+    },
+    {
+      "category": "navigation",
+      "test": "Contact page loads",
+      "status": "PASS",
+      "details": "Title: Kontakt - CvPerfect | Centrum Wsparcia Premium",
+      "timestamp": "2025-08-22T14:37:52.394Z"
+    },
+    {
+      "category": "errors",
+      "test": "Console errors",
+      "status": "FAIL",
+      "details": "2 errors found: Failed to load resource: the server responded with a status of 400 (Bad Request) | Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "timestamp": "2025-08-22T14:37:53.095Z"
+    },
+    {
+      "category": "errors",
+      "test": "Console warnings",
+      "status": "PASS",
+      "details": "No console warnings detected",
+      "timestamp": "2025-08-22T14:37:53.095Z"
+    }
+  ],
+  "generatedAt": "2025-08-22T14:37:53.585Z"
+}

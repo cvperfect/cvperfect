@@ -1,0 +1,88 @@
+{
+  "id": "baseline",
+  "created_at": "2025-08-23T10:38:40.578Z",
+  "system_info": {
+    "node_version": "v22.17.1",
+    "platform": "win32",
+    "cwd": "c:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect",
+    "git_commit": "unknown",
+    "git_branch": "unknown",
+    "package_hash": "unknown"
+  },
+  "test_results": {
+    "timestamp": "2025-08-23T10:38:39.943Z",
+    "suites": {
+      "critical": [
+        {
+          "name": "build",
+          "status": "FAIL",
+          "duration": 285,
+          "error": "Command failed: npm run build\nnpm error code ENOENT\nnpm error syscall open\nnpm error path c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json\nnpm error errno -4058\nnpm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json'\nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm error A complete log of this run can be found in: C:\\Users\\czupa\\AppData\\Local\\npm-cache\\_logs\\2025-08-23T10_38_4",
+          "exitCode": 4294963238
+        },
+        {
+          "name": "lint",
+          "status": "FAIL",
+          "duration": 349,
+          "error": "Command failed: npm run lint\nnpm error code ENOENT\nnpm error syscall open\nnpm error path c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json\nnpm error errno -4058\nnpm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json'\nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm error A complete log of this run can be found in: C:\\Users\\czupa\\AppData\\Local\\npm-cache\\_logs\\2025-08-23T10_38_40",
+          "exitCode": 4294963238
+        }
+      ],
+      "functional": [
+        {
+          "name": "main_page",
+          "status": "SKIP",
+          "reason": "test_file_not_found",
+          "duration": 0
+        },
+        {
+          "name": "payment_flow",
+          "status": "SKIP",
+          "reason": "test_file_not_found",
+          "duration": 0
+        },
+        {
+          "name": "success_functions",
+          "status": "SKIP",
+          "reason": "test_file_not_found",
+          "duration": 0
+        },
+        {
+          "name": "api_endpoints",
+          "status": "SKIP",
+          "reason": "test_file_not_found",
+          "duration": 0
+        },
+        {
+          "name": "responsive",
+          "status": "SKIP",
+          "reason": "test_file_not_found",
+          "duration": 0
+        },
+        {
+          "name": "agents_integration",
+          "status": "SKIP",
+          "reason": "test_file_not_found",
+          "duration": 0
+        }
+      ]
+    },
+    "summary": {
+      "total": 8,
+      "pass": 0,
+      "fail": 2,
+      "skip": 6
+    }
+  },
+  "file_checksums": {
+    "pages/index.js": "missing",
+    "pages/success.js": "missing",
+    "pages/api/analyze.js": "missing",
+    "pages/api/create-checkout-session.js": "missing",
+    "package.json": "missing"
+  },
+  "metadata": {
+    "type": "named",
+    "creator": "snapshot-manager"
+  }
+}

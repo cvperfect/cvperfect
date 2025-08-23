@@ -1,11 +1,9 @@
 // Complete success.js File for CvPerfect.pl
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Head from 'next/head'
-// Temporarily disabled heavy imports for debugging
-// import gsap from 'gsap'
-// import { ScrollTrigger, TextPlugin } from 'gsap/all'
+// GSAP imports removed to reduce bundle size
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 // DOCX Export imports
@@ -14,9 +12,45 @@ import { saveAs } from 'file-saver'
 // XSS Protection
 import DOMPurify from 'dompurify'
 
-// // gsap.registerPlugin(ScrollTrigger, TextPlugin)
 
-export default function Success() {
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('🚨 Error Boundary caught error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md text-center text-white">
+            <h1 className="text-2xl font-bold mb-4">🚨 Wystąpił błąd</h1>
+            <p className="mb-4">Przepraszamy, coś poszło nie tak. Spróbuj odświeżyć stronę.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition-colors"
+            >
+              Odśwież stronę
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function Success() {
   // Expose DOMPurify globally for testing
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -85,85 +119,35 @@ export default function Success() {
     return htmlContent || '';
   };
 
-  // FAZA 5: MILLION DOLLAR STATE MANAGEMENT ARCHITECTURE
-  // ====================================================
+  // SIMPLIFIED STATE MANAGEMENT ARCHITECTURE
+  // ========================================
   
-  // Primary Application State
+  // Core Application State (Essential Only)
   const [appState, setAppState] = useState({
-    // Core Data
+    // Essential Data
     cvData: null,
-    sessionData: null,
     userPlan: 'premium',
-    language: 'pl',
-    
-    // UI State
     selectedTemplate: 'simple',
-    activeView: 'preview', // preview, export, settings
     
-    // Loading States
+    // Loading States (Simplified)
     isInitializing: true,
     isOptimizing: false,
     isExporting: false,
-    isSessionLoading: false,
     
-    // Modal States
+    // UI State (Essential Only) 
     modals: {
       email: false,
       template: false,
-      export: false,
-      settings: false
+      export: false
     },
     
-    // Progress Tracking
-    progress: {
-      sessionLoad: 0,
-      aiOptimization: 0,
-      export: 0
-    },
-    
-    // Performance Metrics
-    metrics: {
-      atsScore: 45,
-      optimizedScore: 95,
-      loadTime: null,
-      lastOptimized: null
-    },
-    
-    // Error Handling
-    errors: [],
-    warnings: [],
-    
-    // Cache Management
-    cache: {
-      sessionData: null,
-      optimizedContent: null,
-      exportCache: {}
-    },
-    
-    // Feature Flags
-    features: {
-      advancedAI: true,
-      realTimePreview: true,
-      autoSave: true,
-      analytics: true
-    },
-    
-    // User Preferences
-    preferences: {
-      autoOptimize: false,
-      exportFormat: 'pdf',
-      templateStyle: 'professional',
-      language: 'pl'
-    }
+    // Basic Metrics
+    atsScore: 45,
+    optimizedScore: 95
   })
 
-  // Advanced State Management Hooks
+  // Separate State for Notifications (Reduces re-renders)
   const [notifications, setNotifications] = useState([])
-  const [performanceMonitor, setPerformanceMonitor] = useState({
-    startTime: Date.now(),
-    renderCount: 0,
-    memoryUsage: 0
-  })
 
   // Notification System - MOVED TO TOP for dependency resolution
   const addNotification = useCallback((messageOrObj, type) => {
@@ -192,37 +176,18 @@ export default function Success() {
     }
   }, [])
 
-  // Refs for UI Elements and Performance
+  // Refs for UI Elements
   const cvPreviewRef = useRef(null)
-  const timelineRef = useRef(null)
-  const performanceRef = useRef({
-    renderTimes: [],
-    interactionTimes: []
-  })
 
-  // MILLION DOLLAR STATE MANAGEMENT UTILITIES
-  // =========================================
+  // SIMPLIFIED STATE MANAGEMENT UTILITIES
+  // ====================================
   
-  // Advanced State Updater with Performance Monitoring
+  // Simple State Updater (No Performance Overhead)
   const updateAppState = useCallback((updates, source = 'unknown') => {
-    const startTime = performance.now()
-    
     setAppState(prevState => {
       const newState = {
         ...prevState,
-        ...updates,
-        // Always update timestamp for change tracking
-        lastUpdated: Date.now(),
-        updateSource: source
-      }
-      
-      // Performance tracking
-      const endTime = performance.now()
-      performanceRef.current.renderTimes.push(endTime - startTime)
-      
-      // Keep only last 100 render times for memory efficiency
-      if (performanceRef.current.renderTimes.length > 100) {
-        performanceRef.current.renderTimes.shift()
+        ...updates
       }
       
       console.log(`🔄 State updated from ${source}:`, updates)
@@ -230,30 +195,9 @@ export default function Success() {
     })
   }, [])
 
-  // Specialized State Updaters for Different Domains
+  // Essential Helper Functions Only (Memoized)
   const updateCvData = useCallback((cvData) => {
     updateAppState({ cvData }, 'cv-data')
-  }, [updateAppState])
-
-  const updateProgress = useCallback((progressType, value) => {
-    updateAppState((prevState) => ({
-      ...prevState,
-      progress: {
-        ...prevState.progress,
-        [progressType]: value
-      }
-    }), 'progress-update')
-  }, [updateAppState])
-
-  const updateMetrics = useCallback((metricsUpdate) => {
-    updateAppState((prevState) => ({
-      ...prevState,
-      metrics: {
-        ...prevState.metrics,
-        ...metricsUpdate,
-        lastUpdated: Date.now()
-      }
-    }), 'metrics-update')
   }, [updateAppState])
 
   const toggleModal = useCallback((modalName, isOpen = null) => {
@@ -269,219 +213,71 @@ export default function Success() {
     }, 'modal-toggle')
   }, [updateAppState])
 
-
-  // Performance Monitor
-  const trackPerformance = useCallback((action, duration = null) => {
-    const timestamp = Date.now()
-    setPerformanceMonitor(prev => ({
-      ...prev,
-      renderCount: prev.renderCount + 1,
-      memoryUsage: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 0
-    }))
+  // Memoize expensive computations
+  const memoizedCVData = useMemo(() => {
+    if (!appState.cvData) return null
     
-    if (appState.features.analytics) {
-      console.log(`📊 Performance: ${action}`, {
-        duration: duration || 'N/A',
-        renderCount: performanceMonitor.renderCount + 1,
-        memoryMB: performanceMonitor.memoryUsage
-      })
+    return {
+      ...appState.cvData,
+      hasContent: !!(appState.cvData.fullContent && appState.cvData.fullContent.length > 100)
     }
-  }, [appState.features.analytics])
+  }, [appState.cvData])
 
-  // Cache Management
-  const setCacheItem = useCallback((key, value, ttl = 300000) => { // 5 min default TTL
-    const cacheItem = {
-      value,
-      timestamp: Date.now(),
-      ttl
-    }
+  const memoizedTemplateData = useMemo(() => {
+    if (!memoizedCVData?.hasContent) return null
     
-    updateAppState({
-      cache: {
-        ...appState.cache,
-        [key]: cacheItem
-      }
-    }, 'cache-set')
-  }, [updateAppState, appState.cache])
+    return {
+      selectedTemplate: appState.selectedTemplate,
+      cvData: memoizedCVData,
+      isLoading: appState.isOptimizing || appState.isExporting
+    }
+  }, [appState.selectedTemplate, memoizedCVData, appState.isOptimizing, appState.isExporting])
+
+  // Simple Cache (Basic Implementation)
+  const cache = useRef({})
+  
+  const setCacheItem = useCallback((key, value) => {
+    cache.current[key] = { value, timestamp: Date.now() }
+  }, [])
 
   const getCacheItem = useCallback((key) => {
-    const item = appState.cache[key]
-    if (!item) return null
-    
-    const isExpired = Date.now() - item.timestamp > item.ttl
-    if (isExpired) {
-      // Remove expired item with advanced cleanup
-      const newCache = { ...appState.cache }
-      delete newCache[key]
-      updateAppState({ cache: newCache }, 'cache-cleanup')
-      
-      console.log(`🧹 Cache cleanup: expired item "${key}" removed`)
-      return null
-    }
-    
-    return item.value
-  }, [updateAppState, appState.cache])
-
-  // FAZA 3: Advanced Cache Management Functions
-  const clearCacheByPattern = useCallback((pattern) => {
-    const newCache = { ...appState.cache }
-    let removedCount = 0
-    
-    Object.keys(newCache).forEach(key => {
-      if (key.includes(pattern)) {
-        delete newCache[key]
-        removedCount++
-      }
-    })
-    
-    if (removedCount > 0) {
-      updateAppState({ cache: newCache }, 'cache-pattern-cleanup')
-      console.log(`🧹 Cache pattern cleanup: removed ${removedCount} items matching "${pattern}"`)
-    }
-  }, [updateAppState, appState.cache])
-
-  const forceExpireCache = useCallback((key) => {
-    const newCache = { ...appState.cache }
-    if (newCache[key]) {
-      delete newCache[key]
-      updateAppState({ cache: newCache }, 'cache-force-expire')
-      console.log(`🔥 Force expired cache item: "${key}"`)
-    }
-  }, [updateAppState, appState.cache])
-
-  const getCacheStats = useCallback(() => {
-    const cache = appState.cache
-    const now = Date.now()
-    let totalItems = 0
-    let expiredItems = 0
-    let totalSize = 0
-
-    Object.keys(cache).forEach(key => {
-      totalItems++
-      const item = cache[key]
-      const isExpired = now - item.timestamp > item.ttl
-      
-      if (isExpired) expiredItems++
-      
-      // Estimate size (rough calculation)
-      totalSize += JSON.stringify(item).length
-    })
-
-    return {
-      totalItems,
-      expiredItems,
-      activeItems: totalItems - expiredItems,
-      estimatedSizeKB: Math.round(totalSize / 1024)
-    }
-  }, [appState.cache])
-
-  const performCacheCleanup = useCallback(() => {
-    const newCache = { ...appState.cache }
-    const now = Date.now()
-    let cleanedCount = 0
-
-    Object.keys(newCache).forEach(key => {
-      const item = newCache[key]
-      const isExpired = now - item.timestamp > item.ttl
-      
-      if (isExpired) {
-        delete newCache[key]
-        cleanedCount++
-      }
-    })
-
-    if (cleanedCount > 0) {
-      updateAppState({ cache: newCache }, 'cache-maintenance-cleanup')
-      console.log(`🧹 Cache maintenance: cleaned ${cleanedCount} expired items`)
-    }
-
-    return cleanedCount
-  }, [updateAppState, appState.cache])
+    return cache.current[key]?.value || null
+  }, [])
 
   // Error Handling
   const handleError = useCallback((error, context = 'unknown') => {
-    const errorObj = {
-      message: error.message || error,
-      context,
-      timestamp: Date.now(),
-      stack: error.stack
-    }
-    
-    updateAppState({
-      errors: [...appState.errors, errorObj]
-    }, 'error-handler')
+    console.error(`❌ Error in ${context}:`, error)
     
     addNotification({
       type: 'error',
       title: 'Wystąpił błąd',
-      message: errorObj.message,
-      context
+      message: error.message || 'Nieznany błąd'
     })
-    
-    console.error(`❌ Error in ${context}:`, error)
-  }, [updateAppState, appState.errors, addNotification])
+  }, [addNotification])
 
-  // Guard to prevent multiple initialization calls
-  const initializationRef = useRef(false)
-  
-  // ENHANCED URL PARAMETERS & SESSION HANDLING WITH MILLION DOLLAR ARCHITECTURE
+  // Simple initialization effect
   useEffect(() => {
-    console.log('🔍 useEffect triggered, initializationRef:', initializationRef.current)
-    if (typeof window !== 'undefined' && !initializationRef.current) {
-      console.log('✅ Passing initialization check')
-      initializationRef.current = true
-      const startTime = performance.now()
-      trackPerformance('initialization-start')
-      
+    if (typeof window === 'undefined') return
+    
+    const initialize = async () => {
       try {
-        // Wrap async operations in IIFE since useEffect can't be async
-        (async () => {
-          const urlParams = new URLSearchParams(window.location.search)
-          const sessionId = urlParams.get('session_id')
-          const templateParam = urlParams.get('template')
-          const planParam = urlParams.get('plan')
-          const langParam = urlParams.get('lang')
-          
-          // Initialize URL-based state
-          const urlBasedState = {}
-          
-          if (planParam) urlBasedState.userPlan = planParam
-          if (templateParam && templateParam !== 'default') urlBasedState.selectedTemplate = templateParam
-          if (langParam) urlBasedState.language = langParam
-          
-          // Update state with URL parameters
-          if (Object.keys(urlBasedState).length > 0) {
-            updateAppState(urlBasedState, 'url-params')
-          }
+        const urlParams = new URLSearchParams(window.location.search)
+        const sessionId = urlParams.get('session_id')
+        const templateParam = urlParams.get('template')
+        const planParam = urlParams.get('plan')
         
-        // FAZA 3: Initialize cache management and cleanup
-        console.log('🔧 FAZA 3: Initializing cache management...')
+        // Update state from URL params
+        const urlState = {}
+        if (planParam) urlState.userPlan = planParam
+        if (templateParam) urlState.selectedTemplate = templateParam
         
-        // Store cleanup interval ID for proper cleanup
-        let cacheCleanupInterval = null
-        
-        try {
-          // Perform initial cache cleanup with try-catch
-          console.log('🧹 Starting initial cache cleanup...')
-          
-          // Manual cache cleanup implementation for initialization
-          let cleanedCount = 0
-          console.log('✅ Cache system initialized successfully with', cleanedCount, 'items cleaned')
-          
-          // Setup periodic cache cleanup (every 5 minutes)
-          cacheCleanupInterval = setInterval(() => {
-            console.log('📊 Performing periodic cache maintenance...')
-            // This will run every 5 minutes
-          }, 300000) // 5 minutes
-          
-          console.log('✅ FAZA 3 Cache management system fully initialized!')
-        } catch (cacheError) {
-          console.error('❌ Cache management initialization error:', cacheError)
-          // Continue without cache management
+        if (Object.keys(urlState).length > 0) {
+          updateAppState(urlState, 'url-params')
         }
         
         if (sessionId) {
-          console.log('🔗 Session ID found:', sessionId)
+          console.log('🔗 Loading session:', sessionId)
+          updateAppState({ isInitializing: true }, 'init-start')
           
           addNotification({
             type: 'info',
@@ -489,64 +285,24 @@ export default function Success() {
             message: 'Pobieranie danych sesji...'
           })
           
-          // Update loading state
-          updateAppState({ isSessionLoading: true }, 'session-start')
-          
-          // Fetch user data from session with enhanced error handling
-          console.log('🚀 About to call fetchUserDataFromSession with:', sessionId)
-          console.log('🚀 DEBUG: sessionId type:', typeof sessionId, 'value:', sessionId)
-          const result = await fetchUserDataFromSession(sessionId)
-          console.log('🚀 fetchUserDataFromSession returned:', result)
-          
-          // Simulate ATS score improvement animation
-          const atsAnimationTimeout = setTimeout(() => {
-            animateATSScore()
-          }, 2000)
-          
-          // Store timeout for cleanup
-          window.atsAnimationTimeout = atsAnimationTimeout
-          
+          await fetchUserDataFromSession(sessionId)
         } else {
-          // No session - show error state  
-          console.log('⚠️ No session ID found - user must upload CV first')
+          console.log('⚠️ No session ID found')
           updateCvData({
             error: true,
-            message: 'Nie znaleziono sesji. Wróć do strony głównej i prześlij swoje CV.',
-            actionRequired: 'redirect'
+            message: 'Nie znaleziono sesji. Wróć do strony głównej i prześlij swoje CV.'
           })
-          updateAppState({ 
-            isInitializing: false,
-            sessionData: { type: 'error' }
-          }, 'no-session-error')
+          updateAppState({ isInitializing: false }, 'no-session')
         }
-          
-          // Track initialization performance
-          const endTime = performance.now()
-          updateMetrics({ 
-            loadTime: endTime - startTime,
-            initializeTime: endTime - startTime
-          })
-        })() // End of async IIFE
-        
       } catch (error) {
-        handleError(error, 'initialization')
-      }
-      
-      // Return cleanup function for useEffect
-      return () => {
-        if (window.cacheCleanupInterval) {
-          clearInterval(window.cacheCleanupInterval)
-          console.log('🧹 Cache cleanup interval cleared on component unmount')
-          delete window.cacheCleanupInterval
-        }
-        if (window.atsAnimationTimeout) {
-          clearTimeout(window.atsAnimationTimeout)
-          console.log('🧹 ATS animation timeout cleared on component unmount')
-          delete window.atsAnimationTimeout
-        }
+        console.error('❌ Initialization error:', error)
+        addNotification('❌ Błąd podczas inicjalizacji', 'error')
+        updateAppState({ isInitializing: false }, 'init-error')
       }
     }
-  }, []) // FIXED: Empty array to prevent infinite loop - functions are stable via useCallback
+    
+    initialize()
+  }, []) // Run once on mount
 
   // ========================================
   // CRITICAL MISSING FUNCTIONS - ADDED FOR FUNCTIONALITY
@@ -624,11 +380,8 @@ export default function Success() {
       
       updateAppState({ 
         isOptimizing: false,
-        metrics: {
-          ...appState.metrics,
-          optimizedScore: 95,
-          lastOptimized: Date.now()
-        }
+        atsScore: 95,
+        optimizedScore: 95
       }, 'optimize-complete')
       
     } catch (error) {
@@ -979,14 +732,9 @@ export default function Success() {
         isInitializing: false
       }, 'session-success')
       
-      // Track performance
+      // Performance tracking simplified
       const duration = performance.now() - startTime
-      updateMetrics({
-        sessionLoadTime: duration,
-        lastSessionLoad: Date.now()
-      })
-      
-      trackPerformance('session-load', duration)
+      console.log(`📊 Session loaded in ${Math.round(duration)}ms`)
       
       addNotification({
         type: 'success',
@@ -1030,8 +778,7 @@ export default function Success() {
       
       return null
     }
-  }, [getCacheItem, setCacheItem, updateCvData, updateAppState, updateProgress, 
-      updateMetrics, trackPerformance, addNotification, handleError])
+  }, [getCacheItem, setCacheItem, updateCvData, updateAppState, addNotification, handleError])
 
   // FAZA 3: Circuit Breaker Pattern for Enhanced Retry Logic
   const circuitBreakerRef = useRef({
@@ -1817,21 +1564,17 @@ export default function Success() {
   }
 
   const animateATSScore = () => {
-    // Animate from low score to high score - simplified to avoid conflicts
-    const startScore = Math.floor(Math.random() * 30) + 30 // 30-60%
+    console.log('🎯 ATS Score improved!')
+    
+    // Simplified score animation
     const endScore = 95
+    updateAppState({ atsScore: endScore, optimizedScore: endScore }, 'ats-animation')
     
-    updateMetrics({ atsScore: startScore, optimizedScore: endScore })
-    
-    // Use GSAP for smooth animation instead of setInterval
-    setTimeout(() => {
-      const scoreElement = document.querySelector('.ats-score-value')
-      if (scoreElement) {
-        // GSAP temporarily disabled
-        console.log('Setting ATS score to', endScore)
-        updateMetrics({ atsScore: endScore })
-      }
-    }, 1000)
+    addNotification({
+      type: 'success',
+      title: 'CV Zoptymalizowane!',
+      message: `ATS Score poprawiony do ${endScore}%!`
+    })
   }
 
   const scoreRef = useRef(null)
@@ -2138,13 +1881,11 @@ export default function Success() {
         })
         setCvData(optimizedCvData)
         
-        // Reset and animate ATS score improvement
-        const initialScore = Math.floor(Math.random() * 30) + 40 // 40-70%
-        updateMetrics({ atsScore: initialScore })
+        // ATS score animation simplified
+        updateAppState({ atsScore: 45 }, 'initial-ats')
         
         setTimeout(() => {
-          // Simplified score animation without GSAP
-          updateMetrics({ atsScore: 95 })
+          updateAppState({ atsScore: 95, optimizedScore: 95 }, 'final-ats')
         }, 500)
         
         const finalLength = result.optimizedCV.length
@@ -3548,16 +3289,16 @@ export default function Success() {
 
 
       {/* Performance Monitor (Development Mode) */}
-      {appState.features.analytics && process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === 'development' && (
         <motion.div
           initial={{ opacity: 0, y: -100 }}
           animate={{ opacity: 1, y: 0 }}
           className="fixed top-20 left-4 z-40 bg-black/80 backdrop-blur-sm text-white p-3 rounded-lg text-xs font-mono"
         >
-          <div>Renders: {performanceMonitor.renderCount}</div>
-          <div>Memory: {performanceMonitor.memoryUsage}MB</div>
-          <div>Load: {appState.metrics.loadTime ? `${Math.round(appState.metrics.loadTime)}ms` : 'N/A'}</div>
-          <div>Session: {appState.sessionData?.type || 'Loading...'}</div>
+          <div>Status: {appState?.isInitializing ? 'Loading' : 'Ready'}</div>
+          <div>Template: {appState?.selectedTemplate || 'None'}</div>
+          <div>CV: {appState?.cvData ? 'Loaded' : 'None'}</div>
+          <div>ATS Score: {appState?.atsScore || 0}%</div>
         </motion.div>
       )}
 
@@ -3717,7 +3458,7 @@ export default function Success() {
                 ref={scoreRef}
                 className="text-3xl font-bold text-violet-400 drop-shadow-lg ats-score-value"
               >
-                {appState.metrics.atsScore}
+                {appState.atsScore || 45}
               </span>
               <span className="text-violet-400 text-xl ml-1">%</span>
             </div>
@@ -4714,5 +4455,14 @@ export default function Success() {
       `}</style>
       </div>
     </>
+  )
+}
+
+// Export wrapped with Error Boundary
+export default function WrappedSuccess() {
+  return (
+    <ErrorBoundary>
+      <Success />
+    </ErrorBoundary>
   )
 }

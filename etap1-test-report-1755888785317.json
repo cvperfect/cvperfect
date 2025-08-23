@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-08-22T18:53:05.316Z",
+  "duration": "14s",
+  "summary": {
+    "passed": 9,
+    "failed": 2,
+    "warnings": 0
+  },
+  "tests": {
+    "security": {
+      "cors": {
+        "status": "PASS",
+        "message": "CORS properly restricted"
+      },
+      "envBackup": {
+        "status": "PASS",
+        "message": "Exposed keys backed up"
+      },
+      "headers": {
+        "status": "PASS",
+        "message": "Security headers present"
+      },
+      "xss": {
+        "status": "FAIL",
+        "message": "DOMPurify not found on success page"
+      },
+      "auth": {
+        "status": "PASS",
+        "message": "Email bypass blocked, proper auth required"
+      }
+    },
+    "functionality": {
+      "photo": {
+        "status": "PASS",
+        "message": "Photo preserved (407 chars)"
+      },
+      "chunking": {
+        "status": "PASS",
+        "message": "Long CV processed successfully (147060 → 147059 chars)"
+      },
+      "mainPage": {
+        "status": "FAIL",
+        "message": "Main page title incorrect"
+      },
+      "modal": {
+        "status": "PASS",
+        "message": "Modal interaction working"
+      },
+      "mobile": {
+        "status": "PASS",
+        "message": "Mobile layout responsive"
+      }
+    },
+    "performance": {
+      "api": {
+        "status": "PASS",
+        "message": "Average response time: 121ms",
+        "details": [
+          {
+            "endpoint": "/api/demo-optimize",
+            "responseTime": 130,
+            "status": 500
+          },
+          {
+            "endpoint": "/api/save-session",
+            "responseTime": 112,
+            "status": 200
+          }
+        ]
+      }
+    }
+  },
+  "recommendations": [
+    "🔴 CRITICAL: Fix failed tests before proceeding to ETAP 2"
+  ]
+}

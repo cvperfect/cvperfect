@@ -16,6 +16,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Set proper JSON content type first
+    res.setHeader('Content-Type', 'application/json')
+    
     const { sessionId, cvData, jobPosting, email, plan, template, photo } = req.body
 
     // Walidacja
@@ -23,6 +26,14 @@ export default async function handler(req, res) {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: sessionId, cvData, email'
+      })
+    }
+    
+    // Validate sessionId format to prevent file system errors
+    if (typeof sessionId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid sessionId format'
       })
     }
 
@@ -87,9 +98,29 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ Save session error:', error)
-    res.status(500).json({
+    
+    // Ensure we always return JSON, even on errors
+    res.setHeader('Content-Type', 'application/json')
+    
+    // Handle specific error types
+    if (error.name === 'SyntaxError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid JSON in request body'
+      })
+    }
+    
+    if (error.code === 'EACCES' || error.code === 'EPERM') {
+      return res.status(500).json({
+        success: false,
+        error: 'File system permission error'
+      })
+    }
+    
+    return res.status(500).json({
       success: false,
-      error: 'Failed to save session data'
+      error: 'Failed to save session data',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     })
   }
 }

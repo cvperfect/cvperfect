@@ -1,0 +1,55 @@
+🧪 Initializing CVPerfect ETAP 1 Testing Suite...
+✅ Testing environment initialized
+
+🔐 TEST 1: Security Fixes Validation
+❌ HTTP Error: 405 http://localhost:3001/api/analyze
+
+🛡️ TEST 2: XSS Protection with DOMPurify
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_session_id
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_session_id
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_session_id
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_session_id
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_session_id
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_session_id
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_session_id
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_session_id
+
+🔑 TEST 3: New Authentication System
+❌ HTTP Error: 403 http://localhost:3001/api/analyze
+❌ HTTP Error: 403 http://localhost:3001/api/analyze
+🔍 Auth test result: { authTest: false, legitTest: 403 }
+
+📸 TEST 4: Photo Preservation Through Flow
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_photo_session
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_photo_session
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_photo_session
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_photo_session
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_photo_session
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_photo_session
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_photo_session
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_photo_session
+
+📄 TEST 5: Chunking Strategy for Long CVs
+📊 Generated test CV: 147060 characters
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_photo_session
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_photo_session
+❌ HTTP Error: 500 http://localhost:3001/api/get-session?session_id=test_photo_session
+❌ HTTP Error: 404 http://localhost:3001/api/get-session-data?session_id=test_photo_session
+
+🔄 TEST 6: Complete End-to-End Flow
+
+📱 TEST 7: Mobile Responsiveness
+
+⚡ TEST 8: API Endpoints Performance
+❌ HTTP Error: 500 http://localhost:3001/api/demo-optimize
+
+================================================================================
+🧪 CVPERFECT ETAP 1 - TEST RESULTS SUMMARY
+================================================================================
+✅ PASSED: 10
+❌ FAILED: 1
+⚠️ WARNINGS: 0
+⏱️ DURATION: 13s
+📄 REPORT: etap1-test-report-1755888990890.json
+================================================================================
+⚠️ SOME TESTS FAILED - REVIEW REQUIRED BEFORE ETAP 2

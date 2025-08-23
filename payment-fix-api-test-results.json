@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-08-22T13:55:19.465Z",
+  "tests": [
+    {
+      "test": "Gold Plan Payment Type Fix",
+      "status": "PASS",
+      "details": "Successfully created checkout session without payment type error"
+    },
+    {
+      "test": "Basic Plan Reference Test",
+      "status": "PASS",
+      "details": "Basic plan works correctly"
+    },
+    {
+      "test": "Premium Plan Test",
+      "status": "PASS",
+      "details": "Premium plan works correctly"
+    }
+  ],
+  "api_responses": [
+    {
+      "test": "Gold Plan API",
+      "request": {
+        "plan": "gold",
+        "email": "test@example.com",
+        "cv": "Jan Kowalski - Test CV for Gold plan payment validation test",
+        "job": "Senior Developer position - test job posting",
+        "fullSessionId": "test_gold_fix_1755870919466"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "data": {
+          "id": "cs_test_a1x3MTJmWaSwqOY8808w0HRV5Zn4NWW2I5h2yLS3NIl1A5fD6YVEesrzOZ",
+          "url": "https://checkout.stripe.com/c/pay/cs_test_a1x3MTJmWaSwqOY8808w0HRV5Zn4NWW2I5h2yLS3NIl1A5fD6YVEesrzOZ#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+          "success": true
+        }
+      }
+    },
+    {
+      "test": "Basic Plan API",
+      "request": {
+        "plan": "basic",
+        "email": "test@example.com",
+        "cv": "Jan Kowalski - Test CV for Basic plan reference test",
+        "job": "Test job posting",
+        "fullSessionId": "test_basic_ref_1755870920248"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "data": {
+          "id": "cs_test_a1m9mlNN88hhKCywuL3kA33b9lf82fiLKGiVrUzcS2sD1L1iRmj32CpIMp",
+          "url": "https://checkout.stripe.com/c/pay/cs_test_a1m9mlNN88hhKCywuL3kA33b9lf82fiLKGiVrUzcS2sD1L1iRmj32CpIMp#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+          "success": true
+        }
+      }
+    },
+    {
+      "test": "Premium Plan API",
+      "request": {
+        "plan": "premium",
+        "email": "test@example.com",
+        "cv": "Jan Kowalski - Test CV for Premium plan test",
+        "job": "Test job posting",
+        "fullSessionId": "test_premium_1755870920602"
+      },
+      "response": {
+        "status": 200,
+        "ok": true,
+        "data": {
+          "id": "cs_test_a1Ue9PvPwNuJUHEYO3Zmf4GedSDSlH9gdVYzJB6zyImGqNaMWLoWmoQzfJ",
+          "url": "https://checkout.stripe.com/c/pay/cs_test_a1Ue9PvPwNuJUHEYO3Zmf4GedSDSlH9gdVYzJB6zyImGqNaMWLoWmoQzfJ#fidpamZkaWAnPyd1aScpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRXamBgUDFDUmc2fVwwcUEyY0BGUmxMZkBzMUx0XGlJS2xOaVRtUUQyY0NHbU83SEl0dVxPRk53bWFwdDV1cGw0Ykp8dXI1UkxScDNKYEhmfHBHZ2Jncl81NVx9cTNPUm5pJyknY3dqaFZgd3Ngdyc%2FcXdwYCknaWR8anBxUXx1YCc%2FJ3Zsa2JpYFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+          "success": true
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "totalTests": 3,
+    "passed": 3,
+    "failed": 0,
+    "errors": 0,
+    "totalErrors": 0
+  }
+}

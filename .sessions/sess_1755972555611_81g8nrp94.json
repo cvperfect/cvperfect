@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_1755972555611_81g8nrp94",
+  "email": "test@example.com",
+  "plan": "gold",
+  "template": "modern",
+  "cvData": "Jan Kowalski\nFrontend Developer\nWarszawa, Polska\nEmail: jan.kowalski@email.com\n\nDOŚWIADCZENIE\nSenior Frontend Developer | ABC Software | 2020-2024\n- Rozwój aplikacji React.js i Angular\n- Optymalizacja wydajności aplikacji webowych\n\nUMIEJĘTNOŚCI\n- React.js, Angular, Vue.js\n- HTML5, CSS3, JavaScript ES6+\n- TypeScript, Node.js",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-23T18:09:15.723Z",
+  "processed": false,
+  "createdAt": 1755972555723
+}

@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_test_valid_123",
+  "email": "valid@example.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Valid CV content",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-23T17:32:30.890Z",
+  "processed": false,
+  "createdAt": 1755970350890
+}

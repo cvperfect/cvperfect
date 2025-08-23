@@ -2,12 +2,21 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { buffer } from 'micro'
+import { ensureEnvironmentVariables, getMaskedEnvVar } from '../../lib/env-validation'
 
 // WAŻNE: Wyłącz body parser!
 export const config = {
   api: {
     bodyParser: false, // KRYTYCZNE dla bezpieczeństwa!
   },
+}
+
+// Validate critical environment variables at startup
+try {
+  ensureEnvironmentVariables(['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'])
+  console.log('✅ All environment variables validated for stripe-webhook')
+} catch (error) {
+  console.error('❌ CRITICAL: Environment variables missing for /api/stripe-webhook:', error.message)
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -17,6 +26,19 @@ const supabase = createClient(
 )
 
 export default async function handler(req, res) {
+  // Runtime environment validation
+  const requiredEnvVars = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+  
+  if (missingVars.length > 0) {
+    console.error('❌ Missing environment variables for webhook:', missingVars)
+    return res.status(500).json({
+      error: 'Webhook configuration error',
+      code: 'MISSING_ENV_VARS',
+      details: process.env.NODE_ENV === 'development' ? `Missing: ${missingVars.join(', ')}` : undefined
+    })
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' })
   }

@@ -1,0 +1,33 @@
+Jan Nowak
+ul. Testowa 123, 00-001 Warszawa
+tel. +48 123 456 789, email: jan.nowak@email.com
+
+DOŚWIADCZENIE ZAWODOWE:
+2022-2024 | Senior Frontend Developer | TechCorp Sp. z o.o.
+• Rozwój aplikacji webowych w React.js i TypeScript
+• Optymalizacja wydajności aplikacji (poprawa o 40%)
+• Mentoring junior developers
+• Współpraca z zespołami UX/UI
+
+2020-2022 | Frontend Developer | StartupXYZ
+• Implementacja interfejsów użytkownika
+• Integracja z API REST
+• Praca w metodologii Agile/Scrum
+
+WYKSZTAŁCENIE:
+2016-2020 | Informatyka, Politechnika Warszawska
+Specjalizacja: Inżynieria Oprogramowania
+
+UMIEJĘTNOŚCI TECHNICZNE:
+• Języki: JavaScript (ES6+), TypeScript, Python
+• Frameworki: React.js, Vue.js, Node.js
+• Narzędzia: Git, Webpack, Docker
+• Bazy danych: MySQL, MongoDB
+
+JĘZYKI OBCE:
+• Angielski - C1
+• Niemiecki - A2
+
+CERTYFIKATY:
+• AWS Certified Developer Associate (2023)
+• React Developer Certification (2022)

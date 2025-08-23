@@ -1,0 +1,378 @@
+{
+  "timestamp": "2025-08-22T14:09:52.084Z",
+  "testResults": {
+    "homepage": {
+      "status": "❌",
+      "details": [
+        "✅ Page navigation successful",
+        "❌ File upload input missing",
+        "❌ Drop zone missing",
+        "⚠️ Notification text color: rgb(0, 0, 0)",
+        "✅ Notification has white text",
+        "✅ Notification has white text",
+        "⚠️ Notification text color: rgb(0, 0, 0)",
+        "✅ Notification has white text",
+        "⚠️ Notification text color: rgb(0, 255, 136)",
+        "✅ Notification has white text",
+        "✅ Notification has white text",
+        "✅ Notification has white text",
+        "⚠️ Notification text color: rgb(0, 0, 0)",
+        "✅ Notification has white text",
+        "⚠️ Notification text color: rgb(0, 255, 136)",
+        "✅ Notification has white text"
+      ]
+    },
+    "paymentSystem": {
+      "status": "❌",
+      "details": [
+        "❌ Gold plan button missing",
+        "❌ Basic plan button missing",
+        "✅ Premium plan button present"
+      ]
+    },
+    "successPage": {
+      "status": "❌",
+      "details": [
+        "✅ Success page navigation successful",
+        "✅ showEmailModal error resolved",
+        "❌ Email modal button missing",
+        "❌ CV optimization button missing"
+      ]
+    },
+    "consoleErrors": {
+      "status": "✅",
+      "details": [
+        "✅ No console errors found"
+      ]
+    },
+    "uiVerification": {
+      "status": "✅",
+      "details": [
+        "✅ Mobile responsive test completed",
+        "✅ Tablet responsive test completed",
+        "✅ Desktop responsive test completed",
+        "✅ Glassmorphism design detected (7 elements)"
+      ]
+    },
+    "cvTest": {
+      "status": "❌",
+      "details": [
+        "⚠️ No CV templates found",
+        "❌ AI endpoint error: 400"
+      ]
+    }
+  },
+  "summary": {
+    "totalTests": 6,
+    "passedTests": 2,
+    "failedTests": 4
+  },
+  "consoleLog": [
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "timestamp": "2025-08-22T14:09:34.239Z",
+      "url": "http://localhost:3008/"
+    },
+    {
+      "type": "log",
+      "text": "[HMR] connected",
+      "timestamp": "2025-08-22T14:09:34.288Z",
+      "url": "http://localhost:3008/"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "timestamp": "2025-08-22T14:09:41.096Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "[HMR] connected",
+      "timestamp": "2025-08-22T14:09:41.495Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.534Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.535Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "📊 Performance: initialization-start JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.556Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "ℹ️ No session ID - showing demo",
+      "timestamp": "2025-08-22T14:09:41.556Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "GSAP animations disabled - page should load normally",
+      "timestamp": "2025-08-22T14:09:41.556Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "📊 Performance: initialization-start JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.559Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "ℹ️ No session ID - showing demo",
+      "timestamp": "2025-08-22T14:09:41.559Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "GSAP animations disabled - page should load normally",
+      "timestamp": "2025-08-22T14:09:41.559Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.572Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.572Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.572Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.572Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.573Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.573Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.574Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.574Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.574Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.574Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.575Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.575Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.575Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:41.576Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "timestamp": "2025-08-22T14:09:50.655Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "[HMR] connected",
+      "timestamp": "2025-08-22T14:09:51.001Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.024Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.025Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "📊 Performance: initialization-start JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.051Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "ℹ️ No session ID - showing demo",
+      "timestamp": "2025-08-22T14:09:51.051Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "GSAP animations disabled - page should load normally",
+      "timestamp": "2025-08-22T14:09:51.052Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "📊 Performance: initialization-start JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.054Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "ℹ️ No session ID - showing demo",
+      "timestamp": "2025-08-22T14:09:51.055Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "GSAP animations disabled - page should load normally",
+      "timestamp": "2025-08-22T14:09:51.055Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.069Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.069Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.070Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.070Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.070Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.070Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.071Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.072Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.073Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.073Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from cv-data: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.073Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from demo-mode: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.074Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔄 State updated from metrics-update: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.074Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "log",
+      "text": "🔍 CV Display Debug: JSHandle@object",
+      "timestamp": "2025-08-22T14:09:51.074Z",
+      "url": "http://localhost:3008/success"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "timestamp": "2025-08-22T14:09:52.084Z",
+      "url": "http://localhost:3008/success"
+    }
+  ]
+}

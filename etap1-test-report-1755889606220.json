@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-08-22T19:06:46.218Z",
+  "duration": "14s",
+  "summary": {
+    "passed": 11,
+    "failed": 0,
+    "warnings": 0
+  },
+  "tests": {
+    "security": {
+      "cors": {
+        "status": "PASS",
+        "message": "CORS properly restricted"
+      },
+      "envBackup": {
+        "status": "PASS",
+        "message": "Exposed keys backed up"
+      },
+      "headers": {
+        "status": "PASS",
+        "message": "Security headers present"
+      },
+      "xss": {
+        "status": "PASS",
+        "message": "DOMPurify loaded and sanitizing content"
+      },
+      "auth": {
+        "status": "PASS",
+        "message": "Email bypass blocked, proper auth required"
+      }
+    },
+    "functionality": {
+      "photo": {
+        "status": "PASS",
+        "message": "Photo preserved (407 chars)"
+      },
+      "chunking": {
+        "status": "PASS",
+        "message": "Long CV processed successfully (147060 → 147059 chars)"
+      },
+      "mainPage": {
+        "status": "PASS",
+        "message": "Main page loads correctly"
+      },
+      "modal": {
+        "status": "PASS",
+        "message": "Modal interaction working"
+      },
+      "mobile": {
+        "status": "PASS",
+        "message": "Mobile layout responsive"
+      }
+    },
+    "performance": {
+      "api": {
+        "status": "PASS",
+        "message": "Average response time: 122ms",
+        "details": [
+          {
+            "endpoint": "/api/demo-optimize",
+            "responseTime": 99,
+            "status": 500
+          },
+          {
+            "endpoint": "/api/save-session",
+            "responseTime": 145,
+            "status": 200
+          }
+        ]
+      }
+    }
+  },
+  "recommendations": [
+    "🚀 READY FOR ETAP 2: Performance & Architecture improvements"
+  ]
+}

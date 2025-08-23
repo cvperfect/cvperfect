@@ -1,0 +1,21 @@
+{
+  "bridge_active": true,
+  "last_update": "2025-08-23T08:33:05.002Z",
+  "pending_tasks": [
+    {
+      "id": "task_1755937985002_nbhzjprzk",
+      "description": "Optymalizuj szablon CV dla lepszego ATS scoring",
+      "type": "claude_task",
+      "assigned_agent": "ats_optimization",
+      "confidence": 3,
+      "keywords": [
+        "cv",
+        "ats"
+      ],
+      "status": "pending",
+      "created_at": "2025-08-23T08:33:05.002Z",
+      "claude_session": true
+    }
+  ],
+  "completed_tasks": []
+}

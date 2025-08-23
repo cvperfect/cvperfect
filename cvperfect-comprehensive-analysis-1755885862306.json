@@ -1,0 +1,70 @@
+{
+  "website_analysis": {
+    "status": "failed",
+    "error": "Navigating frame was detached"
+  },
+  "security_scan": {
+    "status": "failed",
+    "error": "Attempted to use detached Frame 'F3CFFBE7D17B376FAFB0E8D0C285EAAD'."
+  },
+  "performance_monitor": {
+    "status": "failed",
+    "error": "Attempted to use detached Frame 'F3CFFBE7D17B376FAFB0E8D0C285EAAD'."
+  },
+  "code_quality": {
+    "code_quality_agent": {
+      "success": true,
+      "agent": "code_quality",
+      "result": {
+        "action": "default",
+        "task": {
+          "type": "code_analysis",
+          "target": "./pages/"
+        }
+      },
+      "timestamp": "2025-08-22T18:04:22.305Z"
+    },
+    "static_analysis": {
+      "success": true,
+      "agent": "static_code_analysis",
+      "result": {
+        "action": "default",
+        "task": {
+          "type": "static_analysis",
+          "target": "./"
+        }
+      },
+      "timestamp": "2025-08-22T18:04:22.305Z"
+    },
+    "dependency_audit": {
+      "success": true,
+      "agent": "dependency_audit",
+      "result": {
+        "action": "default",
+        "task": {
+          "type": "dependency_check",
+          "target": "./package.json"
+        }
+      },
+      "timestamp": "2025-08-22T18:04:22.305Z"
+    },
+    "status": "completed"
+  },
+  "ux_analysis": {
+    "status": "failed",
+    "error": "Attempted to use detached Frame 'F3CFFBE7D17B376FAFB0E8D0C285EAAD'."
+  },
+  "polish_market": {
+    "status": "failed",
+    "error": "Attempted to use detached Frame 'F3CFFBE7D17B376FAFB0E8D0C285EAAD'."
+  },
+  "timestamp": "2025-08-22T18:04:18.461Z",
+  "summary": {
+    "total_analyses": 6,
+    "completed": 1,
+    "failed": 5,
+    "success_rate": "17%",
+    "analysis_date": "2025-08-22T18:04:22.306Z",
+    "website_url": "https://cvperfect.pl"
+  }
+}

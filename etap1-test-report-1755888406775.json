@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-08-22T18:46:46.774Z",
+  "duration": "11s",
+  "summary": {
+    "passed": 4,
+    "failed": 7,
+    "warnings": 0
+  },
+  "tests": {
+    "security": {
+      "cors": {
+        "status": "PASS",
+        "message": "CORS properly restricted"
+      },
+      "envBackup": {
+        "status": "PASS",
+        "message": "Exposed keys backed up"
+      },
+      "error": {
+        "status": "FAIL",
+        "message": "net::ERR_ABORTED at http://localhost:3000"
+      },
+      "xss": {
+        "status": "FAIL",
+        "message": "this.page.waitForTimeout is not a function"
+      },
+      "auth": {
+        "status": "ERROR",
+        "message": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+      }
+    },
+    "functionality": {
+      "photo": {
+        "status": "ERROR",
+        "message": "this.page.waitForTimeout is not a function"
+      },
+      "chunking": {
+        "status": "PASS",
+        "message": "Long CV processed successfully (147060 → 147059 chars)"
+      },
+      "mainPage": {
+        "status": "FAIL",
+        "message": "Main page title incorrect"
+      },
+      "endToEnd": {
+        "status": "ERROR",
+        "message": "this.page.waitForTimeout is not a function"
+      },
+      "mobile": {
+        "status": "ERROR",
+        "message": "this.page.waitForTimeout is not a function"
+      }
+    },
+    "performance": {
+      "api": {
+        "status": "PASS",
+        "message": "Average response time: 68.5ms",
+        "details": [
+          {
+            "endpoint": "/api/demo-optimize",
+            "responseTime": 83,
+            "status": 500
+          },
+          {
+            "endpoint": "/api/save-session",
+            "responseTime": 54,
+            "status": 200
+          }
+        ]
+      }
+    }
+  },
+  "recommendations": [
+    "🔴 CRITICAL: Fix failed tests before proceeding to ETAP 2"
+  ]
+}

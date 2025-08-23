@@ -1,0 +1,20 @@
+JOHN DOE
+Software Developer
+
+Email: john.doe@example.com
+Phone: +48 123 456 789
+
+EXPERIENCE:
+2022-2024: Frontend Developer at TechCorp
+- Developed React applications
+- Improved performance by 30%
+- Led team of 3 developers
+
+SKILLS:
+- JavaScript, React, Node.js
+- HTML, CSS, TypeScript
+- Git, Docker
+
+EDUCATION:
+2018-2022: Computer Science, University of Warsaw
+Bachelor's Degree

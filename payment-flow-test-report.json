@@ -1,0 +1,359 @@
+{
+  "testStartTime": "2025-08-23T17:17:46.210Z",
+  "testResults": [
+    {
+      "testName": "Server Accessibility",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:00.388Z",
+      "details": {
+        "message": "Server responding at http://localhost:3003",
+        "duration": 14159
+      },
+      "duration": 14159
+    },
+    {
+      "testName": "Environment Variables",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:00.389Z",
+      "details": {
+        "message": "Missing variables: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, GROQ_API_KEY",
+        "missingVars": [
+          "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+          "STRIPE_SECRET_KEY",
+          "GROQ_API_KEY"
+        ],
+        "duration": 14160
+      },
+      "duration": 14160
+    },
+    {
+      "testName": "API /api/create-checkout-session",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:02.692Z",
+      "details": {
+        "message": "POST 200 OK",
+        "status": 200,
+        "endpoint": "/api/create-checkout-session",
+        "duration": 2303
+      },
+      "duration": 2303
+    },
+    {
+      "testName": "API /api/save-session",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.345Z",
+      "details": {
+        "message": "POST 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/save-session",
+        "duration": 3956
+      },
+      "duration": 3956
+    },
+    {
+      "testName": "API /api/get-session-data",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.405Z",
+      "details": {
+        "message": "GET 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/get-session-data",
+        "duration": 4016
+      },
+      "duration": 4016
+    },
+    {
+      "testName": "API /api/parse-cv",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.478Z",
+      "details": {
+        "message": "POST 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/parse-cv",
+        "duration": 4089
+      },
+      "duration": 4089
+    },
+    {
+      "testName": "API /api/analyze",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.573Z",
+      "details": {
+        "message": "POST 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/analyze",
+        "duration": 4184
+      },
+      "duration": 4184
+    },
+    {
+      "testName": "CV Upload - Valid Full CV",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.589Z",
+      "details": {
+        "message": "Upload failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 16
+      },
+      "duration": 16
+    },
+    {
+      "testName": "CV Upload - Minimal CV",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.600Z",
+      "details": {
+        "message": "Upload failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 27
+      },
+      "duration": 27
+    },
+    {
+      "testName": "CV Upload - Invalid Short CV",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.612Z",
+      "details": {
+        "message": "Upload failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 39
+      },
+      "duration": 39
+    },
+    {
+      "testName": "Session Management",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.623Z",
+      "details": {
+        "message": "Session test failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 11
+      },
+      "duration": 11
+    },
+    {
+      "testName": "Plan Configuration - basic",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:04.975Z",
+      "details": {
+        "message": "Stripe session created successfully",
+        "sessionId": "cs_test_a1JVi6InKjF2JE6hsQrISj8AzbG1LEPuwlW6RcxUE2mDq5X2GkW4p3QdeM",
+        "planType": "basic",
+        "expectedMode": "payment",
+        "hasRedirectUrl": true,
+        "duration": 352
+      },
+      "duration": 352
+    },
+    {
+      "testName": "Plan Configuration - gold",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:05.305Z",
+      "details": {
+        "message": "Stripe session created successfully",
+        "sessionId": "cs_test_a1JhCih88UlvVjq147Xh5kpJlXhuffTTXpag4D7Th0H6iytEFuRnaaz8dZ",
+        "planType": "gold",
+        "expectedMode": "subscription",
+        "hasRedirectUrl": true,
+        "duration": 682
+      },
+      "duration": 682
+    },
+    {
+      "testName": "Plan Configuration - premium",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:05.633Z",
+      "details": {
+        "message": "Stripe session created successfully",
+        "sessionId": "cs_test_a1SVwyohoH38e35YW4uVeiS05I6MbpXJKaeU0O7t7lSpsRnZDIGlGEVy4l",
+        "planType": "premium",
+        "expectedMode": "subscription",
+        "hasRedirectUrl": true,
+        "duration": 1010
+      },
+      "duration": 1010
+    },
+    {
+      "testName": "Error Handling - Missing Email in Payment",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:05.975Z",
+      "details": {
+        "message": "Expected error: true, got error: false",
+        "responseStatus": 200,
+        "duration": 342
+      },
+      "duration": 342
+    },
+    {
+      "testName": "Error Handling - Invalid Plan Type",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:06.306Z",
+      "details": {
+        "message": "Expected error: false, got error: false",
+        "responseStatus": 200,
+        "errorMessage": "No error",
+        "duration": 673
+      },
+      "duration": 673
+    },
+    {
+      "testName": "Error Handling - Missing Session Data",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:06.317Z",
+      "details": {
+        "message": "Network error occurred: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "expectedError": true,
+        "duration": 684
+      },
+      "duration": 684
+    },
+    {
+      "testName": "Error Handling - Non-existent Session Retrieval",
+      "status": "PASS",
+      "timestamp": "2025-08-23T17:18:06.326Z",
+      "details": {
+        "message": "Network error occurred: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "expectedError": true,
+        "duration": 693
+      },
+      "duration": 693
+    }
+  ],
+  "screenshots": [],
+  "errors": [],
+  "environment": {
+    "nodeVersion": "v22.17.1",
+    "platform": "win32",
+    "testUrl": "http://localhost:3003"
+  },
+  "testSummary": {
+    "totalTests": 18,
+    "passedTests": 8,
+    "failedTests": 10,
+    "warningTests": 0,
+    "successRate": "44%"
+  },
+  "testDuration": {
+    "startTime": "2025-08-23T17:17:46.210Z",
+    "endTime": "2025-08-23T17:18:06.327Z",
+    "totalDurationMs": 20117
+  },
+  "criticalIssues": [
+    {
+      "testName": "Environment Variables",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:00.389Z",
+      "details": {
+        "message": "Missing variables: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, GROQ_API_KEY",
+        "missingVars": [
+          "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+          "STRIPE_SECRET_KEY",
+          "GROQ_API_KEY"
+        ],
+        "duration": 14160
+      },
+      "duration": 14160
+    },
+    {
+      "testName": "API /api/save-session",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.345Z",
+      "details": {
+        "message": "POST 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/save-session",
+        "duration": 3956
+      },
+      "duration": 3956
+    },
+    {
+      "testName": "API /api/get-session-data",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.405Z",
+      "details": {
+        "message": "GET 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/get-session-data",
+        "duration": 4016
+      },
+      "duration": 4016
+    },
+    {
+      "testName": "API /api/parse-cv",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.478Z",
+      "details": {
+        "message": "POST 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/parse-cv",
+        "duration": 4089
+      },
+      "duration": 4089
+    },
+    {
+      "testName": "API /api/analyze",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.573Z",
+      "details": {
+        "message": "POST 500 Internal Server Error",
+        "status": 500,
+        "endpoint": "/api/analyze",
+        "duration": 4184
+      },
+      "duration": 4184
+    },
+    {
+      "testName": "CV Upload - Valid Full CV",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.589Z",
+      "details": {
+        "message": "Upload failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 16
+      },
+      "duration": 16
+    },
+    {
+      "testName": "CV Upload - Minimal CV",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.600Z",
+      "details": {
+        "message": "Upload failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 27
+      },
+      "duration": 27
+    },
+    {
+      "testName": "CV Upload - Invalid Short CV",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.612Z",
+      "details": {
+        "message": "Upload failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 39
+      },
+      "duration": 39
+    },
+    {
+      "testName": "Session Management",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:04.623Z",
+      "details": {
+        "message": "Session test failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+        "duration": 11
+      },
+      "duration": 11
+    },
+    {
+      "testName": "Error Handling - Missing Email in Payment",
+      "status": "FAIL",
+      "timestamp": "2025-08-23T17:18:05.975Z",
+      "details": {
+        "message": "Expected error: true, got error: false",
+        "responseStatus": 200,
+        "duration": 342
+      },
+      "duration": 342
+    }
+  ],
+  "recommendations": [
+    "Fix failing API endpoints before deployment",
+    "Verify environment variables are properly configured",
+    "Test payment flow integration with Stripe",
+    "Review error handling for edge cases",
+    "Implement additional validation for user inputs"
+  ]
+}

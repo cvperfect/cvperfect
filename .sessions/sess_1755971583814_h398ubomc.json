@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_1755971583814_h398ubomc",
+  "email": "test@example.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Jan Kowalski\nSenior Software Developer\nEmail: jan.kowalski@example.com\nPhone: +48 123 456 789\n\nPROFESSIONAL SUMMARY\nExperienced software developer with 8+ years of expertise in full-stack development, specializing in React, Node.js, and cloud technologies. Proven track record of delivering scalable solutions and leading development teams.\n\nWORK EXPERIENCE\nSenior Software Developer | Tech Solutions SP. z o.o. | 2020-Present\n• Led development of microservices architecture serving 1M+ users\n• Implemented CI/CD pipelines reducing deployment time by 60%\n• Mentored team of 5 junior developers\n\nTECHNICAL SKILLS\nLanguages: JavaScript, TypeScript, Python\nFrontend: React, Next.js, Vue.js\nBackend: Node.js, Express, GraphQL\nDatabases: PostgreSQL, MongoDB, Redis",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-23T17:53:03.968Z",
+  "processed": false,
+  "createdAt": 1755971583968
+}

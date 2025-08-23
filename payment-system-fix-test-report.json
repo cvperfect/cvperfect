@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-08-22T13:54:10.970Z",
+  "tests": [
+    {
+      "test": "Homepage Load",
+      "status": "PASS",
+      "url": "http://localhost:3005"
+    }
+  ],
+  "screenshots": [],
+  "console_logs": [
+    "info: %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+    "log: [HMR] connected"
+  ],
+  "errors": [
+    "page.waitForTimeout is not a function"
+  ],
+  "summary": {
+    "totalTests": 1,
+    "passed": 1,
+    "failed": 0,
+    "warnings": 0,
+    "errors": 0,
+    "totalErrors": 1,
+    "consoleErrors": 0
+  }
+}

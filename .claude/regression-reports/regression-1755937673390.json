@@ -1,0 +1,129 @@
+{
+  "timestamp": "2025-08-23T08:27:32.696Z",
+  "options": {
+    "quick": true,
+    "criticalOnly": false,
+    "compareWith": null,
+    "autoFix": false,
+    "verbose": false,
+    "reportOnly": false
+  },
+  "summary": {
+    "total": 7,
+    "pass": 2,
+    "fail": 2,
+    "skip": 3,
+    "critical_fail": 2
+  },
+  "categories": {
+    "critical": [
+      {
+        "id": "critical.build_process",
+        "name": "build_process",
+        "category": "critical",
+        "description": "Next.js build process",
+        "critical": true,
+        "status": "PASS",
+        "duration": 16901,
+        "details": "\n  ├ chunks/webpack-6f8b356beabc407f.js     1.89 kB\n  └ css/62e5ffc2496a6fd1.css               8.91 kB\n\n○  (Static)   prerendered as static HTML\nλ  (Dynamic)  server-rendered on demand using Node.js\n\n",
+        "error": null
+      },
+      {
+        "id": "critical.lint_validation",
+        "name": "lint_validation",
+        "category": "critical",
+        "description": "ESLint validation",
+        "critical": true,
+        "status": "PASS",
+        "duration": 468,
+        "details": "\n> cvperfect@0.1.0 lint\n> next lint\n\n? How would you like to configure ESLint? https://nextjs.org/docs/basic-features/eslint\n\u001b[?25l❯  Strict (recommended)\n   Base\n   Cancel",
+        "error": null
+      },
+      {
+        "id": "critical.package_dependencies",
+        "name": "package_dependencies",
+        "category": "critical",
+        "description": "Critical package dependencies",
+        "critical": true,
+        "status": "FAIL",
+        "duration": 0,
+        "details": "",
+        "error": {
+          "message": "Missing critical dependencies: @groq/sdk",
+          "timeout": false
+        }
+      }
+    ],
+    "functional": [
+      {
+        "id": "functional.main_page_functionality",
+        "name": "main_page_functionality",
+        "category": "functional",
+        "description": "Main page CV upload and processing",
+        "critical": true,
+        "status": "SKIP",
+        "duration": 1,
+        "details": "Script file not found: test-main-page.js",
+        "error": null
+      },
+      {
+        "id": "functional.payment_flow",
+        "name": "payment_flow",
+        "category": "functional",
+        "description": "Stripe payment integration",
+        "critical": true,
+        "status": "FAIL",
+        "duration": 3321,
+        "details": "",
+        "error": {
+          "message": "Command failed: node test-stripe-payment-flow.js\n❌ Error testing basic: net::ERR_CONNECTION_REFUSED at http://localhost:3005\n❌ Test execution error: TypeError: this.page.waitForTimeout is not a function\n    at StripePaymentFlowTester.testAllPaymentScenarios (c:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\test-stripe-payment-flow.js:450:29)\n    at async runStripePaymentFlowTest (c:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\test-stripe-payment-flow.js:529:9)\n❌ Test failed: TypeError: this.page.waitForTimeou",
+          "timeout": false,
+          "exitCode": 1
+        }
+      },
+      {
+        "id": "functional.success_page_functions",
+        "name": "success_page_functions",
+        "category": "functional",
+        "description": "Success page template and export functions",
+        "critical": true,
+        "status": "SKIP",
+        "duration": 0,
+        "details": "Script file not found: test-all-success-functions.js",
+        "error": null
+      },
+      {
+        "id": "functional.cv_optimization",
+        "name": "cv_optimization",
+        "category": "functional",
+        "description": "AI CV optimization with Groq",
+        "critical": true,
+        "status": "SKIP",
+        "duration": 0,
+        "details": "Script file not found: test-ai-optimization.js",
+        "error": null
+      }
+    ],
+    "integration": [],
+    "performance": []
+  },
+  "regressions": [],
+  "improvements": [],
+  "recommendations": [
+    {
+      "severity": "CRITICAL",
+      "message": "Critical tests are failing - immediate action required",
+      "actions": [
+        "Stop all development work",
+        "Run /rollback-to-safe if issues persist",
+        "Check build logs for specific errors",
+        "Verify environment variables are set correctly"
+      ]
+    }
+  ],
+  "git_context": {
+    "commit": "38e0fac158ff5bbe64e7634c92b293c1c2fb3716",
+    "branch": "main",
+    "dirty": true
+  }
+}

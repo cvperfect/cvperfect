@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "passed": 6,
+    "failed": 3,
+    "warnings": 1,
+    "total": 10,
+    "score": 60
+  },
+  "results": [
+    {
+      "test": "API demo-optimize (POST)",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-22T14:51:26.137Z"
+    },
+    {
+      "test": "AI Optimization Response",
+      "status": "PASS",
+      "details": "Otrzymano zoptymalizowane CV (702 znaków)",
+      "timestamp": "2025-08-22T14:51:26.138Z"
+    },
+    {
+      "test": "API create-checkout-session (POST)",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-22T14:51:26.590Z"
+    },
+    {
+      "test": "API parse-cv (POST)",
+      "status": "WARNING",
+      "details": "Błąd walidacji: 400",
+      "timestamp": "2025-08-22T14:51:26.595Z"
+    },
+    {
+      "test": "API contact (POST)",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-22T14:51:28.117Z"
+    },
+    {
+      "test": "Input file",
+      "status": "FAIL",
+      "details": "Nie znaleziono pola do uploadu plików",
+      "timestamp": "2025-08-22T14:51:29.335Z"
+    },
+    {
+      "test": "Test modali",
+      "status": "FAIL",
+      "details": "this.page.waitForTimeout is not a function",
+      "timestamp": "2025-08-22T14:51:30.445Z"
+    },
+    {
+      "test": "Test języka",
+      "status": "FAIL",
+      "details": "this.page.waitForTimeout is not a function",
+      "timestamp": "2025-08-22T14:51:31.575Z"
+    },
+    {
+      "test": "Działanie bez JS",
+      "status": "PASS",
+      "details": "Strona wyświetla treść bez JavaScript",
+      "timestamp": "2025-08-22T14:51:32.285Z"
+    },
+    {
+      "test": "Bardzo mały ekran (280px)",
+      "status": "PASS",
+      "details": "Przyciski pozostają dostępne",
+      "timestamp": "2025-08-22T14:51:33.439Z"
+    }
+  ],
+  "timestamp": "2025-08-22T14:51:33.440Z"
+}

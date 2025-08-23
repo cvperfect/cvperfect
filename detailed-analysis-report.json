@@ -1,0 +1,236 @@
+{
+  "timestamp": "2025-08-22T14:50:12.133Z",
+  "mainPage": {
+    "title": "CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+    "hasHeader": false,
+    "hasNavigation": true,
+    "hasMainContent": false,
+    "hasFooter": true,
+    "totalElements": 579,
+    "totalButtons": 13,
+    "totalLinks": 3,
+    "totalImages": 0,
+    "hasModals": false,
+    "ctaButtons": [
+      {
+        "index": 6,
+        "text": "🇵🇱 PL",
+        "classes": "jsx-e811eded39564a72 lang-btn active",
+        "visible": true
+      },
+      {
+        "index": 7,
+        "text": "🇬🇧 EN",
+        "classes": "jsx-e811eded39564a72 lang-btn ",
+        "visible": true
+      },
+      {
+        "index": 8,
+        "text": "🎯 Zoptymalizuj CV teraz ⚡",
+        "classes": "jsx-e811eded39564a72 nav-cta",
+        "visible": true
+      },
+      {
+        "index": 9,
+        "text": "🔍 Sprawdź swoje CV",
+        "classes": "jsx-e811eded39564a72 hero-button primary",
+        "visible": true
+      },
+      {
+        "index": 10,
+        "text": "Rozpocznij teraz🚀",
+        "classes": "jsx-e811eded39564a72 timeline-button premium-button",
+        "visible": true
+      },
+      {
+        "index": 11,
+        "text": "Zwiększ swoje szanse 🚀",
+        "classes": "jsx-e811eded39564a72 testimonials-button",
+        "visible": true
+      },
+      {
+        "index": 12,
+        "text": "Wypróbuj za darmo ⚡",
+        "classes": "jsx-e811eded39564a72 faq-button",
+        "visible": true
+      }
+    ],
+    "languageSwitcher": [
+      {
+        "tag": "BUTTON",
+        "text": "🇵🇱 PL",
+        "clickable": true
+      },
+      {
+        "tag": "BUTTON",
+        "text": "🇬🇧 EN",
+        "clickable": true
+      }
+    ]
+  },
+  "staticAssets": {
+    "stylesheets": [
+      {
+        "href": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
+        "loaded": true
+      }
+    ],
+    "scripts": [
+      {
+        "src": "http://localhost:3010/_next/static/chunks/polyfills.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/chunks/webpack.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/chunks/main.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/chunks/pages/_app.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/chunks/pages/index.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/development/_buildManifest.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/development/_ssgManifest.js?ts=1755874202602",
+        "loaded": true
+      },
+      {
+        "src": "http://localhost:3010/_next/static/chunks/react-refresh.js?ts=1755874202602",
+        "loaded": true
+      }
+    ],
+    "images": [],
+    "failed": []
+  },
+  "forms": {
+    "forms": 0,
+    "inputs": 0
+  },
+  "performance": {
+    "metrics": {
+      "Timestamp": 76488.71939,
+      "Documents": 1,
+      "Frames": 1,
+      "JSEventListeners": 318,
+      "Nodes": 1965,
+      "LayoutCount": 624,
+      "RecalcStyleCount": 615,
+      "LayoutDuration": 0.268557,
+      "RecalcStyleDuration": 0.486122,
+      "ScriptDuration": 0.370552,
+      "TaskDuration": 2.001525,
+      "JSHeapUsedSize": 17143964,
+      "JSHeapTotalSize": 30318592
+    },
+    "timing": {
+      "dns": 0,
+      "connect": 2,
+      "request": 28,
+      "response": 1,
+      "dom": 239,
+      "load": 241
+    }
+  },
+  "mobile": {
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "scrollable": {
+      "horizontal": false,
+      "vertical": true
+    },
+    "touchTargets": [
+      {
+        "width": 44,
+        "height": 44,
+        "tooSmall": false,
+        "text": ""
+      },
+      {
+        "width": 44,
+        "height": 44,
+        "tooSmall": false,
+        "text": ""
+      },
+      {
+        "width": 44,
+        "height": 44,
+        "tooSmall": false,
+        "text": ""
+      },
+      {
+        "width": 44,
+        "height": 44,
+        "tooSmall": false,
+        "text": ""
+      },
+      {
+        "width": 44,
+        "height": 44,
+        "tooSmall": false,
+        "text": ""
+      },
+      {
+        "width": 44,
+        "height": 44,
+        "tooSmall": false,
+        "text": ""
+      },
+      {
+        "width": 209,
+        "height": 50,
+        "tooSmall": false,
+        "text": "🔍 Sprawdź swoje CV"
+      },
+      {
+        "width": 223,
+        "height": 46,
+        "tooSmall": false,
+        "text": "Rozpocznij teraz🚀"
+      },
+      {
+        "width": 265,
+        "height": 53,
+        "tooSmall": false,
+        "text": "Zwiększ swoje szanse 🚀"
+      },
+      {
+        "width": 239,
+        "height": 78,
+        "tooSmall": false,
+        "text": "Wypróbuj za darmo ⚡"
+      },
+      {
+        "width": 121,
+        "height": 53,
+        "tooSmall": false,
+        "text": "Regulamin"
+      },
+      {
+        "width": 97,
+        "height": 53,
+        "tooSmall": false,
+        "text": "Kontakt"
+      },
+      {
+        "width": 209,
+        "height": 53,
+        "tooSmall": false,
+        "text": "Polityka prywatności"
+      }
+    ]
+  },
+  "issues": [],
+  "screenshots": 2
+}

@@ -16,12 +16,23 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Set proper JSON content type first
+    res.setHeader('Content-Type', 'application/json')
+    
     const { session_id, force_file } = req.query
 
     if (!session_id) {
       return res.status(400).json({
         success: false,
         error: 'Missing session_id parameter'
+      })
+    }
+    
+    // Validate session_id format to prevent file system errors
+    if (typeof session_id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(session_id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid session_id format'
       })
     }
 
@@ -128,9 +139,29 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ Get session error:', error)
-    res.status(500).json({
+    
+    // Ensure we always return JSON, even on errors
+    res.setHeader('Content-Type', 'application/json')
+    
+    // Handle specific error types
+    if (error.code === 'EACCES' || error.code === 'EPERM') {
+      return res.status(500).json({
+        success: false,
+        error: 'File system permission error'
+      })
+    }
+    
+    if (error.type === 'StripeInvalidRequestError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid Stripe session ID'
+      })
+    }
+    
+    return res.status(500).json({
       success: false,
-      error: 'Failed to retrieve session data'
+      error: 'Failed to retrieve session data',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     })
   }
 }

@@ -1,14 +1,5 @@
 {
   "mcpServers": {
-    "puppeteer": {
-      "command": "npm",
-      "args": ["run", "mcp-puppeteer"],
-      "env": {
-        "PUPPETEER_HEADLESS": "true",
-        "PUPPETEER_TIMEOUT": "30000",
-        "PUPPETEER_DEVTOOLS": "false"
-      }
-    }
   },
   "permissions": {
     "allow": [
@@ -17,8 +8,45 @@
       "Bash(node:*)",
       "Bash(.claude/hooks/*)",
       "Bash(.claude/test-snapshots/*)",
-      "mcp__puppeteer__*",
-      "WebSearch"
+      "Bash(ls:*)",
+      "Bash(git status)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git diff:*)",
+      "Bash(git pull:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run test:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh issue:*)",
+      "Bash(winget:*)",
+      "Bash(taskkill:*)",
+      "Bash(dir:*)",
+      "Bash(copy:*)",
+      "Bash(del:*)",
+      "Bash(timeout:*)",
+      "Bash(start:*)",
+      "Bash(chmod:*)",
+      "Bash(bash:*)",
+      "Bash(cmd:*)",
+      "Bash(pkill:*)",
+      "mcp__playwright__*",
+      "WebSearch",
+      "WebFetch"
     ],
     "deny": [],
     "ask": []
@@ -54,7 +82,7 @@
       "command": "node start-agents-system.js && node claude-cvperfect-integration.js",
       "timeout": 15000,
       "background": true,
-      "description": "Auto-start CVPerfect agents system and Claude integration"
+      "description": "Auto-start CVPerfect agents system and Claude integration (Playwright MCP auto-loads from global config)"
     },
     "task-execute": {
       "command": "node -e \"const {processTask} = require('./claude-cvperfect-integration'); processTask(process.argv[1]).then(r => console.log(JSON.stringify(r)));\"",

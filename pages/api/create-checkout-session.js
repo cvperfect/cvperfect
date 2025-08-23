@@ -1,7 +1,27 @@
 import Stripe from 'stripe'
+import { ensureEnvironmentVariables, getMaskedEnvVar } from '../../lib/env-validation'
+
+// Validate critical environment variables at startup
+try {
+  ensureEnvironmentVariables(['STRIPE_SECRET_KEY'])
+  console.log('✅ Stripe environment variables validated for create-checkout-session')
+} catch (error) {
+  console.error('❌ CRITICAL: Environment variables missing for /api/create-checkout-session:', error.message)
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 export default async function handler(req, res) {
+  // Runtime environment validation
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('❌ Missing STRIPE_SECRET_KEY at runtime')
+    return res.status(500).json({
+      error: 'Payment system configuration error',
+      success: false,
+      code: 'MISSING_STRIPE_KEY'
+    })
+  }
+
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' })
   }
@@ -13,35 +33,36 @@ export default async function handler(req, res) {
   let mode = 'payment'
   
   try {
-    // Określ cenę i tryb płatności
-    if (priceId) {
-      finalPriceId = priceId
-      mode = 'payment'
-    } else {
-      switch (plan) {
-        case 'basic':
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 19.99 zł jednorazowo
-          mode = 'payment'
-          break
-        case 'premium':
-          // SUBSKRYPCJA 79 PLN/miesiąc
-          finalPriceId = process.env.STRIPE_PRICE_PREMIUM_79 || 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł/miesiąc
-          mode = 'subscription'
-          break
-        case 'gold':
-        case 'pro':
-          // SUBSKRYPCJA 49 PLN/miesiąc
-          finalPriceId = process.env.STRIPE_PRICE_GOLD_49 || 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł/miesiąc
-          mode = 'subscription'
-          break
-        case 'premium-monthly':
-          finalPriceId = 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł miesięcznie (musisz zmienić na właściwy price ID)
-          mode = 'subscription'
-          break
-        default:
+    // Określ cenę i tryb płatności na podstawie planu
+    switch (plan) {
+      case 'basic':
+        finalPriceId = priceId || 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 19.99 zł jednorazowo
+        mode = 'payment'
+        break
+      case 'premium':
+        // SUBSKRYPCJA 79 PLN/miesiąc
+        finalPriceId = priceId || process.env.STRIPE_PRICE_PREMIUM_79 || 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł/miesiąc
+        mode = 'subscription'
+        break
+      case 'gold':
+      case 'pro':
+        // SUBSKRYPCJA 49 PLN/miesiąc
+        finalPriceId = priceId || process.env.STRIPE_PRICE_GOLD_49 || 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł/miesiąc
+        mode = 'subscription'
+        break
+      case 'premium-monthly':
+        finalPriceId = priceId || 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł miesięcznie (musisz zmienić na właściwy price ID)
+        mode = 'subscription'
+        break
+      default:
+        // For direct priceId without plan, try to determine mode from plan context or default to payment
+        if (priceId) {
+          finalPriceId = priceId
+          mode = 'payment' // Default for direct priceId calls
+        } else {
           finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69'
           mode = 'payment'
-      }
+        }
     }
     
     // WALIDACJA: Sprawdź czy price ID nie jest placeholder

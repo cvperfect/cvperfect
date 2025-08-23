@@ -1,0 +1,60 @@
+{
+  "summary": {
+    "total": 8,
+    "passed": 5,
+    "failed": 1,
+    "warnings": 1,
+    "info": 1
+  },
+  "results": [
+    {
+      "status": "PASS",
+      "test": "SessionStorage functionality works",
+      "details": "",
+      "timestamp": "2025-08-22T14:42:13.558Z"
+    },
+    {
+      "status": "PASS",
+      "test": "Modal can be opened",
+      "details": "",
+      "timestamp": "2025-08-22T14:42:13.578Z"
+    },
+    {
+      "status": "PASS",
+      "test": "Email can be filled",
+      "details": "test@datflow.com",
+      "timestamp": "2025-08-22T14:42:15.602Z"
+    },
+    {
+      "status": "PASS",
+      "test": "File upload simulation works",
+      "details": "test-cv.pdf",
+      "timestamp": "2025-08-22T14:42:15.629Z"
+    },
+    {
+      "status": "INFO",
+      "test": "Form data state",
+      "details": "Email: , Files: 0",
+      "timestamp": "2025-08-22T14:42:16.638Z"
+    },
+    {
+      "status": "WARNING",
+      "test": "Step navigation not available",
+      "details": "Available buttons: 🇵🇱 PL, 🇬🇧 EN, 🎯 Zoptymalizuj CV teraz ⚡, 🔍 Sprawdź swoje CV, Rozpocznij teraz🚀, Zwiększ swoje szanse 🚀, ×, ❌, Przejdź do płatności →, Wypróbuj za darmo ⚡",
+      "timestamp": "2025-08-22T14:42:16.641Z"
+    },
+    {
+      "status": "PASS",
+      "test": "SessionStorage data persistence works",
+      "details": "",
+      "timestamp": "2025-08-22T14:42:16.650Z"
+    },
+    {
+      "status": "FAIL",
+      "test": "Data flow test execution",
+      "details": "Navigation timeout of 30000 ms exceeded",
+      "timestamp": "2025-08-22T14:42:46.656Z"
+    }
+  ],
+  "timestamp": "2025-08-22T14:42:47.094Z"
+}

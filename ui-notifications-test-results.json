@@ -1,0 +1,65 @@
+{
+  "timestamp": "2025-08-22T13:56:09.937Z",
+  "tests": [
+    {
+      "test": "Homepage Load",
+      "status": "PASS"
+    },
+    {
+      "test": "Upload Notification Test",
+      "status": "WARNING",
+      "details": "No file input element found"
+    }
+  ],
+  "screenshots": [
+    "test-ui-homepage.png"
+  ],
+  "ui_elements": [
+    {
+      "type": "upload_elements",
+      "data": {
+        "fileInputs": [],
+        "dragDropAreas": [
+          {
+            "className": "jsx-e811eded39564a72 upload-animation",
+            "text": "📎",
+            "visible": true
+          },
+          {
+            "className": "jsx-e811eded39564a72 upload-progress",
+            "text": "",
+            "visible": true
+          }
+        ],
+        "uploadButtons": []
+      }
+    },
+    {
+      "type": "payment_buttons",
+      "data": [
+        {
+          "text": "Rozpocznij teraz🚀",
+          "className": "jsx-e811eded39564a72 timeline-button premium-button",
+          "visible": true,
+          "style": {
+            "color": "rgb(0, 0, 0)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "display": "inline-flex"
+          }
+        }
+      ]
+    }
+  ],
+  "console_logs": [
+    "info: %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+    "log: [HMR] connected"
+  ],
+  "summary": {
+    "totalTests": 2,
+    "passed": 1,
+    "warnings": 1,
+    "errors": 0,
+    "screenshots": 1,
+    "consoleErrors": 0
+  }
+}

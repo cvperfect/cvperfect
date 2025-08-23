@@ -1,0 +1,159 @@
+{
+  "summary": {
+    "totalTests": 24,
+    "passed": 21,
+    "failed": 1,
+    "warnings": 2,
+    "successRate": 88
+  },
+  "results": {
+    "passed": [
+      {
+        "test": "Main page loads with correct title",
+        "details": "CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+        "timestamp": "2025-08-22T14:40:28.465Z"
+      },
+      {
+        "test": "Live statistics elements visible",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:28.468Z"
+      },
+      {
+        "test": "Language switcher found",
+        "details": "Found 2 language buttons",
+        "timestamp": "2025-08-22T14:40:28.469Z"
+      },
+      {
+        "test": "Language switching functionality works",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:32.051Z"
+      },
+      {
+        "test": "Modal trigger found and clicked",
+        "details": "Rozpocznij teraz🚀",
+        "timestamp": "2025-08-22T14:40:32.065Z"
+      },
+      {
+        "test": "Modal appears after trigger",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:36.269Z"
+      },
+      {
+        "test": "Email input found in modal",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:36.289Z"
+      },
+      {
+        "test": "Email input accepts and stores text",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:37.974Z"
+      },
+      {
+        "test": "File input found in modal",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:37.990Z"
+      },
+      {
+        "test": "File upload zone exists",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:37.995Z"
+      },
+      {
+        "test": "Upload zone is clickable",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:38.531Z"
+      },
+      {
+        "test": "Pricing information visible",
+        "details": "Currency: true, Numbers: true, Elements: false",
+        "timestamp": "2025-08-22T14:40:38.539Z"
+      },
+      {
+        "test": "API /api/demo-optimize responds",
+        "details": "Status: 400",
+        "timestamp": "2025-08-22T14:40:38.580Z"
+      },
+      {
+        "test": "API /api/analyze responds",
+        "details": "Status: 400",
+        "timestamp": "2025-08-22T14:40:38.615Z"
+      },
+      {
+        "test": "API /api/create-checkout-session responds",
+        "details": "Status: 200",
+        "timestamp": "2025-08-22T14:40:39.140Z"
+      },
+      {
+        "test": "Mobile responsive layout",
+        "details": "Width: 367px, No overflow",
+        "timestamp": "2025-08-22T14:40:41.366Z"
+      },
+      {
+        "test": "Tablet responsive layout",
+        "details": "Width: 760px, No overflow",
+        "timestamp": "2025-08-22T14:40:44.144Z"
+      },
+      {
+        "test": "Desktop responsive layout",
+        "details": "Width: 1912px, No overflow",
+        "timestamp": "2025-08-22T14:40:47.616Z"
+      },
+      {
+        "test": "Success page functionality",
+        "details": "Templates: 22, Downloads: 0",
+        "timestamp": "2025-08-22T14:40:52.878Z"
+      },
+      {
+        "test": "Contact page accessible",
+        "details": "Title: Kontakt - CvPerfect | Centrum Wsparcia Premium",
+        "timestamp": "2025-08-22T14:40:57.468Z"
+      },
+      {
+        "test": "No console warnings",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:57.468Z"
+      }
+    ],
+    "failed": [
+      {
+        "test": "Console errors detected",
+        "details": "2 errors: Failed to load resource: the server responded with a status of 400 (Bad Request) | Failed to load resource: the server responded with a status of 400 (Bad Request)",
+        "timestamp": "2025-08-22T14:40:57.468Z"
+      }
+    ],
+    "warnings": [
+      {
+        "test": "Modal step navigation not found",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:38.537Z"
+      },
+      {
+        "test": "Success page loads but no title",
+        "details": "",
+        "timestamp": "2025-08-22T14:40:52.875Z"
+      }
+    ],
+    "screenshots": [
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-main-page-loaded-1755873626402.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-language-switched-1755873629983.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-modal-triggered-1755873634067.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-responsive-mobile-1755873640209.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-responsive-tablet-1755873642409.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-responsive-desktop-1755873645254.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-success-page-1755873651632.png",
+      "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-contact-page-1755873656484.png"
+    ]
+  },
+  "screenshots": [
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-main-page-loaded-1755873626402.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-language-switched-1755873629983.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-modal-triggered-1755873634067.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-responsive-mobile-1755873640209.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-responsive-tablet-1755873642409.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-responsive-desktop-1755873645254.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-success-page-1755873651632.png",
+    "C:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\final-test-contact-page-1755873656484.png"
+  ],
+  "timestamp": "2025-08-22T14:40:58.100Z",
+  "testDuration": 1755873658100
+}

@@ -1,0 +1,12 @@
+{
+  "sessionId": "test",
+  "email": "test@test.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "test",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-22T19:06:46.194Z",
+  "processed": false,
+  "createdAt": 1755889606194
+}

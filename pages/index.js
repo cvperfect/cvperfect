@@ -275,6 +275,7 @@ const handlePlanSelect = async (plan) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            plan: plan,
             priceId: getPriceId(plan),
             email: formData.email || userEmail,
             sessionId: newSessionId,

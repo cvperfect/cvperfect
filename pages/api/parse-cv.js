@@ -13,6 +13,9 @@ export const config = {
 }
 
 export default async function handler(req, res) {
+  // Set proper JSON content type first
+  res.setHeader('Content-Type', 'application/json')
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -254,8 +257,35 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ API Error:', error)
+    
+    // Ensure we always return JSON, even on errors
+    res.setHeader('Content-Type', 'application/json')
+    
+    // Handle specific error types
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({
+        error: 'Plik jest zbyt duży. Maksymalny rozmiar to 5MB.',
+        code: 'FILE_TOO_LARGE'
+      })
+    }
+    
+    if (error.code === 'ENOENT') {
+      return res.status(400).json({
+        error: 'Plik nie został poprawnie przesłany.',
+        code: 'FILE_NOT_FOUND'
+      })
+    }
+    
+    if (error.message && error.message.includes('formidable')) {
+      return res.status(400).json({
+        error: 'Błąd podczas przesyłania pliku. Spróbuj ponownie.',
+        code: 'UPLOAD_ERROR'
+      })
+    }
+    
     return res.status(500).json({ 
-      error: 'Wystąpił błąd podczas przetwarzania pliku.' 
+      error: 'Wystąpił błąd podczas przetwarzania pliku.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     })
   }
 }

@@ -1,0 +1,113 @@
+{
+  "summary": {
+    "passed": 13,
+    "failed": 4,
+    "warnings": 0,
+    "total": 17
+  },
+  "timestamp": "2025-08-23T11:49:55.296Z",
+  "results": [
+    {
+      "test": "Dostęp do strony głównej",
+      "status": "PASS",
+      "details": "Status 200 OK",
+      "timestamp": "2025-08-23T11:49:35.373Z"
+    },
+    {
+      "test": "Tytuł strony",
+      "status": "PASS",
+      "details": "Tytuł: \"CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund\"",
+      "timestamp": "2025-08-23T11:49:37.177Z"
+    },
+    {
+      "test": "Responsywność Mobile (375px)",
+      "status": "PASS",
+      "details": "Brak poziomego scrollowania",
+      "timestamp": "2025-08-23T11:49:38.293Z"
+    },
+    {
+      "test": "Mobile Touch Targets",
+      "status": "PASS",
+      "details": "Wszystkie elementy ≥44px",
+      "timestamp": "2025-08-23T11:49:39.163Z"
+    },
+    {
+      "test": "Responsywność Tablet (768px)",
+      "status": "PASS",
+      "details": "Brak poziomego scrollowania",
+      "timestamp": "2025-08-23T11:49:40.303Z"
+    },
+    {
+      "test": "Responsywność Desktop (1920px)",
+      "status": "PASS",
+      "details": "Brak poziomego scrollowania",
+      "timestamp": "2025-08-23T11:49:42.746Z"
+    },
+    {
+      "test": "Test formularzy i modali",
+      "status": "FAIL",
+      "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button[class*=\"cta\"], .cta-button, button:contains(\"Optymalizuj\")' is not a valid selector.",
+      "timestamp": "2025-08-23T11:49:45.321Z"
+    },
+    {
+      "test": "SessionStorage",
+      "status": "PASS",
+      "details": "Dane są zapisywane i odczytywane",
+      "timestamp": "2025-08-23T11:49:45.322Z"
+    },
+    {
+      "test": "Dostęp do success page",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-23T11:49:48.057Z"
+    },
+    {
+      "test": "ERROR",
+      "status": "FAIL",
+      "details": "Console Error: Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "timestamp": "2025-08-23T11:49:49.223Z"
+    },
+    {
+      "test": "API /api/demo-optimize",
+      "status": "PASS",
+      "details": "Status: 400",
+      "timestamp": "2025-08-23T11:49:49.224Z"
+    },
+    {
+      "test": "API /api/create-checkout-session",
+      "status": "PASS",
+      "details": "Status: 200",
+      "timestamp": "2025-08-23T11:49:49.806Z"
+    },
+    {
+      "test": "ERROR",
+      "status": "FAIL",
+      "details": "Console Error: Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "timestamp": "2025-08-23T11:49:50.086Z"
+    },
+    {
+      "test": "API /api/parse-cv",
+      "status": "PASS",
+      "details": "Status: 400",
+      "timestamp": "2025-08-23T11:49:50.086Z"
+    },
+    {
+      "test": "Test UX i animacji",
+      "status": "FAIL",
+      "details": "this.page.waitForTimeout is not a function",
+      "timestamp": "2025-08-23T11:49:52.384Z"
+    },
+    {
+      "test": "Obsługa braku sesji",
+      "status": "PASS",
+      "details": "Strona działa bez danych sesji",
+      "timestamp": "2025-08-23T11:49:53.496Z"
+    },
+    {
+      "test": "Bardzo małe ekrany (320px)",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-08-23T11:49:54.550Z"
+    }
+  ]
+}
