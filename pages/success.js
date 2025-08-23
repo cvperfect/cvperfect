@@ -554,6 +554,13 @@ export default function Success() {
   
   // Helper function to set CV data
   const setCvData = (data) => {
+    console.log('🔧 setCvData CALLED with:', {
+      hasData: !!data,
+      hasFullContent: !!data?.fullContent,
+      fullContentLength: data?.fullContent?.length || 0,
+      dataKeys: data ? Object.keys(data) : [],
+      dataSample: data?.fullContent ? data.fullContent.substring(0, 100) + '...' : 'no fullContent'
+    });
     updateAppState({ cvData: data }, 'set-cv-data')
   }
   
@@ -2562,6 +2569,28 @@ export default function Success() {
     },
     
     simple: (data) => {
+      console.log('🔍 TEMPLATE SIMPLE DEBUG - received data:', {
+        hasData: !!data,
+        hasFullContent: !!data?.fullContent,
+        fullContentLength: data?.fullContent?.length || 0,
+        hasOptimizedContent: !!data?.optimizedContent,
+        dataKeys: data ? Object.keys(data) : [],
+        dataSample: data?.fullContent ? data.fullContent.substring(0, 100) + '...' : 'no fullContent'
+      });
+      
+      // DEFENSIVE FALLBACK: If no data at all, show loading state
+      if (!data || (Object.keys(data).length === 0)) {
+        console.log('⚠️ TEMPLATE: No data received, showing loading state');
+        return (
+          <div className="bg-gray-900 border border-purple-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="animate-spin w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full"></div>
+              <span className="text-white">Ładowanie danych CV...</span>
+            </div>
+          </div>
+        );
+      }
+      
       // Check if we have AI-optimized content
       const hasOptimizedContent = data?.fullContent || data?.optimizedContent;
       const optimizedHTML = hasOptimizedContent ? parseMarkdownToHTML(data.fullContent || data.optimizedContent) : null;
