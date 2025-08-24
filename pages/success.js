@@ -524,16 +524,29 @@ export default function Success() {
       // Determine endpoint based on plan
       const endpoint = plan === 'premium' || plan === 'gold' ? '/api/analyze' : '/api/demo-optimize'
       
+      // DEBUG: Log what we're sending to API
+      console.log('🔍 [DEBUG] Sending to', endpoint, {
+        cvTextLength: cvText?.length || 0,
+        hasJobDescription: !!(jobDescription),
+        plan: plan,
+        hasPhoto: !!photo,
+        sessionData: window.location.search
+      })
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cvText: cvText,
+          currentCV: cvText, // API expects currentCV
+          email: 'session@cvperfect.pl', // ADD MISSING EMAIL
           jobDescription: jobDescription || '',
           plan: plan || 'basic',
           fullOptimization: true,
           photo: photo,
-          preservePhotos: true
+          preservePhotos: true,
+          paid: true, // Mark as paid user
+          sessionId: new URLSearchParams(window.location.search).get('session_id')
         })
       })
       
