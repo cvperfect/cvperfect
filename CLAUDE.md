@@ -2,115 +2,112 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 📚 WAŻNE: Przeczytaj najpierw CLAUDE_BEST_PRACTICES.md
-Przed rozpoczęciem każdej ważnej sesji kodowania, zapoznaj się z plikiem `CLAUDE_BEST_PRACTICES.md` który zawiera:
-- Najlepsze praktyki zapobiegania błędom
-- Granice gdzie Claude może popełniać błędy
-- System sub-agentów i delegacji zadań
-- Zarządzanie kontekstem i automatyzacja workflow
-- Konkretne techniki dla CVPerfect
+## 📚 CRITICAL: Read CLAUDE_BEST_PRACTICES.md First
+Before starting any significant coding session, review `CLAUDE_BEST_PRACTICES.md` which contains:
+- Best practices for error prevention
+- Boundaries where Claude may fail
+- Sub-agent system and task delegation
+- Context management and workflow automation
+- CVPerfect-specific techniques
 
-## Development Commands
+## 🚀 Quick Start Guide
 
-**Core Development:**
-- `npm run dev` - Start Next.js development server on localhost:3000
-- `npm run build` - Build production bundle (required before deployment)
-- `npm run start` - Start production server
-- `npm run lint` - Run Next.js linting
+### Essential Commands
+```bash
+npm run dev              # Start development server (localhost:3000)
+npm run build            # Build production bundle (REQUIRED before deployment)
+npm run lint             # ESLint validation (TypeScript-aware)
+npm run mcp-puppeteer    # Browser automation for testing
+node start-agents-system.js  # Auto-start CVPerfect 40-agent system
+```
 
-**Automation & Testing:**
-- `npm run mcp-puppeteer` - Start Puppeteer MCP server for browser automation
-- `node start-agents-system.js` - Start CVPerfect 40-agent system
-- `node test-agents-integration.js` - Verify agent system functionality
-- `node comprehensive-test.js` - Run full end-to-end test suite
+### Development Workflow
+1. **Port handling**: Use localhost:3001 if port 3000 is occupied
+2. **Before commits**: Always run `npm run build` && `npm run lint`
+3. **Testing sequence**: lint → build → test scripts → commit
+4. **Context management**: Use `/clear` when context > 70%
 
-**Common Development Patterns:**
-- **Port conflicts**: Use localhost:3001 if port 3000 is occupied
-- **Build validation**: Always run `npm run build` and `npm run lint` before commits
-- **Testing sequence**: `npm run lint` → `npm run build` → test scripts → git commit
 
-## Architecture Overview
+## Project Overview
 
-**CvPerfect** is a Next.js 14 application that provides AI-powered CV optimization services. The app uses a freemium model with Stripe integration and operates primarily in Polish with English localization.
+**CVPerfect** is a Next.js 14 application providing AI-powered CV optimization services with a freemium model, Stripe payments, and bilingual support (Polish/English).
 
-### Core Architecture
+### Architecture
 
-**Frontend Structure:**
-- **Single-page application** - Main functionality concentrated in `pages/index.js` (~6000 lines)
-- **Embedded CSS** - All styles are defined within JSX files using `<style jsx>` tags
-- **Bilingual support** - Polish (default) and English with `currentLanguage` state management
-- **Modal-driven UX** - Primary interactions happen through overlay modals rather than page navigation
+**Frontend (Next.js 14):**
+- Single-page app with 6000+ line main component (`pages/index.js`)
+- Embedded CSS using `<style jsx>` - no external CSS framework
+- Glassmorphism design with backdrop-filter effects
+- Modal-driven UX with complex state management (20+ variables)
+- Bilingual interface with `currentLanguage` state switching
+- Deterministic client-side statistics using hash-based random generation
 
-**Key State Management:**
-- Language switching (`currentLanguage: 'pl' | 'en'`)
-- Live statistics generation using deterministic seeded random numbers
-- Multi-step form wizard for CV upload and optimization
-- File upload with drag-and-drop support
+**Payment Flow:**
+- Three-tier pricing: Basic (19.99 PLN), Gold (49 PLN), Premium (79 PLN)
+- Stripe Checkout integration with webhook validation
+- Session persistence through payment process
+- Usage limits tracked in Supabase
 
-**Payment Integration:**
-- Stripe Checkout for premium features
-- Freemium model with usage limits stored in Supabase
-- Session-based flow: collect CV → payment → optimization
+**AI Processing:**
+- Groq SDK with Llama 3.1-70B model for CV optimization
+- Chunked processing for long CVs (50k+ characters)
+- Photo preservation through optimization process
+- Multiple output formats: PDF, DOCX, email delivery
 
-### Backend API Structure
+### API Endpoints
 
-**Core Endpoints:**
-- `/api/analyze` - Main CV analysis using Groq AI (Llama model)
-- `/api/demo-optimize` - Demo AI optimization endpoint for testing (no user auth required)  
+**Core Flow:**
+- `/api/parse-cv` - PDF/DOCX file parsing and text extraction
+- `/api/save-session` - Session data persistence during payment
 - `/api/create-checkout-session` - Stripe payment initialization
-- `/api/stripe-webhook` - Payment completion handling
+- `/api/stripe-webhook` - Payment completion and validation
+- `/api/get-session-data` - Session retrieval for success page
+- `/api/analyze` - Production AI CV analysis (Groq/Llama)
+- `/api/demo-optimize` - Testing AI endpoint (no auth required)
 - `/api/contact` - Email notifications via Nodemailer
-- `/api/get-session-data` - Session data retrieval for success page
-- `/api/save-session` - Session data persistence during payment flow
-- `/api/parse-cv` - CV file parsing (PDF/DOCX to text)
 
 **Critical Data Flow:**
-1. `index.js` → `/api/parse-cv` → `/api/save-session` → Stripe Checkout
-2. Stripe → `/api/stripe-webhook` → Session update → `success.js`
-3. `success.js` → `/api/get-session-data` → AI optimization → Template rendering
+1. User uploads CV → `index.js` → `/api/parse-cv` → `/api/save-session`
+2. Payment → Stripe Checkout → `/api/stripe-webhook` → Session update
+3. Success page → `success.js` → `/api/get-session-data` → AI optimization
 
-**External Services:**
-- **Groq SDK** - AI processing using Llama 3.1-70B model
-- **Supabase** - User management and usage tracking
-- **Stripe** - Payment processing
-- **Nodemailer** - Email delivery
+**External Dependencies:**
+- Groq SDK (Llama 3.1-70B for AI processing)
+- Supabase (user management, usage tracking)
+- Stripe (payment processing, webhooks)
+- Nodemailer (email delivery)
 
-### Data Flow
+### Key Technical Patterns
 
-1. **CV Upload** - Users upload CV files (PDF/DOCX) via file picker or drag-drop
-2. **Job Matching** - Optional job posting text for targeted optimization
-3. **Payment Gateway** - Stripe Checkout for premium features
-4. **AI Processing** - Groq API analyzes and optimizes CV content
-5. **Results Delivery** - Optimized CV returned as downloadable file
+**Styling Approach:**
+- No external CSS framework - all styles in JSX using `<style jsx>`
+- Glassmorphism design with `backdrop-filter` effects
+- Responsive breakpoints: 480px, 768px, 1024px, 1440px
+- Touch-optimized mobile interface (44px minimum targets)
 
-### Technical Patterns
+**Animation Stack:**
+- Framer Motion (page transitions, modal animations)
+- GSAP (timeline animations, scroll triggers)
+- Canvas Confetti (success celebrations)
 
-**Live Statistics:**
-- Deterministic random number generation using hash functions
-- Base stats with daily increments to simulate organic growth
-- No backend required - all calculations client-side
-
-**Responsive Design:**
-- Mobile-first approach with CSS Grid and Flexbox
-- Touch target optimization (44px minimum for mobile)
-- Breakpoints: 480px, 768px, 1024px, 1440px
-
-**Animation Libraries:**
-- **Framer Motion** - Page transitions and modal animations
-- **GSAP** - Timeline animations and scroll triggers
-- **Canvas Confetti** - Success celebrations
+**State Management:**
+- Complex modal overlay system with step progression
+- Language switching affects entire application state
+- File upload with drag-and-drop validation
+- Deterministic statistics generation (no backend required)
 
 ### Environment Variables Required
 
-```
-GROQ_API_KEY=
-NEXT_PUBLIC_SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-STRIPE_SECRET_KEY=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_WEBHOOK_SECRET=
-GMAIL_USER=
-GMAIL_PASS=
+```bash
+GROQ_API_KEY=                          # AI processing (Llama model)
+NEXT_PUBLIC_SUPABASE_URL=             # Database connection
+SUPABASE_SERVICE_ROLE_KEY=            # Admin database access
+STRIPE_SECRET_KEY=                    # Payment processing
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=   # Frontend payment integration
+STRIPE_WEBHOOK_SECRET=                # Payment webhook validation
+GMAIL_USER=                           # Email delivery
+GMAIL_PASS=                           # Gmail app password
+NEXT_PUBLIC_BASE_URL=                 # Production URL for Stripe redirects
 ```
 
 ### Testing and Browser Automation
@@ -168,11 +165,14 @@ pages/
 │   └── parse-cv.js          # PDF/DOCX file parsing
 └── [legal pages]     # Privacy, terms, GDPR (regulamin.js, etc.)
 
-agents/                # 40-agent system for specialized tasks
+agents/                # 40+ agent system for specialized tasks
 ├── orchestration/     # Master orchestrators and coordinators
 ├── core/              # Backend, frontend, DevOps agents  
 ├── ai_optimization/   # CV analysis, ATS scoring, content
-├── debug/             # 3-agent debug system (File Reader, Bug Fixer, Supervisor)
+├── debug/             # 6-agent debug system (File Reader, Bug Fixer, Supervisor + 3 Masters)
+│   ├── root_cause_analysis_master.js      # Five Whys, Fishbone, FMEA methodology
+│   ├── ai_debugging_copilot_master.js     # AI-powered debugging with pattern recognition
+│   └── systematic_debugging_master.js     # 8-phase structured debugging process
 └── [specialized]/     # Security, performance, business, quality agents
 
 components/
@@ -244,6 +244,38 @@ components/
 
 **Current State:** All requested improvements implemented and tested. Success.js is production-ready with premium UX matching regulamin.js design consistency.
 
+## 🚀 Current Development Status (August 2025)
+
+### ⚡ Payment Flow Optimization - Branch: `hotfix/payment-optimization-fix`
+**Status: IN PROGRESS**
+
+**Recent Accomplishments:**
+- ✅ **Complete Payment Flow Fixed**: All plans (Basic, Gold, Premium) now working correctly
+- ✅ **Template Selection Loop Fixed**: Resolved infinite loop for Gold/Premium plan access
+- ✅ **Enhanced Security**: Added `lib/auth.js`, `lib/cors.js`, `lib/validation.js` for improved API security
+- ✅ **Error Handling**: Implemented `lib/error-responses.js` and `lib/timeout-utils.js` for robust error management
+- ✅ **Request Limiting**: Added `lib/request-limits.js` for API rate limiting and abuse prevention
+
+**Key Infrastructure Improvements:**
+- **ESLint Integration**: TypeScript-aware linting with `next/core-web-vitals` standards
+- **Error Boundary**: Added `components/ErrorBoundary.js` for better React error handling
+- **Session Management**: Enhanced session persistence and retrieval reliability
+- **API Security**: CORS policies, authentication middleware, request validation
+
+**Files Modified in Current Branch:**
+- `pages/success.js` - Post-payment flow optimizations
+- All `/api/*` endpoints - Enhanced security and error handling
+- `lib/` directory - New utility modules for security and reliability
+- `package.json` - Dependency updates for security improvements
+
+**Known Working Features:**
+- ✅ CV Upload & Parsing (PDF/DOCX)
+- ✅ Stripe Payment Flow (all plans)
+- ✅ AI Optimization (Groq API integration)
+- ✅ Template System (7 templates, plan-based access)
+- ✅ Export Functions (PDF, DOCX, Email)
+- ✅ Session Data Persistence
+
 ## 🔧 FAZA DEBUG SUCCESS.JS - SIERPIEŃ 2025
 
 ### ✅ UKOŃCZONE FAZY:
@@ -294,6 +326,70 @@ components/
 - fetchUserDataFromSession ma teraz proper retry logic
 - Prawdziwe CV (sess_1755865667776_22z3osqrw) testowane i działa
 - Server na localhost:3001 (port 3000 zajęty)
+
+### 🚨 CURRENT DEBUGGING STATUS (August 2025)
+**Template Loading Issue Detected:**
+- Debug logs show `hasFullContent: false` in CV Display component
+- Template receives no data, shows loading state instead of CV content
+- Issue appears to be in data flow from session to UI components
+- Server running on localhost:3001 due to port 3000 being occupied
+
+## 🎯 NEW: ADVANCED DEBUGGING MASTERS (August 2025)
+
+### 🔍 ROOT CAUSE ANALYSIS MASTER
+**File**: `agents/debug/root_cause_analysis_master.js`
+**Metodologie**: Five Whys + Fishbone + FMEA + Comprehensive RCA
+
+**Capabilities**:
+- **Five Whys Analysis**: Iteracyjne pytania "dlaczego?" z CVPerfect-specific patterns
+- **Fishbone (Ishikawa) Diagram**: Multi-category cause analysis (People, Process, Technology, Environment)
+- **FMEA Analysis**: Proactive failure mode identification and risk assessment
+- **Pattern Recognition**: CVPerfect-specific patterns (session loss, infinite retry, payment issues)
+- **Root Cause Consolidation**: Multi-methodology analysis z confidence scoring
+
+**Usage Example**:
+```javascript
+const rcaMaster = new RootCauseAnalysisMaster();
+await rcaMaster.performComprehensiveRCA(problem, context);
+```
+
+### 🤖 AI DEBUGGING COPILOT MASTER
+**File**: `agents/debug/ai_debugging_copilot_master.js`
+**Inspirowany**: GitHub Copilot 2025 + AI-driven debugging trends
+
+**Capabilities**:
+- **AI Pattern Recognition**: 50+ debugging patterns w database (React, CVPerfect, Security)
+- **Automated Fix Suggestions**: AI-generated solutions z confidence scoring
+- **Code Analysis**: Static analysis z performance, security, React anti-patterns detection
+- **Historical Learning**: Pattern learning z successful debugging sessions
+- **Automated Fix Application**: Code fixes dla automatable patterns
+- **Intelligent Context**: CVPerfect-aware debugging z domain knowledge
+
+**Key Features**:
+- Pattern confidence scoring (0.8-0.98 dla CVPerfect patterns)
+- 7 categories: React, CVPerfect, Payment, Performance, Security, API, Memory
+- Success rate tracking i learning z outcomes
+- Effort estimation (low/medium/high) dla każdy fix
+
+### ⚙️ SYSTEMATIC DEBUGGING MASTER  
+**File**: `agents/debug/systematic_debugging_master.js`
+**Metodologia**: 8-Phase Structured Debugging Process
+
+**8-Phase Process**:
+1. **Problem Definition & Scope**: Severity assessment, impact analysis, boundaries
+2. **Information Gathering**: Environment, system state, logs, recent changes
+3. **Hypothesis Generation**: Likelihood-based hypothesis ranking
+4. **Test Case Design**: Reproduction, isolation, boundary, performance tests
+5. **Systematic Testing**: Hypothesis validation through testing
+6. **Root Cause Identification**: Evidence-based cause determination
+7. **Solution Implementation**: Systematic fix implementation z rollback plan
+8. **Validation & Prevention**: Regression prevention i monitoring
+
+**Features**:
+- **Checkpoint System**: Rollback capability na każdym etapie
+- **CVPerfect Integration Tests**: Payment flow, session recovery, AI API tests
+- **Risk Assessment**: Implementation risk analysis
+- **Regression Prevention**: Comprehensive test suite dla prevention
 
 ## 🛡️ REGRESSION PREVENTION SYSTEM
 

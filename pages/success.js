@@ -1,6 +1,7 @@
 // Complete success.js File for CvPerfect.pl
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import ErrorBoundary from '../components/ErrorBoundary'
 import { motion, AnimatePresence } from 'framer-motion'
 import Head from 'next/head'
 // GSAP imports removed to reduce bundle size
@@ -13,42 +14,6 @@ import { saveAs } from 'file-saver'
 import DOMPurify from 'dompurify'
 
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('🚨 Error Boundary caught error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md text-center text-white">
-            <h1 className="text-2xl font-bold mb-4">🚨 Wystąpił błąd</h1>
-            <p className="mb-4">Przepraszamy, coś poszło nie tak. Spróbuj odświeżyć stronę.</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition-colors"
-            >
-              Odśwież stronę
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 function Success() {
   // Expose DOMPurify globally for testing
@@ -123,25 +88,34 @@ function Success() {
   // ========================================
   
   // Core Application State (Essential Only)
-  const [appState, setAppState] = useState({
-    // Essential Data
+  // PERFORMANCE: Split state to reduce re-renders
+  
+  // Core CV data and user info (changes rarely)
+  const [coreData, setCoreData] = useState({
     cvData: null,
-    userPlan: 'premium',
+    userPlan: 'premium'
+  })
+  
+  // UI state (changes frequently)  
+  const [uiState, setUiState] = useState({
     selectedTemplate: 'simple',
-    
-    // Loading States (Simplified)
-    isInitializing: true,
-    isOptimizing: false,
-    isExporting: false,
-    
-    // UI State (Essential Only) 
     modals: {
       email: false,
       template: false,
       export: false
-    },
-    
-    // Basic Metrics
+    }
+  })
+  
+  // Loading states (changes during operations)
+  const [loadingState, setLoadingState] = useState({
+    isInitializing: true,
+    isOptimizing: false,
+    isExporting: false,
+    hasNoSession: false
+  })
+  
+  // Metrics (changes during optimization)
+  const [metricsState, setMetricsState] = useState({
     atsScore: 45,
     optimizedScore: 95
   })
@@ -178,22 +152,61 @@ function Success() {
 
   // Refs for UI Elements
   const cvPreviewRef = useRef(null)
+  const timeoutRefs = useRef([]) // Track all timeouts for cleanup
 
   // SIMPLIFIED STATE MANAGEMENT UTILITIES
   // ====================================
   
-  // Simple State Updater (No Performance Overhead)
+  // BACKWARD COMPATIBILITY: Legacy appState interface
+  const appState = useMemo(() => ({
+    ...coreData,
+    ...uiState,
+    ...loadingState,
+    ...metricsState
+  }), [coreData, uiState, loadingState, metricsState])
+  
+  // Smart state updater - routes to correct sub-state
   const updateAppState = useCallback((updates, source = 'unknown') => {
-    setAppState(prevState => {
-      const newState = {
-        ...prevState,
-        ...updates
+    const coreFields = ['cvData', 'userPlan']
+    const uiFields = ['selectedTemplate', 'modals']
+    const loadingFields = ['isInitializing', 'isOptimizing', 'isExporting'] 
+    const metricsFields = ['atsScore', 'optimizedScore']
+    
+    // Separate updates by category
+    const coreUpdates = {}
+    const uiUpdates = {}
+    const loadingUpdates = {}
+    const metricsUpdates = {}
+    
+    for (const [key, value] of Object.entries(updates)) {
+      if (coreFields.includes(key)) {
+        coreUpdates[key] = value
+      } else if (uiFields.includes(key)) {
+        uiUpdates[key] = value
+      } else if (loadingFields.includes(key)) {
+        loadingUpdates[key] = value
+      } else if (metricsFields.includes(key)) {
+        metricsUpdates[key] = value
       }
-      
-      console.log(`🔄 State updated from ${source}:`, updates)
-      return newState
-    })
+    }
+    
+    // Apply updates to appropriate states
+    if (Object.keys(coreUpdates).length > 0) {
+      setCoreData(prev => ({ ...prev, ...coreUpdates }))
+    }
+    if (Object.keys(uiUpdates).length > 0) {
+      setUiState(prev => ({ ...prev, ...uiUpdates }))
+    }
+    if (Object.keys(loadingUpdates).length > 0) {
+      setLoadingState(prev => ({ ...prev, ...loadingUpdates }))
+    }
+    if (Object.keys(metricsUpdates).length > 0) {
+      setMetricsState(prev => ({ ...prev, ...metricsUpdates }))
+    }
+    
+    console.log(`📝 State updated (${source}):`, updates)
   }, [])
+  
 
   // Essential Helper Functions Only (Memoized)
   const updateCvData = useCallback((cvData) => {
@@ -287,12 +300,49 @@ function Success() {
           
           await fetchUserDataFromSession(sessionId)
         } else {
-          console.log('⚠️ No session ID found')
-          updateCvData({
-            error: true,
-            message: 'Nie znaleziono sesji. Wróć do strony głównej i prześlij swoje CV.'
+          console.log('⚠️ No session ID found in URL - trying fallback mechanisms...')
+          
+          // CRITICAL FIX: Generate fallback session ID and try sessionStorage
+          const fallbackSessionId = `fallback_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+          console.log('🚑 Generated fallback session ID:', fallbackSessionId)
+          
+          updateAppState({ isInitializing: true }, 'fallback-init-start')
+          
+          addNotification({
+            type: 'info',
+            title: 'Sprawdzanie danych',
+            message: 'Szukanie zapisanych danych CV...'
           })
-          updateAppState({ isInitializing: false }, 'no-session')
+          
+          // Try sessionStorage fallback with timeout
+          const fallbackResult = await Promise.race([
+            trySessionStorageFallback(fallbackSessionId),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Fallback timeout')), 5000)
+            )
+          ]).catch(error => {
+            console.warn('Fallback failed or timed out:', error.message);
+            return { success: false, source: 'timeout' };
+          });
+          
+          if (fallbackResult.success) {
+            console.log('✅ FALLBACK SUCCESS: SessionStorage data recovered!')
+            addNotification({
+              type: 'success',
+              title: 'Dane odzyskane',
+              message: 'Pomyślnie odzyskano Twoje CV z pamięci przeglądarki'
+            })
+          } else {
+            console.log('❌ FALLBACK FAILED: No usable data found')
+            // Set hasNoSession flag to prevent infinite rendering loop
+            setLoadingState(prev => ({ ...prev, hasNoSession: true, isInitializing: false }))
+            
+            addNotification({
+              type: 'error',
+              title: 'Brak danych sesji',
+              message: 'Nie znaleziono sesji ani zapisanych danych CV. Wróć do strony głównej i prześlij swoje CV ponownie.'
+            })
+          }
         }
       } catch (error) {
         console.error('❌ Initialization error:', error)
@@ -749,13 +799,25 @@ function Success() {
       
       updateProgress('sessionLoad', 0)
       
+      // TIMEOUT PROTECTION: Prevent infinite loops
+      const currentTime = Date.now()
+      const startTime = options.startTime || currentTime
+      const maxExecutionTime = 30000 // 30 seconds total
+      
+      // Check if we've exceeded maximum execution time
+      if (currentTime - startTime > maxExecutionTime) {
+        console.error('🚨 TIMEOUT: Enhanced fetch exceeded maximum execution time')
+        throw new Error('Session fetch timeout after 30 seconds')
+      }
+      
       // FIXED: Re-enable retry logic with proper controls
       if (retryCount < maxRetries) {
         console.log(`🔄 Enhanced retry (${retryCount + 1}/${maxRetries})...`)
         await new Promise(resolve => setTimeout(resolve, 1000))
         return await enhancedFetchUserDataFromSession(sessionId, { 
           ...options, 
-          retryCount: retryCount + 1 
+          retryCount: retryCount + 1,
+          startTime: startTime
         })
       }
       
@@ -856,94 +918,218 @@ function Success() {
     return { success: false, source: 'all_fallbacks_failed' }
   }
 
-  const fetchUserDataFromSession = async (sessionId, retryCount = 0) => {
-    const MAX_RETRIES = 3
-    console.log(`🔍 fetchUserDataFromSession ENTRY: sessionId=${sessionId}, retry=${retryCount}`)
-    
-    // CRITICAL FIX: Add proper exit conditions
-    if (retryCount >= MAX_RETRIES) {
-      console.log('🚫 Max retries exceeded, stopping recursion');
-      return { success: false, source: 'max_retries_exceeded' };
-    }
+  // 🚑 CRITICAL FIX: Dedicated SessionStorage Fallback Function
+  // This function is called when no session_id is found in URL
+  const trySessionStorageFallback = async (fallbackSessionId) => {
+    console.log('🚑 Starting immediate sessionStorage fallback with ID:', fallbackSessionId)
     
     try {
-      console.log(`🔍 [Attempt ${retryCount + 1}] Fetching session data for:`, sessionId)
-      console.log('🐛 DEBUG: fetchUserDataFromSession called at:', new Date().toISOString())
+      // Check if we have sessionStorage data
+      const pendingCV = sessionStorage.getItem('pendingCV')
+      const pendingJob = sessionStorage.getItem('pendingJob') || ''
+      const pendingEmail = sessionStorage.getItem('pendingEmail') || ''
+      const pendingPhoto = sessionStorage.getItem('pendingPhoto') || null
+      const pendingPlan = sessionStorage.getItem('pendingPlan') || 'premium'
       
-      // ENTERPRISE PRIORITY LOADING SYSTEM
-      let fullSessionData = null
-      let stripeSessionData = null
-      let actualSessionId = sessionId
+      console.log('🔍 SessionStorage check:', {
+        hasCV: !!pendingCV,
+        cvLength: pendingCV?.length || 0,
+        hasJob: !!pendingJob,
+        hasEmail: !!pendingEmail,
+        hasPhoto: !!pendingPhoto,
+        plan: pendingPlan
+      })
       
-      // Add timeout to prevent hanging
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 15000)
-      );
-      
-      // PARALLEL DATA LOADING for better performance with timeout protection
-      const [stripeResponse, directSessionResponse] = await Promise.race([
-        Promise.allSettled([
-          fetch(`/api/get-session?session_id=${sessionId}`),
-          fetch(`/api/get-session-data?session_id=${sessionId}`)
-        ]),
-        timeout
-      ]);
-      
-      // Process Stripe response
-      if (stripeResponse.status === 'fulfilled' && stripeResponse.value.ok) {
-        stripeSessionData = await stripeResponse.value.json()
+      if (pendingCV && pendingCV.length > 100) {
+        console.log('✅ SESSIONSTORAGE FALLBACK: Valid CV data found!')
         
-        if (stripeSessionData.success && stripeSessionData.session?.metadata?.fullSessionId) {
-          actualSessionId = stripeSessionData.session.metadata.fullSessionId
-          console.log('🎯 Found fullSessionId in Stripe metadata:', actualSessionId)
+        // Parse and display CV immediately
+        const parsedCV = parseCvFromText(pendingCV)
+        const initialCvData = {
+          ...parsedCV,
+          fullContent: pendingCV,
+          photo: pendingPhoto,
+          jobPosting: pendingJob,
+          plan: pendingPlan,
+          isOriginal: true,
+          source: 'sessionStorage_fallback_immediate',
+          email: pendingEmail?.substring(0, 20) + '...'
+        }
+        
+        // Update user plan from sessionStorage
+        if (pendingPlan) {
+          updateAppState({ userPlan: pendingPlan }, 'set-plan-from-sessionstorage')
+        }
+        
+        // Display CV data immediately
+        setCvData(initialCvData)
+        
+        // Show success notification
+        addNotification({
+          type: 'success',
+          title: 'CV załadowane',
+          message: 'Twoje CV zostało pomyślnie odzyskane z pamięci przeglądarki'
+        })
+        
+        // Start AI optimization in background
+        console.log('🤖 Starting background AI optimization...')
+        await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, pendingPlan)
+        
+        // Cache the successful recovery
+        setCacheItem(`session-fallback-${fallbackSessionId}`, {
+          cv: pendingCV,
+          job: pendingJob, 
+          email: pendingEmail,
+          photo: pendingPhoto,
+          plan: pendingPlan,
+          source: 'sessionStorage_immediate'
+        }, 3600000) // 1 hour cache
+        
+        // Clean up sessionStorage after successful use
+        sessionStorage.removeItem('pendingCV')
+        sessionStorage.removeItem('pendingJob')
+        sessionStorage.removeItem('pendingEmail')  
+        sessionStorage.removeItem('pendingPhoto')
+        sessionStorage.removeItem('pendingPlan')
+        
+        console.log('✅ SessionStorage fallback complete - data cleaned up')
+        
+        return { success: true, source: 'sessionStorage_immediate', sessionId: fallbackSessionId }
+      } else {
+        console.log('⚠️ No valid CV data in sessionStorage')
+        return { success: false, source: 'no_sessionStorage_data' }
+      }
+    } catch (error) {
+      console.error('❌ SessionStorage fallback error:', error)
+      return { success: false, source: 'sessionStorage_error', error: error.message }
+    } finally {
+      updateAppState({ isInitializing: false }, 'fallback-complete')
+    }
+  }
+
+  // 🎯 DEBUG MASTERS FIX: Centralized Retry Control System
+  // Eliminates dual recursive paths that caused infinite loops
+  const fetchUserDataFromSession = async (sessionId) => {
+    const MAX_RETRIES = 3
+    const MAX_EXECUTION_TIME = 30000 // 30 seconds total timeout
+    const REQUEST_TIMEOUT = 15000 // 15 seconds per request
+    
+    // Centralized state for all retry logic - prevents competing retry paths
+    const executionState = {
+      sessionId,
+      startTime: Date.now(),
+      attempts: 0,
+      lastError: null,
+      results: {
+        fullSessionData: null,
+        stripeSessionData: null,
+        actualSessionId: sessionId
+      }
+    }
+    
+    console.log(`🎯 DEBUG MASTERS: fetchUserDataFromSession ENTRY with centralized state`, executionState)
+    
+    // SINGLE STATE VALIDATOR - prevents all infinite loop scenarios
+    const validateContinuation = (state) => {
+      const timeElapsed = Date.now() - state.startTime
+      
+      if (timeElapsed > MAX_EXECUTION_TIME) {
+        console.error('🚨 CENTRALIZED TIMEOUT: Maximum execution time exceeded')
+        throw new Error(`Session fetch timeout after ${timeElapsed}ms`)
+      }
+      
+      if (state.attempts >= MAX_RETRIES) {
+        console.log('🚫 CENTRALIZED LIMIT: Max attempts reached')
+        return { success: false, source: 'max_attempts_exceeded', attempts: state.attempts }
+      }
+      
+      return null // Continue execution
+    }
+    
+    // CENTRALIZED RETRY LOOP - replaces dual recursive paths
+    while (executionState.attempts < MAX_RETRIES) {
+      const continueCheck = validateContinuation(executionState)
+      if (continueCheck) return continueCheck
+      
+      executionState.attempts++
+      
+      try {
+        console.log(`🔍 [Centralized Attempt ${executionState.attempts}] Fetching session data for:`, executionState.sessionId)
+        console.log('🎯 DEBUG MASTERS: Execution state:', {
+          attempt: executionState.attempts,
+          elapsed: Date.now() - executionState.startTime,
+          sessionId: executionState.results.actualSessionId
+        })
+        
+        // Request timeout protection
+        const timeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
+        );
+      
+        // PARALLEL DATA LOADING for better performance with timeout protection
+        const [stripeResponse, directSessionResponse] = await Promise.race([
+          Promise.allSettled([
+            fetch(`/api/get-session?session_id=${executionState.sessionId}`),
+            fetch(`/api/get-session-data?session_id=${executionState.sessionId}`)
+          ]),
+          timeout
+        ]);
+        
+        // Process Stripe response and update centralized state
+        if (stripeResponse.status === 'fulfilled' && stripeResponse.value.ok) {
+          executionState.results.stripeSessionData = await stripeResponse.value.json()
           
-          // Re-fetch with actual session ID if different - WITH TIMEOUT
-          if (actualSessionId !== sessionId) {
-            const fullResponse = await Promise.race([
-              fetch(`/api/get-session-data?session_id=${actualSessionId}`),
-              timeout
-            ]);
-            if (fullResponse.ok) {
-              fullSessionData = await fullResponse.json()
+          if (executionState.results.stripeSessionData.success && executionState.results.stripeSessionData.session?.metadata?.fullSessionId) {
+            executionState.results.actualSessionId = executionState.results.stripeSessionData.session.metadata.fullSessionId
+            console.log('🎯 Found fullSessionId in Stripe metadata:', executionState.results.actualSessionId)
+            
+            // Re-fetch with actual session ID if different - WITH TIMEOUT
+            if (executionState.results.actualSessionId !== executionState.sessionId) {
+              const fullResponse = await Promise.race([
+                fetch(`/api/get-session-data?session_id=${executionState.results.actualSessionId}`),
+                timeout
+              ]);
+              if (fullResponse.ok) {
+                executionState.results.fullSessionData = await fullResponse.json()
+              }
             }
           }
         }
-      }
       
-      // Process direct session response - PRIORITY: CVPerfect API has full CV data
-      if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value.ok) {
-        const cvPerfectData = await directSessionResponse.value.json()
-        // CVPerfect API takes priority if it has CV data
-        if (cvPerfectData.success && cvPerfectData.cvData) {
-          fullSessionData = cvPerfectData
-          console.log('🎯 Using CVPerfect data (enhanced retry):', cvPerfectData.cvData.length, 'chars')
+        // Process direct session response - PRIORITY: CVPerfect API has full CV data
+        if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value.ok) {
+          const cvPerfectData = await directSessionResponse.value.json()
+          // CVPerfect API takes priority if it has CV data
+          if (cvPerfectData.success && cvPerfectData.cvData) {
+            executionState.results.fullSessionData = cvPerfectData
+            console.log('🎯 Using CVPerfect data (centralized):', cvPerfectData.cvData.length, 'chars')
+          }
         }
-      }
-      
-      console.log('📊 Data loading results:', {
-        actualSessionId,
-        hasStripeData: !!stripeSessionData?.success,
-        hasFullSessionData: !!fullSessionData?.success,
-        hasCV: !!(fullSessionData?.session?.metadata?.cv || fullSessionData?.cvData),
-        cvLength: fullSessionData?.session?.metadata?.cv?.length || fullSessionData?.cvData?.length || 0,
-        hasPhoto: !!(fullSessionData?.session?.metadata?.photo),
-        dataStructure: fullSessionData ? Object.keys(fullSessionData) : []
-      })
-      
-      // ENTERPRISE DATA PROCESSING - Handle both CVPerfect and Stripe data structures
-      if (fullSessionData?.success && (fullSessionData.session?.metadata?.cv || fullSessionData.cvData)) {
-        const metadata = fullSessionData.session?.metadata || {
-          cv: fullSessionData.cvData,
-          job: fullSessionData.jobPosting,
-          photo: fullSessionData.photo,
-          plan: fullSessionData.plan
-        }
-        const plan = stripeSessionData?.session?.metadata?.plan || metadata.plan || fullSessionData.plan || 'premium'
-        const email = fullSessionData.session?.customer_email || fullSessionData.email || stripeSessionData?.session?.customer_email
         
-        console.log('✅ ENTERPRISE CV LOADED! Full session data:', {
-          sessionId: actualSessionId,
-          plan: plan,
+        console.log('📊 DEBUG MASTERS - Data loading results:', {
+          actualSessionId: executionState.results.actualSessionId,
+          hasStripeData: !!executionState.results.stripeSessionData?.success,
+          hasFullSessionData: !!executionState.results.fullSessionData?.success,
+          hasCV: !!(executionState.results.fullSessionData?.session?.metadata?.cv || executionState.results.fullSessionData?.cvData),
+          cvLength: executionState.results.fullSessionData?.session?.metadata?.cv?.length || executionState.results.fullSessionData?.cvData?.length || 0,
+          hasPhoto: !!(executionState.results.fullSessionData?.session?.metadata?.photo),
+          attempt: executionState.attempts
+        })
+        
+        // ENTERPRISE DATA PROCESSING - Handle both CVPerfect and Stripe data structures
+        if (executionState.results.fullSessionData?.success && (executionState.results.fullSessionData.session?.metadata?.cv || executionState.results.fullSessionData.cvData)) {
+          const metadata = executionState.results.fullSessionData.session?.metadata || {
+            cv: executionState.results.fullSessionData.cvData,
+            job: executionState.results.fullSessionData.jobPosting,
+            photo: executionState.results.fullSessionData.photo,
+            plan: executionState.results.fullSessionData.plan
+          }
+          const plan = executionState.results.stripeSessionData?.session?.metadata?.plan || metadata.plan || executionState.results.fullSessionData.plan || 'premium'
+          const email = executionState.results.fullSessionData.session?.customer_email || executionState.results.fullSessionData.email || executionState.results.stripeSessionData?.session?.customer_email
+        
+          console.log('✅ DEBUG MASTERS SUCCESS! Enterprise CV loaded:', {
+            sessionId: executionState.results.actualSessionId,
+            plan: plan,
           email: email,
           cvLength: metadata.cv.length,
           hasJob: !!metadata.job,
@@ -1031,11 +1217,21 @@ function Success() {
         return { success: true, source: 'stripe_metadata' }
       }
       
-      // CRITICAL FIX: Only retry if we have a legitimate reason and haven't exceeded limits
-      if (retryCount < MAX_RETRIES - 1 && (!stripeSessionData && !fullSessionData)) {
-        console.log(`🔄 Retrying due to no data... (attempt ${retryCount + 1}/${MAX_RETRIES})`)
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Exponential backoff
-        return await fetchUserDataFromSession(sessionId, retryCount + 1)
+      // 🎯 DEBUG MASTERS: Check if retry needed - NO MORE RECURSION
+      if (!executionState.results.stripeSessionData && !executionState.results.fullSessionData) {
+        console.log(`🔄 No data found on attempt ${executionState.attempts}. Will retry if under limit.`)
+        
+        if (executionState.attempts < MAX_RETRIES) {
+          console.log(`⏳ Waiting ${executionState.attempts}s before retry...`)
+          await new Promise(resolve => setTimeout(resolve, 1000 * executionState.attempts)) // Exponential backoff
+          continue // Continue the centralized while loop instead of recursion
+        } else {
+          console.log('🚫 All data fetch attempts exhausted')
+          break // Exit the retry loop
+        }
+      } else {
+        console.log('✅ Data found, proceeding with processing')
+        break // Exit retry loop when successful
       }
       
       // 🆕 NEW: SESSIONSTORAGE FALLBACK - Try to get CV data from browser storage
@@ -1116,24 +1312,45 @@ function Success() {
       
       return { success: false, source: 'error' }
       
-    } catch (error) {
-      console.error('❌ CRITICAL ERROR in fetchUserDataFromSession:', error)
-      console.error('🔍 Session ID:', sessionId, 'Retry:', retryCount)
-      
-      // CRITICAL FIX: Don't retry on certain error types
-      if (error.message.includes('timeout') || error.message.includes('fetch')) {
-        console.log('🚫 Network/timeout error - not retrying');
-        return { success: false, source: 'network_error' };
-      }
-      
-      // Only retry if we haven't exceeded limit and it's not a permanent error
-      if (retryCount < MAX_RETRIES - 1) {
-        console.log(`🔄 Error retry... (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+      } catch (attemptError) {
+        console.error(`❌ ATTEMPT ${executionState.attempts} ERROR:`, attemptError)
+        executionState.lastError = attemptError
+        
+        // 🎯 DEBUG MASTERS: Centralized error handling - NO MORE RECURSION
+        if (attemptError.message.includes('timeout') || attemptError.message.includes('fetch')) {
+          console.log('🚫 Network/timeout error - breaking retry loop')
+          break // Exit retry loop for non-retryable errors
+        }
+        
+        console.log(`⏳ Attempt ${executionState.attempts} failed. Will retry if under limit.`)
+        // Continue the while loop for retry instead of recursion
         await new Promise(resolve => setTimeout(resolve, 2000))
-        return await fetchUserDataFromSession(sessionId, retryCount + 1)
       }
+    }
+    
+    // 🎯 DEBUG MASTERS: Final fallback after all attempts
+    console.log('🔄 All attempts completed. Trying sessionStorage fallback...')
+    try {
+      const pendingCV = sessionStorage.getItem('pendingCV')
+      const pendingJob = sessionStorage.getItem('pendingJob') || ''
+      const pendingEmail = sessionStorage.getItem('pendingEmail') || ''
+      const pendingPhoto = sessionStorage.getItem('pendingPhoto') || null
       
-      return { success: false, source: 'error', error: error.message }
+      if (pendingCV && pendingCV.length > 100) {
+        console.log('✅ SESSIONSTORAGE FALLBACK SUCCESS!')
+        await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, executionState.sessionId)
+        return { success: true, source: 'sessionStorage_fallback' }
+      }
+    } catch (sessionStorageError) {
+      console.warn('⚠️ SessionStorage fallback failed:', sessionStorageError.message)
+    }
+    
+    // Return final failure result
+    return { 
+      success: false, 
+      source: 'all_attempts_failed', 
+      attempts: executionState.attempts,
+      lastError: executionState.lastError?.message 
     }
   }
 
@@ -1640,6 +1857,24 @@ function Success() {
     console.log('GSAP animations disabled - page should load normally')
   }, [])
 
+  // MEMORY LEAK FIX: Cleanup all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      // Clear all notification timeouts
+      notifications.forEach(notification => {
+        if (notification.timeoutId) {
+          clearTimeout(notification.timeoutId)
+        }
+      })
+      
+      // Clear all tracked timeouts
+      timeoutRefs.current.forEach(timeoutId => {
+        clearTimeout(timeoutId)
+      })
+      timeoutRefs.current = []
+    }
+  }, [notifications])
+
   // CV Data Parser
   const parseCV = useCallback(async (file) => {
     try {
@@ -1884,9 +2119,11 @@ function Success() {
         // ATS score animation simplified
         updateAppState({ atsScore: 45 }, 'initial-ats')
         
-        setTimeout(() => {
+        // MEMORY LEAK FIX: Track timeout for cleanup
+        const atsTimeoutId = setTimeout(() => {
           updateAppState({ atsScore: 95, optimizedScore: 95 }, 'final-ats')
         }, 500)
+        timeoutRefs.current.push(atsTimeoutId)
         
         const finalLength = result.optimizedCV.length
         const achievedTarget = finalLength >= 10000
@@ -2310,18 +2547,8 @@ function Success() {
     },
     
     simple: (data) => {
-      console.log('🔍 TEMPLATE SIMPLE DEBUG - received data:', {
-        hasData: !!data,
-        hasFullContent: !!data?.fullContent,
-        fullContentLength: data?.fullContent?.length || 0,
-        hasOptimizedContent: !!data?.optimizedContent,
-        dataKeys: data ? Object.keys(data) : [],
-        dataSample: data?.fullContent ? data.fullContent.substring(0, 100) + '...' : 'no fullContent'
-      });
-      
       // DEFENSIVE FALLBACK: If no data at all, show loading state
       if (!data || (Object.keys(data).length === 0)) {
-        console.log('⚠️ TEMPLATE: No data received, showing loading state');
         return (
           <div className="bg-gray-900 border border-purple-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
             <div className="flex items-center justify-center space-x-4">
@@ -3095,6 +3322,46 @@ function Success() {
     )
   }
 
+  // Memoized template renderer to prevent infinite loop
+  const TemplateRenderer = useMemo(() => {
+    // Check if no session found - show error UI
+    if (loadingState.hasNoSession) {
+      return (
+        <div className="bg-gradient-to-br from-red-900/90 via-red-800/90 to-red-900/90 backdrop-blur-xl border border-red-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <div className="text-2xl font-bold text-white mb-4">Brak danych sesji</div>
+            <div className="text-red-200 mb-6">
+              Nie znaleziono sesji CV. Wróć do strony głównej i prześlij swoje CV ponownie.
+            </div>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              Powrót do strony głównej
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Show loading state during initialization
+    if (loadingState.isInitializing) {
+      return (
+        <div className="bg-gray-900 border border-purple-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="animate-spin w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full"></div>
+            <span className="text-white">Inicjalizowanie...</span>
+          </div>
+        </div>
+      );
+    }
+
+    // Render selected template with CV data
+    const selectedTemplate = appState.selectedTemplate || 'simple';
+    const templateFunction = templates[selectedTemplate] || templates.simple;
+    return templateFunction(appState.cvData);
+  }, [loadingState.hasNoSession, loadingState.isInitializing, appState.selectedTemplate, appState.cvData]);
 
   return (
     <>
@@ -3527,15 +3794,8 @@ function Success() {
             </div>
             <div className="cv-preview-container">
               <div ref={cvPreviewRef} className="cv-preview-content">
-                {/* Show selected template with AI optimized content if available */}
-                {console.log('🔍 CV Display Debug:', {
-                  hasFullContent: !!appState.cvData?.fullContent,
-                  isOptimized: !!appState.cvData?.optimized,
-                  fullContentLength: appState.cvData?.fullContent?.length || 0,
-                  selectedTemplate: appState.selectedTemplate
-                })}
-                {/* Always use selected template, templates will handle optimized content internally */}
-                {templates[appState.selectedTemplate]?.(appState.cvData) || templates.simple(appState.cvData)}
+                {/* Render memoized template to prevent infinite loop */}
+                {TemplateRenderer}
               </div>
             </div>
           </div>
@@ -3964,6 +4224,7 @@ function Success() {
           background: radial-gradient(circle at center, rgba(120, 80, 255, 0.1), transparent 70%);
           opacity: 0;
           transition: opacity 0.3s ease;
+          pointer-events: none; /* FIX: Allow clicks to pass through overlay */
         }
 
         .template-card:hover .template-glow {
