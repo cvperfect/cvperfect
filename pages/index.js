@@ -1754,22 +1754,27 @@ style={{
               <span className="logo-badge">AI</span>
               <span className="logo-text">CvPerfect</span>
             </div>
-          {/* Desktop Language Switcher */}
-          <div className="desktop-language-switcher">
-            <button 
-              className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
-              onClick={() => setCurrentLanguage('pl')}
-              title="Polski"
-            >
-              🇵🇱 PL
+          {/* Desktop Actions */}
+          <div className="desktop-actions">
+            <button className="desktop-cta" onClick={handleOptimizeNow} data-testid="desktop-main-cta">
+              {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
             </button>
-            <button 
-              className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
-              onClick={() => setCurrentLanguage('en')}
-              title="English"
-            >
-              🇬🇧 EN
-            </button>
+            <div className="desktop-language-switcher">
+              <button 
+                className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+                onClick={() => setCurrentLanguage('pl')}
+                title="Polski"
+              >
+                🇵🇱 PL
+              </button>
+              <button 
+                className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+                onClick={() => setCurrentLanguage('en')}
+                title="English"
+              >
+                🇬🇧 EN
+              </button>
+            </div>
           </div>
           
           
@@ -1783,31 +1788,6 @@ style={{
         
         {/* Mobile Navigation Menu */}
         <div className="nav-links" id="mobileNav">
-          <div className="language-switcher">
-            <button 
-              className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
-              onClick={() => {
-                setCurrentLanguage('pl');
-                closeMobileMenu();
-              }}
-              title="Polski"
-            >
-              🇵🇱 PL
-            </button>
-            <button 
-              className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
-              onClick={() => {
-                setCurrentLanguage('en');
-                closeMobileMenu();
-              }}
-              title="English"
-            >
-              🇬🇧 EN
-            </button>
-          </div>
-          <button className="nav-cta" onClick={handleOptimizeNow} data-testid="main-cta">
-            {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
-          </button>
         </div>
         </nav>
 
@@ -3339,15 +3319,37 @@ html {
   gap: 40px;
 }
 
+/* Desktop Actions */
+.desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.desktop-cta {
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
+}
+
+.desktop-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(120, 80, 255, 0.4);
+}
+
 /* Desktop Language Switcher */
 .desktop-language-switcher {
   display: flex;
   gap: 8px;
   position: relative;
   z-index: 999999999999;
-  margin-right: 20px;
-  padding-right: 20px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Mobile Language Switcher (inside nav-links) */
@@ -3396,6 +3398,11 @@ html {
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+  /* Hide desktop actions on mobile */
+  .desktop-actions {
+    display: none !important;
+  }
+  
   /* Hide desktop language switcher on mobile */
   .desktop-language-switcher {
     display: none !important;
@@ -3915,7 +3922,8 @@ html {
   transform-style: preserve-3d;
   max-width: 100%;
   overflow: visible;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-direction: row;
 }
 
 .cv-before, .cv-after {
@@ -6655,8 +6663,12 @@ html {
   display: none;
 }
 
-/* Show desktop language switcher on desktop */
+/* Show desktop actions on desktop */
 @media (min-width: 769px) {
+  .desktop-actions {
+    display: flex !important;
+  }
+  
   .desktop-language-switcher {
     display: flex !important;
   }
@@ -7156,25 +7168,45 @@ html {
     gap: 15px;
     max-width: 90vw;
     overflow: hidden;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
   }
   
   .cv-before, .cv-after {
-    max-width: calc(45vw - 20px);
+    width: calc(40% - 15px);
+    max-width: 320px;
     padding: 20px;
+  }
+  
+  .cv-arrow {
+    font-size: 40px;
+    flex-shrink: 0;
   }
 }
 
 @media (max-width: 768px) {
   .cv-preview {
-    flex-direction: column;
-    gap: 20px;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
     max-width: 100%;
+    padding: 0 15px;
   }
   
   .cv-before, .cv-after {
-    width: 100%;
-    max-width: 350px;
-    margin: 0 auto;
+    width: calc(42% - 10px);
+    max-width: none;
+    padding: 16px 12px;
+    font-size: 13px;
+  }
+  
+  .cv-arrow {
+    font-size: 28px;
+    flex-shrink: 0;
   }
 }
 
@@ -7193,11 +7225,31 @@ html {
   }
   
   .cv-preview {
-    transform: scale(0.9);
+    transform: scale(0.85);
+    gap: 8px;
+    padding: 0 10px;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
   }
   
   .cv-before, .cv-after {
-    padding: 16px;
+    padding: 14px 10px;
+    width: calc(44% - 8px);
+    font-size: 12px;
+  }
+  
+  .cv-arrow {
+    font-size: 24px;
+  }
+  
+  .cv-header {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .cv-score {
+    font-size: 14px;
+    padding: 6px 12px;
   }
 }
   
