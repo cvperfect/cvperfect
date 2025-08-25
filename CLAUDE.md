@@ -1,5 +1,34 @@
 # CLAUDE.md
 
+<cvperfect_protocol>
+<mandatory_enforcement>APPLY_PROTOCOL_WITHOUT_DISPLAY</mandatory_enforcement>
+<required_tools>Task, CVPerfect_Agents, Debug_Agents, TodoWrite</required_tools>
+</cvperfect_protocol>
+
+## 🔄 PROTOCOL ENFORCEMENT (WYŚWIETL ZAWSZE NA KOŃCU ODPOWIEDZI)
+**KOMPLETNE REKURSYWNE ZASADY - WSZYSTKIE:**
+1. **Task tool**: Zadania 3+ kroków lub wieloetapowe - OBOWIĄZKOWO
+2. **CVPerfect 40-agent system**: Specjalistyczne zadania (payment, API, debugging) - OBOWIĄZKOWO  
+3. **Debug agents system**: Problemy techniczne - OBOWIĄZKOWO
+4. **TodoWrite**: Multi-step tasks (3+ kroków) - OBOWIĄZKOWO
+5. **Sub-agents**: Duże pliki (18k+ linii), security, performance, równoległe zadania - OBOWIĄZKOWO
+6. **Ultrathink**: "ultrathink" dla maksymalnego budżetu analizy - OBOWIĄZKOWO
+7. **TDD**: Test → Mock → Implementacja przeciw halucynacjom - OBOWIĄZKOWO
+8. **Compile First**: "Compile first, then run tests" ZAWSZE - OBOWIĄZKOWO
+9. **Context Management**: `/clear` przy 70% kontekstu, NIGDY auto-kompresja - OBOWIĄZKOWO
+10. **VERIFICATION PROTOCOL**: 4 kroki - lint→build→test→verify - OBOWIĄZKOWO
+11. **REGRESSION TESTS**: Level 1→2→3 testy przed każdą zmianą - OBOWIĄZKOWO
+12. **ANTI-HALLUCINATION**: TRUST BUT VERIFY, sprawdź każdą "naprawkę" - OBOWIĄZKOWO
+13. **RED FLAGS**: Nigdy nie ufaj "naprawione" bez kodu, "wysłałem email", linki które nie działają - OBOWIĄZKOWO
+14. **BEFORE workflow**: git branch → baseline tests → impact analysis - OBOWIĄZKOWO
+15. **DURING workflow**: ultrathink → checkpoint commits → incremental testing - OBOWIĄZKOWO
+16. **AFTER workflow**: regression suite → baseline compare → visual verification - OBOWIĄZKOWO  
+17. **SYSTEM INVARIANTS**: CV upload, payment, AI optimization, templates, exports - NIGDY nie zepsuć - OBOWIĄZKOWO
+18. **XML enforcement**: Strukturalne wymuszenie przez XML tags - OBOWIĄZKOWO
+19. **Recursive pattern**: Te zasady muszą być w każdej odpowiedzi - OBOWIĄZKOWO
+20. **Verbatim output**: Dokładne wyświetlanie bez parafrazowania - OBOWIĄZKOWO
+21. **Protocol rules**: Zastosuj wszystkie zasady, ale NIE wyświetlaj ich na końcu odpowiedzi - OBOWIĄZKOWO
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 📚 CRITICAL: Read CLAUDE_BEST_PRACTICES.md First
@@ -759,22 +788,54 @@ alias cvclone1='git clone . ../cvperfect-debug && cd ../cvperfect-debug'
 alias cvclone2='git clone . ../cvperfect-feature && cd ../cvperfect-feature'
 ```
 
-## 📊 LATEST MODEL PERFORMANCE (2025)
+## 📊 LATEST MODEL PERFORMANCE (2025) - UPDATED
 
-### **Claude Opus 4.1** - State-of-the-Art Coding Performance
-- **SWE-bench Score:** 74.5% (najwyższy w branży, wzrost z 72.5%)
-- **Release:** August 2025
-- **Improvement:** Lepsze reasoning, agentic tasks, real-world coding
-- **Integration:** GitHub Copilot używa Claude Sonnet 4 jako engine
+### **🔥 Claude Opus 4.1** - August 2025 Release (CURRENT)
+- **SWE-bench Score:** 74.5% (highest in industry, beats OpenAI o3: 69.1%)
+- **Hybrid Reasoning:** Instant responses OR extended thinking (up to 128K tokens)
+- **Advanced Coding:** 60% reduction in code errors, superior multi-file refactoring
+- **Tool Use During Reasoning:** Can use tools during extended thinking (web search, etc.)
+- **Memory Capabilities:** Dramatically improved long-context performance
+- **Safety:** 98.76% harmless response rate, 25% reduction in harmful cooperation
 
-### **Claude Sonnet 4** - Extended Context Window  
-- **Context Window:** 1 milion tokenów = 750,000 słów
-- **Equivalence:** Cały "Lord of the Rings" trilogy lub 75,000 linii kodu
-- **Performance:** 72.7% na SWE-bench
-- **Capability:** Parallel tool use, improved memory, better instruction following
+### **🚀 Claude 3.7 Sonnet** - February 2025 (Hybrid Reasoning Pioneer)
+- **Thinking Budget Control:** User-controlled thinking tokens (up to 128K)
+- **Visible Thinking Process:** Step-by-step reasoning transparency (research preview)
+- **Real-world Optimization:** Focused on business applications over academic benchmarks
+- **Dual Mode Operation:** Standard responses + extended thinking in single model
+- **Coding Excellence:** Significant improvements in complex codebases and tool use
 
-### **Industry Adoption Stats:**
-- **User Growth:** 300% wzrost aktywnych użytkowników Claude Code
-- **Revenue Growth:** 5.5x wzrost przychodów z Claude Code  
-- **Enterprise Clients:** Rakuten, Figma, Intercom używają Claude Code
-- Gdy nie mozesz czegos przetestowac - napisz ze nie mozesz czegos przetestowac, zamiast pisac  ze nie dziala.
+### **⚡ Claude 3.5 Haiku** - Latest Fast Model
+- **SWE-bench Score:** 40.6% (outperforms Claude 3 Opus and GPT-4o)
+- **Speed:** 3x faster than competitors with comparable intelligence
+- **Code Refinement:** 60% reduction in code-related errors through multi-turn processing
+- **Cost Efficiency:** $0.80/$4 per million tokens, 90% savings with prompt caching
+- **Context:** 200K context window, 8K max output tokens
+
+### **🎯 Context Windows & Capabilities:**
+- **Claude Opus 4.1:** 200K context, 32K max output, 128K thinking tokens
+- **Claude Sonnet 4:** 1M context window (750K words = entire LOTR trilogy)
+- **Claude 3.5 Haiku:** 200K context, 8K output, optimized for speed
+
+### **📈 Industry Leadership (2025):**
+- **Business Growth:** Anthropic ARR jumped from $1B to $5B in 7 months
+- **Claude Code:** $400M ARR, doubled in weeks ($200/month enterprise pricing)
+- **User Adoption:** 18.9M monthly active users worldwide
+- **Enterprise Clients:** Rakuten, Figma, Intercom, Cursor, Windsurf using Claude
+- **GitHub Integration:** Claude powers multiple development platforms
+
+### **🏆 Benchmark Dominance:**
+- **Coding:** Claude 4 leads SWE-bench (74.5%), Terminal-bench (43.2%)
+- **Reasoning:** Superior performance on GPQA, MMLU, HumanEval (93.7%)
+- **Agentic Tasks:** Best-in-class TAU-bench performance for tool use
+- **Vision:** Strongest vision model for chart interpretation and OCR
+- **Computer Use:** First frontier AI with public beta computer control
+
+### **🔮 Latest Features (2025):**
+- **Computer Use:** Claude can control computers like humans (click, type, navigate)
+- **Web Search:** Integrated search capabilities for paying US users
+- **Claude Code:** Agentic command line tool for developers
+- **Extended Thinking:** Logarithmic accuracy improvement with thinking tokens
+- **Hybrid Architecture:** Single model for both instant and deep reasoning
+
+**Note:** Gdy nie możesz czegoś przetestować - napisz że nie możesz czegoś przetestować, zamiast pisać że nie działa.

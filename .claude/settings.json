@@ -97,16 +97,19 @@
     "autoExecution": true,
     "complianceTracking": true,
     "violationsLogging": true,
-    "description": "Automatyczne wykrywanie i wymuszanie wykonywania wszystkich skrótów użytkownika",
+    "description": "Automatyczne wykrywanie i wymuszanie wykonywania wszystkich skrótów użytkownika + SuperClaude features",
     "supportedFlags": {
       "thinkingModes": ["-ut", "-th", "-t", "-td"],
+      "superclaudeThinking": ["-sc16", "-sc32", "-sc64", "-scmax"],
+      "superclaudeFeatures": ["-token", "-commit", "-arch", "-analyze"],
       "workflowShortcuts": ["-p", "-r", "-sa", "-todo", "-test", "-mc"],
       "debugging": ["-fix", "-debug", "-dm", "-check"],
       "sessionManagement": ["-clear", "-init"]
     },
     "priorities": {
-      "critical": ["-ut", "-dm", "-sa"],
-      "high": ["-th", "-td", "-fix"],
+      "critical": ["-ut", "-dm", "-sa", "-sc64", "-scmax"],
+      "high": ["-th", "-td", "-fix", "-sc32", "-arch", "-analyze"],
+      "medium": ["-sc16", "-token", "-commit"],
       "normal": ["-p", "-r", "-todo", "-debug", "-check"],
       "low": ["-t", "-test", "-mc", "-clear", "-init"]
     },
@@ -118,19 +121,122 @@
       "reportsPath": ".claude/compliance-reports"
     }
   },
+  "superclaudeEnforcement": {
+    "enabled": true,
+    "mode": "strict",
+    "description": "Wymusza użycie SuperClaude-enhanced features w każdej sesji",
+    "mandatoryFeatures": {
+      "tokenOptimization": {
+        "enabled": true,
+        "triggerOnFileSize": 100000,
+        "triggerOnComplexity": "medium",
+        "autoApply": true
+      },
+      "extendedThinking": {
+        "enabled": true,
+        "suggestOnComplexTasks": true,
+        "autoApplyOnKeywords": true,
+        "autoExecuteWithoutConfirmation": true,
+        "minThinkingTokens": 16000,
+        "maxThinkingTokens": 128000,
+        "autoTriggerKeywords": ["analyze", "architecture", "complex", "system", "optimize", "comprehensive", "debug", "refactor"]
+      },
+      "aiCommitGeneration": {
+        "enabled": true,
+        "autoTrigger": "always",
+        "autoApplyOnCodeChanges": true,
+        "autoExecuteWithoutConfirmation": true,
+        "requireApproval": false,
+        "detectChangesAutomatically": true
+      },
+      "architectureAnalysis": {
+        "enabled": true,
+        "scheduledRuns": "weekly", 
+        "triggerOnStructuralChanges": true,
+        "autoTriggerOnLargeChanges": true,
+        "autoExecuteWithoutConfirmation": true,
+        "fileCountThreshold": 3,
+        "autoTriggerKeywords": ["architecture", "system", "structure", "component"]
+      }
+    },
+    "enforcementRules": {
+      "largeFileOperations": "MUST use token optimization",
+      "complexAnalysis": "MUST use extended thinking mode",
+      "codeChanges": "MUST generate AI commit messages",
+      "structuralModifications": "MUST run architecture analysis"
+    },
+    "penalties": {
+      "tokenOptimizationSkipped": "WARNING + Auto-apply",
+      "extendedThinkingIgnored": "REMINDER + Suggestion",
+      "manualCommitMessages": "REPLACEMENT with AI-generated",
+      "missedArchitectureAnalysis": "AUTO-SCHEDULE next session"
+    }
+  },
+  "commandMapping": {
+    "superclaudeCommands": {
+      "-ut": {
+        "description": "Ultra Think with full autonomous execution",
+        "action": "Ultrathink and execute with full autonomous decision-making",
+        "enforcement": "MANDATORY for maximum AI capability",
+        "autonomy": "full",
+        "thinkingTokens": 128000,
+        "executionMode": "autonomous"
+      },
+      "-sc16": {
+        "description": "Extended thinking with 16K tokens",
+        "action": "ultrathink with 16000 thinking tokens",
+        "enforcement": "MANDATORY for complex analysis"
+      },
+      "-sc32": {
+        "description": "Extended thinking with 32K tokens", 
+        "action": "ultrathink with 32000 thinking tokens",
+        "enforcement": "MANDATORY for comprehensive analysis"
+      },
+      "-sc64": {
+        "description": "Extended thinking with 64K tokens",
+        "action": "ultrathink with 64000 thinking tokens", 
+        "enforcement": "MANDATORY for maximum analysis"
+      },
+      "-scmax": {
+        "description": "Extended thinking with maximum tokens",
+        "action": "ultrathink with 128000 thinking tokens",
+        "enforcement": "MANDATORY for ultra-complex analysis"
+      },
+      "-token": {
+        "description": "Apply token optimization",
+        "action": "Use token optimization for this operation",
+        "enforcement": "MANDATORY for large files/operations"
+      },
+      "-commit": {
+        "description": "Generate AI commit message",
+        "action": "node .claude/hooks/ai-commit-generator.js",
+        "enforcement": "MANDATORY for code changes"
+      },
+      "-arch": {
+        "description": "Run architecture analysis",
+        "action": "node agents/analysis/architecture_analyzer.js",
+        "enforcement": "MANDATORY for structural changes"
+      },
+      "-analyze": {
+        "description": "Comprehensive system analysis",
+        "action": "Run full system analysis with all SuperClaude features",
+        "enforcement": "MANDATORY for system-wide reviews"
+      }
+    }
+  },
   "hooks": {
     "pre-response": {
-      "command": "bash .claude/hooks/pre-response.sh",
-      "timeout": 10000,
+      "command": "cmd /c .claude/hooks/pre-response-enhanced.bat && node .claude/hooks/superclaud-command-enforcer.js && node .claude/hooks/auto-feature-injector.js",
+      "timeout": 15000,
       "background": false,
-      "description": "Detect and enforce user command flags before response",
+      "description": "Full SuperClaude auto-enforcement: detection + injection + mandatory compliance",
       "on": "pre-response"
     },
     "session-start": {
-      "command": "node auto-session-init.js",
+      "command": "node auto-session-init.js && node .claude/hooks/superclaud-enforcer.js",
       "timeout": 15000,
       "background": false,
-      "description": "Auto-initialize all CVPerfect enhanced features including sequential thinking"
+      "description": "Auto-initialize CVPerfect features + SuperClaude enforcement system"
     },
     "task-execute": {
       "command": "node -e \"const {processTask} = require('./claude-cvperfect-integration'); processTask(process.argv[1]).then(r => console.log(JSON.stringify(r)));\"",

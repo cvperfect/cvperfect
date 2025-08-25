@@ -1733,8 +1733,8 @@ const floatingNotifications = currentLanguage === 'pl'
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }}
 style={{
-  width: '44px', // minimum 44px for touch accessibility
-  height: '44px',
+  width: '24px', // większa kropka
+  height: '24px',
   borderRadius: '9999px',
   border: 'none',
   background: 'radial-gradient(circle, #3b005e 0%, #000000 100%)',
@@ -1772,6 +1772,23 @@ style={{
             </button>
           </div>
           
+          {/* Mobile Language Switcher - Always Visible on Mobile */}
+          <div className="mobile-language-switcher">
+            <button 
+              className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+              onClick={() => setCurrentLanguage('pl')}
+              title="Polski"
+            >
+              🇵🇱 PL
+            </button>
+            <button 
+              className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+              onClick={() => setCurrentLanguage('en')}
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </div>
           
           {/* Mobile Menu Button */}
           <div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
@@ -2247,7 +2264,7 @@ style={{
 
 {/* NOWY MODAL - 2 KROKI */}
 {showMainModal && (
-  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 55}}>
+  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 99997}}>
     <div className="modal-content optimize-modal" onClick={(e) => e.stopPropagation()}>
       <button className="modal-close" onClick={closeModal}>×</button>
       
@@ -2894,7 +2911,7 @@ style={{
           display: flex;
           gap: 8px;
           position: relative;
-          z-index: 50;
+          z-index: 999999999999;
           margin-right: 20px;
         }
 
@@ -3143,7 +3160,7 @@ html {
   position: fixed;
   top: 96px;               /* NAD top-barem */
   right: 20px;
-  z-index: 45;    /* scroll indicator below navigation */
+  z-index: 2147483646;    /* wyżej niż navbar i wskaźniki */
   pointer-events: none;
   max-width: 380px;
 }
@@ -3535,7 +3552,7 @@ html {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.3s ease;
+  transition: left 0.5s ease;
 }
 
 .nav-cta:hover {
@@ -3764,7 +3781,7 @@ html {
   height: 200%;
   background: radial-gradient(circle, rgba(120, 80, 255, 0.1) 0%, transparent 50%);
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.6s ease;
   transform: rotate(0deg);
 }
 
@@ -3848,7 +3865,7 @@ html {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
   transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
+  transition: width 0.8s ease, height 0.8s ease;
 }
 
 .hero-button::after {
@@ -3950,7 +3967,7 @@ html {
   height: 200%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
   transform: rotate(45deg);
-  transition: all 0.3s ease;
+  transition: all 0.6s ease;
   opacity: 0;
 }
 
@@ -4363,7 +4380,7 @@ html {
   width: 300%;
   height: 300%;
   background: radial-gradient(circle, rgba(80, 180, 255, 0.1) 0%, transparent 40%);
-  transition: all 0.3s ease;
+  transition: all 0.6s ease;
   opacity: 0;
 }
 
@@ -4478,7 +4495,7 @@ html {
   .testimonial-card::before,
   .testimonial-card::after,
   .testimonial-card:hover .testimonial-avatar {
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
 }
 
@@ -4538,7 +4555,7 @@ html {
 }
 
 /* Mobile responsiveness for stats */
-@media (max-width: 768px) {
+@media (max-width: 968px) {
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -4554,7 +4571,7 @@ html {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 568px) {
   .stats-counter-section {
     padding: 80px 20px;
   }
@@ -4683,7 +4700,7 @@ html {
   background: linear-gradient(90deg, #00ff88, #00cc70);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s ease;
+  transition: transform 0.6s ease;
 }
 
 .step-card:hover::before {
@@ -5053,7 +5070,7 @@ html {
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 968px) {
   .step-card {
     grid-template-columns: 1fr;
     padding: 32px;
@@ -5215,7 +5232,7 @@ html {
   height: 100%;
   width: 0;
   background: linear-gradient(90deg, #7850ff, #ff5080, #50b4ff);
-  transition: width 0.5s ease;
+  transition: width 2s ease;
   border-radius: 2px;
   box-shadow: 0 0 20px rgba(120, 80, 255, 0.5);
 }
@@ -5251,7 +5268,7 @@ html {
   height: 200%;
   background: radial-gradient(circle, rgba(255, 80, 150, 0.1) 0%, transparent 50%);
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.8s ease;
   transform: rotate(0deg);
 }
 
@@ -5383,7 +5400,7 @@ html {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
+  transition: width 0.6s ease, height 0.6s ease;
 }
 
 .timeline-button:hover {
@@ -5524,7 +5541,7 @@ html {
   height: 100px;
   background: linear-gradient(180deg, rgba(120, 80, 255, 0.1) 0%, transparent 100%);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
 /* Efekt hover dla wszystkich kart */
@@ -5705,7 +5722,7 @@ html {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
+  transition: width 0.6s ease, height 0.6s ease;
 }
 
 .testimonials-button:hover {
@@ -5923,7 +5940,7 @@ html {
     transparent 70%
   );
   transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.3s ease;
+  transition: transform 0.6s ease;
 }
 
 .plan-button:hover::before {
@@ -6115,7 +6132,7 @@ html {
   height: 200%;
   background: radial-gradient(circle, rgba(120, 80, 255, 0.12) 0%, transparent 50%);
   transform: rotate(0deg);
-  transition: all 0.3s ease;
+  transition: all 0.8s ease;
   opacity: 0;
 }
 
@@ -6127,7 +6144,7 @@ html {
   font-size: 24px;
   opacity: 0;
   transform: scale(0) rotate(-180deg);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .capability-card:hover {
@@ -6152,7 +6169,7 @@ html {
   font-size: 56px;
   margin-bottom: 24px;
   display: block;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
   filter: drop-shadow(0 5px 15px rgba(255, 255, 255, 0.1));
 }
 
@@ -6319,7 +6336,7 @@ html {
   width: 200%;
   height: 200%;
   background: radial-gradient(circle, rgba(120, 80, 255, 0.12) 0%, transparent 50%);
-  transition: all 0.3s ease;
+  transition: all 0.8s ease;
   opacity: 0;
   transform: rotate(0deg);
 }
@@ -6332,7 +6349,7 @@ html {
   font-size: 20px;
   opacity: 0;
   transform: scale(0) rotate(-90deg);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .faq-item:hover {
@@ -6369,7 +6386,7 @@ html {
   font-size: 32px;
   flex-shrink: 0;
   margin-top: 4px;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
   filter: drop-shadow(0 5px 15px rgba(255, 255, 255, 0.2));
 }
 
@@ -6463,7 +6480,7 @@ html {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
+  transition: width 0.6s ease, height 0.6s ease;
 }
 
 .faq-button:hover {
@@ -6588,7 +6605,7 @@ html {
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    z-index: 35;
+    z-index: 9999999999;
   }
   
   .nav-links.show {
@@ -6707,7 +6724,7 @@ html {
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    z-index: 40;
+    z-index: 99999999999;
     display: none;
   }
   
@@ -6794,7 +6811,7 @@ html {
   align-items: stretch; /* Równa wysokość kart */
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -6840,7 +6857,7 @@ html {
   height: 200%;
   background: radial-gradient(circle, rgba(120, 80, 255, 0.15) 0%, transparent 50%);
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.8s ease;
   transform: rotate(0deg);
 }
 
@@ -6852,7 +6869,7 @@ html {
   font-size: 24px;
   opacity: 0;
   transform: scale(0) rotate(-180deg);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .feature-card:hover {
@@ -6898,7 +6915,7 @@ html {
   margin-bottom: 32px;
   display: block;
   filter: grayscale(0);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
 }
 
 .feature-card:hover .feature-icon {
@@ -7536,7 +7553,7 @@ button:focus {
 /* === TOP GAP KILLER (wklej na sam koniec) === */
 html, body { margin:0 !important; padding:0 !important; }
 
-navigation { position: fixed; top:0; left:0; right:0; z-index: 50 !important; }
+navigation { position: fixed; top:0; left:0; right:0; z-index:99999999999 !important; }
 
 .hero-section{
   position: relative;
@@ -7664,7 +7681,7 @@ navigation { position: fixed; top:0; left:0; right:0; z-index: 50 !important; }
   color: #00ff88; /* zielony jak w innych krokach */
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .upload-modal, .paywall-modal {
     width: 95vw;
     padding: 20px;
@@ -7849,7 +7866,7 @@ navigation { position: fixed; top:0; left:0; right:0; z-index: 50 !important; }
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 60 !important;
+  z-index: 999999999 !important;
   animation: modalFadeIn 0.3s ease;
   overflow-y: auto !important;
   padding: 40px 20px;

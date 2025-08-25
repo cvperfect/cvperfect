@@ -277,35 +277,7 @@ JĘZYKI:
         const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
         
         try {
-          // RETRY LOGIC WITH EXPONENTIAL BACKOFF for session propagation delays
-          let stripeSession = null
-          let lastError = null
-          const maxRetries = 5
-          
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              stripeSession = await stripe.checkout.sessions.retrieve(session_id)
-              console.log(`✅ Stripe session retrieved on attempt ${attempt}`)
-              break
-            } catch (error) {
-              lastError = error
-              
-              if (error.code === 'resource_missing' && attempt < maxRetries) {
-                // Exponential backoff: 300ms, 600ms, 1200ms, 2400ms
-                const delay = 300 * Math.pow(2, attempt - 1)
-                console.log(`⏳ Stripe retry attempt ${attempt} failed, retrying in ${delay}ms...`)
-                await new Promise(resolve => setTimeout(resolve, delay))
-                continue
-              } else {
-                // Re-throw if not resource_missing or last attempt
-                throw error
-              }
-            }
-          }
-          
-          if (!stripeSession) {
-            throw lastError || new Error('Failed to retrieve Stripe session after retries')
-          }
+          const stripeSession = await stripe.checkout.sessions.retrieve(session_id)
           
           console.log('📋 Stripe session found:', {
             id: stripeSession.id,
