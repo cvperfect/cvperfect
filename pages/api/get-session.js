@@ -12,7 +12,45 @@ export default async function handler(req, res) {
    return res.status(400).json({ error: 'Session ID is required' })
  }
  
+ // 🧠 INTELLIGENT SESSION TYPE DETECTION (same as get-session-data.js)
+ const isRegularSession = /^sess_[a-zA-Z0-9_]+$/.test(session_id)
+ const isFallbackSession = /^fallback_[0-9]+_[a-zA-Z0-9]+$/.test(session_id)
+ const isDemoSession = /^demo_session_[a-zA-Z0-9_]+$/.test(session_id)
+ const isTestSession = /^test_[a-zA-Z0-9_]+$/.test(session_id)
+ const isStripeSession = /^cs_[a-zA-Z0-9_]+$/.test(session_id)
+ 
+ const sessionType = isRegularSession ? 'regular' : 
+                    isFallbackSession ? 'fallback' :
+                    isDemoSession ? 'demo' : 
+                    isTestSession ? 'test' : 
+                    isStripeSession ? 'stripe' : 'unknown'
+ 
+ const isLocalSession = isRegularSession || isFallbackSession || isDemoSession || isTestSession
+ 
+ console.log('🔍 get-session.js - Session type:', sessionType, 'for ID:', session_id)
+ 
+ // 🎯 SKIP STRIPE FOR LOCAL SESSIONS
+ if (isLocalSession) {
+   console.log('⚠️ Local session detected in get-session.js - this endpoint is for Stripe sessions only')
+   return res.status(400).json({ 
+     success: false,
+     error: 'This endpoint is for Stripe sessions only. Use /api/get-session-data for local sessions.',
+     sessionType: sessionType,
+     recommendedEndpoint: '/api/get-session-data'
+   })
+ }
+ 
+ // Only proceed for Stripe sessions
+ if (!isStripeSession) {
+   return res.status(400).json({ 
+     success: false,
+     error: 'Invalid session format for this endpoint. Expected Stripe session (cs_*)',
+     sessionType: sessionType
+   })
+ }
+ 
  try {
+   console.log('🔄 Retrieving Stripe session:', session_id)
    const session = await stripe.checkout.sessions.retrieve(session_id)
    
    if (session.payment_status === 'paid') {
@@ -57,10 +95,32 @@ export default async function handler(req, res) {
      })
    }
  } catch (error) {
-   console.error('Error retrieving session:', error)
+   console.error('Error retrieving session:', error.message)
+   
+   // Enhanced error handling with proper status codes
+   if (error.type === 'StripeInvalidRequestError') {
+     if (error.code === 'resource_missing') {
+       return res.status(404).json({ 
+         success: false,
+         error: 'Stripe session not found',
+         sessionId: session_id,
+         sessionType: sessionType
+       })
+     } else {
+       return res.status(400).json({ 
+         success: false,
+         error: 'Invalid Stripe session request',
+         details: error.message
+       })
+     }
+   }
+   
+   // Network or other errors
    return res.status(500).json({ 
      success: false,
-     error: 'Failed to retrieve session' 
+     error: 'Failed to retrieve Stripe session',
+     sessionType: sessionType,
+     details: process.env.NODE_ENV === 'development' ? error.message : undefined
    })
  }
 }
