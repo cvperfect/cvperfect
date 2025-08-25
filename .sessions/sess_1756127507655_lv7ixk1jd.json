@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_1756127507655_lv7ixk1jd",
+  "email": "test@example.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "John Smith\nSoftware Developer\nEmail: john@example.com\nPhone: +1-555-123-4567\n\nEXPERIENCE:\nSenior Software Engineer at Tech Corp (2020-2023)\n- Developed web applications using React and Node.js\n- Led a team of 5 developers\n- Implemented CI/CD pipelines\n\nEDUCATION:\nBachelor of Computer Science\nUniversity of Technology (2016-2020)\n\nSKILLS:\n- JavaScript, TypeScript, Python\n- React, Vue.js, Angular\n- AWS, Docker, Kubernetes\n- Git, Jira, Agile methodologies",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-25T13:11:47.742Z",
+  "processed": false,
+  "createdAt": 1756127507742
+}

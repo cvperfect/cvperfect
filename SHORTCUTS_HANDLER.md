@@ -41,10 +41,19 @@ Gdy użytkownik używa następujących skrótów w swoich promptach (np. "Napraw
   - Przeanalizuj istniejące patterns i konwencje
   - Zrozum context i zależności
 
-- **`-sa`** → **USE SUBAGENT**
-  - Deleguj zadanie do wyspecjalizowanego sub-agenta
-  - Użyj Task tool z odpowiednim subagent_type
-  - Wybierz najlepszy typ agenta dla zadania
+- **`-sa`** → **USE SUBAGENT (CVPerfect Integration)**
+  - Automatycznie deleguj zadanie do systemu 40 agentów CVPerfect
+  - Inteligentne wykrywanie typu zadania i wybór odpowiedniego agenta
+  - Fallback do wbudowanego Task tool Claude jeśli agenci niedostępni
+  - **Dostępne typy agentów:**
+    - `frontend` → React, CSS, komponenty, responsive design
+    - `backend` → API, endpointy, baza danych, Stripe, webhooks
+    - `cv-optimization` → Analiza CV, ATS, szablony, Groq AI
+    - `security` → Autentykacja, CORS, walidacja, ochrona danych
+    - `testing` → Testy, debugging, QA, naprawianie bugów
+    - `performance` → Optymalizacja, cache, szybkość, bundle size
+    - `analytics` → Metryki, raporty, business intelligence
+  - **Użycie:** `-sa` (automatyczne) lub `-sa frontend` (konkretny agent)
 
 - **`-todo`** → **CREATE TODO LIST**
   - Automatycznie użyj TodoWrite tool
@@ -113,6 +122,11 @@ Gdy użytkownik używa następujących skrótów w swoich promptach (np. "Napraw
 2. Stwórz szczegółowy plan
 3. Użyj maksymalnej mocy obliczeniowej do analizy
 
+### Przykład: `-sa -ut -todo`
+1. Automatycznie deleguj zadanie do odpowiedniego agenta CVPerfect
+2. Użyj maksymalnej mocy obliczeniowej do analizy
+3. Stwórz szczegółową todo listę z postępem
+
 ---
 
 ## 🚨 SPECIAL HANDLING
@@ -140,6 +154,12 @@ Gdy użytkownik używa następujących skrótów w swoich promptach (np. "Napraw
 - Uruchom pełną serię testów
 - Sprawdź build, linting, core functionality
 - Raportuj wszystkie znalezione problemy
+
+### Gdy wykryjesz `-sa`:
+- Aktywuj system 40 agentów CVPerfect przez claude-agent-router.js
+- Przeanalizuj opis zadania i wybierz odpowiedniego agenta automatycznie
+- Jeśli system agentów niedostępny, użyj fallback do Task tool
+- Raportuj który agent został wybrany i dlaczego
 
 ---
 

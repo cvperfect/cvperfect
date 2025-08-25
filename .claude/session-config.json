@@ -1,0 +1,14 @@
+{
+  "sequential_thinking": {
+    "enabled": true,
+    "auto_enabled": true,
+    "timestamp": "2025-08-24T22:22:12.154Z",
+    "mode": "multi-step-breakdown"
+  },
+  "session_commands": {
+    "/sequential": "enabled",
+    "/analyze": "enabled",
+    "/cli-tool": "enabled",
+    "/docs": "enabled"
+  }
+}

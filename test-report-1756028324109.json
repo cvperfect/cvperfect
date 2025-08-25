@@ -1,0 +1,119 @@
+{
+  "summary": {
+    "totalTests": 16,
+    "passed": 3,
+    "failed": 9,
+    "warnings": 4
+  },
+  "categories": {
+    "mainPage": [
+      {
+        "test": "Page loads with correct title",
+        "status": "PASS",
+        "details": "Title: CvPerfect - #1 AI Optymalizacja CV w Polsce | ATS-Ready w 30 sekund",
+        "timestamp": "2025-08-24T09:38:31.568Z"
+      },
+      {
+        "test": "Language switching",
+        "status": "FAIL",
+        "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:has-text(\"EN\"), button:has-text(\"English\")' is not a valid selector.",
+        "timestamp": "2025-08-24T09:38:31.591Z"
+      },
+      {
+        "test": "File input element",
+        "status": "FAIL",
+        "details": "No file input found",
+        "timestamp": "2025-08-24T09:38:31.592Z"
+      },
+      {
+        "test": "Drag and drop zone",
+        "status": "WARNING",
+        "details": "Drop zone not clearly identified",
+        "timestamp": "2025-08-24T09:38:31.592Z"
+      },
+      {
+        "test": "Email input field",
+        "status": "FAIL",
+        "details": "No email input found",
+        "timestamp": "2025-08-24T09:38:31.593Z"
+      },
+      {
+        "test": "Pricing display",
+        "status": "FAIL",
+        "details": "No pricing information found",
+        "timestamp": "2025-08-24T09:38:31.598Z"
+      },
+      {
+        "test": "Payment flow initialization",
+        "status": "FAIL",
+        "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:has-text(\"Zapłać\"), button:has-text(\"Pay\"), .payment-btn, [data-testid=\"payment\"]' is not a valid selector.",
+        "timestamp": "2025-08-24T09:38:31.599Z"
+      }
+    ],
+    "navigation": [
+      {
+        "test": "Internal links functionality",
+        "status": "PASS",
+        "details": "Working: 0, Broken: 3",
+        "timestamp": "2025-08-24T09:38:37.118Z"
+      }
+    ],
+    "apiEndpoints": [
+      {
+        "test": "/api/demo-optimize responds",
+        "status": "WARNING",
+        "details": "Status: 500",
+        "timestamp": "2025-08-24T09:38:41.763Z"
+      },
+      {
+        "test": "/api/analyze responds",
+        "status": "WARNING",
+        "details": "Status: 500",
+        "timestamp": "2025-08-24T09:38:42.461Z"
+      },
+      {
+        "test": "/api/create-checkout-session responds",
+        "status": "WARNING",
+        "details": "Status: 500",
+        "timestamp": "2025-08-24T09:38:42.825Z"
+      }
+    ],
+    "uiUx": [],
+    "dataFlow": [],
+    "responsive": [
+      {
+        "test": "Mobile responsive design",
+        "status": "FAIL",
+        "details": "page.waitForTimeout is not a function",
+        "timestamp": "2025-08-24T09:38:31.629Z"
+      },
+      {
+        "test": "Tablet responsive design",
+        "status": "FAIL",
+        "details": "page.waitForTimeout is not a function",
+        "timestamp": "2025-08-24T09:38:31.658Z"
+      },
+      {
+        "test": "Desktop responsive design",
+        "status": "FAIL",
+        "details": "page.waitForTimeout is not a function",
+        "timestamp": "2025-08-24T09:38:31.696Z"
+      }
+    ],
+    "errors": [
+      {
+        "test": "Console errors detected",
+        "status": "FAIL",
+        "details": "7 errors: ./pages/api/demo-optimize.js\nError: \n  x the name `optimizedChunks` is defined multiple times\n    ,-[c:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\pages\\api\\demo-optimize.js:81:1]\n 81 |       console.log(`📊 Split into ${chunks.length} chunks for processing`)\n 82 |       \n 83 |       // Process each chunk and combine results\n 84 |       const optimizedChunks = []\n    :             ^^^^^^^|^^^^^^^\n    :                    `-- previous definition of `optimizedChunks` here\n 85 |       \n 86 |       // TIMEOUT: Process chunks with unified timeout system\n 87 |       const chunkProcessor = async (chunk, index) => {\n 88 |         console.log(`🤖 Processing chunk ${index + 1}/${chunks.length} (${chunk.length} chars)`)\n 89 |         return await optimizeChunk(chunk, jobText, language, index === 0, photoData, preservePhotos)\n 90 |       }\n 91 |       \n 92 |       const optimizedChunks = await processWithChunkedTimeout(chunks, chunkProcessor, {\n    :             ^^^^^^^|^^^^^^^\n    :                    `-- `optimizedChunks` redefined here\n 93 |         chunkTimeout: TIMEOUTS.CHUNK_PROCESSING,\n 94 |         delayBetweenChunks: 500, // Consistent with analyze.js\n 94 |         failFast: false // Continue on individual chunk failures\r\n    `----\n\nImport trace for requested module:\n./pages/api/demo-optimize.js, ./pages/api/demo-optimize.js\nError: \n  x the name `optimizedChunks` is defined multiple times\n    ,-[c:\\Users\\czupa\\OneDrive\\Pulpit\\cvperfect\\pages\\api\\demo-optimize.js:81:1]\n 81 |       console.log(`📊 Split into ${chunks.length} chunks for processing`)\n 82 |       \n 83 |       // Process each chunk and combine results\n 84 |       const optimizedChunks = []\n    :             ^^^^^^^|^^^^^^^\n    :                    `-- previous definition of `optimizedChunks` here\n 85 |       \n 86 |       // TIMEOUT: Process chunks with unified timeout system\n 87 |       const chunkProcessor = async (chunk, index) => {\n 88 |         console.log(`🤖 Processing chunk ${index + 1}/${chunks.length} (${chunk.length} chars)`)\n 89 |         return await optimizeChunk(chunk, jobText, language, index === 0, photoData, preservePhotos)\n 90 |       }\n 91 |       \n 92 |       const optimizedChunks = await processWithChunkedTimeout(chunks, chunkProcessor, {\n    :             ^^^^^^^|^^^^^^^\n    :                    `-- `optimizedChunks` redefined here\n 93 |         chunkTimeout: TIMEOUTS.CHUNK_PROCESSING,\n 94 |         delayBetweenChunks: 500, // Consistent with analyze.js\n 94 |         failFast: false // Continue on individual chunk failures\r\n    `----\n\nImport trace for requested module:\n./pages/api/demo-optimize.js, Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "timestamp": "2025-08-24T09:38:42.825Z"
+      },
+      {
+        "test": "Console warnings",
+        "status": "PASS",
+        "details": "No console warnings",
+        "timestamp": "2025-08-24T09:38:42.825Z"
+      }
+    ]
+  },
+  "generatedAt": "2025-08-24T09:38:44.109Z"
+}

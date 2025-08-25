@@ -25,6 +25,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+// SECURITY: Helper function to identify transient database errors
+function isTransientError(error) {
+  const transientCodes = [
+    'ECONNRESET', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT',
+    '40001', '40P01', '53300', '53400', '08000', '08003', '08006'
+  ]
+  return error.code && transientCodes.includes(error.code)
+}
+
 export default async function handler(req, res) {
   // Runtime environment validation
   const requiredEnvVars = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
@@ -81,17 +90,7 @@ export default async function handler(req, res) {
         mode: session.mode
       })
 
-      // IDEMPOTENCY CHECK - sprawdź czy już przetworzyliśmy tę sesję
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('stripe_session_id')
-        .eq('stripe_session_id', session.id)
-        .single()
-
-      if (existingUser) {
-        console.log('⚠️ Session already processed, skipping:', session.id)
-        return res.status(200).json({ received: true, message: 'Already processed' })
-      }
+      // SECURITY: Check for existing session using atomic upsert instead of separate check
 
       // Pobierz email (Stripe może go przechowywać w różnych miejscach)
       const email = session.customer_email || session.customer_details?.email
@@ -159,18 +158,27 @@ export default async function handler(req, res) {
           last_payment_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'email',
-          ignoreDuplicates: false // Zawsze aktualizuj przy konflikcie
+          onConflict: 'stripe_session_id', // SECURITY: Use session_id for idempotency
+          ignoreDuplicates: true // Skip if session already processed
         })
 
       if (error) {
-        console.error('❌ Błąd bazy danych:', error)
-        // NIE zwracaj błędu 500 - Stripe będzie próbował ponownie!
-        // Zamiast tego zaloguj błąd i zwróć sukces
-        return res.status(200).json({ 
-          received: true, 
-          warning: 'Database error but payment processed' 
-        })
+        console.error('❌ Database error:', error)
+        
+        // SECURITY: Check if it's duplicate session (idempotent)
+        if (error.code === '23505' && error.message.includes('stripe_session_id')) {
+          console.log('⚠️ Session already processed (duplicate):', session.id)
+          return res.status(200).json({ received: true, message: 'Already processed' })
+        }
+        
+        // For transient errors, return 500 so Stripe retries
+        if (isTransientError(error)) {
+          return res.status(500).json({ error: 'Database temporarily unavailable' })
+        }
+        
+        // For permanent errors, return 200 to stop retries but log critical error
+        console.error('🚨 CRITICAL: Permanent database error for session:', session.id)
+        return res.status(200).json({ received: true, warning: 'Permanent error logged' })
       }
 
       console.log('✅ Użytkownik zapisany/zaktualizowany:', {
@@ -180,8 +188,38 @@ export default async function handler(req, res) {
         expiresAt: expiresAt
       })
 
-      // TODO: Wyślij email potwierdzający (opcjonalne)
-      // await sendConfirmationEmail(email, plan, amountPLN)
+      // STEP 11: Extract and log session recovery information
+      const fullSessionId = session.metadata?.fullSessionId
+      if (fullSessionId) {
+        console.log('🔗 Session recovery mapping:', {
+          stripeSessionId: session.id,
+          fullSessionId: fullSessionId,
+          email: email,
+          plan: plan
+        })
+        
+        // Set response header to instruct client to set cookie
+        // Note: Webhooks can't directly set cookies, but we can log for monitoring
+        console.log('🍪 Session should be set as cookie on success page:', fullSessionId)
+      } else {
+        console.warn('⚠️ No fullSessionId found in payment metadata for:', session.id)
+      }
+
+      // STEP 12: Send payment confirmation email with recovery URL
+      if (fullSessionId) {
+        try {
+          const { sendPaymentConfirmationEmail } = await import('../../lib/email-sender.js')
+          const emailResult = await sendPaymentConfirmationEmail(email, plan, amountPLN, fullSessionId)
+          
+          if (emailResult.success) {
+            console.log('📧 Payment confirmation email sent successfully')
+          } else {
+            console.warn('⚠️ Payment confirmation email failed:', emailResult.reason || emailResult.error)
+          }
+        } catch (emailError) {
+          console.error('❌ Email sending error:', emailError.message)
+        }
+      }
     }
 
     // Obsługa odnowienia subskrypcji

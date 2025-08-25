@@ -1,5 +1,19 @@
 {
   "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["@context7/mcp-server"],
+      "env": {
+        "CONTEXT7_API_KEY": "demo"
+      }
+    },
+    "sequential": {
+      "command": "npx",
+      "args": ["@sequential/mcp-server"],
+      "env": {
+        "SEQUENTIAL_MODE": "enabled"
+      }
+    }
   },
   "permissions": {
     "allow": [
@@ -77,12 +91,46 @@
       "createBackups": true
     }
   },
+  "commandEnforcement": {
+    "enabled": true,
+    "mode": "mandatory",
+    "autoExecution": true,
+    "complianceTracking": true,
+    "violationsLogging": true,
+    "description": "Automatyczne wykrywanie i wymuszanie wykonywania wszystkich skrótów użytkownika",
+    "supportedFlags": {
+      "thinkingModes": ["-ut", "-th", "-t", "-td"],
+      "workflowShortcuts": ["-p", "-r", "-sa", "-todo", "-test", "-mc"],
+      "debugging": ["-fix", "-debug", "-dm", "-check"],
+      "sessionManagement": ["-clear", "-init"]
+    },
+    "priorities": {
+      "critical": ["-ut", "-dm", "-sa"],
+      "high": ["-th", "-td", "-fix"],
+      "normal": ["-p", "-r", "-todo", "-debug", "-check"],
+      "low": ["-t", "-test", "-mc", "-clear", "-init"]
+    },
+    "compliance": {
+      "requireAll": true,
+      "allowPartial": false,
+      "logViolations": true,
+      "generateReports": true,
+      "reportsPath": ".claude/compliance-reports"
+    }
+  },
   "hooks": {
+    "pre-response": {
+      "command": "bash .claude/hooks/pre-response.sh",
+      "timeout": 10000,
+      "background": false,
+      "description": "Detect and enforce user command flags before response",
+      "on": "pre-response"
+    },
     "session-start": {
-      "command": "node start-agents-system.js && node claude-cvperfect-integration.js",
+      "command": "node auto-session-init.js",
       "timeout": 15000,
-      "background": true,
-      "description": "Auto-start CVPerfect agents system and Claude integration (Playwright MCP auto-loads from global config)"
+      "background": false,
+      "description": "Auto-initialize all CVPerfect enhanced features including sequential thinking"
     },
     "task-execute": {
       "command": "node -e \"const {processTask} = require('./claude-cvperfect-integration'); processTask(process.argv[1]).then(r => console.log(JSON.stringify(r)));\"",

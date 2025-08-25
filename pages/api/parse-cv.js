@@ -5,6 +5,7 @@ import os from 'os'
 import pdfParse from 'pdf-parse'
 import mammoth from 'mammoth'
 import { PDFDocument } from 'pdf-lib'
+import { ErrorTypes, sendErrorResponse } from '../../lib/error-responses'
 
 export const config = {
   api: {
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json')
   
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return sendErrorResponse(res, ErrorTypes.METHOD_NOT_ALLOWED('POST'))
   }
 
   try {
@@ -31,10 +32,18 @@ export default async function handler(req, res) {
     })
 
     const [fields, files] = await form.parse(req)
-    const file = files.cv?.[0]
-
+    
+    // Handle multiple possible field names for file upload
+    const file = files.cv?.[0] || files.file?.[0] || files.upload?.[0]
+    
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' })
+      const availableFields = Object.keys(files)
+      return res.status(400).json({ 
+        error: 'Plik CV wymagany (PDF lub DOCX) / CV file required (PDF or DOCX)',
+        errorPL: 'Nie przesłano pliku CV. Wymagany plik w formacie PDF lub DOCX.',
+        errorEN: 'No CV file uploaded. Required file in PDF or DOCX format.',
+        debug: `Available fields: ${availableFields.join(', ')}`
+      })
     }
 
     const filePath = file.filepath

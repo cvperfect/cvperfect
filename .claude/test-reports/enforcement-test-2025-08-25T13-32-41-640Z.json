@@ -1,0 +1,79 @@
+{
+  "timestamp": "2025-08-25T13:32:41.641Z",
+  "summary": {
+    "totalTests": 8,
+    "passedTests": 8,
+    "failedTests": 0,
+    "successRate": "100.0%"
+  },
+  "results": [
+    {
+      "test": "Flag Detection",
+      "status": "PASS",
+      "expected": 4,
+      "actual": 4
+    },
+    {
+      "test": "Priority Ordering",
+      "status": "PASS",
+      "expected": "-ut first",
+      "actual": "-ut first"
+    },
+    {
+      "test": "Compliance Tracking",
+      "status": "PASS",
+      "expected": 3,
+      "actual": 3
+    },
+    {
+      "test": "Compliance Verification",
+      "status": "PASS",
+      "expected": "violation detected",
+      "actual": "violation detected"
+    },
+    {
+      "test": "Hook Script Existence",
+      "status": "PASS",
+      "expected": "file exists",
+      "actual": "file exists"
+    },
+    {
+      "test": "Settings Configuration",
+      "status": "PASS",
+      "expected": "enforcement enabled",
+      "actual": "enforcement enabled"
+    },
+    {
+      "test": "Unknown Flag Handling",
+      "status": "PASS",
+      "expected": 2,
+      "actual": 2
+    },
+    {
+      "test": "No Flags Input",
+      "status": "PASS",
+      "expected": 0,
+      "actual": 0
+    }
+  ],
+  "systemStats": {
+    "enforcement": {
+      "totalCommands": 3,
+      "flagsDetected": 10,
+      "flagsExecuted": 0,
+      "violationsCount": 0,
+      "complianceRate": "0.0%"
+    },
+    "compliance": {
+      "startTime": 1756128761637,
+      "totalCommands": 1,
+      "flagsRequired": 3,
+      "flagsExecuted": 2,
+      "violations": 1,
+      "complianceRate": 66.66666666666666,
+      "sessionDuration": 0,
+      "averageComplianceRate": "66.7%",
+      "violationRate": "100.0%"
+    }
+  }
+}

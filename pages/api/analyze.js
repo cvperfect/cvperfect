@@ -1,4 +1,5 @@
 import Groq from 'groq-sdk'
+import { withTimeout, calculateDynamicTimeout, processWithChunkedTimeout, TIMEOUTS } from '../../lib/timeout-utils'
 import { createClient } from '@supabase/supabase-js'
 import { authenticateUser, updateUserUsage } from '../../lib/auth'
 import { handleCORSPreflight } from '../../lib/cors'
@@ -309,27 +310,17 @@ PAMIĘTAJ:
       
       console.log(`📊 Split into ${chunks.length} chunks for processing`)
       
-      // Process each chunk and combine results
-      const optimizedChunks = []
-      
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i]
-        console.log(`🤖 Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`)
-        
-        try {
-          const optimizedChunk = await optimizeChunk(chunk, jobPosting, i === 0, photoData, preservePhotos)
-          optimizedChunks.push(optimizedChunk)
-          
-          // Rate limiting - small delay between chunks
-          if (i < chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-          }
-        } catch (chunkError) {
-          console.error(`❌ Error processing chunk ${i + 1}:`, chunkError)
-          // Fallback to original chunk if optimization fails
-          optimizedChunks.push(chunk)
-        }
+      // TIMEOUT: Process chunks with unified timeout system
+      const chunkProcessor = async (chunk, index) => {
+        console.log(`🤖 Processing chunk ${index + 1}/${chunks.length} (${chunk.length} chars)`)
+        return await optimizeChunk(chunk, jobPosting, index === 0, photoData, preservePhotos)
       }
+      
+      const optimizedChunks = await processWithChunkedTimeout(chunks, chunkProcessor, {
+        chunkTimeout: TIMEOUTS.CHUNK_PROCESSING,
+        delayBetweenChunks: 500, // Reduced delay
+        failFast: false // Continue on individual chunk failures
+      })
       
       optimizedCV = optimizedChunks.join('\n\n')
     } else {
@@ -528,12 +519,11 @@ Zwróć TYLKO zoptymalizowane CV zachowując oryginalny format.`
       stream: false
     })
     
-    // Timeout after 30 seconds
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Groq API timeout')), 30000)
-    )
+    // TIMEOUT: Dynamic timeout based on content size
+    const dynamicTimeout = calculateDynamicTimeout(cvText, 'ai')
+    console.log(`⏱️ Using dynamic timeout: ${dynamicTimeout}ms for CV length: ${cvText.length}`)
     
-    const completion = await Promise.race([groqPromise, timeoutPromise])
+    const completion = await withTimeout(groqPromise, dynamicTimeout, 'Groq API call')
 
     const optimizedText = completion.choices[0]?.message?.content
 

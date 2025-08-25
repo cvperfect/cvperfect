@@ -1,0 +1,66 @@
+import Stripe from 'stripe'
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+export default async function handler(req, res) {
+ if (req.method !== 'GET') {
+   return res.status(405).json({ message: 'Method not allowed' })
+ }
+ 
+ const { session_id } = req.query
+ 
+ if (!session_id) {
+   return res.status(400).json({ error: 'Session ID is required' })
+ }
+ 
+ try {
+   const session = await stripe.checkout.sessions.retrieve(session_id)
+   
+   if (session.payment_status === 'paid') {
+     // Try to load full CV data from saved session
+     let fullCvData = null
+     const fullSessionId = session.metadata?.fullSessionId
+     
+     if (fullSessionId) {
+       const fs = require('fs').promises
+       const path = require('path')
+       
+       try {
+         const sessionsDir = path.join(process.cwd(), '.sessions')
+         const sessionFile = path.join(sessionsDir, `${fullSessionId}.json`)
+         
+         // Check if file exists and read it
+         await fs.access(sessionFile)
+         const sessionData = await fs.readFile(sessionFile, 'utf8')
+         fullCvData = JSON.parse(sessionData)
+         
+         console.log('✅ Full CV data retrieved for session:', fullSessionId)
+       } catch (fileError) {
+         console.log('⚠️ Could not load full CV data:', fileError.message)
+       }
+     }
+     
+     return res.status(200).json({
+       success: true,
+       session: {
+         id: session.id,
+         metadata: session.metadata,
+         customer_email: session.customer_details?.email,
+         amount_total: session.amount_total,
+         // Include full CV data if available
+         fullCvData: fullCvData
+       }
+     })
+   } else {
+     return res.status(400).json({ 
+       success: false,
+       error: 'Payment not completed' 
+     })
+   }
+ } catch (error) {
+   console.error('Error retrieving session:', error)
+   return res.status(500).json({ 
+     success: false,
+     error: 'Failed to retrieve session' 
+   })
+ }
+}

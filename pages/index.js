@@ -100,6 +100,94 @@ const [errors, setErrors] = useState({});
 const [selectedPlan, setSelectedPlan] = useState('basic');
 const [sessionId, setSessionId] = useState(null);
 
+// Enhanced error and loading states
+const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+const [paymentError, setPaymentError] = useState(null);
+const [operationProgress, setOperationProgress] = useState({
+  message: '',
+  step: 0,
+  total: 0,
+  isVisible: false
+});
+const [networkError, setNetworkError] = useState(false);
+
+// Enhanced error handling utilities
+const showProgressStep = (message, step, total) => {
+  setOperationProgress({
+    message,
+    step,
+    total,
+    isVisible: true
+  });
+};
+
+const hideProgress = () => {
+  setOperationProgress(prev => ({ ...prev, isVisible: false }));
+};
+
+const handlePaymentError = (error, context = '') => {
+  console.error(`💥 Payment Error ${context}:`, error);
+  setPaymentError({
+    message: error.message || 'Wystąpił nieoczekiwany błąd',
+    context,
+    timestamp: Date.now(),
+    canRetry: !error.message?.includes('network') && !error.message?.includes('session')
+  });
+  setIsProcessingPayment(false);
+  hideProgress();
+};
+
+const clearErrors = () => {
+  setPaymentError(null);
+  setNetworkError(false);
+  setErrors({});
+};
+
+// Enhanced plan persistence with validation
+const persistPlanSelection = (plan, sessionId) => {
+  try {
+    // Dual storage with timestamps
+    const planData = {
+      plan,
+      sessionId,
+      timestamp: Date.now(),
+      validation: `plan_${plan}_${sessionId}`
+    };
+    
+    sessionStorage.setItem('selectedPlan', plan);
+    sessionStorage.setItem('planData', JSON.stringify(planData));
+    localStorage.setItem(`plan_${sessionId}`, JSON.stringify(planData));
+    
+    console.log('✅ Plan selection persisted:', planData);
+    return true;
+  } catch (error) {
+    console.warn('⚠️ Failed to persist plan selection:', error);
+    return false;
+  }
+};
+
+const validatePlanSelection = (sessionId) => {
+  try {
+    const sessionPlan = sessionStorage.getItem('selectedPlan');
+    const planData = JSON.parse(sessionStorage.getItem('planData') || '{}');
+    const backupPlan = JSON.parse(localStorage.getItem(`plan_${sessionId}`) || '{}');
+    
+    if (sessionPlan && planData.sessionId === sessionId) {
+      return sessionPlan;
+    } else if (backupPlan.sessionId === sessionId) {
+      // Restore from backup
+      sessionStorage.setItem('selectedPlan', backupPlan.plan);
+      console.log('🔄 Plan selection restored from backup:', backupPlan.plan);
+      return backupPlan.plan;
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn('⚠️ Plan validation failed:', error);
+    return null;
+  }
+};
+
 // Handle plan selection and payment
 const handlePlanSelect = async (plan) => {
   console.log('💳 [DEBUG] Plan selected:', plan);
@@ -111,30 +199,48 @@ const handlePlanSelect = async (plan) => {
     cvLength: savedCV ? savedCV.length : (currentCV ? currentCV.length : 0)
   });
   
+  // Clear previous errors and start processing
+  clearErrors();
   setSelectedPlan(plan);
+  setIsProcessingPayment(true);
+  showProgressStep('Przygotowywanie płatności...', 1, 5);
   
-  // Check if we have CV data
-  if (!formData.cvFile && !savedCV && !currentCV) {
-    console.log('❌ [DEBUG] No CV data found - showing alert');
-    showToast('Najpierw wgraj swoje CV!', 'error');
-    setShowMainModal(true);
-    return;
-  }
+  try {
+    // Check if we have CV data
+    if (!formData.cvFile && !savedCV && !currentCV) {
+      console.log('❌ [DEBUG] No CV data found - showing alert');
+      setPaymentError({
+        message: 'Najpierw wgraj swoje CV!',
+        context: 'validation',
+        canRetry: false
+      });
+      setShowMainModal(true);
+      setIsProcessingPayment(false);
+      hideProgress();
+      return;
+    }
 
-  // Generate session ID
-  const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  setSessionId(newSessionId);
-  
-  // DUAL STORAGE STRATEGY: Save CV data to both sessionStorage AND localStorage
-  const cvContent = savedCV || currentCV || '';
-  const timestamp = Date.now();
-  const localStorageKey = `cvperfect_cv_${newSessionId}`;
-  
-  // SessionStorage (for current session)
-  sessionStorage.setItem('pendingCV', cvContent);
-  sessionStorage.setItem('pendingEmail', formData.email || userEmail);
-  sessionStorage.setItem('pendingJob', jobPosting);
-  sessionStorage.setItem('pendingPlan', plan);
+    // Generate session ID
+    showProgressStep('Generowanie sesji...', 2, 5);
+    const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setSessionId(newSessionId);
+    
+    // Enhanced plan persistence with validation
+    if (!persistPlanSelection(plan, newSessionId)) {
+      throw new Error('Nie udało się zapisać wyboru planu');
+    }
+    
+    // DUAL STORAGE STRATEGY: Save CV data to both sessionStorage AND localStorage
+    showProgressStep('Zapisywanie danych...', 3, 5);
+    const cvContent = savedCV || currentCV || '';
+    const timestamp = Date.now();
+    const localStorageKey = `cvperfect_cv_${newSessionId}`;
+    
+    // SessionStorage (for current session)
+    sessionStorage.setItem('pendingCV', cvContent);
+    sessionStorage.setItem('pendingEmail', formData.email || userEmail);
+    sessionStorage.setItem('pendingJob', jobPosting);
+    sessionStorage.setItem('pendingPlan', plan);
   
   // LocalStorage (for persistence across browser sessions - 24h TTL)
   const persistentData = {
@@ -160,14 +266,15 @@ const handlePlanSelect = async (plan) => {
     // Continue with sessionStorage only
   }
   
-  // Handle template selection logic
-  if (plan === 'basic') {
-    // Basic plan uses simple template by default - proceed directly to payment
-    sessionStorage.setItem('selectedTemplate', 'simple');
-    
-    // Save to backend and proceed to payment
-    try {
-      console.log('💾 [DEBUG] Saving session to backend...', {
+    // Handle template selection logic
+    if (plan === 'basic') {
+      // Basic plan uses simple template by default - proceed directly to payment
+      sessionStorage.setItem('selectedTemplate', 'simple');
+      
+      try {
+        // Save to backend and proceed to payment
+        showProgressStep('Zapisywanie sesji...', 4, 5);
+        console.log('💾 [DEBUG] Saving session to backend...', {
         sessionId: newSessionId,
         cvLength: cvContent.length,
         email: formData.email || userEmail,
@@ -189,8 +296,9 @@ const handlePlanSelect = async (plan) => {
       });
       
       if (!saveResponse.ok) {
-        console.error('❌ [DEBUG] Failed to save session, status:', saveResponse.status);
-        showToast('Błąd podczas zapisywania sesji', 'error');
+        const errorText = await saveResponse.text();
+        console.error('❌ [DEBUG] Failed to save session, status:', saveResponse.status, errorText);
+        throw new Error(`Błąd zapisywania sesji: ${saveResponse.status}`);
       } else {
         console.log('✅ [DEBUG] Session saved successfully');
         
@@ -204,6 +312,7 @@ const handlePlanSelect = async (plan) => {
       console.log('💾 [SESSION FIX] Saved currentSessionId to sessionStorage:', newSessionId);
       
       // Create Stripe checkout session
+      showProgressStep('Tworzenie płatności...', 5, 5);
       console.log('💳 [DEBUG] Creating Stripe checkout session...', {
         plan: plan,
         email: formData.email || userEmail,
@@ -236,6 +345,10 @@ const handlePlanSelect = async (plan) => {
         const { sessionId: stripeSessionId, url } = await checkoutResponse.json();
         console.log('🎯 [DEBUG] Stripe checkout response received:', { stripeSessionId, hasUrl: !!url });
         
+        // Success! Hide progress and redirect
+        hideProgress();
+        setIsProcessingPayment(false);
+        
         // Redirect to Stripe checkout
         if (url) {
           console.log('🚀 [DEBUG] Redirecting to Stripe checkout URL');
@@ -247,14 +360,14 @@ const handlePlanSelect = async (plan) => {
           await stripe.redirectToCheckout({ sessionId: stripeSessionId });
         }
       } else {
-        console.error('❌ [DEBUG] Checkout response not OK, status:', checkoutResponse.status);
         const errorText = await checkoutResponse.text();
+        console.error('❌ [DEBUG] Checkout response not OK, status:', checkoutResponse.status);
         console.error('❌ [DEBUG] Checkout error details:', errorText);
-        throw new Error(`Failed to create checkout session: ${checkoutResponse.status}`);
+        throw new Error(`Nie udało się utworzyć sesji płatności: ${checkoutResponse.status}`);
       }
       
     } catch (error) {
-      console.error('💥 [DEBUG] Payment error caught:', error);
+      handlePaymentError(error, 'basic-plan-payment');
       showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
     }
   } else {
@@ -293,6 +406,8 @@ const handlePlanSelect = async (plan) => {
         
         if (!saveResponse.ok) {
           console.error('❌ [DEBUG] Failed to save session for Gold/Premium, status:', saveResponse.status);
+          hideProgress();
+          setIsProcessingPayment(false);
           showToast('Błąd podczas zapisywania sesji', 'error');
           return;
         } else {
@@ -334,6 +449,8 @@ const handlePlanSelect = async (plan) => {
           // Redirect to Stripe checkout
           if (url) {
             console.log('🚀 [DEBUG] Redirecting to Stripe checkout URL for Gold/Premium');
+            hideProgress();
+            setIsProcessingPayment(false);
             window.location.href = url;
           } else {
             console.log('🔄 [DEBUG] Using fallback Stripe redirect for Gold/Premium');
@@ -345,11 +462,15 @@ const handlePlanSelect = async (plan) => {
           console.error('❌ [DEBUG] Gold/Premium checkout response not OK, status:', checkoutResponse.status);
           const errorText = await checkoutResponse.text();
           console.error('❌ [DEBUG] Gold/Premium checkout error details:', errorText);
+          hideProgress();
+          setIsProcessingPayment(false);
           throw new Error(`Failed to create checkout session: ${checkoutResponse.status}`);
         }
         
       } catch (error) {
         console.error('💥 [DEBUG] Gold/Premium payment error caught:', error);
+        hideProgress();
+        setIsProcessingPayment(false);
         showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
       }
       
@@ -384,7 +505,10 @@ const handlePlanSelect = async (plan) => {
         
         if (!saveResponse.ok) {
           console.error('❌ [DEBUG] Failed to save session, status:', saveResponse.status);
+          hideProgress();
+          setIsProcessingPayment(false);
           showToast('Błąd podczas zapisywania sesji', 'error');
+          return;
         } else {
           console.log('✅ [DEBUG] Session saved successfully');
           
@@ -405,18 +529,30 @@ const handlePlanSelect = async (plan) => {
           if (response.ok) {
             const { url } = await response.json();
             console.log('🚀 [DEBUG] Redirecting to Stripe:', url);
+            hideProgress();
+            setIsProcessingPayment(false);
             window.location.href = url;
           } else {
             console.error('❌ [DEBUG] Checkout session creation failed:', response.status);
+            hideProgress();
+            setIsProcessingPayment(false);
             showToast('Błąd podczas tworzenia sesji płatności', 'error');
           }
         }
         
       } catch (error) {
         console.error('💥 [DEBUG] Payment error caught:', error);
+        hideProgress();
+        setIsProcessingPayment(false);
         showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
       }
     }
+  }
+  
+  } catch (error) {
+    // Overall function error handler
+    handlePaymentError(error, 'handlePlanSelect');
+    showToast(`Wystąpił błąd podczas wyboru planu: ${error.message}`, 'error');
   }
 };
 
@@ -835,7 +971,7 @@ const typingPhrases =currentLanguage === 'pl'
   ? [
   'optymalizacji CV',
   'analizie słów kluczowych',
-  'personalizacji treści',
+  'personalizacji CV',
   'analizie ATS',
   'konkretnym rezultatom',
   'czystemu formatowaniu',
@@ -1112,6 +1248,23 @@ const closeModal = () => {
   setShowMainModal(false);
   setModalStep(1);
   document.body.style.overflow = 'auto';
+  
+  // Clear form data from sessionStorage for privacy
+  sessionStorage.removeItem('pendingCV');
+  sessionStorage.removeItem('pendingEmail');
+  sessionStorage.removeItem('pendingJob');
+  sessionStorage.removeItem('pendingPlan');
+  sessionStorage.removeItem('selectedTemplate');
+  sessionStorage.removeItem('pendingPhoto');
+  
+  // Reset form state
+  setFormData({
+    email: '',
+    acceptTerms: false,
+    cvFile: null
+  });
+  
+  console.log('🧹 Modal closed - cleared sessionStorage and form data for privacy');
 };
 
 const validateStep1 = () => {
@@ -1413,7 +1566,7 @@ const floatingNotifications = currentLanguage === 'pl'
     }
 
    showNotification()
-    const interval = setInterval(showNotification, 12000)
+    const interval = setInterval(showNotification, 45000)
     return () => clearInterval(interval)
   }, [])
 
@@ -1603,6 +1756,24 @@ style={{
             </div>
           {/* Desktop Language Switcher */}
           <div className="desktop-language-switcher">
+            <button 
+              className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+              onClick={() => setCurrentLanguage('pl')}
+              title="Polski"
+            >
+              🇵🇱 PL
+            </button>
+            <button 
+              className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+              onClick={() => setCurrentLanguage('en')}
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+          
+          {/* Mobile Language Switcher - Always Visible on Mobile */}
+          <div className="mobile-language-switcher">
             <button 
               className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
               onClick={() => setCurrentLanguage('pl')}
@@ -2093,7 +2264,7 @@ style={{
 
 {/* NOWY MODAL - 2 KROKI */}
 {showMainModal && (
-  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 99998}}>
+  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 99997}}>
     <div className="modal-content optimize-modal" onClick={(e) => e.stopPropagation()}>
       <button className="modal-close" onClick={closeModal}>×</button>
       
@@ -2136,6 +2307,62 @@ style={{
       </div>
 
       <div className="modal-body">
+        {/* Payment Progress Indicator */}
+        {operationProgress.isVisible && (
+          <div className="payment-progress-overlay">
+            <div className="payment-progress-content">
+              <div className="payment-progress-spinner"></div>
+              <div className="payment-progress-text">
+                <h4>{operationProgress.message}</h4>
+                <div className="payment-progress-bar">
+                  <div 
+                    className="payment-progress-fill"
+                    style={{
+                      width: `${(operationProgress.step / operationProgress.total) * 100}%`
+                    }}
+                  ></div>
+                </div>
+                <p>{operationProgress.step} z {operationProgress.total}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Error Display */}
+        {paymentError && (
+          <div className="payment-error-banner">
+            <div className="payment-error-content">
+              <div className="payment-error-icon">⚠️</div>
+              <div className="payment-error-text">
+                <h4>Wystąpił błąd</h4>
+                <p>{paymentError.message}</p>
+                {paymentError.context && (
+                  <small>Kontekst: {paymentError.context}</small>
+                )}
+              </div>
+              <div className="payment-error-actions">
+                {paymentError.canRetry && (
+                  <button 
+                    className="payment-retry-button"
+                    onClick={() => {
+                      clearErrors();
+                      handlePlanSelect(selectedPlan);
+                    }}
+                  >
+                    Spróbuj ponownie
+                  </button>
+                )}
+                <button 
+                  className="payment-error-close"
+                  onClick={clearErrors}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {modalStep === 1 ? (
           <div className="step-form">
             {/* EMAIL */}
@@ -2315,13 +2542,21 @@ style={{
                   <li>✅ Jednorazowa płatność</li>
                 </ul>
                 <button 
-                  className="select-plan-button" 
+                  className={`select-plan-button ${isProcessingPayment ? 'processing' : ''}`}
                   onClick={() => handlePlanSelect('basic')}
+                  disabled={isProcessingPayment}
                   data-plan="basic"
                   data-price="19.99"
                   data-testid="plan-basic"
                 >
-                  Wybierz Basic
+                  {isProcessingPayment && selectedPlan === 'basic' ? (
+                    <>
+                      <span className="button-spinner"></span>
+                      Przetwarzanie...
+                    </>
+                  ) : (
+                    'Wybierz Basic'
+                  )}
                 </button>
               </div>
 
@@ -2337,13 +2572,21 @@ style={{
                   <li>✅ PDF + DOCX</li>
                 </ul>
                 <button 
-                  className="select-plan-button gold" 
+                  className={`select-plan-button gold ${isProcessingPayment ? 'processing' : ''}`}
                   onClick={() => handlePlanSelect('gold')}
+                  disabled={isProcessingPayment}
                   data-plan="gold"
                   data-price="49"
                   data-testid="plan-gold"
                 >
-                  Wybierz Gold
+                  {isProcessingPayment && selectedPlan === 'gold' ? (
+                    <>
+                      <span className="button-spinner"></span>
+                      Przetwarzanie...
+                    </>
+                  ) : (
+                    'Wybierz Gold'
+                  )}
                 </button>
               </div>
 
@@ -2358,13 +2601,21 @@ style={{
                   <li>✅ Anuluj w każdej chwili</li>
                 </ul>
                 <button 
-                  className="select-plan-button premium" 
+                  className={`select-plan-button premium ${isProcessingPayment ? 'processing' : ''}`}
+                  disabled={isProcessingPayment}
                   onClick={() => handlePlanSelect('premium')}
                   data-plan="premium"
                   data-price="79"
                   data-testid="plan-premium"
                 >
-                  Wybierz Premium
+                  {isProcessingPayment && selectedPlan === 'premium' ? (
+                    <>
+                      <span className="button-spinner"></span>
+                      Przetwarzanie...
+                    </>
+                  ) : (
+                    'Wybierz Premium'
+                  )}
                 </button>
               </div>
             </div>
@@ -3153,6 +3404,13 @@ html {
   box-shadow: 0 4px 15px rgba(120, 80, 255, 0.3);
 }
 
+/* Mobile Language Switcher - Always Visible */
+.mobile-language-switcher {
+  display: none;
+  gap: 8px;
+  margin-right: 15px;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   /* Hide desktop language switcher on mobile */
@@ -3160,7 +3418,22 @@ html {
     display: none !important;
   }
   
-  /* Mobile language switcher styles */
+  /* Show mobile language switcher */
+  .mobile-language-switcher {
+    display: flex !important;
+    z-index: 1000;
+  }
+  
+  /* Mobile language switcher buttons */
+  .mobile-language-switcher .lang-btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    min-height: 36px !important;
+    min-width: 50px !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Mobile language switcher styles for menu */
   .language-switcher {
     margin-right: 0;
     padding-right: 0;
@@ -3181,6 +3454,50 @@ html {
     min-height: 44px !important;
     min-width: 60px !important;
     font-size: 15px !important;
+  }
+}
+
+/* ISSUE #6 FIX: Enhanced Mobile Language Switcher for Small Viewports (375px) */
+@media (max-width: 480px) {
+  /* Always show mobile language switcher on small screens */
+  .mobile-language-switcher {
+    display: flex !important;
+    position: relative;
+    z-index: 1000;
+    margin-right: 10px;
+  }
+  
+  /* Compact mobile buttons for 375px */
+  .mobile-language-switcher .lang-btn {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    min-height: 32px !important;
+    min-width: 45px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Ensure language switcher is always visible in mobile menu */
+  .nav-links.show .language-switcher {
+    display: flex !important;
+    z-index: 999999999999;
+    margin-bottom: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  /* Enhanced touch targets for menu language switcher */
+  .nav-links .language-switcher .lang-btn {
+    min-height: 48px !important; /* WCAG 2.1 compliant touch target */
+    min-width: 80px !important;
+    font-size: 16px !important; /* Improved readability */
+    padding: 14px 24px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
   }
 }
 
@@ -8090,6 +8407,175 @@ navigation { position: fixed; top:0; left:0; right:0; z-index:99999999999 !impor
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
+}
+
+/* Payment Progress & Error Handling Styles */
+.payment-progress-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  border-radius: 20px;
+}
+
+.payment-progress-content {
+  text-align: center;
+  color: white;
+  max-width: 300px;
+}
+
+.payment-progress-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(120, 80, 255, 0.3);
+  border-top: 3px solid #7850ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.payment-progress-text h4 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.payment-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(120, 80, 255, 0.2);
+  border-radius: 4px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.payment-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7850ff, #a855f7);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.payment-progress-text p {
+  margin: 10px 0 0 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.payment-error-banner {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  overflow: hidden;
+}
+
+.payment-error-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+}
+
+.payment-error-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.payment-error-text {
+  flex-grow: 1;
+}
+
+.payment-error-text h4 {
+  margin: 0 0 5px 0;
+  color: #ef4444;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.payment-error-text p {
+  margin: 0 0 5px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.payment-error-text small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+.payment-error-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.payment-retry-button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-retry-button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.payment-error-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.payment-error-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Button Loading States */
+.select-plan-button.processing {
+  opacity: 0.7;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.select-plan-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
 }
 
 .template-card {

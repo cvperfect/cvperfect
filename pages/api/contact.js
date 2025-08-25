@@ -1,8 +1,9 @@
 import nodemailer from 'nodemailer'
+import { ErrorTypes, sendErrorResponse } from '../../lib/error-responses'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
+    return sendErrorResponse(res, ErrorTypes.METHOD_NOT_ALLOWED('POST'))
   }
 
   const { name, email, subject, message, isPremium } = req.body
@@ -40,9 +41,13 @@ const transporter = nodemailer.createTransport({
       `
     })
 
-    res.status(200).json({ success: true })
+    res.status(200).json({ 
+      success: true, 
+      message: 'Email sent successfully',
+      timestamp: new Date().toISOString()
+    })
   } catch (error) {
     console.error('Email error:', error)
-    res.status(500).json({ error: 'Błąd wysyłania' })
+    return sendErrorResponse(res, ErrorTypes.EXTERNAL_SERVICE_ERROR('email service'))
   }
 }

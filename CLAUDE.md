@@ -4,21 +4,65 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📚 CRITICAL: Read CLAUDE_BEST_PRACTICES.md First
 Before starting any significant coding session, review `CLAUDE_BEST_PRACTICES.md` which contains:
-- Best practices for error prevention
-- Boundaries where Claude may fail
-- Sub-agent system and task delegation
-- Context management and workflow automation
-- CVPerfect-specific techniques
+- **Context Management**: Use `/clear` at 70% context, avoid auto-compression
+- **Thinking Modes**: `ultrathink` for maximum analysis budget
+- **Error Boundaries**: Claude fails at compilation, large files, state persistence
+- **Sub-agent System**: Delegate specialized tasks to reduce main context usage
+- **TodoWrite**: Essential for multi-step tasks (3+ steps)
+- **Test-Driven Development**: Claude's most effective anti-hallucination method
+- **CVPerfect-specific techniques**: 40-agent integration, regression prevention
+
+## ⚠️ CRITICAL: CLAUDE VERIFICATION PROTOCOL
+**PROBLEM (2025 Research):** 66% developerów spędza więcej czasu naprawiając "prawie-poprawny" kod AI
+**SOLUTION:** TRUST BUT VERIFY - zawsze testuj przed przyjęciem "naprawki"
+
+### MANDATORY VERIFICATION STEPS:
+```bash
+# NIGDY nie ufaj że coś jest naprawione bez testów
+npm run lint                          # 1. Linting
+npm run build                         # 2. Build success  
+node test-specific-fix.js             # 3. Test konkretnej naprawki
+node test-regression-suite.js         # 4. Regression tests
+git commit -m "verify: fix tested and working"  # 5. Commit tylko po verification
+```
 
 ## 🚀 Quick Start Guide
 
 ### Essential Commands
 ```bash
-npm run dev              # Start development server (localhost:3000)
-npm run build            # Build production bundle (REQUIRED before deployment)
-npm run lint             # ESLint validation (TypeScript-aware)
+npm run dev              # Start development server (localhost:3000, use :3001 if 3000 occupied)
+npm run build            # Build production bundle (REQUIRED before deployment)  
+npm run start            # Production server start
+npm run lint             # ESLint validation (next/core-web-vitals + next/typescript)
 npm run mcp-puppeteer    # Browser automation for testing
-node start-agents-system.js  # Auto-start CVPerfect 40-agent system
+
+# Agent System Commands  
+node start-agents-system.js           # Auto-start CVPerfect 40-agent system
+node start-debug-agents.js            # 6-agent debug system (3 basic + 3 masters)
+
+# Testing Commands (custom test files)
+node test-comprehensive-website.js    # Full UI/UX validation
+node test-all-success-functions.js    # Template system verification (6 core functions)
+node test-agents-integration.js       # CVPerfect agents system test
+node test-debug-agents.js             # Debug system validation
+node test-session-recovery.js         # Session persistence testing
+
+# Hidden Commands (Community Discovered 2024-2025)
+/history 2024-12-01                   # Show all conversations from specific date
+/export cookbook                      # Export best prompts to markdown file
+/analyze @src --complexity           # Code complexity analysis for src folder
+/security @api                       # Security audit all API endpoints  
+/diagram @components                  # Auto-generate component diagrams
+/benchmark @utils/*.ts               # Performance benchmark TypeScript files
+/deps @package.json                  # Dependency analysis and conflicts check
+/terminal-setup                      # Fix Shift+Enter for newlines (one-time)
+
+# Terminal Productivity Alias
+alias cc='claude --dangerously-skip-permissions'  # Quick Claude start (add to ~/.bashrc)
+
+# Windows-specific Commands
+taskkill /f /im node.exe              # Kill all Node processes (Windows)
+netstat -ano | findstr :3000          # Check port 3000 usage (Windows)
 ```
 
 ### Development Workflow
@@ -26,6 +70,8 @@ node start-agents-system.js  # Auto-start CVPerfect 40-agent system
 2. **Before commits**: Always run `npm run build` && `npm run lint`
 3. **Testing sequence**: lint → build → test scripts → commit
 4. **Context management**: Use `/clear` when context > 70%
+5. **Regression prevention**: Enabled via `.claude/settings.json` hooks
+6. **Agent integration**: CVPerfect agents auto-start on session initialization
 
 
 ## Project Overview
@@ -66,6 +112,14 @@ node start-agents-system.js  # Auto-start CVPerfect 40-agent system
 - `/api/demo-optimize` - Testing AI endpoint (no auth required)
 - `/api/contact` - Email notifications via Nodemailer
 
+**Additional Endpoints:**
+- `/api/cleanup-sessions` - Automated session cleanup and maintenance
+- `/api/recover-session` - Session recovery for failed transactions
+- `/api/session-metrics` - Session analytics and usage tracking
+- `/api/get-session` - Alternative session retrieval endpoint
+- `/api/stripe-proxy` - Stripe API proxy for secure transactions
+- `/api/webhook` - Generic webhook handler for third-party integrations
+
 **Critical Data Flow:**
 1. User uploads CV → `index.js` → `/api/parse-cv` → `/api/save-session`
 2. Payment → Stripe Checkout → `/api/stripe-webhook` → Session update
@@ -73,9 +127,17 @@ node start-agents-system.js  # Auto-start CVPerfect 40-agent system
 
 **External Dependencies:**
 - Groq SDK (Llama 3.1-70B for AI processing)
-- Supabase (user management, usage tracking)
+- Supabase (user management, usage tracking)  
 - Stripe (payment processing, webhooks)
 - Nodemailer (email delivery)
+- DOMPurify (XSS protection and input sanitization)
+- Mammoth (DOCX file processing)
+- PDF-Parse (PDF text extraction)
+- Canvas-Confetti (success animations)
+- HTML2Canvas (PDF export generation)
+- Framer Motion (page transitions, modal animations)
+- GSAP (timeline animations, scroll triggers)
+- Puppeteer (browser automation via MCP)
 
 ### Key Technical Patterns
 
@@ -247,7 +309,7 @@ components/
 ## 🚀 Current Development Status (August 2025)
 
 ### ⚡ Payment Flow Optimization - Branch: `hotfix/payment-optimization-fix`
-**Status: IN PROGRESS**
+**Status: COMPLETED - SUCCESS PAGE INFINITE LOOP RESOLVED**
 
 **Recent Accomplishments:**
 - ✅ **Complete Payment Flow Fixed**: All plans (Basic, Gold, Premium) now working correctly
@@ -275,6 +337,21 @@ components/
 - ✅ Template System (7 templates, plan-based access)
 - ✅ Export Functions (PDF, DOCX, Email)
 - ✅ Session Data Persistence
+
+**New Security Infrastructure (`lib/` directory):**
+- `lib/auth.js` - Authentication middleware and session validation
+- `lib/cors.js` - CORS policies for cross-origin request protection
+- `lib/validation.js` - Input validation and sanitization utilities
+- `lib/error-responses.js` - Standardized error handling and logging
+- `lib/timeout-utils.js` - Request timeout and rate limiting protection
+- `lib/request-limits.js` - API rate limiting and abuse prevention
+- `lib/email-sender.js` - Secure email delivery with templates
+- `lib/email-templates.js` - Professional email templates for notifications
+
+**Enhanced Error Handling:**
+- `components/ErrorBoundary.js` - React error boundary for crash prevention
+- Comprehensive error logging and user-friendly error messages
+- Graceful fallbacks for API failures and timeout scenarios
 
 ## 🔧 FAZA DEBUG SUCCESS.JS - SIERPIEŃ 2025
 
@@ -327,12 +404,13 @@ components/
 - Prawdziwe CV (sess_1755865667776_22z3osqrw) testowane i działa
 - Server na localhost:3001 (port 3000 zajęty)
 
-### 🚨 CURRENT DEBUGGING STATUS (August 2025)
-**Template Loading Issue Detected:**
-- Debug logs show `hasFullContent: false` in CV Display component
-- Template receives no data, shows loading state instead of CV content
-- Issue appears to be in data flow from session to UI components
-- Server running on localhost:3001 due to port 3000 being occupied
+### ✅ CURRENT STATUS (August 2025)
+**Success Page Session ID Infinite Loop - RESOLVED:**
+- ✅ **Fixed**: Success page session ID infinite loop issue completely resolved (commit c097ae3)
+- ✅ **Working**: Complete payment flow for all plans (Basic, Gold, Premium)
+- ✅ **Fixed**: Template selection infinite loop for Gold/Premium plans
+- ✅ **Stable**: Server running on localhost:3001 due to port 3000 being occupied
+- ✅ **All Systems**: CV upload, payment processing, AI optimization, template rendering, exports all functional
 
 ## 🎯 NEW: ADVANCED DEBUGGING MASTERS (August 2025)
 
@@ -513,3 +591,190 @@ git branch -D fix/[branch-name]     # Delete failed branch
 - Tests run automatically on file changes to critical paths
 - Snapshot comparison after each working session  
 - Daily regression reports for accumulated changes
+
+## 🛑 CLAUDE ANTI-HALLUCINATION SYSTEM
+
+### PROBLEM IDENTIFIED (2024-2025 Research):
+- **Claude może "halucynować"** - produkować kod który wygląda poprawnie ale jest błędny
+- **False Claims**: Claude czasami mówi że wysłał email lub naprawił kod, mimo że tego nie zrobił
+- **"Almost Right" Code**: 66% developerów spędza więcej czasu naprawiając kod AI niż pisząc od nowa
+
+### ANTI-HALLUCINATION VERIFICATION PROTOCOL:
+
+```bash
+# PRZED zaakceptowaniem jakiejkolwiek "naprawki" od Claude:
+
+echo "🔍 STEP 1: VERIFY CLAIMS"
+# Sprawdź czy naprawka faktycznie działa
+npm run lint 2>&1 | tee verification.log
+npm run build 2>&1 | tee -a verification.log  
+node test-specific-functionality.js 2>&1 | tee -a verification.log
+
+echo "🔍 STEP 2: TEST MANUALLY"
+# Otwórz browser i przetestuj funkcjonalność ręcznie
+start http://localhost:3001
+# Wykonaj konkretne kroki które miały być naprawione
+
+echo "🔍 STEP 3: CHECK FOR REGRESSIONS" 
+# Upewnij się że naprawka nie zepsuła czegoś innego
+node test-comprehensive-website.js
+node test-all-success-functions.js
+
+echo "🔍 STEP 4: DOCUMENT VERIFICATION"
+git add .
+git commit -m "✅ VERIFIED: [opis naprawki] tested and working
+
+- Manual test: ✅ [konkrety test]  
+- Automated tests: ✅ Pass
+- Regression tests: ✅ Pass
+- Build status: ✅ Success"
+```
+
+### HALLUCINATION DETECTION QUESTIONS:
+```markdown
+# Zadaj Claude te pytania aby wykryć hallucination:
+1. "How confident are you about that fix?" 
+2. "What's your source for this solution?"
+3. "Can you walk me through exactly what changed?"
+4. "What could go wrong with this fix?"
+5. "How can I test if this actually works?"
+```
+
+### RED FLAGS - NIGDY NIE UFAJ jeśli Claude:
+- ❌ Mówi "naprawione" bez pokazania konkretnego kodu
+- ❌ Twierdzi że wysłał email lub wykonał akcję zewnętrzną  
+- ❌ Podaje linki które nie działają
+- ❌ Mówi "to powinno działać" zamiast "przetestuj to tak..."
+- ❌ Nie potrafi wyjaśnić dlaczego jego rozwiązanie zadziała
+- ❌ Ignoruje kontekst który wcześniej podałeś
+
+### SAFE CLAUDE INTERACTION PATTERN:
+```markdown
+## ✅ GOOD REQUEST:
+"Fix the infinite loop in pages/success.js:342 in function fetchUserDataFromSession. 
+Context: CV data not loading, API returns 200 but UI shows loading.
+Expected: CV displays in template after API call.
+I tried: Adding console.log, checked network tab.
+Please show specific code changes and explain how to test the fix."
+
+## ❌ BAD REQUEST:  
+"Fix this code" (bez kontekstu - prawie zawsze prowadzi do hallucination)
+```
+
+## 🚀 GAME-CHANGING FEATURES 2024-2025
+
+### **1. HIDDEN COMMANDS** (Community Discovered)
+**Game Changer:** Ukryte funkcje Claude Code które zwiększają produktywność o 300%
+
+```bash
+# Historical & Export Commands
+/history 2024-12-01        # Pokaż wszystkie rozmowy z konkretnej daty
+/export cookbook           # Eksportuj najlepsze prompty do pliku markdown
+
+# Analysis & Security Commands  
+/analyze @src --complexity # Analiza złożoności kodu w całym folderze src
+/security @api            # Security audit wszystkich API endpoints
+/diagram @components      # Generuj diagramy komponentów automatycznie
+/benchmark @utils/*.ts    # Performance benchmarking plików TypeScript
+/deps @package.json       # Analiza zależności i konflikty w package.json
+
+# Terminal Productivity
+/terminal-setup           # Naprawia Shift+Enter dla nowych linii (jednorazowe)
+```
+
+### **2. THE 3-FILE RULE** (Context Optimization)
+**Game Changer:** Paradoks kontekstu - więcej NIE znaczy lepiej
+
+```markdown
+## ZASADA:
+- ZAWSZE podawaj MAX 3 pliki naraz do Claude
+- Więcej kontekstu = GORSZA jakość odpowiedzi  
+- "Context isn't better—it's noise that degrades response quality"
+
+## PRZYKŁAD POPRAWNY:
+"Napraw bug w pages/success.js:342, sprawdź też lib/session.js:23 i package.json"
+
+## PRZYKŁAD ZŁY:  
+Podanie 10 plików naraz - Claude się "zagubi" w kontekście
+```
+
+### **3. PARALLEL SUB-AGENTS WORKFLOW** 
+**Game Changer:** 300% wzrost produktywności (oficjalne dane Anthropic)
+
+```bash
+# Setup dla parallel workflow
+# 1. Utwórz 2 klony tego samego repo dla izolacji
+git clone . ../cvperfect-debug
+git clone . ../cvperfect-feature
+
+# 2. W każdym klonie uruchom innego Claude agenta
+# Repo 1: Agent debugujący (fixing bugs)
+# Repo 2: Agent implementujący (new features)
+
+# 3. Równoległa praca bez konfliktów
+# Sub-agent 1: "Debug infinite loop w success.js" 
+# Sub-agent 2: "Implement new payment flow"
+# Sub-agent 3: "Write tests dla nowych funkcji"
+```
+
+### **4. MODEL CONTEXT PROTOCOL (MCP) - Full Expansion**
+**Game Changer:** "USB-C dla AI" - podłącz Claude do wszystkiego
+
+```markdown
+## RÓŻNICA: Co masz teraz vs co możesz mieć
+
+### TERAZ (MCP Puppeteer):
+- Claude kontroluje tylko przeglądarkę
+- Dostęp tylko do lokalnych plików
+
+### Z PEŁNYM MCP:
+- Claude czyta z bazy PostgreSQL/MySQL
+- Wysyła wiadomości na Slack  
+- Commituje kod na GitHub
+- Czyta z Google Drive/Gmail
+- Integracja z dowolnym API
+
+## DOSTĘPNE MCP SERVERS (2024-2025):
+@modelcontextprotocol/server-postgres    # Baza danych SQL
+@modelcontextprotocol/server-github      # GitHub integration  
+@modelcontextprotocol/server-slack       # Slack messaging
+@modelcontextprotocol/server-gdrive      # Google Drive files
+@modelcontextprotocol/server-gmail       # Email access
+```
+
+### **5. PRODUCTIVITY MULTIPLIERS**
+
+```bash
+# Terminal Productivity Alias (dodaj do ~/.bashrc lub ~/.zshrc)
+alias cc='claude --dangerously-skip-permissions'
+# Teraz piszesz tylko: cc
+
+# Quick Commands dla CVPerfect
+alias cvdev='cd /c/Users/czupa/OneDrive/Pulpit/cvperfect && npm run dev'
+alias cvtest='npm run lint && npm run build && node test-all-success-functions.js'
+alias cvcommit='npm run lint && npm run build && git add . && git commit'
+
+# Parallel Workflow Templates
+alias cvclone1='git clone . ../cvperfect-debug && cd ../cvperfect-debug'  
+alias cvclone2='git clone . ../cvperfect-feature && cd ../cvperfect-feature'
+```
+
+## 📊 LATEST MODEL PERFORMANCE (2025)
+
+### **Claude Opus 4.1** - State-of-the-Art Coding Performance
+- **SWE-bench Score:** 74.5% (najwyższy w branży, wzrost z 72.5%)
+- **Release:** August 2025
+- **Improvement:** Lepsze reasoning, agentic tasks, real-world coding
+- **Integration:** GitHub Copilot używa Claude Sonnet 4 jako engine
+
+### **Claude Sonnet 4** - Extended Context Window  
+- **Context Window:** 1 milion tokenów = 750,000 słów
+- **Equivalence:** Cały "Lord of the Rings" trilogy lub 75,000 linii kodu
+- **Performance:** 72.7% na SWE-bench
+- **Capability:** Parallel tool use, improved memory, better instruction following
+
+### **Industry Adoption Stats:**
+- **User Growth:** 300% wzrost aktywnych użytkowników Claude Code
+- **Revenue Growth:** 5.5x wzrost przychodów z Claude Code  
+- **Enterprise Clients:** Rakuten, Figma, Intercom używają Claude Code
+- Gdy nie mozesz czegos przetestowac - napisz ze nie mozesz czegos przetestowac, zamiast pisac  ze nie dziala.

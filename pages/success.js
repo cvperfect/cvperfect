@@ -383,13 +383,21 @@ function Success() {
             await fetchUserDataFromSession(lastSuccessSessionId)
             return // Exit early if successful
           } else {
-            // Generate random fallback if no saved session ID
-            fallbackSessionId = `fallback_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-            console.log('🚑 Generated fallback session ID:', fallbackSessionId)
+            // No valid session found - show error instead of generating fallback
+            console.log('❌ No valid session found - redirecting to main page')
             
-            // Save the fallback session ID for future use
-            sessionStorage.setItem('currentSessionId', fallbackSessionId)
-            console.log('💾 Saved fallback session ID to sessionStorage')
+            addNotification({
+              type: 'error',
+              title: 'Brak sesji',
+              message: 'Nie znaleziono danych sesji. Wróć do strony głównej i spróbuj ponownie.'
+            })
+            
+            updateAppState({ 
+              error: 'Brak sesji - wróć do strony głównej',
+              isInitializing: false 
+            }, 'no-session-error')
+            
+            return
           }
           
           updateAppState({ isInitializing: true }, 'fallback-init-start')
@@ -4012,7 +4020,16 @@ JĘZYKI:
 
       {/* MILLION DOLLAR Loading Experience */}
       <AnimatePresence>
-        {appState.isInitializing && (
+        {loadingState.isInitializing && (
+          <>
+            {console.log('🔄 LOADING OVERLAY VISIBLE:', {
+              isInitializing: loadingState.isInitializing,
+              hasCvData: !!coreData.cvData,
+              timestamp: new Date().toISOString()
+            })}
+          </>
+        )}
+        {loadingState.isInitializing && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -4165,7 +4182,7 @@ JĘZYKI:
       )}
 
       {/* Premium Floating Action Panel */}
-      {!appState.isInitializing && (
+      {!loadingState.isInitializing && (
         <motion.div
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}

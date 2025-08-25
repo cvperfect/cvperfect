@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-08-24T19:40:48.592Z",
+  "summary": {
+    "totalTests": 20,
+    "passedTests": 20,
+    "passRate": "100.0"
+  },
+  "tests": [
+    {
+      "name": "Integration status available",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-24T19:40:47.833Z"
+    },
+    {
+      "name": "Router status active",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-24T19:40:47.833Z"
+    },
+    {
+      "name": "In CVPerfect project",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-24T19:40:47.833Z"
+    },
+    {
+      "name": "-sa shortcut ready",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-08-24T19:40:47.833Z"
+    },
+    {
+      "name": "Frontend task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:47.834Z"
+    },
+    {
+      "name": "Backend task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:47.935Z"
+    },
+    {
+      "name": "CV Optimization task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:48.034Z"
+    },
+    {
+      "name": "Security task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:48.146Z"
+    },
+    {
+      "name": "Testing task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:48.256Z"
+    },
+    {
+      "name": "Performance task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:48.366Z"
+    },
+    {
+      "name": "Generic task fallback",
+      "passed": true,
+      "details": "🔄 Fallback to Task tool: general-purpose",
+      "timestamp": "2025-08-24T19:40:48.479Z"
+    },
+    {
+      "name": "Fallback to Task tool",
+      "passed": true,
+      "details": "Subagent type: statusline-setup",
+      "timestamp": "2025-08-24T19:40:48.590Z"
+    },
+    {
+      "name": "Task tool params complete",
+      "passed": true,
+      "details": "Description: true, Prompt: true",
+      "timestamp": "2025-08-24T19:40:48.590Z"
+    },
+    {
+      "name": "Agent mapping: general-purpose → supreme_orchestrator",
+      "passed": true,
+      "details": "✅ Mapping correct",
+      "timestamp": "2025-08-24T19:40:48.590Z"
+    },
+    {
+      "name": "Agent mapping: frontend → frontend_development",
+      "passed": true,
+      "details": "✅ Mapping correct",
+      "timestamp": "2025-08-24T19:40:48.590Z"
+    },
+    {
+      "name": "Agent mapping: backend → backend_api",
+      "passed": true,
+      "details": "✅ Mapping correct",
+      "timestamp": "2025-08-24T19:40:48.591Z"
+    },
+    {
+      "name": "Agent mapping: security → api_security",
+      "passed": true,
+      "details": "✅ Mapping correct",
+      "timestamp": "2025-08-24T19:40:48.591Z"
+    },
+    {
+      "name": "Error handling: Empty task description",
+      "passed": true,
+      "details": "✅ Handled gracefully",
+      "timestamp": "2025-08-24T19:40:48.591Z"
+    },
+    {
+      "name": "Error handling: Null task description",
+      "passed": true,
+      "details": "✅ Handled gracefully",
+      "timestamp": "2025-08-24T19:40:48.591Z"
+    },
+    {
+      "name": "Error handling: Very long task description",
+      "passed": true,
+      "details": "✅ Handled gracefully",
+      "timestamp": "2025-08-24T19:40:48.592Z"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "cvperfect",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "mcp-puppeteer": "node start-puppeteer-mcp.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server-puppeteer": "^2025.5.12",
+    "@stripe/stripe-js": "^2.1.11",
+    "@supabase/supabase-js": "^2.53.0",
+    "canvas-confetti": "^1.9.3",
+    "docx": "^9.5.1",
+    "dompurify": "^3.2.6",
+    "file-saver": "^2.0.5",
+    "form-data": "^4.0.4",
+    "formidable": "^3.5.4",
+    "framer-motion": "^12.23.12",
+    "groq-sdk": "^0.29.0",
+    "gsap": "^3.13.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
+    "mammoth": "^1.10.0",
+    "micro": "^10.0.1",
+    "next": "14.0.0",
+    "nodemailer": "^7.0.5",
+    "openai": "^4.20.1",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^1.1.1",
+    "puppeteer": "^24.17.0",
+    "raw-body": "^2.5.2",
+    "react": "^18",
+    "react-dom": "^18",
+    "stripe": "^14.25.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "eslint": "^9.34.0",
+    "node-fetch": "^2.7.0",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.0"
+  }
+}

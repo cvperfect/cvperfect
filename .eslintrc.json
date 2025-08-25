@@ -9,7 +9,6 @@
     "@next/next/no-before-interactive-script-outside-document": "warn",
     "@next/next/no-page-custom-font": "warn"
   },
-  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2021,
     "sourceType": "module",

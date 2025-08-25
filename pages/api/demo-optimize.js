@@ -1,5 +1,6 @@
 // Demo CV optimization endpoint for testing and long CV processing
 import Groq from 'groq-sdk'
+import { processWithChunkedTimeout, TIMEOUTS } from '../../lib/timeout-utils'
 import { handleCORSPreflight } from '../../lib/cors'
 
 const groq = new Groq({
@@ -21,13 +22,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { cvText, jobText = '', language = 'pl', photo, preservePhotos = true } = req.body
+    // Handle multiple possible field names for CV text with input sanitization
+    const bodyData = req.body || {}
+    const rawCvText = bodyData.cvText || bodyData.cv || bodyData.text || bodyData.content
+    const rawJobText = bodyData.jobText || bodyData.job || bodyData.jobDescription || ''
+    const rawLanguage = bodyData.language || bodyData.lang || 'pl'
+    
+    // Input sanitization
+    const cvText = typeof rawCvText === 'string' ? rawCvText.trim() : rawCvText
+    const jobText = typeof rawJobText === 'string' ? rawJobText.trim() : rawJobText
+    const language = typeof rawLanguage === 'string' ? rawLanguage.trim().toLowerCase() : rawLanguage
+    const photo = bodyData.photo || bodyData.image || null
+    const preservePhotos = bodyData.preservePhotos !== undefined ? bodyData.preservePhotos : true
 
-    // Validation
-    if (!cvText) {
+    // Enhanced validation with better error messaging
+    if (!cvText || (typeof cvText === 'string' && cvText.trim().length === 0)) {
       return res.status(400).json({
         success: false,
-        error: 'CV text is required'
+        error: 'Treść CV jest wymagana / CV content is required',
+        errorPL: 'Nie podano treści CV. Wymagany tekst CV do optymalizacji.',
+        errorEN: 'No CV content provided. CV text is required for optimization.',
+        debug: `Available fields: ${Object.keys(bodyData).join(', ')}`,
+        received: {
+          hasBody: !!req.body,
+          bodyKeys: Object.keys(bodyData),
+          cvTextValue: cvText ? `${cvText.substring(0, 50)}...` : null
+        }
       })
     }
 
@@ -79,27 +99,17 @@ export default async function handler(req, res) {
       
       console.log(`📊 Split into ${chunks.length} chunks for processing`)
       
-      // Process each chunk and combine results
-      const optimizedChunks = []
-      
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i]
-        console.log(`🤖 Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`)
-        
-        try {
-          const optimizedChunk = await optimizeChunk(chunk, jobText, language, i === 0, photoData, preservePhotos)
-          optimizedChunks.push(optimizedChunk)
-          
-          // Rate limiting - small delay between chunks
-          if (i < chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-          }
-        } catch (chunkError) {
-          console.error(`❌ Error processing chunk ${i + 1}:`, chunkError)
-          // Fallback to original chunk if optimization fails
-          optimizedChunks.push(chunk)
-        }
+      // TIMEOUT: Process chunks with unified timeout system
+      const chunkProcessor = async (chunk, index) => {
+        console.log(`🤖 Processing chunk ${index + 1}/${chunks.length} (${chunk.length} chars)`)
+        return await optimizeChunk(chunk, jobText, language, index === 0, photoData, preservePhotos)
       }
+      
+      const optimizedChunks = await processWithChunkedTimeout(chunks, chunkProcessor, {
+        chunkTimeout: TIMEOUTS.CHUNK_PROCESSING,
+        delayBetweenChunks: 500, // Consistent with analyze.js
+        failFast: false // Continue on individual chunk failures
+      })
       
       processedCV = optimizedChunks.join('\n\n')
     } else {

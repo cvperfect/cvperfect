@@ -27,7 +27,21 @@ export default async function handler(req, res) {
     if (!session_id || session_id.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Missing or empty session_id parameter'
+        error: 'Brak identyfikatora sesji / Missing session ID',
+        errorPL: 'Nie podano identyfikatora sesji.',
+        errorEN: 'Session ID parameter is missing or empty.'
+      })
+    }
+    
+    // Validate session_id format: sess_1234567890123_abcdefghi
+    const sessionIdRegex = /^sess_\d{13}_[a-z0-9]{9}$/
+    if (!sessionIdRegex.test(session_id) && session_id !== 'demo_session_12345') {
+      return res.status(400).json({
+        success: false,
+        error: 'Nieprawidłowy format sesji / Invalid session format',
+        errorPL: 'Nieprawidłowy format identyfikatora sesji.',
+        errorEN: 'Invalid session ID format. Expected: sess_[timestamp]_[hash]',
+        received: session_id
       })
     }
     

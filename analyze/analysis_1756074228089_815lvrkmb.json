@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "command": "analyze",
+  "type": "security",
+  "analysisId": "analysis_1756074228089_815lvrkmb",
+  "timestamp": "2025-08-24T22:23:48.089Z",
+  "data": {
+    "vulnerabilities": {
+      "high": 0,
+      "medium": 2,
+      "low": 5
+    },
+    "checks": {
+      "cors": "configured",
+      "csrf": "protected",
+      "auth": "implemented",
+      "dataValidation": "present",
+      "secrets": "secured"
+    },
+    "recommendations": [
+      "Update dependencies with known vulnerabilities",
+      "Implement rate limiting on all API endpoints",
+      "Add input sanitization to contact form"
+    ]
+  }
+}

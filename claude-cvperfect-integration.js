@@ -4,6 +4,7 @@
  */
 
 const { executeWithAgents, getSystemStatus } = require('./claude-task-delegator');
+const { routeTask, getRouterStatus } = require('./claude-agent-router');
 const path = require('path');
 const fs = require('fs');
 
@@ -126,6 +127,53 @@ class ClaudeCVPerfectIntegration {
         }
     }
 
+    // Nowa funkcja do obsługi skrótu -sa
+    async handleSubagentRequest(taskDescription, options = {}) {
+        console.log(`\n🎯 Obsługa skrótu -sa dla zadania: "${taskDescription}"`);
+        
+        try {
+            // Użyj nowego routera do inteligentnego delegowania
+            const result = await routeTask(taskDescription, options);
+            
+            if (result.useFallback) {
+                // Router zdecydował o fallback do Task tool Claude
+                console.log(`🔄 Router zaleca użycie Task tool Claude`);
+                return {
+                    success: true,
+                    useTaskTool: true,
+                    taskToolParams: result.taskTool,
+                    message: result.message,
+                    source: 'claude-agent-router-fallback'
+                };
+            } else if (result.success) {
+                // Zadanie zostało pomyślnie przekazane do agentów CVPerfect
+                console.log(`✅ Zadanie przekazane do agenta: ${result.agent}`);
+                return {
+                    success: true,
+                    useTaskTool: false,
+                    agent: result.agent,
+                    result: result.result,
+                    source: 'cvperfect-agents'
+                };
+            } else {
+                // Błąd w systemie routingu
+                return {
+                    success: false,
+                    message: `Błąd routingu: ${result.message}`,
+                    useClaudeDirectly: true
+                };
+            }
+            
+        } catch (error) {
+            console.error('❌ Błąd obsługi skrótu -sa:', error);
+            return {
+                success: false,
+                message: error.message,
+                useClaudeDirectly: true
+            };
+        }
+    }
+
     // Sprawdź czy zadanie powinno być wykonane przez agentów
     shouldUseAgents(taskDescription) {
         if (!this.isInCVPerfectProject || !this.integrationActive) {
@@ -161,10 +209,14 @@ class ClaudeCVPerfectIntegration {
 
     // Pobierz status integracji
     getIntegrationStatus() {
+        const routerStatus = getRouterStatus();
+        
         return {
             inCVPerfectProject: this.isInCVPerfectProject,
             integrationActive: this.integrationActive,
-            systemStatus: this.integrationActive ? getSystemStatus() : null
+            systemStatus: this.integrationActive ? getSystemStatus() : null,
+            routerStatus: routerStatus,
+            subagentShortcutReady: this.isInCVPerfectProject && routerStatus.router === 'active'
         };
     }
 
@@ -217,6 +269,12 @@ module.exports = {
                 message: 'Zadanie nie wymaga użycia agentów CVPerfect'
             };
         }
+    },
+
+    // Nowa funkcja dla obsługi skrótu -sa
+    async handleSubagentShortcut(taskDescription, options = {}) {
+        const integration = getIntegration();
+        return await integration.handleSubagentRequest(taskDescription, options);
     },
     
     // Status integracji

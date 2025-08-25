@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_1756126752808_test12345",
+  "email": "john.doe@example.com",
+  "plan": "premium",
+  "template": "modern",
+  "cvData": "John Doe\nSoftware Engineer\n5 years experience...",
+  "jobPosting": "Looking for React developer...",
+  "photo": null,
+  "timestamp": "2025-08-25T12:59:12.824Z",
+  "processed": false,
+  "createdAt": 1756126752824
+}

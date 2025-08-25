@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_1756025986908_ajwzqzzjr",
+  "email": "test@cvperfect.pl",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Konrad Jakóbczak\nSoftware Engineer\nPhone: +48 123 456 789\nEmail: konrad@example.com\n\nEXPERIENCE:\n- Senior Developer at UPS (2020-2024)\n- Frontend Developer at Zamość Tech (2018-2020)\n- Junior Developer at Local Company (2016-2018)\n\nSKILLS:\n- JavaScript, React, Node.js\n- Python, Django\n- SQL, MongoDB\n- Git, Docker\n\nEDUCATION:\n- Computer Science, University of Warsaw (2012-2016)\n\nLANGUAGES:\n- Polish (native)\n- English (advanced)",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-24T08:59:47.023Z",
+  "processed": false,
+  "createdAt": 1756025987023
+}

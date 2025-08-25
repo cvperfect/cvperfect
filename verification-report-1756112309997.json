@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-08-25T08:57:59.307Z",
+  "issues": {
+    "eslintDeprecated": {
+      "status": "FIXED",
+      "details": {
+        "exitCode": 0,
+        "hasDeprecationWarnings": false,
+        "hasWarnings": false,
+        "hasErrors": false,
+        "output": "\n> cvperfect@0.1.0 lint\n> next lint\n\n\n./pages/index.js\n832:7  Warning: The 'typingPhrases' conditional could make the dependencies of useEffect Hook (at line 862) change on every render. To fix this, wrap the initialization of 'typingPhrases' in its own useMemo() Hook.  react-hooks/exhaustive-deps\n832:7  Warning: The 'typingPhrases' conditional could make the dependencies of useEffect Hook (at line 893) change on every render. To fix this, wrap the initialization of 'typingPhrases' in its own us..."
+      }
+    },
+    "mobileNavigation": {
+      "status": "UNKNOWN",
+      "details": {
+        "error": "Navigation timeout of 10000 ms exceeded"
+      }
+    },
+    "statisticsDisplay": {
+      "status": "UNKNOWN",
+      "details": {
+        "error": "Navigation timeout of 10000 ms exceeded"
+      }
+    },
+    "successPageTemplates": {
+      "status": "UNKNOWN",
+      "details": {
+        "error": "Navigation timeout of 10000 ms exceeded"
+      }
+    }
+  },
+  "summary": {
+    "total": 4,
+    "fixed": 1,
+    "broken": 0,
+    "unknown": 3
+  }
+}

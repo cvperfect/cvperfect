@@ -29,11 +29,15 @@ export default async function handler(req, res) {
       })
     }
     
-    // Validate sessionId format to prevent file system errors
-    if (typeof sessionId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+    // SECURITY: Strict sessionId validation to prevent path traversal
+    // Format: sess_1234567890123_abcdefghi (timestamp_hash)
+    if (typeof sessionId !== 'string' || 
+        !/^sess_\d{13}_[a-z0-9]{9}$/.test(sessionId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid sessionId format'
+        error: 'Invalid sessionId format. Expected: sess_[timestamp]_[hash]',
+        received: sessionId,
+        expectedFormat: 'sess_1234567890123_abcdefghi'
       })
     }
 
@@ -77,11 +81,43 @@ export default async function handler(req, res) {
       }
       
       const sessionFile = path.join(sessionsDir, `${sessionId}.json`)
+      const tempFile = sessionFile + '.tmp'
       
-      // Save session data to file
-      await fs.writeFile(sessionFile, JSON.stringify(fullSessionData, null, 2))
+      // SECURITY: Atomic write operation to prevent race conditions
+      await fs.writeFile(tempFile, JSON.stringify(fullSessionData, null, 2))
+      await fs.rename(tempFile, sessionFile)
       
       console.log('✅ Session data saved successfully:', sessionFile)
+      
+      // STEP 7: Create email-to-session index for recovery
+      try {
+        const crypto = require('crypto')
+        const emailHash = crypto.createHash('sha256').update(email.toLowerCase()).digest('hex').substring(0, 16)
+        
+        const emailIndexDir = path.join(process.cwd(), '.sessions', 'email-index')
+        
+        // Create email-index directory if it doesn't exist
+        try {
+          await fs.access(emailIndexDir)
+        } catch {
+          await fs.mkdir(emailIndexDir, { recursive: true })
+        }
+        
+        const indexFile = path.join(emailIndexDir, `${emailHash}.json`)
+        const indexData = {
+          email: email.toLowerCase(),
+          sessionId: sessionId,
+          createdAt: new Date().toISOString(),
+          plan: plan || 'basic'
+        }
+        
+        await fs.writeFile(indexFile, JSON.stringify(indexData, null, 2))
+        console.log('📧 Email index created:', emailHash, '→', sessionId)
+        
+      } catch (indexError) {
+        console.warn('⚠️ Failed to create email index:', indexError.message)
+        // Continue - email index is not critical for main functionality
+      }
       
     } catch (fileError) {
       console.error('❌ File system error:', fileError)

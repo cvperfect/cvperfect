@@ -1,0 +1,12 @@
+{
+  "sessionId": "sess_1756025247113_nlixm1b9z",
+  "email": "test@example.com",
+  "plan": "basic",
+  "template": "simple",
+  "cvData": "Jan Kowalski\nSenior Frontend Developer\n\nDOŚWIADCZENIE:\n- 5 lat doświadczenia w React.js\n- Tworzenie aplikacji SPA\n- Praca z REST API\n- Git, webpack, TypeScript\n\nWYKSZTAŁCENIE:\nUniwersytet Warszawski - Informatyka (2018-2022)\n\nUMIEJĘTNOŚCI:\nJavaScript, React, HTML, CSS, Node.js",
+  "jobPosting": "",
+  "photo": null,
+  "timestamp": "2025-08-24T08:47:27.505Z",
+  "processed": false,
+  "createdAt": 1756025247505
+}

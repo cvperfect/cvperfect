@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "tools": {
+    "cv-analyzer": {
+      "name": "cv-analyzer",
+      "command": "node cv-analyzer.js",
+      "description": "Analyze CV files for ATS compatibility and quality scores",
+      "usage": "cv-analyzer <cv-file> [options]",
+      "examples": [
+        "cv-analyzer resume.pdf --format json",
+        "cv-analyzer cv.docx --ats-check --keywords tech"
+      ],
+      "options": {
+        "--format": "Output format (json, text, html)",
+        "--ats-check": "Run ATS compatibility check",
+        "--keywords": "Comma-separated keywords to check",
+        "--score": "Include quality score analysis"
+      },
+      "category": "cv-processing",
+      "version": "1.0",
+      "registered": "2025-08-24T21:14:41.650Z"
+    },
+    "data-export": {
+      "name": "data-export",
+      "command": "node data-manager.js",
+      "description": "Export CVPerfect data in various formats",
+      "usage": "data-export <type> [options]",
+      "examples": [
+        "data-export cv --format csv --date-range 30d",
+        "data-export analytics --format json"
+      ],
+      "options": {
+        "--format": "Export format (csv, json, xlsx)",
+        "--date-range": "Date range filter (7d, 30d, 90d)",
+        "--output": "Output file path"
+      },
+      "category": "data-management",
+      "version": "1.0",
+      "registered": "2025-08-24T21:14:41.651Z"
+    },
+    "perf-audit": {
+      "name": "perf-audit",
+      "command": "node performance-audit.js",
+      "description": "Run performance audit on CVPerfect website",
+      "usage": "perf-audit [url] [options]",
+      "examples": [
+        "perf-audit http://localhost:3001 --mobile",
+        "perf-audit --lighthouse --report html"
+      ],
+      "options": {
+        "--mobile": "Run mobile performance test",
+        "--lighthouse": "Use Lighthouse for comprehensive audit",
+        "--report": "Report format (html, json, csv)"
+      },
+      "category": "performance",
+      "version": "1.0",
+      "registered": "2025-08-24T21:14:41.651Z"
+    }
+  },
+  "created": "2025-08-24T21:14:41.648Z"
+}

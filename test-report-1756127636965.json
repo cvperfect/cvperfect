@@ -1,0 +1,25 @@
+{
+  "summary": {
+    "totalTests": 1,
+    "passed": 0,
+    "failed": 1,
+    "warnings": 0
+  },
+  "categories": {
+    "mainPage": [],
+    "navigation": [],
+    "apiEndpoints": [],
+    "uiUx": [],
+    "dataFlow": [],
+    "responsive": [],
+    "errors": [
+      {
+        "test": "Test suite execution",
+        "status": "FAIL",
+        "details": "net::ERR_CONNECTION_REFUSED at http://localhost:3009",
+        "timestamp": "2025-08-25T13:13:56.780Z"
+      }
+    ]
+  },
+  "generatedAt": "2025-08-25T13:13:56.965Z"
+}

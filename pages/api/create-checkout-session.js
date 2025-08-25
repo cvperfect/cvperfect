@@ -1,5 +1,6 @@
 import Stripe from 'stripe'
 import { ensureEnvironmentVariables, getMaskedEnvVar } from '../../lib/env-validation'
+import { withSecureCORS } from '../../lib/cors'
 
 // Validate critical environment variables at startup
 try {
@@ -11,7 +12,7 @@ try {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Runtime environment validation
   if (!process.env.STRIPE_SECRET_KEY) {
     console.error('❌ Missing STRIPE_SECRET_KEY at runtime')
@@ -121,10 +122,11 @@ export default async function handler(req, res) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
                     process.env.BASE_URL || 
                     req.headers.origin || 
-                    (req.headers.host ? `https://${req.headers.host}` : null) ||
-                    'http://localhost:3000'
+                    (req.headers.host ? `http://${req.headers.host}` : null) ||
+                    'http://localhost:3006'
     
-    const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}`
+    // STEP 10: Enhanced success URL with backup session ID
+    const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}${fullSessionId ? `&backup_session=${fullSessionId}` : ''}`
     const cancelUrl = `${baseUrl}/`
     
     console.log('🎯 Creating checkout session:', {
@@ -201,3 +203,5 @@ export default async function handler(req, res) {
     })
   }
 }
+
+export default withSecureCORS(handler)
