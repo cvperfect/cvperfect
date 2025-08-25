@@ -51,10 +51,10 @@ function Success() {
               source: 'emergency_fix'
             };
             
-            // Set the CV data directly
+            // Set the CV data directly and ensure loading state is cleared
+            setLoadingState(prev => ({ ...prev, isInitializing: false }))
             updateAppState({ 
               cvData: cvData,
-              isInitializing: false,
               hasFullContent: true
             }, 'emergency-cv-load');
             
@@ -84,6 +84,15 @@ function Success() {
     return htmlContent || '';
   };
 
+  // STEP 5: Cookie parser function for session recovery
+  const getCookie = (name) => {
+    if (typeof document === 'undefined') return null
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  }
+
   // SIMPLIFIED STATE MANAGEMENT ARCHITECTURE
   // ========================================
   
@@ -99,10 +108,12 @@ function Success() {
   // UI state (changes frequently)  
   const [uiState, setUiState] = useState({
     selectedTemplate: 'simple',
+    isDemoMode: false, // 🎭 Demo mode flag
     modals: {
       email: false,
       template: false,
-      export: false
+      export: false,
+      recovery: false // STEP 6: Email recovery modal
     }
   })
   
@@ -112,6 +123,12 @@ function Success() {
     isOptimizing: false,
     isExporting: false,
     hasNoSession: false
+  })
+  
+  // STEP 6: Recovery form state
+  const [recoveryState, setRecoveryState] = useState({
+    email: '',
+    isRecovering: false
   })
   
   // Metrics (changes during optimization)
@@ -268,16 +285,96 @@ function Success() {
     })
   }, [addNotification])
 
+  // Prevent double execution in React Strict Mode
+  const initializationRef = useRef(false)
+  
   // Simple initialization effect
   useEffect(() => {
     if (typeof window === 'undefined') return
     
+    // GUARD: Prevent double execution from React Strict Mode
+    if (initializationRef.current) {
+      console.log('🚫 Initialization already running, skipping duplicate call')
+      return
+    }
+    initializationRef.current = true
+    
     const initialize = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search)
-        const sessionId = urlParams.get('session_id')
+        const urlSessionId = urlParams.get('session_id')
+        const backupSessionId = urlParams.get('backup_session')
+        const cookieSessionId = getCookie('cvperfect_session')
         const templateParam = urlParams.get('template')
         const planParam = urlParams.get('plan')
+        const demoParam = urlParams.get('demo')
+        
+        // 🎭 DEMO MODE: Check for demo parameter first
+        const isDemoMode = demoParam === 'true'
+        
+        // STEP 10: Enhanced priority - Demo > URL session_id > Backup session > Cookie > None
+        let sessionId = isDemoMode ? 'demo_session_12345' : (urlSessionId || backupSessionId || cookieSessionId)
+        
+        if (backupSessionId && !urlSessionId) {
+          console.log('🔄 Using backup session from Stripe URL:', backupSessionId)
+        }
+        
+        if (cookieSessionId && !urlSessionId) {
+          console.log('🍪 Using session from cookie (no URL param):', cookieSessionId)
+        } else if (urlSessionId) {
+          console.log('🔗 Using session from URL parameter:', urlSessionId)
+        }
+        
+        // STEP 14: Analytics & Error Tracking
+        const analytics = {
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          referrer: document.referrer || 'direct',
+          screenResolution: `${screen.width}x${screen.height}`,
+          viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+          sessionSources: {
+            hasUrlSessionId: !!urlSessionId,
+            hasBackupSessionId: !!backupSessionId,
+            hasCookieSessionId: !!cookieSessionId,
+            finalSessionId: sessionId,
+            sourceUsed: urlSessionId ? 'url' : (backupSessionId ? 'backup' : (cookieSessionId ? 'cookie' : 'none'))
+          },
+          urlParameters: {
+            session_id: urlSessionId,
+            backup_session: backupSessionId, 
+            template: templateParam,
+            plan: planParam
+          }
+        }
+        
+        console.log('📊 Session Analytics:', analytics)
+        
+        // 🎭 DEMO MODE: Handle demo mode setup
+        if (isDemoMode) {
+          console.log('🎭 DEMO MODE ACTIVATED - Loading sample data for testing')
+          
+          // Create demo CV data compatible with existing template system
+          const demoCV = 'Anna Kowalska\nanna.kowalska@example.com | +48 123 456 789 | Warszawa, Polska\n\nDOŚWIADCZENY FRONTEND DEVELOPER\n\nDoświadczony Frontend Developer z 5-letnim doświadczeniem w tworzeniu nowoczesnych aplikacji webowych. Specjalizuje się w React, TypeScript i responsive design. Pasjonat UI/UX z silnymi umiejętnościami współpracy w zespole.\n\nDOŚWIADCZENIE ZAWODOWE\n\nSenior Frontend Developer | Tech Solutions Sp. z o.o. | Warszawa | 01/2022 - obecnie\n• Liderowanie zespołu 4 programistów w tworzeniu aplikacji e-commerce\n• Implementacja responsive design i optymalizacja wydajności\n• Zwiększenie conversion rate o 25% przez optymalizację UX\n• Mentoring młodszych developerów\n\nFrontend Developer | Digital Agency | Kraków | 06/2020 - 12/2021\n• Rozwój aplikacji SPA w React dla klientów z różnych branż\n• Współpraca z zespołem UX/UI w tworzeniu przyjaznych interfejsów\n• Implementacja responsive design zgodnie z zasadami accessibility\n\nUMIEJĘTNOŚCI\n• Frontend: React, TypeScript, JavaScript (ES6+), HTML5, CSS3, SASS\n• Frameworks: Next.js, Redux, Material-UI, Styled Components\n• Tools: Git, Webpack, Jest, Figma, Adobe XD\n• Metodyki: Responsive Design, Mobile First, REST API Integration\n\nWYKSZTAŁCENIE\nMagister Informatyki | Uniwersytet Warszawski | Warszawa | 2018-2020\nSpecjalizacja: Inżynieria Oprogramowania\n\nJĘZYKI\n• Polski - ojczysty\n• Angielski - zaawansowany (C1)\n• Niemiecki - podstawowy (A2)'
+          
+          // Set demo state
+          const demoState = {
+            userPlan: planParam || 'premium',
+            selectedTemplate: templateParam || 'luxury',
+            isDemoMode: true,
+            isInitializing: false
+          }
+          
+          updateAppState(demoState, 'demo-mode')
+          setCvData(demoCV)
+          
+          addNotification({
+            type: 'info',
+            title: '🎭 Tryb Demo',
+            message: 'Korzystasz z trybu demonstracyjnego. Wszystkie funkcje dostępne do testowania!'
+          })
+          
+          return // Exit early - demo mode setup complete
+        }
         
         // Update state from URL params
         const urlState = {}
@@ -290,7 +387,10 @@ function Success() {
         
         if (sessionId) {
           console.log('🔗 Loading session:', sessionId)
-          updateAppState({ isInitializing: true }, 'init-start')
+          updateAppState({ 
+            isInitializing: true,
+            sessionId: sessionId 
+          }, 'init-start')
           
           addNotification({
             type: 'info',
@@ -302,9 +402,43 @@ function Success() {
         } else {
           console.log('⚠️ No session ID found in URL - trying fallback mechanisms...')
           
-          // CRITICAL FIX: Generate fallback session ID and try sessionStorage
-          const fallbackSessionId = `fallback_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-          console.log('🚑 Generated fallback session ID:', fallbackSessionId)
+          // STEP 2: Enhanced fallback - try sessionStorage first, then localStorage
+          let fallbackSessionId = sessionStorage.getItem('currentSessionId')
+          
+          if (fallbackSessionId) {
+            console.log('💾 Found session ID in sessionStorage (CRITICAL FIX):', fallbackSessionId)
+            sessionId = fallbackSessionId
+            
+            // Update URL to reflect found session ID
+            window.history.replaceState({}, '', `/success?session_id=${sessionId}`)
+            
+            addNotification({
+              type: 'success',
+              title: 'Sesja odzyskana',
+              message: 'Pomyślnie odzyskano dane sesji z pamięci przeglądarki'
+            })
+            
+            await fetchUserDataFromSession(sessionId)
+            return
+          }
+          
+          const lastSuccessSessionId = localStorage.getItem('lastSuccessSessionId')
+          
+          if (lastSuccessSessionId) {
+            fallbackSessionId = lastSuccessSessionId
+            console.log('🔗 Found lastSuccessSessionId, using:', fallbackSessionId)
+            // Try to fetch using the saved session ID first
+            await fetchUserDataFromSession(lastSuccessSessionId)
+            return // Exit early if successful
+          } else {
+            // Generate random fallback if no saved session ID
+            fallbackSessionId = `fallback_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+            console.log('🚑 Generated fallback session ID:', fallbackSessionId)
+            
+            // Save the fallback session ID for future use
+            sessionStorage.setItem('currentSessionId', fallbackSessionId)
+            console.log('💾 Saved fallback session ID to sessionStorage')
+          }
           
           updateAppState({ isInitializing: true }, 'fallback-init-start')
           
@@ -334,14 +468,56 @@ function Success() {
             })
           } else {
             console.log('❌ FALLBACK FAILED: No usable data found')
-            // Set hasNoSession flag to prevent infinite rendering loop
-            setLoadingState(prev => ({ ...prev, hasNoSession: true, isInitializing: false }))
+            
+            // STEP 14: Error tracking for failed session recovery
+            const errorReport = {
+              ...analytics,
+              error: {
+                type: 'session_recovery_failed',
+                message: 'All fallback mechanisms failed to find session data',
+                attempts: {
+                  urlSession: !!urlSessionId,
+                  backupSession: !!backupSessionId,
+                  cookieSession: !!cookieSessionId,
+                  sessionStorage: false, // would need to be tracked in fallback
+                  localStorage: false    // would need to be tracked in fallback
+                },
+                timestamp: new Date().toISOString()
+              }
+            }
+            
+            console.error('🚨 SESSION RECOVERY FAILURE REPORT:', errorReport)
+            
+            // AUTOMATIC DEMO MODE FALLBACK: Instead of showing error, activate demo mode
+            console.log('🎭 AUTO-FALLBACK: No session found, activating demo mode automatically')
+            
+            // Set demo mode instead of hasNoSession error
+            setLoadingState(prev => ({ ...prev, isInitializing: false }))
+            updateAppState({ 
+              isDemoMode: true, 
+              userPlan: 'premium',
+              selectedTemplate: 'simple' 
+            }, 'auto-demo-fallback')
+            
+            // Load demo data like the demo=true URL parameter does
+            const demoCV = 'Anna Kowalska\nanna.kowalska@example.com | +48 123 456 789 | Warszawa, Polska\n\nDOŚWIADCZENY FRONTEND DEVELOPER\n\nDoświadczony Frontend Developer z 5-letnim doświadczeniem w tworzeniu nowoczesnych aplikacji webowych. Specjalizuje się w React, TypeScript i responsive design. Pasjonat UI/UX z silnymi umiejętnościami współpracy w zespole.\n\nDOŚWIADCZENIE ZAWODOWE\n\nSenior Frontend Developer | Tech Solutions Sp. z o.o. | Warszawa | 01/2022 - obecnie\n• Liderowanie zespołu 4 programistów w tworzeniu aplikacji e-commerce\n• Implementacja responsive design i optymalizacja wydajności\n• Zwiększenie conversion rate o 25% przez optymalizację UX\n• Mentoring młodszych developerów\n\nFrontend Developer | Digital Agency | Kraków | 06/2020 - 12/2021\n• Rozwój aplikacji SPA w React dla klientów z różnych branż\n• Współpraca z zespołem UX/UI w tworzeniu przyjaznych interfejsów\n• Implementacja responsive design zgodnie z zasadami accessibility\n\nUMIEJĘTNOŚCI\n• Frontend: React, TypeScript, JavaScript (ES6+), HTML5, CSS3, SASS\n• Frameworks: Next.js, Redux, Material-UI, Styled Components\n• Tools: Git, Webpack, Jest, Figma, Adobe XD\n• Metodyki: Responsive Design, Mobile First, REST API Integration\n\nWYKSZTAŁCENIE\nMagister Informatyki | Uniwersytet Warszawski | Warszawa | 2018-2020\nSpecjalizacja: Inżynieria Oprogramowania\n\nJĘZYKI\n• Polski - ojczysty\n• Angielski - zaawansowany (C1)\n• Niemiecki - podstawowy (A2)'
+            
+            // Set demo CV data and basic state
+            setCvData(demoCV)
+            setUserPlan('premium')
+            updateAppState({ 
+              selectedTemplate: 'simple',
+              userEmail: 'anna.kowalska@example.com',
+              jobDescription: 'Frontend Developer w innowacyjnej firmie technologicznej'
+            }, 'demo-fallback-data')
             
             addNotification({
-              type: 'error',
-              title: 'Brak danych sesji',
-              message: 'Nie znaleziono sesji ani zapisanych danych CV. Wróć do strony głównej i prześlij swoje CV ponownie.'
+              type: 'info',
+              title: '🎭 Tryb Demo Aktywowany',
+              message: 'Brak sesji CV - uruchomiono tryb demonstracyjny. Wszystkie funkcje dostępne do testowania!'
             })
+            
+            console.log('✅ Auto-demo mode activated successfully')
           }
         }
       } catch (error) {
@@ -352,6 +528,11 @@ function Success() {
     }
     
     initialize()
+    
+    // Cleanup function to reset initialization flag
+    return () => {
+      initializationRef.current = false
+    }
   }, []) // Run once on mount
 
   // ========================================
@@ -392,10 +573,12 @@ function Success() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cvText: cvText,
-          jobDescription: jobDescription || '',
+          currentCV: cvText,
+          jobPosting: jobDescription || '',
+          email: appState.cvData?.email || 'user@example.com',
+          sessionId: appState.sessionId || 'unknown',
           plan: plan || 'basic',
-          fullOptimization: true,
+          paid: plan === 'premium' || plan === 'gold',
           photo: photo,
           preservePhotos: true
         })
@@ -918,13 +1101,40 @@ function Success() {
     return { success: false, source: 'all_fallbacks_failed' }
   }
 
-  // 🚑 CRITICAL FIX: Dedicated SessionStorage Fallback Function
-  // This function is called when no session_id is found in URL
+  // 🚑 ENHANCED FALLBACK: SessionStorage + LocalStorage Dual Recovery
+  // This function handles comprehensive data recovery when no session_id is found in URL
   const trySessionStorageFallback = async (fallbackSessionId) => {
-    console.log('🚑 Starting immediate sessionStorage fallback with ID:', fallbackSessionId)
+    console.log('🚑 Starting enhanced fallback recovery with ID:', fallbackSessionId)
     
     try {
-      // Check if we have sessionStorage data
+      // LEVEL 1: Check sessionStorage first (most recent data)
+      const sessionData = await trySessionStorageRecovery()
+      if (sessionData.success) {
+        return sessionData
+      }
+      
+      console.log('📦 SessionStorage failed, trying localStorage...')
+      
+      // LEVEL 2: Check localStorage (persisted data)
+      const localData = await tryLocalStorageRecovery(fallbackSessionId)
+      if (localData.success) {
+        return localData
+      }
+      
+      console.log('❌ All fallback mechanisms failed')
+      return { success: false, source: 'all_fallbacks_failed' }
+      
+    } catch (error) {
+      console.error('❌ Enhanced fallback error:', error)
+      return { success: false, source: 'fallback_error', error: error.message }
+    } finally {
+      updateAppState({ isInitializing: false }, 'fallback-complete')
+    }
+  }
+
+  // SessionStorage recovery (Level 1)
+  const trySessionStorageRecovery = async () => {
+    try {
       const pendingCV = sessionStorage.getItem('pendingCV')
       const pendingJob = sessionStorage.getItem('pendingJob') || ''
       const pendingEmail = sessionStorage.getItem('pendingEmail') || ''
@@ -941,69 +1151,205 @@ function Success() {
       })
       
       if (pendingCV && pendingCV.length > 100) {
-        console.log('✅ SESSIONSTORAGE FALLBACK: Valid CV data found!')
+        console.log('✅ SESSIONSTORAGE RECOVERY: Valid CV data found!')
         
-        // Parse and display CV immediately
-        const parsedCV = parseCvFromText(pendingCV)
-        const initialCvData = {
-          ...parsedCV,
-          fullContent: pendingCV,
-          photo: pendingPhoto,
-          jobPosting: pendingJob,
-          plan: pendingPlan,
-          isOriginal: true,
-          source: 'sessionStorage_fallback_immediate',
-          email: pendingEmail?.substring(0, 20) + '...'
-        }
-        
-        // Update user plan from sessionStorage
-        if (pendingPlan) {
-          updateAppState({ userPlan: pendingPlan }, 'set-plan-from-sessionstorage')
-        }
-        
-        // Display CV data immediately
-        setCvData(initialCvData)
-        
-        // Show success notification
-        addNotification({
-          type: 'success',
-          title: 'CV załadowane',
-          message: 'Twoje CV zostało pomyślnie odzyskane z pamięci przeglądarki'
-        })
-        
-        // Start AI optimization in background
-        console.log('🤖 Starting background AI optimization...')
-        await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, pendingPlan)
-        
-        // Cache the successful recovery
-        setCacheItem(`session-fallback-${fallbackSessionId}`, {
+        await displayRecoveredData({
           cv: pendingCV,
-          job: pendingJob, 
+          job: pendingJob,
           email: pendingEmail,
           photo: pendingPhoto,
           plan: pendingPlan,
-          source: 'sessionStorage_immediate'
-        }, 3600000) // 1 hour cache
+          source: 'sessionStorage'
+        })
         
-        // Clean up sessionStorage after successful use
-        sessionStorage.removeItem('pendingCV')
-        sessionStorage.removeItem('pendingJob')
-        sessionStorage.removeItem('pendingEmail')  
-        sessionStorage.removeItem('pendingPhoto')
-        sessionStorage.removeItem('pendingPlan')
+        return { success: true, source: 'sessionStorage' }
+      }
+      
+      return { success: false, source: 'no_sessionStorage_data' }
+    } catch (error) {
+      console.error('❌ SessionStorage recovery error:', error)
+      return { success: false, source: 'sessionStorage_error', error: error.message }
+    }
+  }
+
+  // LocalStorage recovery (Level 2) - NEW ENHANCED FEATURE
+  const tryLocalStorageRecovery = async (fallbackSessionId) => {
+    try {
+      // Clean old localStorage entries first (older than 24 hours)
+      cleanOldLocalStorageEntries()
+      
+      // STEP 3: First try to use lastSuccessSessionId if available
+      const lastSuccessSessionId = localStorage.getItem('lastSuccessSessionId')
+      if (lastSuccessSessionId && fallbackSessionId === lastSuccessSessionId) {
+        const specificKey = `cvperfect_cv_${lastSuccessSessionId}`
+        const specificData = localStorage.getItem(specificKey)
         
-        console.log('✅ SessionStorage fallback complete - data cleaned up')
+        if (specificData) {
+          console.log('🎯 Found data using lastSuccessSessionId:', lastSuccessSessionId)
+          try {
+            const parsedData = JSON.parse(specificData)
+            if (parsedData.cvContent && parsedData.cvContent.length > 100) {
+              console.log('✅ LOCALSTORAGE RECOVERY (Specific): Valid CV data found!')
+              
+              await displayRecoveredData({
+                cv: parsedData.cvContent,
+                job: parsedData.jobPosting || '',
+                email: parsedData.email || '',
+                photo: parsedData.photo || null,
+                plan: parsedData.plan || 'premium',
+                source: 'localStorage_specific'
+              })
+              
+              return { success: true, source: 'localStorage_specific' }
+            }
+          } catch (parseError) {
+            console.warn('⚠️ Failed to parse specific localStorage data:', parseError)
+          }
+        }
+      }
+      
+      // Get all CV data from localStorage with timestamp validation
+      const cvDataKeys = Object.keys(localStorage).filter(key => key.startsWith('cvperfect_cv_'))
+      
+      console.log('🔍 LocalStorage check:', {
+        totalCVEntries: cvDataKeys.length,
+        keys: cvDataKeys.slice(0, 3), // Show first 3 for debugging
+        lastSuccessSessionId: lastSuccessSessionId
+      })
+      
+      // Find most recent valid CV data
+      let mostRecentData = null
+      let mostRecentTimestamp = 0
+      
+      for (const key of cvDataKeys) {
+        try {
+          const dataStr = localStorage.getItem(key)
+          if (!dataStr) continue
+          
+          const data = JSON.parse(dataStr)
+          
+          // Validate data structure and timestamp (within 24 hours)
+          const timestamp = data.timestamp || 0
+          const isValid = data.cv && 
+                          data.cv.length > 100 && 
+                          timestamp > Date.now() - (24 * 60 * 60 * 1000) // 24h validity
+          
+          if (isValid && timestamp > mostRecentTimestamp) {
+            mostRecentData = data
+            mostRecentTimestamp = timestamp
+          }
+        } catch (parseError) {
+          console.warn('⚠️ Failed to parse localStorage entry:', key, parseError.message)
+          // Remove corrupted entry
+          localStorage.removeItem(key)
+        }
+      }
+      
+      if (mostRecentData) {
+        console.log('✅ LOCALSTORAGE RECOVERY: Valid CV data found!', {
+          age: Math.round((Date.now() - mostRecentTimestamp) / 1000 / 60),
+          cvLength: mostRecentData.cv.length
+        })
         
-        return { success: true, source: 'sessionStorage_immediate', sessionId: fallbackSessionId }
-      } else {
-        console.log('⚠️ No valid CV data in sessionStorage')
-        return { success: false, source: 'no_sessionStorage_data' }
+        await displayRecoveredData({
+          cv: mostRecentData.cv,
+          job: mostRecentData.job || '',
+          email: mostRecentData.email || '',
+          photo: mostRecentData.photo || null,
+          plan: mostRecentData.plan || 'premium',
+          source: 'localStorage'
+        })
+        
+        return { success: true, source: 'localStorage' }
+      }
+      
+      return { success: false, source: 'no_localStorage_data' }
+    } catch (error) {
+      console.error('❌ LocalStorage recovery error:', error)
+      return { success: false, source: 'localStorage_error', error: error.message }
+    }
+  }
+
+  // Display recovered data (shared function)
+  const displayRecoveredData = async (data) => {
+    const { cv, job, email, photo, plan, source } = data
+    
+    // Parse and display CV immediately
+    const parsedCV = parseCvFromText(cv)
+    const initialCvData = {
+      ...parsedCV,
+      fullContent: cv,
+      photo: photo,
+      jobPosting: job,
+      plan: plan,
+      isOriginal: true,
+      source: `${source}_recovery`,
+      email: email?.substring(0, 20) + '...'
+    }
+    
+    // Update user plan
+    if (plan) {
+      updateAppState({ userPlan: plan }, `set-plan-from-${source}`)
+    }
+    
+    // Display CV data immediately
+    setCvData(initialCvData)
+    
+    // Show success notification
+    addNotification({
+      type: 'success',
+      title: 'CV odzyskane',
+      message: `Pomyślnie odzyskano dane CV z ${source === 'localStorage' ? 'pamięci trwałej' : 'pamięci sesji'}`
+    })
+    
+    // Start AI optimization in background
+    console.log('🤖 Starting background AI optimization...')
+    await optimizeFullCVWithAI(cv, job, photo, plan)
+    
+    // Clean up sessionStorage after successful use (but keep localStorage for future)
+    if (source === 'sessionStorage') {
+      sessionStorage.removeItem('pendingCV')
+      sessionStorage.removeItem('pendingJob')
+      sessionStorage.removeItem('pendingEmail')  
+      sessionStorage.removeItem('pendingPhoto')
+      sessionStorage.removeItem('pendingPlan')
+      console.log('✅ SessionStorage cleaned up after recovery')
+    }
+  }
+
+  // Clean old localStorage entries (older than 24 hours)
+  const cleanOldLocalStorageEntries = () => {
+    try {
+      const now = Date.now()
+      const maxAge = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+      let cleanedCount = 0
+      
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('cvperfect_cv_')) {
+          try {
+            const dataStr = localStorage.getItem(key)
+            if (dataStr) {
+              const data = JSON.parse(dataStr)
+              const age = now - (data.timestamp || 0)
+              
+              if (age > maxAge) {
+                localStorage.removeItem(key)
+                cleanedCount++
+              }
+            }
+          } catch (error) {
+            // Remove corrupted entries
+            localStorage.removeItem(key)
+            cleanedCount++
+          }
+        }
+      })
+      
+      if (cleanedCount > 0) {
+        console.log(`🧹 Cleaned ${cleanedCount} old localStorage entries`)
       }
     } catch (error) {
-      console.error('❌ SessionStorage fallback error:', error)
-      return { success: false, source: 'sessionStorage_error', error: error.message }
-    } finally {
-      updateAppState({ isInitializing: false }, 'fallback-complete')
+      console.warn('⚠️ Failed to clean localStorage:', error.message)
     }
   }
 
@@ -1041,6 +1387,11 @@ function Success() {
       if (state.attempts >= MAX_RETRIES) {
         console.log('🚫 CENTRALIZED LIMIT: Max attempts reached')
         return { success: false, source: 'max_attempts_exceeded', attempts: state.attempts }
+      }
+      
+      if (state.nonRetryableError) {
+        console.log('🚫 CENTRALIZED STOP: Non-retryable error detected (404/session not found)')
+        return { success: false, source: 'session_not_found', error: state.lastError?.message }
       }
       
       return null // Continue execution
@@ -1097,12 +1448,29 @@ function Success() {
         }
       
         // Process direct session response - PRIORITY: CVPerfect API has full CV data
-        if (directSessionResponse.status === 'fulfilled' && directSessionResponse.value.ok) {
-          const cvPerfectData = await directSessionResponse.value.json()
-          // CVPerfect API takes priority if it has CV data
-          if (cvPerfectData.success && cvPerfectData.cvData) {
-            executionState.results.fullSessionData = cvPerfectData
-            console.log('🎯 Using CVPerfect data (centralized):', cvPerfectData.cvData.length, 'chars')
+        if (directSessionResponse.status === 'fulfilled') {
+          const response = directSessionResponse.value
+          
+          if (response.ok) {
+            const cvPerfectData = await response.json()
+            // CVPerfect API takes priority if it has CV data
+            if (cvPerfectData.success && cvPerfectData.cvData) {
+              executionState.results.fullSessionData = cvPerfectData
+              console.log('🎯 Using CVPerfect data (centralized):', cvPerfectData.cvData.length, 'chars')
+            }
+          } else if (response.status === 404) {
+            // 🎯 FIX: Handle 404 - session does not exist (stop retrying)
+            console.log(`⚠️ Session ${executionState.sessionId} does not exist (404) - stopping retry`)
+            const notFoundData = await response.json().catch(() => ({ error: 'Session not found' }))
+            
+            if (notFoundData.guidance) {
+              console.log('💡 Fallback guidance received:', notFoundData.guidance.message)
+            }
+            
+            // Mark this as non-retryable error
+            executionState.nonRetryableError = true
+            executionState.lastError = new Error(`Session ${executionState.sessionId} not found (404)`)
+            break // Exit the retry loop immediately
           }
         }
         
@@ -1124,6 +1492,11 @@ function Success() {
             photo: executionState.results.fullSessionData.photo,
             plan: executionState.results.fullSessionData.plan
           }
+          
+          // CRITICAL FIX: Ensure metadata.cv exists before accessing .length
+          if (!metadata.cv && executionState.results.fullSessionData.cvData) {
+            metadata.cv = executionState.results.fullSessionData.cvData
+          }
           const plan = executionState.results.stripeSessionData?.session?.metadata?.plan || metadata.plan || executionState.results.fullSessionData.plan || 'premium'
           const email = executionState.results.fullSessionData.session?.customer_email || executionState.results.fullSessionData.email || executionState.results.stripeSessionData?.session?.customer_email
         
@@ -1131,7 +1504,7 @@ function Success() {
             sessionId: executionState.results.actualSessionId,
             plan: plan,
           email: email,
-          cvLength: metadata.cv.length,
+          cvLength: metadata.cv?.length || 0,
           hasJob: !!metadata.job,
           hasPhoto: !!metadata.photo,
           template: metadata.template,
@@ -1151,6 +1524,7 @@ function Success() {
         const initialCvData = {
           ...originalCV,
           fullContent: metadata.cv,
+          email: email || originalCV.email,
           photo: metadata.photo,
           jobPosting: metadata.job || '',
           plan: plan,
@@ -1183,9 +1557,9 @@ function Success() {
         await optimizeFullCVWithAI(metadata.cv, metadata.job || '', metadata.photo, plan)
         return { success: true, source: 'full_session' }
         
-      } else if (stripeSessionData?.success && stripeSessionData.session?.metadata?.cv) {
+      } else if (executionState.results.stripeSessionData?.success && executionState.results.stripeSessionData.session?.metadata?.cv) {
         // FALLBACK: Use Stripe metadata (limited but better than nothing)
-        const metadata = stripeSessionData.session.metadata
+        const metadata = executionState.results.stripeSessionData.session.metadata
         const plan = metadata.plan || 'basic'
         setUserPlan(plan)
         
@@ -1287,30 +1661,11 @@ function Success() {
         console.warn('⚠️ SessionStorage fallback failed:', sessionError.message)
       }
       
-      // ABSOLUTE LAST RESORT: Show error instead of infinite loop
-      console.error('❌ CRITICAL: NO CV DATA FOUND AFTER ALL ATTEMPTS!')
-      console.error('🔍 Session IDs tried:', { original: sessionId, actual: actualSessionId })
-      console.error('⚠️ This indicates a serious system issue for paid users!')
+      // Continue to next attempt - DO NOT return error here, let retry logic handle it
+      console.log('🔄 No data found on current attempt, will retry if under limit')
       
-      // Show error state instead of demo for paying users
-      if (stripeSessionData?.session?.customer_email) {
-        console.log('💳 Paid user detected - showing error state instead of demo')
-        setCvData({
-          error: true,
-          message: 'Nie udało się załadować Twojego CV. Spróbuj odświeżyć stronę.',
-          sessionId: actualSessionId,
-          email: stripeSessionData.session.customer_email
-        })
-      } else {
-        console.log('👤 No payment detected - showing error state')
-        setCvData({
-          error: true,
-          message: 'Nie wykryto płatności. Wróć do strony głównej i zakup odpowiedni plan.',
-          actionRequired: 'purchase'
-        })
-      }
-      
-      return { success: false, source: 'error' }
+      // Exit the inner try-catch to continue the while loop
+      // This prevents returning error prematurely and allows retry logic to work
       
       } catch (attemptError) {
         console.error(`❌ ATTEMPT ${executionState.attempts} ERROR:`, attemptError)
@@ -1344,6 +1699,32 @@ function Success() {
     } catch (sessionStorageError) {
       console.warn('⚠️ SessionStorage fallback failed:', sessionStorageError.message)
     }
+    
+    // FINAL ERROR HANDLING: After all attempts failed
+    console.error('❌ CRITICAL: ALL ATTEMPTS EXHAUSTED - NO CV DATA FOUND!')
+    console.error('🔍 Session IDs tried:', { original: sessionId, actual: executionState.results.actualSessionId })
+    console.error('⚠️ This indicates a serious system issue for paid users!')
+    
+    // Show error state based on payment status
+    if (executionState.results.stripeSessionData?.session?.customer_email) {
+      console.log('💳 Paid user detected - showing error state instead of demo')
+      setCvData({
+        error: true,
+        message: 'Nie udało się załadować Twojego CV. Spróbuj odświeżyć stronę.',
+        sessionId: executionState.results.actualSessionId,
+        email: executionState.results.stripeSessionData.session.customer_email
+      })
+    } else {
+      console.log('👤 No payment detected - showing error state')
+      setCvData({
+        error: true,
+        message: 'Nie wykryto płatności. Wróć do strony głównej i zakup odpowiedni plan.',
+        actionRequired: 'purchase'
+      })
+    }
+    
+    // Update UI to stop loading state
+    updateAppState({ isInitializing: false }, 'final-error-state')
     
     // Return final failure result
     return { 
@@ -3320,9 +3701,9 @@ function Success() {
         </div>
       </div>
     )
-  }
+  }; // End templates object
 
-  // Memoized template renderer to prevent infinite loop
+  // Memoized template renderer to prevent infinite loop  
   const TemplateRenderer = useMemo(() => {
     // Check if no session found - show error UI
     if (loadingState.hasNoSession) {
@@ -3332,20 +3713,36 @@ function Success() {
             <div className="text-6xl mb-4">⚠️</div>
             <div className="text-2xl font-bold text-white mb-4">Brak danych sesji</div>
             <div className="text-red-200 mb-6">
-              Nie znaleziono sesji CV. Wróć do strony głównej i prześlij swoje CV ponownie.
+              Nie znaleziono sesji CV. Możesz przetestować funkcje w trybie demo, odzyskać sesję przez email lub wrócić do strony głównej.
             </div>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            >
-              Powrót do strony głównej
-            </button>
+            
+            {/* STEP 6: Recovery buttons with DEMO option */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
+              <button
+                onClick={() => window.location.href = '/success?demo=true'}
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                🎭 Tryb Demo
+              </button>
+              <button
+                onClick={() => setUiState(prev => ({ ...prev, modals: { ...prev.modals, recovery: true } }))}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                📧 Odzyskaj używając email
+              </button>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                Powrót do strony głównej
+              </button>
+            </div>
           </div>
         </div>
       );
     }
 
-    // Show loading state during initialization
+    // Show loading state during initialization  
     if (loadingState.isInitializing) {
       return (
         <div className="bg-gray-900 border border-purple-400/30 p-8 max-w-2xl mx-auto shadow-2xl rounded-2xl">
@@ -3411,6 +3808,25 @@ function Success() {
           </motion.div>
         ))}
       </AnimatePresence>
+
+      {/* 🎭 DEMO MODE BANNER */}
+      {appState.isDemoMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-yellow-400/95 to-orange-500/95 backdrop-blur-lg border border-orange-300/50 rounded-2xl px-6 py-3 shadow-2xl"
+        >
+          <div className="flex items-center gap-3">
+            <div className="text-2xl animate-pulse">🎭</div>
+            <div className="text-black font-semibold">
+              Tryb Demonstracyjny
+            </div>
+            <div className="text-black/80 text-sm">
+              • Wszystkie funkcje dostępne do testowania
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* FAZA 6: MILLION DOLLAR PREMIUM UI/UX COMPONENTS */}
       {/* ============================================== */}
@@ -3953,6 +4369,135 @@ function Success() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* STEP 6: Email Recovery Modal */}
+      <AnimatePresence>
+        {uiState.modals.recovery && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setUiState(prev => ({ ...prev, modals: { ...prev.modals, recovery: false } }))
+              }
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-gradient-to-br from-slate-900/95 via-gray-900/95 to-slate-900/95 backdrop-blur-xl border border-white/20 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4"
+            >
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">📧</div>
+                <h3 className="text-2xl font-bold text-white mb-2">Odzyskaj sesję CV</h3>
+                <p className="text-gray-300">Wprowadź email użyty podczas przesyłania CV</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Twój adres email"
+                    value={recoveryState.email}
+                    onChange={(e) => setRecoveryState(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      // STEP 9: Real API-based recovery
+                      setRecoveryState(prev => ({ ...prev, isRecovering: true }))
+                      console.log('🔍 Attempting email recovery for:', recoveryState.email)
+                      
+                      try {
+                        const response = await fetch('/api/recover-session', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: recoveryState.email })
+                        })
+                        
+                        const result = await response.json()
+                        
+                        if (result.success && result.sessionId) {
+                          console.log('✅ Recovery successful:', result.sessionId)
+                          
+                          // Clear recovery state and close modal
+                          setRecoveryState({ email: '', isRecovering: false })
+                          setUiState(prev => ({ ...prev, modals: { ...prev.modals, recovery: false } }))
+                          
+                          // Clear cookie to ensure fresh start
+                          document.cookie = 'cvperfect_session=; path=/; max-age=0'
+                          
+                          // Reload page with recovered session ID
+                          const currentUrl = new URL(window.location)
+                          currentUrl.searchParams.set('session_id', result.sessionId)
+                          
+                          addNotification({
+                            type: 'success',
+                            title: 'Sesja odzyskana!',
+                            message: 'Przekierowuję do Twojego CV...'
+                          })
+                          
+                          // Redirect after short delay for notification
+                          setTimeout(() => {
+                            window.location.href = currentUrl.toString()
+                          }, 1500)
+                          
+                        } else {
+                          // Handle different error types
+                          let errorTitle = 'Nie znaleziono sesji'
+                          let errorMessage = result.message || 'Nie znaleziono sesji dla podanego adresu email.'
+                          
+                          if (result.error === 'session_expired') {
+                            errorTitle = 'Sesja wygasła'
+                            errorMessage = 'Twoja sesja wygasła. Prześlij CV ponownie aby kontynuować.'
+                          } else if (result.error === 'no_session_found') {
+                            errorTitle = 'Brak sesji'
+                            errorMessage = 'Nie znaleziono sesji dla tego adresu email. Sprawdź adres lub prześlij CV ponownie.'
+                          }
+                          
+                          setRecoveryState(prev => ({ ...prev, isRecovering: false }))
+                          
+                          addNotification({
+                            type: 'error',
+                            title: errorTitle,
+                            message: errorMessage
+                          })
+                        }
+                        
+                      } catch (error) {
+                        console.error('❌ Recovery API error:', error)
+                        setRecoveryState(prev => ({ ...prev, isRecovering: false }))
+                        
+                        addNotification({
+                          type: 'error',
+                          title: 'Błąd odzyskiwania',
+                          message: 'Wystąpił błąd podczas odzyskiwania sesji. Spróbuj ponownie.'
+                        })
+                      }
+                    }}
+                    disabled={!recoveryState.email || recoveryState.isRecovering}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 disabled:cursor-not-allowed"
+                  >
+                    {recoveryState.isRecovering ? '🔍 Szukam...' : 'Odzyskaj'}
+                  </button>
+                  <button
+                    onClick={() => setUiState(prev => ({ ...prev, modals: { ...prev.modals, recovery: false } }))}
+                    className="px-6 py-3 border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-all duration-300"
+                  >
+                    Anuluj
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

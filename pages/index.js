@@ -95,7 +95,6 @@ const [dragActive, setDragActive] = useState(false);
 const [uploadProgress, setUploadProgress] = useState(0);
 
 const [savedCV, setSavedCV] = useState('');
-const [showTemplateModal, setShowTemplateModal] = useState(false);
 
 const [errors, setErrors] = useState({});
 const [selectedPlan, setSelectedPlan] = useState('basic');
@@ -126,12 +125,40 @@ const handlePlanSelect = async (plan) => {
   const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   setSessionId(newSessionId);
   
-  // Save CV data to sessionStorage
+  // DUAL STORAGE STRATEGY: Save CV data to both sessionStorage AND localStorage
   const cvContent = savedCV || currentCV || '';
+  const timestamp = Date.now();
+  const localStorageKey = `cvperfect_cv_${newSessionId}`;
+  
+  // SessionStorage (for current session)
   sessionStorage.setItem('pendingCV', cvContent);
   sessionStorage.setItem('pendingEmail', formData.email || userEmail);
   sessionStorage.setItem('pendingJob', jobPosting);
   sessionStorage.setItem('pendingPlan', plan);
+  
+  // LocalStorage (for persistence across browser sessions - 24h TTL)
+  const persistentData = {
+    cv: cvContent,
+    email: formData.email || userEmail,
+    job: jobPosting,
+    plan: plan,
+    sessionId: newSessionId,
+    timestamp: timestamp,
+    source: 'index_payment_flow',
+    ttl: 24 * 60 * 60 * 1000 // 24 hours
+  };
+  
+  try {
+    localStorage.setItem(localStorageKey, JSON.stringify(persistentData));
+    console.log('✅ CV data saved to both sessionStorage and localStorage:', {
+      sessionId: newSessionId,
+      cvLength: cvContent.length,
+      localStorageKey: localStorageKey
+    });
+  } catch (error) {
+    console.warn('⚠️ Failed to save to localStorage (storage full?):', error.message);
+    // Continue with sessionStorage only
+  }
   
   // Handle template selection logic
   if (plan === 'basic') {
@@ -166,7 +193,15 @@ const handlePlanSelect = async (plan) => {
         showToast('Błąd podczas zapisywania sesji', 'error');
       } else {
         console.log('✅ [DEBUG] Session saved successfully');
+        
+        // STEP 4: Set cookie-based session tracking for redirect survival
+        document.cookie = `cvperfect_session=${newSessionId}; path=/; max-age=3600; SameSite=Lax; Secure=${location.protocol === 'https:'}`;
+        console.log('🍪 Set session cookie for redirect survival:', newSessionId);
       }
+      
+      // CRITICAL FIX: Save session ID to sessionStorage BEFORE payment
+      sessionStorage.setItem('currentSessionId', newSessionId);
+      console.log('💾 [SESSION FIX] Saved currentSessionId to sessionStorage:', newSessionId);
       
       // Create Stripe checkout session
       console.log('💳 [DEBUG] Creating Stripe checkout session...', {
@@ -262,7 +297,15 @@ const handlePlanSelect = async (plan) => {
           return;
         } else {
           console.log('✅ [DEBUG] Session saved successfully for Gold/Premium');
+          
+          // STEP 4: Set cookie-based session tracking for redirect survival
+          document.cookie = `cvperfect_session=${newSessionId}; path=/; max-age=3600; SameSite=Lax; Secure=${location.protocol === 'https:'}`;
+          console.log('🍪 Set session cookie for redirect survival:', newSessionId);
         }
+        
+        // CRITICAL FIX: Save session ID to sessionStorage BEFORE payment (Gold/Premium)
+        sessionStorage.setItem('currentSessionId', newSessionId);
+        console.log('💾 [SESSION FIX] Saved currentSessionId to sessionStorage (Gold/Premium):', newSessionId);
         
         // Create Stripe checkout session
         console.log('💳 [DEBUG] Creating Stripe checkout session for Gold/Premium...', {
@@ -311,11 +354,68 @@ const handlePlanSelect = async (plan) => {
       }
       
     } else {
-      // No template selected - show template selection modal
-      console.log('🎯 [PLAN DEBUG] No template selected, showing template modal');
-      setShowMainModal(false);
-      setShowTemplateModal(true);
-      console.log('🎯 [PLAN DEBUG] Template modal should now be visible');
+      // Gold/Premium plans - use default template and proceed to payment
+      const defaultTemplate = plan === 'premium' ? 'modern' : 'simple';
+      sessionStorage.setItem('selectedTemplate', defaultTemplate);
+      
+      // Save to backend and proceed to payment
+      try {
+        console.log('💾 [DEBUG] Saving session to backend...', {
+          sessionId: newSessionId,
+          cvLength: cvContent.length,
+          email: formData.email || userEmail,
+          plan: plan,
+          template: defaultTemplate
+        });
+        
+        const saveResponse = await fetch('/api/save-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: newSessionId,
+            cvData: cvContent,
+            email: formData.email || userEmail,
+            jobPosting: jobPosting,
+            plan: plan,
+            template: defaultTemplate,
+            photo: null
+          })
+        });
+        
+        if (!saveResponse.ok) {
+          console.error('❌ [DEBUG] Failed to save session, status:', saveResponse.status);
+          showToast('Błąd podczas zapisywania sesji', 'error');
+        } else {
+          console.log('✅ [DEBUG] Session saved successfully');
+          
+          // Set cookie-based session tracking for redirect survival
+          document.cookie = `cvperfect_session=${newSessionId}; path=/; max-age=3600; SameSite=Lax; Secure=${location.protocol === 'https:'}`;
+          console.log('🍪 Set session cookie for redirect survival:', newSessionId);
+          
+          // Redirect to Stripe checkout
+          const response = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              priceId: getPriceId(plan),
+              sessionId: newSessionId
+            })
+          });
+          
+          if (response.ok) {
+            const { url } = await response.json();
+            console.log('🚀 [DEBUG] Redirecting to Stripe:', url);
+            window.location.href = url;
+          } else {
+            console.error('❌ [DEBUG] Checkout session creation failed:', response.status);
+            showToast('Błąd podczas tworzenia sesji płatności', 'error');
+          }
+        }
+        
+      } catch (error) {
+        console.error('💥 [DEBUG] Payment error caught:', error);
+        showToast(`Wystąpił błąd podczas przetwarzania płatności: ${error.message}`, 'error');
+      }
     }
   }
 };
@@ -341,9 +441,32 @@ const handleFileUpload = (file) => {
     setSavedCV(content);
     setCurrentCV(content);
     
-    // Save to sessionStorage immediately
+    // DUAL STORAGE: Save to both sessionStorage and localStorage immediately
     sessionStorage.setItem('pendingCV', content);
     sessionStorage.setItem('pendingEmail', formData.email || userEmail);
+    
+    // Also save to localStorage for persistence
+    const fileUploadKey = `cvperfect_cv_fileupload_${Date.now()}`;
+    const fileData = {
+      cv: content,
+      email: formData.email || userEmail,
+      job: '',
+      plan: 'premium', // Default plan for file uploads
+      timestamp: Date.now(),
+      source: 'file_upload',
+      ttl: 24 * 60 * 60 * 1000 // 24 hours
+    };
+    
+    try {
+      localStorage.setItem(fileUploadKey, JSON.stringify(fileData));
+      console.log('✅ File upload saved to both storages:', {
+        fileName: file.name,
+        contentLength: content.length,
+        localStorageKey: fileUploadKey
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to save file upload to localStorage:', error.message);
+    }
     
     setFormData(prev => ({
       ...prev,
@@ -365,7 +488,13 @@ useEffect(() => {
 
 
 
-const [liveStats, setLiveStats] = useState(null);
+const [liveStats, setLiveStats] = useState(() => {
+  // Initialize with computed stats to avoid showing dashes
+  if (typeof window !== 'undefined') {
+    return computeLiveStats(new Date());
+  }
+  return null;
+});
 
 useEffect(() => {
   if (typeof window === 'undefined') return;
@@ -374,7 +503,10 @@ useEffect(() => {
 
 function animateNumber(el, end, lang, duration=900){
   if (!el || !Number.isFinite(end)) return;       // ← eliminuje NaN
-  const t0=performance.now(), start=0;
+  // Start from current displayed value to avoid jump from 0
+  const startText = el.textContent.replace(/[^\d]/g, '');
+  const start = startText ? parseInt(startText) : 0;
+  const t0=performance.now();
   const step=(t)=>{
     const p=Math.min(1,(t-t0)/duration);
     const val=Math.floor(start + (end-start)*p);
@@ -678,6 +810,10 @@ const handleClick = function(e) {
       sessionStorage.removeItem('pendingPlan');
       sessionStorage.removeItem('selectedTemplate');
       
+      // STEP 1: Save session ID to localStorage for fallback recovery
+      localStorage.setItem('lastSuccessSessionId', sessionId);
+      console.log('💾 Saved lastSuccessSessionId for fallback:', sessionId);
+      
       window.location.href = `/success?session_id=${sessionId}&template=${selectedTemplate || 'default'}`;
     }
   }
@@ -777,6 +913,10 @@ useEffect(() => {
       sessionStorage.removeItem('pendingJob');
       sessionStorage.removeItem('pendingEmail');
       sessionStorage.removeItem('pendingPlan');
+      
+      // STEP 1: Save session ID to localStorage for fallback recovery
+      localStorage.setItem('lastSuccessSessionId', sessionId);
+      console.log('💾 Saved lastSuccessSessionId for fallback:', sessionId);
       
       // Przekieruj na stronę sukcesu z danymi
       window.location.href = `/success?session_id=${sessionId}`;
@@ -1153,38 +1293,6 @@ showToast(
 
 
 
-// Template selection handler
-const handleTemplateSelect = async (template) => {
-  console.log('🎨 [TEMPLATE DEBUG] Template selection started');
-  console.log('🎨 [TEMPLATE DEBUG] Clicked template:', template);
-  
-  const plan = sessionStorage.getItem('pendingPlan');
-  console.log('🎨 [TEMPLATE DEBUG] Retrieved plan from sessionStorage:', plan);
-  
-  if (!plan) {
-    console.error('❌ [TEMPLATE DEBUG] No plan found in sessionStorage!');
-    showToast('Błąd: Nie znaleziono wybranego planu', 'error');
-    return;
-  }
-  
-  // Close template modal
-  console.log('🎨 [TEMPLATE DEBUG] Closing template modal');
-  setShowTemplateModal(false);
-  
-  // Save selected template
-  console.log('🎨 [TEMPLATE DEBUG] Saving template to sessionStorage:', template);
-  sessionStorage.setItem('selectedTemplate', template);
-  
-  // Use unified payment flow
-  console.log('🎨 [TEMPLATE DEBUG] Calling handlePlanSelect with plan:', plan);
-  try {
-    await handlePlanSelect(plan);
-    console.log('🎨 [TEMPLATE DEBUG] handlePlanSelect completed successfully');
-  } catch (error) {
-    console.error('❌ [TEMPLATE DEBUG] Error in handlePlanSelect:', error);
-    showToast('Wystąpił błąd podczas przejścia do płatności', 'error');
-  }
-};
 
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN
@@ -1493,41 +1601,60 @@ style={{
               <span className="logo-badge">AI</span>
               <span className="logo-text">CvPerfect</span>
             </div>
-<div className="nav-links" id="mobileNav">
-  <div className="language-switcher">
-    <button 
-      className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
-      onClick={() => {
-        setCurrentLanguage('pl');
-        closeMobileMenu();
-      }}
-      title="Polski"
-    >
-      🇵🇱 PL
-    </button>
-    <button 
-      className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
-      onClick={() => {
-        setCurrentLanguage('en');
-        closeMobileMenu();
-      }}
-      title="English"
-    >
-      🇬🇧 EN
-    </button>
-  </div>
-<button className="nav-cta" onClick={handleOptimizeNow} data-testid="main-cta">
-    {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
-  </button>
-
-</div>
-</div>
-<div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
-  <span></span>
-  <span></span>
-  <span></span>
-
+          {/* Desktop Language Switcher */}
+          <div className="desktop-language-switcher">
+            <button 
+              className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+              onClick={() => setCurrentLanguage('pl')}
+              title="Polski"
+            >
+              🇵🇱 PL
+            </button>
+            <button 
+              className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+              onClick={() => setCurrentLanguage('en')}
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
           </div>
+          
+          {/* Mobile Menu Button */}
+          <div className="mobile-menu-btn" onClick={toggleMobileMenu} id="mobileMenuBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        
+        {/* Mobile Navigation Menu */}
+        <div className="nav-links" id="mobileNav">
+          <div className="language-switcher">
+            <button 
+              className={`lang-btn ${currentLanguage === 'pl' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentLanguage('pl');
+                closeMobileMenu();
+              }}
+              title="Polski"
+            >
+              🇵🇱 PL
+            </button>
+            <button 
+              className={`lang-btn ${currentLanguage === 'en' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentLanguage('en');
+                closeMobileMenu();
+              }}
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+          <button className="nav-cta" onClick={handleOptimizeNow} data-testid="main-cta">
+            {currentLanguage === 'pl' ? '🎯 Zoptymalizuj CV teraz ⚡' : '🎯 Optimize CV now ⚡'}
+          </button>
+        </div>
         </nav>
 
         {/* Hero Section */}
@@ -1545,7 +1672,7 @@ style={{
     : <>Trusted across Europe. <strong>95% ATS pass rate</strong> and up to <strong>410% more interviews</strong>. From <strong>≈ €4.40</strong>.</>}
 </p>
 <h1 className="hero-title">
-  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki AI CV ' : 'Boost your chances with AI CV '}
+  {currentLanguage === 'pl' ? 'Zwiększ swoje szanse dzięki: ' : 'Boost your chances with: '}
   <br />
   <span className="typing-block">
     <span className="typing-safe-zone">
@@ -1695,7 +1822,7 @@ style={{
     <div className="stats-grid">
       <div className="stat-box">
         <div className="stat-icon">📄</div>
-        <div className="stat-value"><span data-stat="cv" suppressHydrationWarning>—</span></div>
+        <div className="stat-value"><span data-stat="cv" suppressHydrationWarning>{(liveStats?.cv && !isNaN(liveStats.cv)) ? liveStats.cv.toLocaleString(currentLanguage==='pl' ? 'pl-PL' : 'en-US') : '15,000'}</span></div>
 
         <div className="stat-label">{currentLanguage==='pl' ? 'CV zoptymalizowanych' : 'CV optimized'}</div>
         <div className="stat-growth">+3 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
@@ -1719,7 +1846,7 @@ style={{
       
       <div className="stat-box">
         <div className="stat-icon">💼</div>
-        <div className="stat-value"><span data-stat="jobs" suppressHydrationWarning>—</span></div>
+        <div className="stat-value"><span data-stat="jobs" suppressHydrationWarning>{(liveStats?.jobs && !isNaN(liveStats.jobs)) ? liveStats.jobs.toLocaleString(currentLanguage==='pl' ? 'pl-PL' : 'en-US') : '130'}</span></div>
 
         <div className="stat-label">{currentLanguage==='pl' ? 'Nowych miejsc pracy' : 'New jobs'}</div>
         <div className="stat-growth">+12 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
@@ -1966,7 +2093,7 @@ style={{
 
 {/* NOWY MODAL - 2 KROKI */}
 {showMainModal && (
-  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 999999}}>
+  <div className="modal-overlay" onClick={closeModal} style={{zIndex: 99998}}>
     <div className="modal-content optimize-modal" onClick={(e) => e.stopPropagation()}>
       <button className="modal-close" onClick={closeModal}>×</button>
       
@@ -2248,77 +2375,6 @@ style={{
   </div>
 )}
 
-{/* Template Selection Modal */}
-{showTemplateModal && (
-  <div className="modal-overlay" onClick={() => setShowTemplateModal(false)} style={{zIndex: 999999}}>
-    <div className="modal-content template-modal" onClick={(e) => e.stopPropagation()}>
-      <button className="modal-close" onClick={() => setShowTemplateModal(false)}>×</button>
-      
-      <div className="template-header">
-        <h2>{currentLanguage === 'pl' ? '🎨 Wybierz szablon' : '🎨 Choose template'}</h2>
-        <p>{currentLanguage === 'pl' ? 'Wybierz profesjonalny szablon dla swojego CV' : 'Choose a professional template for your CV'}</p>
-      </div>
-
-      <div className="modal-body">
-        <div className="templates-grid">
-          {/* Simple Template - Always available */}
-          <div className="template-card" onClick={() => handleTemplateSelect('simple')}>
-            <div className="template-icon">📄</div>
-            <h3>{currentLanguage === 'pl' ? 'Klasyczny' : 'Classic'}</h3>
-            <p>{currentLanguage === 'pl' ? 'Prosty i elegancki' : 'Simple and elegant'}</p>
-          </div>
-
-          {/* Modern Template */}
-          <div className="template-card" onClick={() => handleTemplateSelect('modern')}>
-            <div className="template-icon">💼</div>
-            <h3>{currentLanguage === 'pl' ? 'Nowoczesny' : 'Modern'}</h3>
-            <p>{currentLanguage === 'pl' ? 'Współczesny design' : 'Contemporary design'}</p>
-          </div>
-
-          {/* Executive Template */}
-          <div className="template-card" onClick={() => handleTemplateSelect('executive')}>
-            <div className="template-icon">👔</div>
-            <h3>{currentLanguage === 'pl' ? 'Kierowniczy' : 'Executive'}</h3>
-            <p>{currentLanguage === 'pl' ? 'Dla menedżerów' : 'For managers'}</p>
-          </div>
-
-          {/* Creative Template */}
-          <div className="template-card" onClick={() => handleTemplateSelect('creative')}>
-            <div className="template-icon">🎨</div>
-            <h3>{currentLanguage === 'pl' ? 'Kreatywny' : 'Creative'}</h3>
-            <p>{currentLanguage === 'pl' ? 'Dla branż kreatywnych' : 'For creative industries'}</p>
-          </div>
-
-          {/* Premium Templates (only for premium plan) */}
-          {sessionStorage.getItem('pendingPlan') === 'premium' && (
-            <>
-              <div className="template-card premium" onClick={() => handleTemplateSelect('tech')}>
-                <div className="template-badge">PREMIUM</div>
-                <div className="template-icon">💻</div>
-                <h3>{currentLanguage === 'pl' ? 'Tech' : 'Tech'}</h3>
-                <p>{currentLanguage === 'pl' ? 'Dla IT i technologii' : 'For IT and tech'}</p>
-              </div>
-
-              <div className="template-card premium" onClick={() => handleTemplateSelect('luxury')}>
-                <div className="template-badge">PREMIUM</div>
-                <div className="template-icon">💎</div>
-                <h3>{currentLanguage === 'pl' ? 'Luksusowy' : 'Luxury'}</h3>
-                <p>{currentLanguage === 'pl' ? 'Ekskluzywny design' : 'Exclusive design'}</p>
-              </div>
-
-              <div className="template-card premium" onClick={() => handleTemplateSelect('minimal')}>
-                <div className="template-badge">PREMIUM</div>
-                <div className="template-icon">⚪</div>
-                <h3>{currentLanguage === 'pl' ? 'Minimalistyczny' : 'Minimal'}</h3>
-                <p>{currentLanguage === 'pl' ? 'Czysty i prosty' : 'Clean and simple'}</p>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
 
         {/* FAQ Section */}
         <div className="faq-section" id="faq">
@@ -2352,35 +2408,63 @@ style={{
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">🤖</span>
-                  <h3>Jak działa AI optymalizacja?</h3>
+                  <h3>
+  {currentLanguage === 'pl' 
+  ? 'Jak działa AI optymalizacja?' 
+  : 'How does AI optimization work?'}
+</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę.</p>
+                 <p>
+  {currentLanguage === 'pl' 
+    ? 'Nasze AI analizuje Twoje CV pod kątem konkretnej oferty pracy. Sprawdza słowa kluczowe, formatowanie, strukturę.' 
+    : 'Our AI analyzes your CV for specific job offers. It checks keywords, formatting, and structure.'}
+</p>
                 </div>
               </div>
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">⏱️</span>
-                  <h3>Ile czasu zajmuje optymalizacja?</h3>
+                  <h3>
+  {currentLanguage === 'pl' 
+  ? 'Ile czasu zajmuje optymalizacja?' 
+  : 'How long does optimization take?'}
+</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję.</p>
+                  <p>
+  {currentLanguage === 'pl' 
+    ? 'Cały proces trwa maksymalnie 30 sekund! Wklejasz CV i opis oferty, AI analizuje i zwraca zoptymalizowaną wersję.' 
+    : 'The entire process takes a maximum of 30 seconds! You paste your CV and job description, AI analyzes and returns the optimized version.'}
+</p>
                 </div>
               </div>
               <div className="faq-item">
                 <div className="faq-question">
                   <span className="faq-icon">🔒</span>
-                  <h3>Czy moje dane są bezpieczne?</h3>
+                  <h3>
+  {currentLanguage === 'pl' 
+  ? 'Czy moje dane są bezpieczne?' 
+  : 'Is my data secure?'}
+</h3>
                 </div>
                 <div className="faq-answer">
-                  <p>Absolutnie! Twoje CV jest przetwarzane bezpiecznie, nie przechowujemy danych. Płatności przez Stripe.</p>
+                  <p>
+  {currentLanguage === 'pl' 
+    ? 'Absolutnie! Twoje CV jest przetwarzane bezpiecznie, nie przechowujemy danych. Płatności przez Stripe.' 
+    : 'Absolutely! Your CV is processed securely, we don\'t store data. Payments through Stripe.'}
+</p>
                 </div>
               </div>
             </div>
             <div className="faq-cta">
-              <h3>Nie znalazłeś odpowiedzi?</h3>
+              <h3>
+  {currentLanguage === 'pl' 
+  ? 'Nie znalazłeś odpowiedzi?' 
+  : 'Didn\'t find the answer?'}
+</h3>
 <button className="faq-button" onClick={handleOptimizeNow}>
-  Wypróbuj za darmo ⚡
+  {currentLanguage === 'pl' ? 'Wypróbuj za darmo ⚡' : 'Try for free ⚡'}
 </button>
             </div>
           </div>
@@ -2571,10 +2655,12 @@ style={{
 }
 .stat-number{ white-space: nowrap; }
 
-        /* Language Switcher */
+        /* Language Switcher - ensure it stays above modal overlay */
         .language-switcher {
           display: flex;
           gap: 8px;
+          position: relative;
+          z-index: 999999999999;
           margin-right: 20px;
         }
 
@@ -3019,12 +3105,23 @@ html {
   gap: 40px;
 }
 
-.language-switcher {
+/* Desktop Language Switcher */
+.desktop-language-switcher {
   display: flex;
   gap: 8px;
+  position: relative;
+  z-index: 999999999999;
   margin-right: 20px;
   padding-right: 20px;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile Language Switcher (inside nav-links) */
+.language-switcher {
+  display: flex;
+  gap: 8px;
+  position: relative;
+  z-index: 999999999999;
 }
 
 .lang-btn {
@@ -3058,6 +3155,12 @@ html {
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+  /* Hide desktop language switcher on mobile */
+  .desktop-language-switcher {
+    display: none !important;
+  }
+  
+  /* Mobile language switcher styles */
   .language-switcher {
     margin-right: 0;
     padding-right: 0;
@@ -6185,7 +6288,7 @@ html {
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    z-index: 1000;
+    z-index: 9999999999;
   }
   
   .nav-links.show {
@@ -6252,6 +6355,17 @@ html {
   display: none;
 }
 
+/* Show desktop language switcher on desktop */
+@media (min-width: 769px) {
+  .desktop-language-switcher {
+    display: flex !important;
+  }
+  
+  .language-switcher {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: flex !important;
@@ -6293,7 +6407,7 @@ html {
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    z-index: 1000;
+    z-index: 99999999999;
     display: none;
   }
   
@@ -7122,7 +7236,7 @@ button:focus {
 /* === TOP GAP KILLER (wklej na sam koniec) === */
 html, body { margin:0 !important; padding:0 !important; }
 
-.navigation { position: fixed; top:0; left:0; right:0; z-index:2147483600; }
+navigation { position: fixed; top:0; left:0; right:0; z-index:99999999999 !important; }
 
 .hero-section{
   position: relative;
@@ -7439,6 +7553,7 @@ html, body { margin:0 !important; padding:0 !important; }
   animation: modalFadeIn 0.3s ease;
   overflow-y: auto !important;
   padding: 40px 20px;
+  pointer-events: none !important;
 }
 
 @keyframes modalFadeIn {
@@ -7460,6 +7575,7 @@ html, body { margin:0 !important; padding:0 !important; }
     0 50px 150px rgba(0, 0, 0, 0.6),
     0 0 100px rgba(120, 80, 255, 0.1);
   animation: modalSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: auto !important;
 }
 
 @keyframes modalSlideIn {
