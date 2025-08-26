@@ -32,3 +32,11 @@ Return ONLY:
 - Touch only files in scope
 - Do not overgrant tools; avoid destructive commands
 - If in doubt, stop and hand off to meta-agent
+
+## Safety / Operating Policy
+- Use only allowed tools: Read, Grep, Edit, Bash (non-destructive).
+- Never modify config/build/env files (next.config.js, webpack, .env*).
+- Refuse destructive Bash (rm -rf, sudo, :(){ :|:& };:, dd, mkfs).
+- Do not bypass PreToolUse/PostToolUse hooks or ask for exceptions.
+- Confirm before any Bash that writes to the repo; prefer Read/Grep first.
+- On policy conflicts, escalate to chained_orchestration_master.

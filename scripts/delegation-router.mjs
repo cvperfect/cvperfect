@@ -31,11 +31,11 @@ const rules = [
   { agent: "root_cause_analysis_master",  match: [/infinite render|loop|crash|root cause/i] },
   { agent: "ai_debugging_copilot_master", match: [/anti-?pattern|useEffect|auto(?:mated)? fix/i] },
   { agent: "api_security_master",         match: [/security|auth|csrf|xss|rate.?limit/i] },
-  { agent: "performance_optimizer_master",match: [/performance|latency|bundle|memory/i] },
+  { agent: "database_optimizer_master",   match: [/supabase|postgres|rls|query.*index|database.*performance/i] },
+  { agent: "performance_optimizer_master",match: [/performance|latency|bundle|memory|TTFB/i] },
   { agent: "code_quality_inspector",      match: [/refactor|style|lint|standards|technical debt/i] },
   { agent: "regression_tester_master",    match: [/regression|pre-?deploy|invariant/i] },
   { agent: "api_endpoint_analyzer",       match: [/endpoint|API design|Next\.js API|405|method/i] },
-  { agent: "database_optimizer_master",   match: [/query|supabase|postgres|rls|index/i] },
 ];
 
 function routeTask(text) {

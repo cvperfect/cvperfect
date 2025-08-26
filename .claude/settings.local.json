@@ -74,7 +74,12 @@
       "Bash(for:*)",
       "Bash(do if [ -f \".claude/hooks_quarantine/$f\" ])",
       "Bash(then git mv \".claude/hooks_quarantine/$f\" \".claude/hooks/$f\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git rm:*)",
+      "Bash(cat:*)",
+      "Bash(do echo \"Processing $file...\")",
+      "Bash(tail:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": [],

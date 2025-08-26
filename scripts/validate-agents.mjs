@@ -15,7 +15,8 @@ const NEW_8_AGENTS = [
   'database_optimizer_master.md'
 ];
 
-const ALLOWED_TOOLS = ['Read', 'Edit', 'Grep', 'Glob', 'Bash'];
+const ALLOWED_TOOLS = ['Read', 'Edit', 'Grep', 'Bash'];
+const ALLOWED_MODELS = ['sonnet', 'opus', 'haiku'];
 const REQUIRED_SECTIONS = ['Operating Procedure', 'Output / Handoff', 'Guardrails'];
 
 console.log('🔍 CVPerfect Agent Validator - NEW 8 AGENTS ONLY');
@@ -73,6 +74,12 @@ for (const agentFile of NEW_8_AGENTS) {
         console.log(`❌ FAIL: Missing required field: ${field}`);
         passed = false;
       }
+    }
+    
+    // Check model is allowed
+    if (frontmatter.model && !ALLOWED_MODELS.includes(frontmatter.model)) {
+      console.log(`❌ FAIL: Model "${frontmatter.model}" not in allowed set: ${ALLOWED_MODELS.join(', ')}`);
+      passed = false;
     }
     
     // Check description contains "Use PROACTIVELY"

@@ -17,7 +17,16 @@ try {
   console.log("✅ BLOCKED config edit:", e.message);
 }
 
-// 4.2 Legalna edycja README + post-hook lint
+// 4.2 Próba niebezpiecznej komendy Bash
+try {
+  preToolUse({agent:"implementer", tool:"Bash", cmd: "rm -rf /tmp/should_be_blocked"});
+  console.log("❌ Expected BLOCK on rm -rf, but was allowed");
+  process.exitCode = 1;
+} catch (e) {
+  console.log("✅ BLOCKED destructive bash:", e.message);
+}
+
+// 4.3 Legalna edycja README + post-hook lint
 try {
   preToolUse({agent:"implementer", tool:"Edit", target: readme});
   toolEdit(readme, "\nHook test line\n");
