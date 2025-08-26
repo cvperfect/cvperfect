@@ -1,0 +1,14 @@
+{
+  "sessionId": 1756215242458,
+  "timestamp": "2025-08-26T13:34:02.458Z",
+  "enforcementMode": "strict",
+  "featuresRequired": [
+    "tokenOptimization",
+    "extendedThinking",
+    "aiCommitGeneration",
+    "architectureAnalysis"
+  ],
+  "complianceScore": 0,
+  "violations": [],
+  "enforcementActions": []
+}

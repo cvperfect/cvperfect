@@ -1,0 +1,97 @@
+{
+  "summary": {
+    "totalTests": 6,
+    "passed": 5,
+    "failed": 1,
+    "duration": "2709ms",
+    "successRate": "83%"
+  },
+  "testResults": [
+    {
+      "timestamp": "2025-08-26T13:49:43.375Z",
+      "type": "start",
+      "message": "🚀 Starting CVPerfect Comprehensive Website Tests",
+      "duration": 2
+    },
+    {
+      "timestamp": "2025-08-26T13:49:43.376Z",
+      "type": "test",
+      "message": "Starting test: Server Connection",
+      "duration": 2
+    },
+    {
+      "timestamp": "2025-08-26T13:49:43.404Z",
+      "type": "pass",
+      "message": "✅ PASSED: Server Connection (28ms)",
+      "duration": 30
+    },
+    {
+      "timestamp": "2025-08-26T13:49:43.404Z",
+      "type": "test",
+      "message": "Starting test: Main Page Load",
+      "duration": 30
+    },
+    {
+      "timestamp": "2025-08-26T13:49:44.884Z",
+      "type": "fail",
+      "message": "❌ FAILED: Main Page Load - Failed to connect to http://localhost:3000: Command failed: curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000\n (1480ms)",
+      "duration": 1510
+    },
+    {
+      "timestamp": "2025-08-26T13:49:44.884Z",
+      "type": "test",
+      "message": "Starting test: API Endpoints",
+      "duration": 1510
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.082Z",
+      "type": "pass",
+      "message": "✅ PASSED: API Endpoints (1197ms)",
+      "duration": 2708
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.082Z",
+      "type": "test",
+      "message": "Starting test: Responsive Breakpoints",
+      "duration": 2708
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.082Z",
+      "type": "pass",
+      "message": "✅ PASSED: Responsive Breakpoints (0ms)",
+      "duration": 2708
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.082Z",
+      "type": "test",
+      "message": "Starting test: Component Load",
+      "duration": 2708
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.082Z",
+      "type": "pass",
+      "message": "✅ PASSED: Component Load (0ms)",
+      "duration": 2708
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.082Z",
+      "type": "test",
+      "message": "Starting test: Agent System",
+      "duration": 2708
+    },
+    {
+      "timestamp": "2025-08-26T13:49:46.083Z",
+      "type": "pass",
+      "message": "✅ PASSED: Agent System (1ms)",
+      "duration": 2709
+    }
+  ],
+  "errors": [
+    {
+      "testName": "Main Page Load",
+      "error": "Failed to connect to http://localhost:3000: Command failed: curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000\n",
+      "duration": 1480
+    }
+  ],
+  "timestamp": "2025-08-26T13:49:46.083Z"
+}

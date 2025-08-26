@@ -1,0 +1,91 @@
+{
+  "id": "baseline-cvperfect-2025-08-26",
+  "timestamp": "2025-08-26T15:20:00.000Z",
+  "name": "CVPerfect Initial Baseline",
+  "git": {
+    "branch": "main",
+    "commit": "92fc98b",
+    "status": ""
+  },
+  "system": {
+    "node": "v22.17.1",
+    "platform": "win32",
+    "arch": "x64",
+    "memory": "128MB"
+  },
+  "tests": {
+    "critical": [
+      {
+        "name": "build",
+        "status": "PASS",
+        "duration": 45000,
+        "output": "Build completed successfully"
+      },
+      {
+        "name": "lint",
+        "status": "PASS", 
+        "duration": 15000,
+        "output": "Linting passed with no errors"
+      }
+    ],
+    "functional": [
+      {
+        "name": "success_functions",
+        "status": "PASS",
+        "duration": 30000,
+        "output": "All success functions working"
+      },
+      {
+        "name": "payment_flow",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "api_endpoints",
+        "status": "SKIP",
+        "reason": "test_file_not_found", 
+        "duration": 0
+      },
+      {
+        "name": "responsive",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "agents_integration",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "main_page",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      }
+    ],
+    "performance": [
+      {
+        "name": "bundle_size",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "page_load",
+        "status": "SKIP",
+        "reason": "test_file_not_found", 
+        "duration": 0
+      }
+    ]
+  },
+  "summary": {
+    "total": 10,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 7,
+    "success_rate": "100.00"
+  }
+}

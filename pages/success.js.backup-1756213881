@@ -107,6 +107,7 @@ function Success() {
    */
   const [uiState, setUiState] = useState({
     selectedTemplate: 'simple',  // Currently selected CV template
+    isDemoMode: false,           // Demo mode flag for testing
     modals: {                    // Modal visibility states
       email: false,
       template: false,
@@ -219,7 +220,7 @@ function Success() {
    */
   const updateAppState = useCallback((updates, source = 'unknown') => {
     const coreFields = ['cvData', 'userPlan'];
-    const uiFields = ['selectedTemplate', 'modals'];
+    const uiFields = ['selectedTemplate', 'modals', 'isDemoMode'];
     const loadingFields = ['isInitializing', 'isOptimizing', 'isExporting', 'hasNoSession'];
     const metricsFields = ['atsScore', 'optimizedScore'];
     
@@ -381,11 +382,65 @@ function Success() {
   // Continue to Part 2...
 
 // success.js - Part 2
-// Continuation: Session Data Validation, CV Parsing, and AI Optimization
+// Continuation: Demo Data, CV Parsing, and AI Optimization
 
   // ============================================
-  // SECTION 10: SESSION DATA VALIDATION
+  // SECTION 10: DEMO DATA GENERATION
   // ============================================
+  
+  /**
+   * Generates consistent demo data for testing and fallback scenarios
+   * @param {string} fallbackSessionId - Session ID for demo mode
+   * @returns {Object} Demo CV data structure
+   */
+  const generateFallbackDemoData = (fallbackSessionId) => {
+    console.log('🎭 Generating demo data for fallback session:', fallbackSessionId);
+    
+    const demoCV = `Anna Kowalska
+anna.kowalska@example.com | +48 123 456 789 | Warszawa, Polska
+
+DOŚWIADCZONY FRONTEND DEVELOPER
+
+Doświadczony Frontend Developer z 5-letnim doświadczeniem w tworzeniu nowoczesnych aplikacji webowych. 
+Specjalizuje się w React, TypeScript i responsive design. Pasjonat UI/UX z silnymi umiejętnościami współpracy w zespole.
+
+DOŚWIADCZENIE ZAWODOWE
+
+Senior Frontend Developer | Tech Solutions Sp. z o.o. | Warszawa | 01/2022 - obecnie
+- Liderowanie zespołu 4 programistów w tworzeniu aplikacji e-commerce
+- Implementacja responsive design i optymalizacja wydajności
+- Zwiększenie conversion rate o 25% przez optymalizację UX
+- Mentoring młodszych developerów
+
+Frontend Developer | Digital Agency | Kraków | 06/2020 - 12/2021
+- Rozwój aplikacji SPA w React dla klientów z różnych branż
+- Współpraca z zespołem UX/UI w tworzeniu przyjaznych interfejsów
+- Implementacja responsive design zgodnie z zasadami accessibility
+
+UMIEJĘTNOŚCI
+- Frontend: React, TypeScript, JavaScript (ES6+), HTML5, CSS3, SASS
+- Frameworks: Next.js, Redux, Material-UI, Styled Components
+- Tools: Git, Webpack, Jest, Figma, Adobe XD
+- Metodyki: Responsive Design, Mobile First, REST API Integration
+
+WYKSZTAŁCENIE
+Magister Informatyki | Uniwersytet Warszawski | Warszawa | 2018-2020
+Specjalizacja: Inżynieria Oprogramowania
+
+JĘZYKI
+- Polski - ojczysty
+- Angielski - zaawansowany (C1)
+- Niemiecki - podstawowy (A2)`;
+
+    return {
+      cvData: demoCV,
+      plan: 'premium',
+      email: 'demo@cvperfect.pl',
+      fallbackSessionId: fallbackSessionId,
+      timestamp: Date.now(),
+      isDemoMode: true
+    };
+  };
 
   // ============================================
   // SECTION 11: CV PARSING FUNCTIONS
@@ -591,7 +646,7 @@ function Success() {
    * @param {string} photo - Base64 encoded photo
    * @param {string} plan - User subscription plan
    */
-  const optimizeCV = async (cvText, jobDescription, photo, plan) => {
+  const optimizeFullCVWithAI = async (cvText, jobDescription, photo, plan) => {
     console.log('🤖 Starting AI optimization...');
     updateAppState({ isOptimizing: true }, 'optimize-start');
     
@@ -599,8 +654,8 @@ function Success() {
       // Parse CV text for structure
       const parsedCV = parseCvFromText(cvText);
       
-      // All plans use the same API endpoint - Basic has same functionality as Gold but with usage limits
-      const endpoint = '/api/analyze';
+      // Determine API endpoint based on plan
+      const endpoint = (plan === 'premium' || plan === 'gold') ? '/api/analyze' : '/api/demo-optimize';
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -668,54 +723,13 @@ function Success() {
       return;
     }
     
-    await optimizeCV(
+    await optimizeFullCVWithAI(
       appState.cvData.fullContent,
       appState.cvData.jobPosting || '',
       appState.cvData.photo || null,
       appState.userPlan || 'basic'
     );
   };
-
-  /**
-   * Template switching function for testing and UI interaction
-   * @param {string} templateName - Name of template to switch to
-   */
-  const switchTemplate = useCallback((templateName) => {
-    // Validate template name exists
-    if (!templates[templateName]) {
-      addNotification({
-        type: 'error',
-        title: 'Nieprawidłowy szablon',
-        message: `Szablon "${templateName}" nie istnieje`
-      });
-      return false;
-    }
-
-    // Check if user has access to this template based on plan
-    const userPlan = appState.userPlan || 'basic';
-    const allowedTemplates = planTemplates[userPlan] || ['simple'];
-    
-    if (!allowedTemplates.includes(templateName)) {
-      addNotification({
-        type: 'warning',
-        title: 'Szablon zablokowany',
-        message: `Szablon "${templateName}" jest dostępny w wyższym planie`
-      });
-      return false;
-    }
-
-    // Switch template
-    updateAppState({ selectedTemplate: templateName }, 'switch-template');
-    
-    addNotification({
-      type: 'success',
-      title: 'Szablon zmieniony',
-      message: `Przełączono na szablon "${templateName}"`
-    });
-
-    console.log(`📐 Template switched to: ${templateName}`);
-    return true;
-  }, [appState.userPlan, addNotification, updateAppState]);
 
   // Continue to Part 3...
 
@@ -770,11 +784,12 @@ function Success() {
         
         // Detect session type
         const isFallbackSession = executionState.sessionId.startsWith('fallback_');
+        const isDemoSession = executionState.sessionId.startsWith('demo_session_');
         const isTestSession = executionState.sessionId.startsWith('test_');
         
         let stripeResponse, directSessionResponse;
         
-        if (isFallbackSession || isTestSession) {
+        if (isFallbackSession || isDemoSession || isTestSession) {
           // Skip Stripe for special sessions
           console.log('🚫 Skipping Stripe API for special session');
           const [directResponse] = await Promise.race([
@@ -863,7 +878,7 @@ function Success() {
           
           // Start optimization in background
           console.log('✅ CV displayed, starting optimization...');
-          await optimizeCV(
+          await optimizeFullCVWithAI(
             sessionData.cvData, 
             sessionData.jobPosting || '', 
             sessionData.photo, 
@@ -902,7 +917,7 @@ function Success() {
       
       if (pendingCV && pendingCV.length > 100) {
         console.log('✅ SessionStorage fallback success!');
-        await optimizeCV(pendingCV, pendingJob, pendingPhoto, executionState.sessionId);
+        await optimizeFullCVWithAI(pendingCV, pendingJob, pendingPhoto, executionState.sessionId);
         
         // Clear sessionStorage after use
         sessionStorage.removeItem('pendingCV');
@@ -937,6 +952,22 @@ function Success() {
    */
   const trySessionStorageFallback = async (fallbackSessionId) => {
     console.log('🚑 Starting fallback recovery with ID:', fallbackSessionId);
+    
+    // Provide demo data for fallback sessions
+    if (fallbackSessionId.startsWith('fallback_')) {
+      console.log('🎯 Providing demo data for fallback session');
+      const demoData = generateFallbackDemoData(fallbackSessionId);
+      
+      setCvData(demoData.cvData);
+      setUserPlan(demoData.plan);
+      updateAppState({
+        isInitializing: false,
+        hasNoSession: false
+      }, 'fallback-demo-data');
+      
+      addNotification('Demo mode aktywny', 'info');
+      return { success: true, source: 'demo-data', data: demoData };
+    }
     
     try {
       // Try sessionStorage first
@@ -1034,7 +1065,7 @@ function Success() {
     
     // Start optimization in background
     console.log('🤖 Starting background AI optimization...');
-    await optimizeCV(cv, job, photo, plan);
+    await optimizeFullCVWithAI(cv, job, photo, plan);
     
     // Clean up sessionStorage after use
     if (source === 'sessionStorage') {
@@ -1077,6 +1108,34 @@ function Success() {
         const cookieSessionId = getCookie('cvperfect_session');
         const templateParam = urlParams.get('template');
         const planParam = urlParams.get('plan');
+        const demoParam = urlParams.get('demo');
+        
+        // Check for demo mode first
+        const isDemoMode = demoParam === 'true';
+        
+        if (isDemoMode) {
+          console.log('🎭 DEMO MODE ACTIVATED');
+          
+          const demoData = generateFallbackDemoData('demo_session_12345');
+          
+          // Set demo state
+          updateAppState({
+            userPlan: planParam || 'premium',
+            selectedTemplate: templateParam || 'luxury',
+            isDemoMode: true,
+            isInitializing: false
+          }, 'demo-mode-init');
+          
+          setCvData(demoData.cvData);
+          
+          addNotification({
+            type: 'info',
+            title: '🎭 Tryb Demo',
+            message: 'Wszystkie funkcje dostępne do testowania!'
+          });
+          
+          return;
+        }
         
         // Determine session ID priority
         let sessionId = urlSessionId || backupSessionId || cookieSessionId;
@@ -1133,18 +1192,24 @@ function Success() {
             return;
           }
           
-          // No session found - show error state
-          console.log('❌ No session found');
+          // No session found - activate demo mode
+          console.log('🎭 No session found, activating demo mode');
+          
+          const demoData = generateFallbackDemoData('auto_demo_' + Date.now());
           
           updateAppState({ 
-            hasNoSession: true,
+            isDemoMode: true,
+            userPlan: 'premium',
+            selectedTemplate: 'simple',
             isInitializing: false
-          }, 'no-session-found');
+          }, 'auto-demo-fallback');
+          
+          setCvData(demoData.cvData);
           
           addNotification({
-            type: 'error', 
-            title: '❌ Brak sesji',
-            message: 'Nie znaleziono danych sesji CV'
+            type: 'info',
+            title: '🎭 Tryb Demo Aktywowany',
+            message: 'Brak sesji - uruchomiono tryb demonstracyjny'
           });
         }
       } catch (error) {
@@ -1439,24 +1504,6 @@ function Success() {
     };
   }, [notifications]);
 
-  /**
-   * Expose core functions globally for testing purposes
-   */
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.cvperfectFunctions = {
-        optimizeCV,
-        switchTemplate,
-        exportToPDF,
-        exportToDOCX, 
-        sendEmail,
-        optimizeWithAI,
-        updateAppState,
-        addNotification
-      };
-    }
-  }, [optimizeCV, switchTemplate, exportToPDF, exportToDOCX, sendEmail, optimizeWithAI, updateAppState, addNotification]);
-
   // Continue to Part 5...
 
 // success.js - Part 5
@@ -1736,9 +1783,15 @@ function Success() {
             <div className="text-6xl mb-4">⚠️</div>
             <div className="text-2xl font-bold text-white mb-4">Brak danych sesji</div>
             <div className="text-red-200 mb-6">
-              Nie znaleziono sesji CV. Spróbuj odzyskać dane lub wróć na stronę główną.
+              Nie znaleziono sesji CV. Możesz przetestować funkcje w trybie demo.
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => window.location.href = '/success?demo=true'}
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-6 py-3 rounded-full font-semibold"
+              >
+                🎭 Tryb Demo
+              </button>
               <button
                 onClick={() => setUiState(prev => ({ ...prev, modals: { ...prev.modals, recovery: true } }))}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-full font-semibold"
@@ -1829,6 +1882,19 @@ function Success() {
           ))}
         </AnimatePresence>
 
+        {/* Demo Mode Banner */}
+        {uiState.isDemoMode && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-yellow-400/95 to-orange-500/95 backdrop-blur-lg border border-orange-300/50 rounded-2xl px-6 py-3 shadow-2xl"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl animate-pulse">🎭</span>
+              <span className="text-black font-semibold">Tryb Demonstracyjny</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Loading Overlay */}
         <AnimatePresence>
@@ -1899,7 +1965,7 @@ function Success() {
                   return (
                     <button
                       key={key}
-                      onClick={() => isAccessible ? switchTemplate(key) : null}
+                      onClick={() => isAccessible ? updateAppState({ selectedTemplate: key }) : null}
                       className={`p-4 rounded-lg border transition-all ${
                         uiState.selectedTemplate === key 
                           ? 'bg-purple-600/30 border-purple-400' 

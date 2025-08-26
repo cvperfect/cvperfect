@@ -1,0 +1,27 @@
+{
+  "sequential_thinking": {
+    "enabled": true,
+    "auto_enabled": true,
+    "timestamp": "2025-08-26T15:20:00.000Z",
+    "mode": "multi-step-breakdown"
+  },
+  "session_commands": {
+    "/sequential": "enabled",
+    "/analyze": "enabled", 
+    "/cli-tool": "enabled",
+    "/docs": "enabled"
+  },
+  "cvperfect_integration": {
+    "auto_start_agents": true,
+    "superclaud_enforcement": true,
+    "regression_prevention": true,
+    "ai_commit_generation": true
+  },
+  "project_context": {
+    "name": "CVPerfect",
+    "version": "2.0.0",
+    "primary_language": "JavaScript",
+    "framework": "Next.js 14",
+    "ai_service": "Groq + Llama 3.1-70B"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "validation-2025-08-26T13-28-47",
+  "timestamp": "2025-08-26T13:28:47.795Z",
+  "name": "validation",
+  "git": {
+    "branch": "main",
+    "commit": "92fc98b7ecdf717de29355987f33b63a0edc61e4",
+    "status": "M \"components/Nowy Dokument tekstowy.txt\"\n M package-lock.json\n M package.json\n M pages/success.js\n?? .claude/\n?? .eslintrc.json\n?? CLAUDE.md\n?? CLAUDE_BEST_PRACTICES.md\n?? agents/\n?? cli-tools-manager.js\n?? components/ErrorBoundary.js\n?? lib/\n?? logs/\n?? mcp-puppeteer-server.js\n?? pages/api/demo-optimize.js\n?? pages/api/get-session-data.js\n?? pages/api/parse-cv.js\n?? pages/api/save-session.js\n?? pages/success.js.backup-1756213881\n?? screenshots/\n?? start-agents-system.js\n?? start-debug-agents.js\n?? test-agents-integration.js\n?? test-all-success-functions.js\n?? test-comprehensive-website.js\n?? test-debug-agents.js\n?? test-file.js\n?? test-responsive.js\n?? test-session-recovery.js"
+  },
+  "system": {
+    "node": "v22.17.1",
+    "platform": "win32",
+    "arch": "x64",
+    "memory": "5MB"
+  },
+  "tests": {
+    "critical": [
+      {
+        "name": "build",
+        "status": "FAIL",
+        "duration": 211,
+        "error": "Command failed: npm run build\nnpm error code ENOENT\nnpm error syscall open\nnpm error path c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json\nnpm error errno -4058\nnpm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json'\nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm error A complete log of this run can be found in: C:\\Users\\czupa\\AppData\\Local\\npm-cache\\_logs\\2025-08-26T13_28_4",
+        "code": 4294963238
+      },
+      {
+        "name": "lint",
+        "status": "FAIL",
+        "duration": 206,
+        "error": "Command failed: npm run lint\nnpm error code ENOENT\nnpm error syscall open\nnpm error path c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json\nnpm error errno -4058\nnpm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open 'c:\\Users\\czupa\\OneDrive\\Pulpit\\package.json'\nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm error A complete log of this run can be found in: C:\\Users\\czupa\\AppData\\Local\\npm-cache\\_logs\\2025-08-26T13_28_48",
+        "code": 4294963238
+      }
+    ],
+    "functional": [
+      {
+        "name": "main_page",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "payment_flow",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "success_functions",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "api_endpoints",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "responsive",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "agents_integration",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      }
+    ],
+    "performance": [
+      {
+        "name": "bundle_size",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      },
+      {
+        "name": "page_load",
+        "status": "SKIP",
+        "reason": "test_file_not_found",
+        "duration": 0
+      }
+    ]
+  },
+  "summary": {
+    "total": 10,
+    "passed": 0,
+    "failed": 2,
+    "skipped": 8,
+    "success_rate": "0.00"
+  }
+}

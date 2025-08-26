@@ -1,0 +1,27 @@
+{
+  "guard_run_id": "20250826_153117",
+  "timestamp": "2025-08-26T15:31:17+02:00",
+  "project": "CVPerfect",
+  "git_context": {
+    "branch": "main",
+    "last_commit": "92fc98b jutro zaczynamy z claude code"
+  },
+  "test_results": 🧪 Running COMPREHENSIVE test suite...
+  🔧 Testing build...
+     ✅ Build: PASS
+  📝 Testing lint...
+     ❌ Lint: FAIL
+  🎯 Testing core functionality...
+     ❌ Core Functions: FAIL
+  🔍 Testing comprehensive functionality...
+     ❌ Comprehensive: FAIL
+{"build":"PASS","lint":"FAIL","core_functions":"FAIL","comprehensive":"FAIL","timestamp":"2025-08-26T15:31:37+02:00"},
+  "analysis": {
+    "regression_detected": true,
+    "critical_failures": [
+      "core_functions",
+      null
+    ],
+    "recommendation": "IMMEDIATE_ATTENTION_REQUIRED"
+  }
+}
