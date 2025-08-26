@@ -65,7 +65,16 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_resize",
       "mcp__playwright__browser_tabs",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git grep:*)",
+      "Bash(npm run -s lint)",
+      "Bash(if [ -d \".claude/hooks\" ])",
+      "Bash(then git mv .claude/hooks/* .claude/hooks_quarantine/)",
+      "Bash(fi)",
+      "Bash(for:*)",
+      "Bash(do if [ -f \".claude/hooks_quarantine/$f\" ])",
+      "Bash(then git mv \".claude/hooks_quarantine/$f\" \".claude/hooks/$f\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": [],

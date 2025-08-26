@@ -303,3 +303,6 @@ For support, email support@cvperfect.com or create an issue in the project repos
 ---
 
 **CVPerfect** - Transforming CVs with AI-powered optimization.
+Hook test line
+
+Hook test line

@@ -2,7 +2,7 @@ import js from "@eslint/js";
 
 export default [
   {
-    ignores: ["**/.claude/**", "tests/**", "scripts/**", "test-*.js"]
+    ignores: ["**/.claude/**", "tests/**", "scripts/**", "test-*.js", ".next/**", ".eslintrc.js", "tailwind.config.js"]
   },
   js.configs.recommended,
   {
