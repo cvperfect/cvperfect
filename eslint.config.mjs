@@ -1,9 +1,11 @@
 import js from "@eslint/js";
 
 export default [
+  {
+    ignores: ["**/.claude/**", "tests/**", "scripts/**", "test-*.js"]
+  },
   js.configs.recommended,
   {
-    ignores: [".claude/**", "tests/**", "scripts/**", "test-*.js"],
     rules: {
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-undef": "warn"
