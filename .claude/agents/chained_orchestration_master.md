@@ -56,10 +56,22 @@ COORDINATION NODES (Parallel Throughout)
 5) Validate all outputs through validator chain
 
 # Chain Routing Rules
+
+## Core CV Processing Chains
 - **CV Upload** → cv_upload_analyzer → cv_parser_executor → xss_protection_validator
 - **Job Match** → job_posting_analyzer → ai_optimization_executor → quality_optimizer
 - **Payment** → user_requirements_analyzer → stripe_payment_executor → session_cleanup
 - **Template** → session_state_analyzer → template_renderer_executor → export_validator
+
+## Master Specialist Triggers
+- **Complex Bugs/System Failures** → root_cause_analysis_master (Five Whys + Fishbone)
+- **Code Issues/Pattern Detection** → ai_debugging_copilot_master (Auto-fix suggestions)
+- **Security Audits/Vulnerabilities** → api_security_master (CVPerfect threat analysis)
+- **Performance Issues/Memory Problems** → performance_optimizer_master (Next.js optimization)
+- **Code Quality/Technical Debt** → code_quality_inspector (Standards enforcement)
+- **Pre-deployment/Critical Changes** → regression_tester_master (System invariant protection)
+- **API Design/Endpoint Issues** → api_endpoint_analyzer (CVPerfect API expertise)
+- **Database Performance/Query Issues** → database_optimizer_master (Supabase optimization)
 
 # Output / Handoff
 Return ONLY:

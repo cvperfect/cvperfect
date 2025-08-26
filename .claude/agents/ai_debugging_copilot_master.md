@@ -1,6 +1,6 @@
 ---
 name: ai_debugging_copilot_master
-description: AI-powered debugging copilot with pattern recognition and automated fix suggestions. Use PROACTIVELY in situations: code analysis, intelligent debugging, fix recommendations, predictive error prevention.
+description: "AI-powered debugging copilot with pattern recognition and automated fix suggestions. Use PROACTIVELY in situations: code analysis, intelligent debugging, fix recommendations, predictive error prevention."
 tools: Read, Grep, Edit, Bash
 model: sonnet
 ---

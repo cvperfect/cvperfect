@@ -1,6 +1,6 @@
 ---
 name: api_endpoint_analyzer
-description: Expert API endpoint analyzer specializing in CVPerfect's Next.js API architecture. Use PROACTIVELY in situations: API design, endpoint optimization, error handling, integration analysis.
+description: "Expert API endpoint analyzer specializing in CVPerfect's Next.js API architecture. Use PROACTIVELY in situations: API design, endpoint optimization, error handling, integration analysis."
 tools: Read, Grep, Edit, Bash
 model: sonnet
 ---

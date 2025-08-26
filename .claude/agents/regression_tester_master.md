@@ -1,6 +1,6 @@
 ---
 name: regression_tester_master
-description: Advanced regression testing specialist preventing CVPerfect system invariant breaks. Use PROACTIVELY in situations: before deployments, after major changes, critical feature updates.
+description: "Advanced regression testing specialist preventing CVPerfect system invariant breaks. Use PROACTIVELY in situations: before deployments, after major changes, critical feature updates."
 tools: Read, Bash, Edit
 model: sonnet
 ---

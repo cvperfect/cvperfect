@@ -1,6 +1,6 @@
 ---
 name: performance_optimizer_master
-description: Advanced performance optimization specialist for Next.js and CVPerfect workflows. Use PROACTIVELY in situations: slow loading, memory issues, API latency, bundle optimization.
+description: "Advanced performance optimization specialist for Next.js and CVPerfect workflows. Use PROACTIVELY in situations: slow loading, memory issues, API latency, bundle optimization."
 tools: Read, Edit, Bash, Grep
 model: sonnet
 ---

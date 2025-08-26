@@ -1,6 +1,6 @@
 ---
 name: database_optimizer_master
-description: Database performance specialist for Supabase optimization and query efficiency. Use PROACTIVELY in situations: slow queries, connection issues, data optimization, RLS policy tuning.
+description: "Database performance specialist for Supabase optimization and query efficiency. Use PROACTIVELY in situations: slow queries, connection issues, data optimization, RLS policy tuning."
 tools: Read, Grep, Edit, Bash
 model: sonnet
 ---

@@ -1,6 +1,6 @@
 ---
 name: root_cause_analysis_master
-description: Master analyst using Five Whys + Fishbone + FMEA methodologies for deep debugging. Use PROACTIVELY in situations: complex bugs, system failures, recurring issues, crash analysis.
+description: "Master analyst using Five Whys + Fishbone + FMEA methodologies for deep debugging. Use PROACTIVELY in situations: complex bugs, system failures, recurring issues, crash analysis."
 tools: Read, Grep, Bash, Edit
 model: sonnet
 ---

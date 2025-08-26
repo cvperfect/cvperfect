@@ -1,6 +1,6 @@
 ---
 name: api_security_master
-description: Advanced API security auditor with CVPerfect-specific threat detection. Use PROACTIVELY in situations: security audits, vulnerability scanning, API endpoint analysis, authentication issues.
+description: "Advanced API security auditor with CVPerfect-specific threat detection. Use PROACTIVELY in situations: security audits, vulnerability scanning, API endpoint analysis, authentication issues."
 tools: Read, Grep, Bash
 model: sonnet
 ---

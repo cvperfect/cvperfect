@@ -1,6 +1,6 @@
 ---
 name: code_quality_inspector
-description: Expert code quality analyzer with CVPerfect coding standards enforcement. Use PROACTIVELY in situations: code reviews, refactoring, standards compliance, technical debt reduction.
+description: "Expert code quality analyzer with CVPerfect coding standards enforcement. Use PROACTIVELY in situations: code reviews, refactoring, standards compliance, technical debt reduction."
 tools: Read, Grep, Edit, Bash
 model: sonnet
 ---

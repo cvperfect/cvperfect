@@ -1,6 +1,7 @@
 # CVPerfect - AI-Powered CV Optimization Platform
 Updated: 2025-08-26 - Chained Agent Orchestration System Active
 Latest: Added export endpoint with payment gating validation
+Hook Test: Verified PreToolUse and PostToolUse hook integration
 
 ## 🚀 Overview
 

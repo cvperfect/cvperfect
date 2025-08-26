@@ -1,0 +1,39 @@
+{
+  "job_posting": {
+    "title": "Senior Software Engineer - React/Next.js",
+    "company": "TechCorp",
+    "requirements": [
+      "5+ years React/Next.js experience",
+      "TypeScript proficiency",
+      "API design and development",
+      "Stripe payment integration",
+      "Supabase/PostgreSQL",
+      "Performance optimization"
+    ],
+    "preferred_skills": [
+      "AI/ML integration",
+      "DevOps/CI-CD",
+      "Security best practices"
+    ]
+  },
+  "candidate_profile": {
+    "name": "Jan Kowalski",
+    "current_role": "Frontend Developer",
+    "experience_years": 4,
+    "skills": [
+      "React",
+      "Next.js",
+      "JavaScript",
+      "Node.js",
+      "PostgreSQL",
+      "Git"
+    ],
+    "missing_skills": [
+      "TypeScript",
+      "Stripe",
+      "Supabase",
+      "Performance optimization"
+    ],
+    "plan": "premium"
+  }
+}
