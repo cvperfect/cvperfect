@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* eslint-disable no-case-declarations */
 /**
  * CVPerfect CLI Tools Integration Framework
  * Framework for integrating external CLI tools with Claude Code
