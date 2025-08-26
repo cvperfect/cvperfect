@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { execSync } from "child_process";
 import { routeTask } from "../scripts/delegation-router.mjs";
 
 const cases = [
@@ -9,7 +10,7 @@ const cases = [
 
 let pass = 0;
 for (const c of cases) {
-  const res = JSON.parse(require("child_process").execSync(`node ./scripts/delegation-router.mjs "${c.task.replace(/"/g,'\\"')}"`).toString());
+  const res = JSON.parse(execSync(`node ./scripts/delegation-router.mjs "${c.task.replace(/"/g,'\\"')}"`).toString());
   const ok = res.agent === c.expect;
   console.log(`${ok ? "✅" : "❌"} route "${c.task.slice(0,60)}" -> ${res.agent} (expected ${c.expect})`);
   if (!ok) process.exitCode = 1; else pass++;

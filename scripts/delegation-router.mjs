@@ -8,10 +8,19 @@ const AGENTS_DIR = path.join(process.cwd(), ".claude", "agents");
 function loadAgents() {
   const files = fs.readdirSync(AGENTS_DIR).filter(f => f.endsWith(".md"));
   return files.map(file => {
-    const full = fs.readFileSync(path.join(AGENTS_DIR, file), "utf8");
-    const fm = /^---\n([\s\S]*?)\n---/.exec(full);
-    const front = fm ? yaml.load(fm[1]) : {};
-    return { file, ...front };
+    try {
+      const full = fs.readFileSync(path.join(AGENTS_DIR, file), "utf8");
+      const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(full);
+      if (!fm) {
+        console.error(`No YAML frontmatter in ${file}`);
+        return { file, name: null };
+      }
+      const front = yaml.load(fm[1]);
+      return { file, ...front };
+    } catch (e) {
+      console.error(`Error loading ${file}:`, e.message);
+      return { file, name: null };
+    }
   });
 }
 
@@ -36,13 +45,23 @@ function routeTask(text) {
   return null;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'))) {
   const task = process.argv.slice(2).join(" ").trim();
   const agent = routeTask(task || "");
   const found = agents.find(a => a?.name === agent);
   const ok = Boolean(found);
   const tools = found?.tools || "n/a";
-  console.log(JSON.stringify({task, agent, ok, tools, file: found?.file}, null, 2));
+  console.log(JSON.stringify({
+    task, 
+    agent, 
+    ok, 
+    tools, 
+    file: found?.file,
+    debug: {
+      agentCount: agents.length,
+      agentNames: agents.map(a => a.name).filter(Boolean)
+    }
+  }, null, 2));
 }
 
 export { routeTask };
