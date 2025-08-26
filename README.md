@@ -1,3 +1,5 @@
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-blue)](#)
+
 # CVPerfect - AI-Powered CV Optimization Platform
 Updated: 2025-08-26 - Chained Agent Orchestration System Active
 Latest: Added export endpoint with payment gating validation
@@ -96,6 +98,9 @@ Simple ping endpoint for basic availability checks. Returns a lightweight respon
   "error": "Internal health check failed"
 }
 ```
+
+## 🧪 CI
+Pipeline uruchamia: lint, test:delegation, test:hooks, test:smoke (build + start + HTTP).
 
 ## 🧪 Testing
 
