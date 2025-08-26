@@ -4,7 +4,14 @@ import path from 'path';
 export default function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      // Check orchestration status from .claude/settings.json
+      // version from package.json
+      let version = '0.0.0';
+      try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
+        version = pkg.version || version;
+      } catch {}
+      
+      // orchestration from .claude/settings.json
       let orchestrationStatus = 'disabled';
       try {
         const settingsPath = path.join(process.cwd(), '.claude', 'settings.json');
@@ -14,16 +21,13 @@ export default function handler(req, res) {
             orchestrationStatus = 'chained_agent_system_active';
           }
         }
-      } catch (settingsError) {
-        console.warn('Could not read orchestration settings:', settingsError.message);
-      }
-
-      // Enhanced health checks
+      } catch {}
+      
       const healthData = {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         service: 'CVPerfect API',
-        version: '1.0.0',
+        version,
         orchestration: orchestrationStatus,
         uptime: process.uptime(),
         memory: {
@@ -39,19 +43,11 @@ export default function handler(req, res) {
       };
       
       res.status(200).json(healthData);
-    } catch (error) {
-      res.status(503).json({
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        service: 'CVPerfect API',
-        error: 'Internal health check failed'
-      });
+    } catch (err) {
+      res.status(500).json({ status: 'unhealthy', error: err.message });
     }
   } else {
     res.setHeader('Allow', ['GET']);
-    res.status(405).json({
-      error: `Method ${req.method} Not Allowed`,
-      allowed: ['GET']
-    });
+    res.status(405).json({ error: 'Method not allowed' });
   }
 }
