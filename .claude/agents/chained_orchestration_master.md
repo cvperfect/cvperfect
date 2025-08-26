@@ -31,6 +31,16 @@ VALIDATOR LAYER (Convergent)
     ↓
 FINAL OUTPUT
 
+MASTER SPECIALISTS (On-Demand)
+├─ root_cause_analysis_master (Five Whys + Fishbone + FMEA)
+├─ ai_debugging_copilot_master (Pattern recognition + automated fixes)
+├─ api_security_master (CVPerfect threat detection)
+├─ performance_optimizer_master (Next.js + CV processing optimization)
+├─ code_quality_inspector (CVPerfect standards enforcement)
+├─ regression_tester_master (System invariant protection)
+├─ api_endpoint_analyzer (CVPerfect API expertise)
+└─ database_optimizer_master (Supabase optimization)
+
 COORDINATION NODES (Parallel Throughout)
 ├─ workflow_planner (designs optimal paths)
 ├─ performance_optimizer (monitors speed)

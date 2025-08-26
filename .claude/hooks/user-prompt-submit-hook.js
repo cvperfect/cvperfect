@@ -6,7 +6,7 @@ const message = process.argv[2] || '';
 
 // 🔧 SHORTCUT MAPPINGS  
 const shortcuts = {
-  '-sa': ' 🔒 USE_SUBAGENT_REQUIRED',
+  '-sa': ' /task chained_orchestration_master ',
   '-th': ' 🔒 THINK_MODE_REQUIRED', 
   '-tth': ' 🔒 THINK_HARD_MODE_REQUIRED',
   '-uth': ' 🔒 ULTRATHINK_MODE_REQUIRED',

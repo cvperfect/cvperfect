@@ -1,5 +1,6 @@
 # CVPerfect - AI-Powered CV Optimization Platform
 Updated: 2025-08-26 - Chained Agent Orchestration System Active
+Latest: Added export endpoint with payment gating validation
 
 ## 🚀 Overview
 
@@ -7,11 +8,15 @@ CVPerfect is a Next.js 14-based AI-powered CV optimization platform that helps u
 
 ## 📋 API Endpoints
 
-### Health Check Endpoint
+### Health Check Endpoints
 
 **GET /api/health**
 
 Returns the current health status of the CVPerfect API with comprehensive system information.
+
+**GET /api/ping**
+
+Simple ping endpoint for basic availability checks. Returns a lightweight response to verify API connectivity.
 
 #### Response Format
 
@@ -33,6 +38,29 @@ Returns the current health status of the CVPerfect API with comprehensive system
     "stripe": "configured",
     "groq": "ready"
   }
+}
+```
+
+#### Ping Endpoint Response Format
+
+**GET /api/ping**
+
+```json
+{
+  "pong": true
+}
+```
+
+#### Ping Response Fields
+
+- `pong`: Always returns `true` indicating successful connectivity
+
+#### Ping Error Responses
+
+**405 Method Not Allowed**
+```json
+{
+  "error": "Method not allowed"
 }
 ```
 
@@ -70,12 +98,18 @@ Returns the current health status of the CVPerfect API with comprehensive system
 
 ## 🧪 Testing
 
-### Health Endpoint Tests
+### Endpoint Tests
 
 Run the comprehensive health endpoint test suite:
 
 ```bash
 node test-health-endpoint.js
+```
+
+Run the ping endpoint test suite:
+
+```bash
+node test-ping-endpoint.js
 ```
 
 #### Test Coverage
@@ -230,6 +264,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ### Core Endpoints
 
 - `GET /api/health` - System health check
+- `GET /api/ping` - Simple connectivity check
 - `POST /api/parse-cv` - Parse uploaded CV files
 - `POST /api/analyze` - AI-powered CV analysis
 - `POST /api/save-session` - Save user session data
