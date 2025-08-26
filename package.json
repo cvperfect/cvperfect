@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "mcp-puppeteer": "node mcp-puppeteer-server.js",
     "test:delegation": "node tests/auto-delegation.e2e.mjs",
-    "test:hooks": "node tests/hooks-runtime.e2e.mjs"
+    "test:hooks": "node tests/hooks-runtime.e2e.mjs",
+    "test:smoke": "node scripts/ci-smoke.mjs",
+    "ci": "npm run lint && npm run test:delegation && npm run test:hooks && npm run test:smoke"
   },
   "dependencies": {
     "@stripe/stripe-js": "^2.1.11",
