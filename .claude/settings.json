@@ -1,5 +1,23 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/UserPromptSubmit/append_ultrathink.py\""
+      },
+      {
+        "type": "command", 
+        "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/UserPromptSubmit/append_explain.py\""
+      },
+      {
+        "type": "command",
+        "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/UserPromptSubmit/append_default.py\""
+      },
+      {
+        "type": "command",
+        "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/UserPromptSubmit/answer_in_short.py\""
+      }
+    ],
     "pre_tool_use": ".claude/hooks/pre_tool_use.md",
     "post_tool_use": ".claude/hooks/post_tool_use.md",
     "subagent_stop": ".claude/hooks/subagent_stop.md",

@@ -82,7 +82,7 @@ function Success() {
       const firstLine = lines[0];
       const cleanName = firstLine
         .replace(/^(CV|Resume|Curriculum Vitae)/i, '')
-        .replace(/[^\w\s\-]/g, '')
+        .replace(/[^\w\s-]/g, '')
         .trim();
       return cleanName || 'Jan Kowalski';
     }
@@ -417,7 +417,7 @@ function Success() {
     const emailMatch = rawCvText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
     const email = emailMatch ? emailMatch[1] : '';
     
-    const phoneMatch = rawCvText.match(/(\+?\d[\d\s\-\(\)]{8,})/i);
+    const phoneMatch = rawCvText.match(/(\+?\d[\d\s\-()]{8,})/i);
     const phone = phoneMatch ? phoneMatch[1] : '';
     
     // Helper function to extract sections
@@ -590,8 +590,9 @@ function Success() {
    * @param {string} jobDescription - Job posting description
    * @param {string} photo - Base64 encoded photo
    * @param {string} plan - User subscription plan
+   * @param {string} userEmail - User email for API call
    */
-  const optimizeCV = async (cvText, jobDescription, photo, plan) => {
+  const optimizeCV = async (cvText, jobDescription, photo, plan, userEmail = null) => {
     console.log('🤖 Starting AI optimization...');
     updateAppState({ isOptimizing: true }, 'optimize-start');
     
@@ -608,7 +609,7 @@ function Success() {
         body: JSON.stringify({
           currentCV: cvText,
           jobPosting: jobDescription || '',
-          email: appState.cvData?.email || 'user@example.com',
+          email: userEmail || appState.cvData?.email || 'user@cvperfect.com',
           sessionId: appState.sessionId || 'unknown',
           plan: plan || 'basic',
           paid: plan === 'premium' || plan === 'gold',
@@ -672,7 +673,8 @@ function Success() {
       appState.cvData.fullContent,
       appState.cvData.jobPosting || '',
       appState.cvData.photo || null,
-      appState.userPlan || 'basic'
+      appState.userPlan || 'basic',
+      appState.cvData.email
     );
   };
 
@@ -727,14 +729,36 @@ function Success() {
   // ============================================
   
   /**
+   * Fetch with timeout using AbortController - prevents hanging requests
+   * @param {string} url - URL to fetch
+   * @param {Object} options - Fetch options
+   * @param {number} timeout - Timeout in milliseconds
+   * @returns {Promise} Fetch promise with guaranteed timeout
+   */
+  const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log(`⏰ Aborting request to ${url} after ${timeout}ms`);
+      controller.abort();
+    }, timeout);
+    
+    return fetch(url, {
+      ...options,
+      signal: controller.signal
+    }).finally(() => {
+      clearTimeout(timeoutId);
+    });
+  };
+
+  /**
    * Fetches user data from session with retry logic
    * @param {string} sessionId - Session identifier
    * @returns {Object|null} Session data or null if failed
    */
   const fetchUserDataFromSession = async (sessionId) => {
     const MAX_RETRIES = 3;
-    const MAX_EXECUTION_TIME = 30000; // 30 seconds
-    const REQUEST_TIMEOUT = 15000; // 15 seconds per request
+    const MAX_EXECUTION_TIME = 20000; // 20 seconds total
+    const REQUEST_TIMEOUT = 8000; // 8 seconds per request
     
     const executionState = {
       sessionId,
@@ -763,11 +787,6 @@ function Success() {
       try {
         console.log(`🔍 Attempt ${executionState.attempts}/${MAX_RETRIES}`);
         
-        // Create timeout promise
-        const timeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-        );
-        
         // Detect session type
         const isFallbackSession = executionState.sessionId.startsWith('fallback_');
         const isTestSession = executionState.sessionId.startsWith('test_');
@@ -777,17 +796,21 @@ function Success() {
         if (isFallbackSession || isTestSession) {
           // Skip Stripe for special sessions
           console.log('🚫 Skipping Stripe API for special session');
-          const [directResponse] = await Promise.race([
-            Promise.allSettled([
-              fetch(`/api/get-session-data?session_id=${executionState.sessionId}`)
-            ]),
-            timeout
-          ]);
           
-          stripeResponse = { status: 'rejected', reason: new Error('Skipped') };
-          directSessionResponse = directResponse;
+          try {
+            const directResponse = await fetchWithTimeout(
+              `/api/get-session-data?session_id=${executionState.sessionId}`, 
+              {}, 
+              REQUEST_TIMEOUT
+            );
+            stripeResponse = { status: 'rejected', reason: new Error('Skipped') };
+            directSessionResponse = { status: 'fulfilled', value: directResponse };
+          } catch (error) {
+            stripeResponse = { status: 'rejected', reason: new Error('Skipped') };
+            directSessionResponse = { status: 'rejected', reason: error };
+          }
         } else {
-          // Regular session - try both endpoints
+          // Regular session - try both endpoints with guaranteed timeouts
           const urlParams = new URLSearchParams(window.location.search);
           const backupSessionId = urlParams.get('backup_session');
           let apiUrl = `/api/get-session-data?session_id=${executionState.sessionId}`;
@@ -797,12 +820,10 @@ function Success() {
             console.log('🚑 Adding backup_session parameter:', backupSessionId);
           }
           
-          const [response1, response2] = await Promise.race([
-            Promise.allSettled([
-              fetch(`/api/get-session?session_id=${executionState.sessionId}`),
-              fetch(apiUrl)
-            ]),
-            timeout
+          // Use Promise.allSettled with AbortController timeouts - no more hanging requests
+          const [response1, response2] = await Promise.allSettled([
+            fetchWithTimeout(`/api/get-session?session_id=${executionState.sessionId}`, {}, REQUEST_TIMEOUT),
+            fetchWithTimeout(apiUrl, {}, REQUEST_TIMEOUT)
           ]);
           
           stripeResponse = response1;
@@ -861,14 +882,25 @@ function Success() {
           setCvData(initialCvData);
           updateAppState({ isInitializing: false }, 'session-loaded');
           
-          // Start optimization in background
-          console.log('✅ CV displayed, starting optimization...');
-          await optimizeCV(
+          // FORCE update loading state directly (bypass state routing bug)
+          setLoadingState(prev => ({ ...prev, isInitializing: false }));
+          
+          // Start optimization in background WITHOUT await (non-blocking)
+          console.log('✅ CV displayed immediately, starting background optimization...');
+          optimizeCV(
             sessionData.cvData, 
             sessionData.jobPosting || '', 
             sessionData.photo, 
-            plan
-          );
+            plan,
+            sessionData.email
+          ).catch(error => {
+            console.warn('⚠️ Background optimization failed:', error);
+            addNotification({
+              type: 'warning',
+              title: 'Optymalizacja w tle',
+              message: 'Nie udało się zoptymalizować CV automatycznie. Użyj przycisku "Optymalizuj z AI".'
+            });
+          });
           
           return { success: true, source: 'full_session' };
         }
@@ -915,13 +947,40 @@ function Success() {
       console.warn('⚠️ SessionStorage fallback failed:', error);
     }
     
-    // All attempts failed
-    console.error('❌ All session fetch attempts failed');
-    updateAppState({ isInitializing: false }, 'session-failed');
+    // All attempts failed - circuit breaker activates fallback
+    console.error('❌ All session fetch attempts failed, activating fallback recovery...');
+    
+    // Immediate fallback to sessionStorage/localStorage
+    const fallbackResult = await trySessionStorageFallback(`fallback_${executionState.sessionId}`);
+    
+    if (fallbackResult.success) {
+      console.log('✅ Fallback recovery successful');
+      return fallbackResult;
+    }
+    
+    // Final failure - show error state
+    console.error('💥 Complete session recovery failure');
+    updateAppState({ 
+      isInitializing: false,
+      hasNoSession: true 
+    }, 'complete-session-failure');
+    
+    // FORCE update loading state directly (bypass state routing bug)
+    setLoadingState(prev => ({ 
+      ...prev, 
+      isInitializing: false, 
+      hasNoSession: true 
+    }));
+    
+    addNotification({
+      type: 'error',
+      title: 'Błąd sesji', 
+      message: 'Nie udało się odzyskać danych CV. Spróbuj ponownie lub wróć na stronę główną.'
+    });
     
     return { 
       success: false, 
-      source: 'all_attempts_failed', 
+      source: 'complete_failure', 
       attempts: executionState.attempts 
     };
   };
@@ -996,6 +1055,9 @@ function Success() {
       return { success: false, source: 'recovery_error', error: error.message };
     } finally {
       updateAppState({ isInitializing: false }, 'fallback-complete');
+      
+      // FORCE update loading state directly (bypass state routing bug)
+      setLoadingState(prev => ({ ...prev, isInitializing: false }));
     }
   };
 
@@ -1032,9 +1094,16 @@ function Success() {
       message: `Pomyślnie odzyskano dane CV z ${source === 'localStorage' ? 'pamięci trwałej' : 'pamięci sesji'}`
     });
     
-    // Start optimization in background
+    // Start optimization in background WITHOUT await (non-blocking)
     console.log('🤖 Starting background AI optimization...');
-    await optimizeCV(cv, job, photo, plan);
+    optimizeCV(cv, job, photo, plan, email).catch(error => {
+      console.warn('⚠️ Recovery background optimization failed:', error);
+      addNotification({
+        type: 'info', 
+        title: 'Optymalizacja',
+        message: 'Użyj przycisku "Optymalizuj z AI" aby ulepszyć CV.'
+      });
+    });
     
     // Clean up sessionStorage after use
     if (source === 'sessionStorage') {
@@ -1062,11 +1131,16 @@ function Success() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Prevent double execution in React Strict Mode
-    if (initializationRef.current) {
-      console.log('🚫 Initialization already running, skipping duplicate');
+    // Robust React Strict Mode protection using sessionStorage
+    const initKey = 'cvperfect_init_' + Date.now();
+    const existingInit = sessionStorage.getItem('cvperfect_initializing');
+    
+    if (existingInit && (Date.now() - parseInt(existingInit) < 5000)) {
+      console.log('🚫 Initialization already completed recently, skipping');
       return;
     }
+    
+    sessionStorage.setItem('cvperfect_initializing', Date.now().toString());
     initializationRef.current = true;
     
     const initialize = async () => {
@@ -1141,6 +1215,13 @@ function Success() {
             isInitializing: false
           }, 'no-session-found');
           
+          // FORCE update loading state directly (bypass state routing bug)
+          setLoadingState(prev => ({ 
+            ...prev, 
+            isInitializing: false, 
+            hasNoSession: true 
+          }));
+          
           addNotification({
             type: 'error', 
             title: '❌ Brak sesji',
@@ -1156,9 +1237,12 @@ function Success() {
     
     initialize();
     
-    // Cleanup
+    // Cleanup - clear initialization flags
     return () => {
       initializationRef.current = false;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('cvperfect_initializing');
+      }
     };
   }, []); // Run once on mount
 
