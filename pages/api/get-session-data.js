@@ -15,7 +15,7 @@ const { CVPerfectValidation } = require('../../lib/validation');
 const { CVPerfectCORS } = require('../../lib/cors');
 const { CVPerfectErrors } = require('../../lib/error-responses');
 const { CVPerfectTimeouts } = require('../../lib/timeout-utils');
-const { CVPerfectAuth } = require('../../lib/auth');
+// CVPerfectAuth removed - using direct validation patterns instead
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -33,9 +33,15 @@ class SessionRetriever {
     // Get session data by session ID
     async getSessionData(sessionId) {
         try {
-            // Validate session ID format
-            const validation = CVPerfectAuth.validateUserSession(sessionId);
-            if (!validation.valid && !CVPerfectValidation.validateSessionId(sessionId).isValid) {
+            // Validate session ID format - support multiple formats:
+            // 1. CVPerfect format: sess_timestamp_hex
+            // 2. Stripe format: cs_test_* or cs_live_*
+            // 3. Test format: test123 (for development)
+            const isCVPerfectFormat = /^sess_\d{13}_[a-f0-9]{32}$/.test(sessionId);
+            const isStripeFormat = /^cs_(test|live)_[a-zA-Z0-9]{24,}$/.test(sessionId);
+            const isTestFormat = /^test\d+$/.test(sessionId);
+            
+            if (!isCVPerfectFormat && !isStripeFormat && !isTestFormat) {
                 throw new Error('Invalid session ID format');
             }
 
@@ -276,8 +282,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Get session ID from query params or body
-        const sessionId = req.query.sessionId || req.body?.sessionId;
+        // Get session ID from query params or body (handle both snake_case and camelCase)
+        const sessionId = req.query.sessionId || req.query.session_id || req.body?.sessionId;
 
         if (!sessionId) {
             return res.status(400).json(CVPerfectErrors.validation('Session ID is required'));
@@ -297,11 +303,23 @@ export default async function handler(req, res) {
         // Sanitize session data before sending to client
         const sanitizedData = sessionRetriever.sanitizeSessionData(result.sessionData);
 
-        res.status(200).json({
+        // Create backward-compatible response format for success.js
+        // Frontend expects: { success: true, cvData: "...", email: "...", photo: "..." }
+        const compatibleResponse = {
             success: true,
-            sessionData: sanitizedData
-        });
+            sessionData: sanitizedData,  // Keep nested structure for new code
+            
+            // Flat structure for backward compatibility with success.js
+            cvData: sanitizedData.cvText || sanitizedData.cvData || '',
+            email: sanitizedData.email || '',
+            photo: sanitizedData.photo || '',
+            plan: sanitizedData.selectedPlan || 'premium',
+            jobPosting: sanitizedData.jobPosting || '',
+            sessionId: sanitizedData.sessionId,
+            paymentStatus: sanitizedData.paymentStatus
+        };
 
+        res.status(200).json(compatibleResponse);
     } catch (error) {
         console.error('Get session data error:', error);
         
