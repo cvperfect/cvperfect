@@ -43,14 +43,14 @@ class CVPerfectDeploymentValidator {
     log(message, type = 'info') {
         const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
         const icons = {
-            start: '=€',
-            test: '>ê', 
+            start: '=ï¿½',
+            test: '>ï¿½', 
             pass: '',
             fail: 'L',
-            warning: ' ',
+            warning: 'ï¿½',
             info: '9',
             critical: '=%',
-            success: '<‰'
+            success: '<ï¿½'
         };
         
         const icon = icons[type] || '9';
@@ -196,10 +196,10 @@ class CVPerfectDeploymentValidator {
         }
         
         if (this.warnings.length > 0) {
-            recommendations.push('  WARNINGS: Review and address warnings');
+            recommendations.push('ï¿½ WARNINGS: Review and address warnings');
         }
         
-        recommendations.push('=Ê Monitor performance metrics post-deployment');
+        recommendations.push('=ï¿½ Monitor performance metrics post-deployment');
         recommendations.push('= Set up automated regression testing in CI/CD pipeline');
         
         return recommendations;
@@ -207,16 +207,16 @@ class CVPerfectDeploymentValidator {
 
     displayFinalResults(report) {
         console.log('\n' + '='.repeat(80));
-        console.log('<Á CVPERFECT PART 8 - FINAL DEPLOYMENT VALIDATION');
+        console.log('<ï¿½ CVPERFECT PART 8 - FINAL DEPLOYMENT VALIDATION');
         console.log('='.repeat(80));
         
-        console.log(`\n=Ê VALIDATION RESULT: ${report.deploymentValidation.overallResult}`);
-        console.log(`=€ DEPLOYMENT READY: ${report.deploymentValidation.readyForDeployment ? 'YES' : 'NO'}`);
-        console.log(`ñ TOTAL DURATION: ${report.deploymentValidation.duration}`);
-        console.log(`>ê TESTS RUN: ${report.summary.totalTests}`);
+        console.log(`\n=ï¿½ VALIDATION RESULT: ${report.deploymentValidation.overallResult}`);
+        console.log(`=ï¿½ DEPLOYMENT READY: ${report.deploymentValidation.readyForDeployment ? 'YES' : 'NO'}`);
+        console.log(`ï¿½ TOTAL DURATION: ${report.deploymentValidation.duration}`);
+        console.log(`>ï¿½ TESTS RUN: ${report.summary.totalTests}`);
         console.log(` TESTS PASSED: ${report.summary.passed}`);
         console.log(`L TESTS FAILED: ${report.summary.failed}`);
-        console.log(`  WARNINGS: ${report.summary.warnings}`);
+        console.log(`ï¿½ WARNINGS: ${report.summary.warnings}`);
         console.log(`=% CRITICAL ERRORS: ${report.summary.criticalErrors}`);
         
         if (report.criticalErrors.length > 0) {
@@ -227,9 +227,9 @@ class CVPerfectDeploymentValidator {
         }
         
         if (report.warnings.length > 0) {
-            console.log('\n  WARNINGS:');
+            console.log('\nï¿½ WARNINGS:');
             report.warnings.slice(0, 5).forEach(warning => {
-                console.log(`     ${warning.test}: ${warning.warning}`);
+                console.log(`   ï¿½ ${warning.test}: ${warning.warning}`);
             });
             
             if (report.warnings.length > 5) {
@@ -237,23 +237,23 @@ class CVPerfectDeploymentValidator {
             }
         }
         
-        console.log('\n=Ý RECOMMENDATIONS:');
+        console.log('\n=ï¿½ RECOMMENDATIONS:');
         report.recommendations.forEach(rec => console.log(`   ${rec}`));
         
-        console.log('\n=Ä REPORTS GENERATED:');
+        console.log('\n=ï¿½ REPORTS GENERATED:');
         console.log('   " final-deployment-validation.json - Complete validation report');
         console.log('   " production-readiness-report.json - Production readiness assessment');
         console.log('   " performance-regression-report.md - Performance analysis');
         console.log('   " REGRESSION_TEST_SUMMARY.md - Comprehensive test summary');
         
         if (report.deploymentValidation.readyForDeployment) {
-            console.log('\n<‰ DEPLOYMENT APPROVED!');
+            console.log('\n<ï¿½ DEPLOYMENT APPROVED!');
             console.log(' CVPerfect Part 8 is ready for production deployment');
-            console.log('=€ All critical validations passed');
+            console.log('=ï¿½ All critical validations passed');
         } else {
-            console.log('\n  DEPLOYMENT NOT RECOMMENDED');
+            console.log('\nï¿½ DEPLOYMENT NOT RECOMMENDED');
             console.log('L Critical issues must be resolved before deployment');
-            console.log('=' Address critical errors and re-run validation');
+            console.log('ðŸ“‹ Address critical errors and re-run validation');
         }
         
         console.log('\n' + '='.repeat(80));
