@@ -2199,6 +2199,48 @@ Doświadczony specjalista z 5-letnim stażem w branży IT. Ekspert w zakresie ro
         <meta name="description" content={!isHydrated ? 'Ładowanie aplikacji...' : 'Twoje CV zostało profesjonalnie zoptymalizowane przez AI. Pobierz gotowy dokument.'} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+
+      {/* Responsive Design Styles */}
+      <style jsx>{`
+        .success-responsive-container {
+          max-width: 320px;
+          padding: 1rem;
+          margin: 0 auto;
+        }
+        
+        @media (min-width: 480px) {
+          .success-responsive-container {
+            max-width: 480px;
+            padding: 1.5rem;
+          }
+        }
+        
+        @media (min-width: 768px) {
+          .success-responsive-container {
+            max-width: 768px;
+            padding: 2rem;
+          }
+        }
+        
+        @media (min-width: 1024px) {
+          .success-responsive-container {
+            max-width: 1024px;
+            padding: 3rem;
+          }
+        }
+        
+        @media (min-width: 1440px) {
+          .success-responsive-container {
+            max-width: 1440px;
+            padding: 4rem;
+          }
+        }
+        
+        .success-main-wrapper {
+          min-width: 320px;
+          max-width: 100vw;
+        }
+      `}</style>
       
       {!isHydrated ? (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">

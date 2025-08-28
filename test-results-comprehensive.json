@@ -1,97 +1,125 @@
 {
   "summary": {
     "totalTests": 6,
-    "passed": 5,
-    "failed": 1,
-    "duration": "1379ms",
-    "successRate": "83%"
+    "passed": 6,
+    "failed": 0,
+    "duration": "832ms",
+    "successRate": "100%"
+  },
+  "environment": {
+    "serverPort": 3004,
+    "serverDetails": {
+      "port": 3004,
+      "available": true
+    },
+    "platform": "win32",
+    "nodeVersion": "v22.17.1",
+    "timestamp": "2025-08-28T17:43:14.456Z"
   },
   "testResults": [
     {
-      "timestamp": "2025-08-28T14:12:31.718Z",
+      "timestamp": "2025-08-28T17:43:13.624Z",
       "type": "start",
       "message": "🚀 Starting CVPerfect Comprehensive Website Tests",
-      "duration": 1
+      "duration": 3
     },
     {
-      "timestamp": "2025-08-28T14:12:31.719Z",
+      "timestamp": "2025-08-28T17:43:13.627Z",
+      "type": "info",
+      "message": "🧹 Cleaning up test processes (Windows)",
+      "duration": 3
+    },
+    {
+      "timestamp": "2025-08-28T17:43:13.774Z",
+      "type": "info",
+      "message": "Found 0 test-related Node.js processes",
+      "duration": 150
+    },
+    {
+      "timestamp": "2025-08-28T17:43:13.774Z",
       "type": "test",
       "message": "Starting test: Server Connection",
-      "duration": 2
+      "duration": 150
     },
     {
-      "timestamp": "2025-08-28T14:12:31.747Z",
+      "timestamp": "2025-08-28T17:43:13.800Z",
+      "type": "info",
+      "message": "✅ Active Next.js server detected on port 3004",
+      "duration": 176
+    },
+    {
+      "timestamp": "2025-08-28T17:43:13.800Z",
+      "type": "info",
+      "message": "📊 Active server found on port: 3004",
+      "duration": 176
+    },
+    {
+      "timestamp": "2025-08-28T17:43:13.800Z",
       "type": "pass",
-      "message": "✅ PASSED: Server Connection (27ms)",
-      "duration": 30
+      "message": "✅ PASSED: Server Connection (26ms)",
+      "duration": 176
     },
     {
-      "timestamp": "2025-08-28T14:12:31.748Z",
+      "timestamp": "2025-08-28T17:43:13.800Z",
       "type": "test",
       "message": "Starting test: Main Page Load",
-      "duration": 30
+      "duration": 176
     },
     {
-      "timestamp": "2025-08-28T14:12:32.273Z",
-      "type": "fail",
-      "message": "❌ FAILED: Main Page Load - Failed to connect to http://localhost:3000: Command failed: curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000\n (525ms)",
-      "duration": 556
+      "timestamp": "2025-08-28T17:43:13.834Z",
+      "type": "pass",
+      "message": "✅ PASSED: Main Page Load (34ms)",
+      "duration": 210
     },
     {
-      "timestamp": "2025-08-28T14:12:32.274Z",
+      "timestamp": "2025-08-28T17:43:13.834Z",
       "type": "test",
       "message": "Starting test: API Endpoints",
-      "duration": 556
+      "duration": 210
     },
     {
-      "timestamp": "2025-08-28T14:12:33.096Z",
+      "timestamp": "2025-08-28T17:43:14.455Z",
       "type": "pass",
-      "message": "✅ PASSED: API Endpoints (822ms)",
-      "duration": 1378
+      "message": "✅ PASSED: API Endpoints (621ms)",
+      "duration": 831
     },
     {
-      "timestamp": "2025-08-28T14:12:33.096Z",
+      "timestamp": "2025-08-28T17:43:14.455Z",
       "type": "test",
       "message": "Starting test: Responsive Breakpoints",
-      "duration": 1378
+      "duration": 831
     },
     {
-      "timestamp": "2025-08-28T14:12:33.097Z",
+      "timestamp": "2025-08-28T17:43:14.455Z",
       "type": "pass",
-      "message": "✅ PASSED: Responsive Breakpoints (1ms)",
-      "duration": 1379
+      "message": "✅ PASSED: Responsive Breakpoints (0ms)",
+      "duration": 832
     },
     {
-      "timestamp": "2025-08-28T14:12:33.097Z",
+      "timestamp": "2025-08-28T17:43:14.456Z",
       "type": "test",
       "message": "Starting test: Component Load",
-      "duration": 1379
+      "duration": 832
     },
     {
-      "timestamp": "2025-08-28T14:12:33.097Z",
+      "timestamp": "2025-08-28T17:43:14.456Z",
       "type": "pass",
       "message": "✅ PASSED: Component Load (0ms)",
-      "duration": 1379
+      "duration": 832
     },
     {
-      "timestamp": "2025-08-28T14:12:33.097Z",
+      "timestamp": "2025-08-28T17:43:14.456Z",
       "type": "test",
       "message": "Starting test: Agent System",
-      "duration": 1379
+      "duration": 832
     },
     {
-      "timestamp": "2025-08-28T14:12:33.097Z",
+      "timestamp": "2025-08-28T17:43:14.456Z",
       "type": "pass",
       "message": "✅ PASSED: Agent System (0ms)",
-      "duration": 1379
+      "duration": 832
     }
   ],
-  "errors": [
-    {
-      "testName": "Main Page Load",
-      "error": "Failed to connect to http://localhost:3000: Command failed: curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000\n",
-      "duration": 525
-    }
-  ],
-  "timestamp": "2025-08-28T14:12:33.097Z"
+  "errors": [],
+  "timestamp": "2025-08-28T17:43:14.456Z"
 }

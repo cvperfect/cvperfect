@@ -119,7 +119,7 @@ const TemplateSelector = ({
           </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {Object.entries(TEMPLATES).map(([templateKey, template]) => {
             const isAvailable = availableTemplates.includes(templateKey)
             const isSelected = selectedTemplate === templateKey
@@ -264,26 +264,26 @@ const TemplateRenderer = ({
       />
       
       {/* CV Render */}
-      <div className="max-w-4xl mx-auto p-4">
-        <div className={`${templateConfig.className} rounded-xl shadow-2xl min-h-[800px] p-8`}>
+      <div className="max-w-sm mx-auto p-2 sm:max-w-lg sm:p-3 md:max-w-xl md:p-4 lg:max-w-2xl lg:p-6 xl:max-w-4xl xl:p-8">
+        <div className={`${templateConfig.className} rounded-xl shadow-2xl min-h-[600px] p-4 sm:p-6 md:p-8 lg:min-h-[800px]`}>
           
           {/* Header Section */}
           <header className={templateConfig.headerClass}>
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6">
               {cvData.profilePicture && (
                 <img
                   src={cvData.profilePicture}
                   alt="Zdjęcie profilowe"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white shadow-lg"
                 />
               )}
               
               <div className="flex-1">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
                   {cvData.name || 'Imię Nazwisko'}
                 </h1>
                 
-                <div className="flex flex-wrap gap-4 text-sm opacity-80">
+                <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm opacity-80">
                   {cvData.email && (
                     <div className="flex items-center gap-2">
                       📧 {cvData.email}

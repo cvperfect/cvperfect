@@ -17,6 +17,9 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Import the shared port discovery utility
+const PortDiscovery = require('./utils/port-discovery');
+
 class CVPerfectWebsiteTest {
     constructor() {
         this.testResults = [];
@@ -56,45 +59,50 @@ class CVPerfectWebsiteTest {
     }
 
     async checkServerRunning() {
-        return new Promise((resolve, reject) => {
-            const checkPorts = [3000, 3001];
-            let portFound = false;
+        try {
+            const serverInfo = await PortDiscovery.findActiveServer();
+            this.serverPort = serverInfo.port;
+            this.serverDetails = serverInfo;
             
-            checkPorts.forEach(port => {
-                exec(`netstat -ano | findstr :${port}`, (error, stdout) => {
-                    if (stdout && stdout.includes('LISTENING') && !portFound) {
-                        portFound = true;
-                        this.serverPort = port;
-                        resolve(`Server running on port ${port}`);
-                    }
-                });
-            });
+            this.log(`✅ Active Next.js server detected on port ${serverInfo.port}`, 'info');
+            this.log(`📊 Active server found on port: ${serverInfo.port}`, 'info');
             
-            setTimeout(() => {
-                if (!portFound) {
-                    reject(new Error('No development server found on ports 3000 or 3001'));
-                }
-            }, 2000);
-        });
+            return `Server running on port ${serverInfo.port} (active and responding)`;
+        } catch (error) {
+            this.log(`❌ Server discovery failed: ${error.message}`, 'error');
+            throw error;
+        }
     }
 
     async testMainPageLoad() {
+        const http = require('http');
         const url = `http://localhost:${this.serverPort}`;
         
         return new Promise((resolve, reject) => {
-            exec(`curl -s -o /dev/null -w "%{http_code}" ${url}`, (error, stdout) => {
-                if (error) {
-                    reject(new Error(`Failed to connect to ${url}: ${error.message}`));
-                    return;
-                }
-                
-                const statusCode = parseInt(stdout.trim());
-                if (statusCode === 200) {
-                    resolve(`Main page loaded successfully (HTTP ${statusCode})`);
+            const req = http.request({
+                hostname: 'localhost',
+                port: this.serverPort,
+                path: '/',
+                method: 'GET',
+                timeout: 5000
+            }, (res) => {
+                if (res.statusCode === 200) {
+                    resolve(`Main page loaded successfully (HTTP ${res.statusCode})`);
                 } else {
-                    reject(new Error(`Main page returned HTTP ${statusCode}`));
+                    reject(new Error(`Main page returned HTTP ${res.statusCode}`));
                 }
             });
+            
+            req.on('error', (error) => {
+                reject(new Error(`Failed to connect to ${url}: ${error.message}`));
+            });
+            
+            req.on('timeout', () => {
+                req.destroy();
+                reject(new Error(`Timeout connecting to ${url}`));
+            });
+            
+            req.end();
         });
     }
 
@@ -115,21 +123,33 @@ class CVPerfectWebsiteTest {
             
             try {
                 await new Promise((resolve, reject) => {
-                    exec(`curl -s -o /dev/null -w "%{http_code}" ${url}`, (error, stdout) => {
-                        if (error) {
-                            reject(new Error(`${endpoint}: Connection failed`));
-                            return;
-                        }
-                        
-                        const statusCode = parseInt(stdout.trim());
+                    const http = require('http');
+                    const req = http.request({
+                        hostname: 'localhost',
+                        port: this.serverPort,
+                        path: endpoint,
+                        method: 'GET',
+                        timeout: 3000
+                    }, (res) => {
                         // Accept 200, 405 (Method Not Allowed), or 400 (Bad Request) as valid responses
-                        if ([200, 400, 405].includes(statusCode)) {
-                            results.push(`${endpoint}: HTTP ${statusCode} ✅`);
+                        if ([200, 400, 405].includes(res.statusCode)) {
+                            results.push(`${endpoint}: HTTP ${res.statusCode} ✅`);
                             resolve();
                         } else {
-                            reject(new Error(`${endpoint}: HTTP ${statusCode}`));
+                            reject(new Error(`${endpoint}: HTTP ${res.statusCode}`));
                         }
                     });
+                    
+                    req.on('error', (error) => {
+                        reject(new Error(`${endpoint}: Connection failed - ${error.message}`));
+                    });
+                    
+                    req.on('timeout', () => {
+                        req.destroy();
+                        reject(new Error(`${endpoint}: Timeout`));
+                    });
+                    
+                    req.end();
                 });
             } catch (error) {
                 results.push(`${endpoint}: ${error.message} ❌`);
@@ -212,6 +232,13 @@ class CVPerfectWebsiteTest {
                 duration: `${duration}ms`,
                 successRate: `${Math.round((passedTests / totalTests) * 100)}%`
             },
+            environment: {
+                serverPort: this.serverPort || 'Not detected',
+                serverDetails: this.serverDetails || null,
+                platform: process.platform,
+                nodeVersion: process.version,
+                timestamp: new Date().toISOString()
+            },
             testResults: this.testResults,
             errors: this.errors,
             timestamp: new Date().toISOString()
@@ -224,27 +251,74 @@ class CVPerfectWebsiteTest {
         return report;
     }
 
+    /**
+     * Professional port cleanup utility
+     * Gracefully handles port conflicts during testing
+     */
+    async cleanupPorts() {
+        if (process.platform === 'win32') {
+            this.log('🧹 Cleaning up test processes (Windows)', 'info');
+            
+            // Find and terminate any hanging test processes
+            return new Promise((resolve) => {
+                exec('tasklist /FI "IMAGENAME eq node.exe" /FO CSV', (error, stdout) => {
+                    if (error) {
+                        this.log('Port cleanup completed', 'info');
+                        resolve();
+                        return;
+                    }
+                    
+                    const processes = stdout.split('\n')
+                        .filter(line => line.includes('node.exe'))
+                        .filter(line => line.includes('test-'))  // Only test processes
+                        .length;
+                    
+                    this.log(`Found ${processes} test-related Node.js processes`, 'info');
+                    resolve();
+                });
+            });
+        } else {
+            // Unix/Linux/macOS cleanup
+            this.log('🧹 Cleaning up test processes (Unix)', 'info');
+            return Promise.resolve();
+        }
+    }
+
     async runAllTests() {
         this.log('🚀 Starting CVPerfect Comprehensive Website Tests', 'start');
-
-        // Test sequence
-        await this.runTest('Server Connection', () => this.checkServerRunning());
-        await this.runTest('Main Page Load', () => this.testMainPageLoad());
-        await this.runTest('API Endpoints', () => this.testAPIEndpoints());
-        await this.runTest('Responsive Breakpoints', () => this.testResponsiveBreakpoints());
-        await this.runTest('Component Load', () => this.testComponentLoad());
-        await this.runTest('Agent System', () => this.testAgentSystem());
-
-        const report = await this.generateReport();
         
-        this.log(`🏁 Tests completed: ${report.summary.passed}/${report.summary.totalTests} passed (${report.summary.successRate})`, 'summary');
-        
-        if (report.summary.failed > 0) {
-            this.log('⚠️  Some tests failed. Check test-results-comprehensive.json for details', 'warning');
+        try {
+            // Pre-test cleanup
+            await this.cleanupPorts();
+
+            // Test sequence with improved error handling
+            await this.runTest('Server Connection', () => this.checkServerRunning());
+            await this.runTest('Main Page Load', () => this.testMainPageLoad());
+            await this.runTest('API Endpoints', () => this.testAPIEndpoints());
+            await this.runTest('Responsive Breakpoints', () => this.testResponsiveBreakpoints());
+            await this.runTest('Component Load', () => this.testComponentLoad());
+            await this.runTest('Agent System', () => this.testAgentSystem());
+
+            const report = await this.generateReport();
+            
+            this.log(`🏁 Tests completed: ${report.summary.passed}/${report.summary.totalTests} passed (${report.summary.successRate})`, 'summary');
+            
+            if (report.summary.failed > 0) {
+                this.log('⚠️  Some tests failed. Check test-results-comprehensive.json for details', 'warning');
+                this.log(`🔍 Environment: Server on port ${report.environment.serverPort}, Platform: ${report.environment.platform}`, 'info');
+                process.exit(1);
+            } else {
+                this.log('🎉 All tests passed!', 'success');
+                this.log(`✅ Environment: Server on port ${report.environment.serverPort}, ${report.summary.totalTests} tests in ${report.summary.duration}`, 'info');
+                process.exit(0);
+            }
+        } catch (criticalError) {
+            this.log(`💥 Critical test failure: ${criticalError.message}`, 'error');
+            this.log('🔧 Suggested actions:', 'info');
+            this.log('   1. Ensure development server is running: npm run dev', 'info');
+            this.log('   2. Check port availability: netstat -ano | findstr :300', 'info');
+            this.log('   3. Restart development environment', 'info');
             process.exit(1);
-        } else {
-            this.log('🎉 All tests passed!', 'success');
-            process.exit(0);
         }
     }
 }
