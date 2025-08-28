@@ -14,9 +14,21 @@ export default [
       globals: { ...globals.browser }
     }
   },
-  // Środowisko Node dla backendu / skryptów / testów
+  // Środowisko Node dla backendu / skryptów / testów / utilities / config files
   {
-    files: ["pages/api/**/*.{js,mjs}","lib/**/*.{js,mjs}","scripts/**/*.{js,mjs}","tests/**/*.{js,mjs}","cli-*.js","**/test-*.js","mcp-*.js","*puppeteer*.js"],
+    files: [
+      "pages/api/**/*.{js,mjs}",
+      "lib/**/*.{js,mjs}",
+      "scripts/**/*.{js,mjs}",
+      "tests/**/*.{js,mjs}",
+      "utils/**/*.{js,mjs}",
+      "cli-*.js",
+      "**/test-*.js", 
+      "mcp-*.js",
+      "*puppeteer*.js",
+      "start-*.js",
+      "*.config.js"
+    ],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -33,6 +45,21 @@ export default [
         console: "readonly",
         __dirname: "readonly",
         __filename: "readonly"
+      }
+    }
+  },
+  // React components and pages that need process.env access
+  {
+    files: [
+      "components/PerformanceMonitor.js",
+      "pages/_app.js",
+      "pages/privacy-policy.js", 
+      "pages/performance.js"
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        process: "readonly"
       }
     }
   },

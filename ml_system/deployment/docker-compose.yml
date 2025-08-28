@@ -1,0 +1,206 @@
+# CVPerfect ML System - Docker Compose Configuration
+# Production-ready containerization with GPU support
+
+version: '3.8'
+
+services:
+  # ML Inference Server (GPU-enabled)
+  ml-inference-gpu:
+    build:
+      context: ../..
+      dockerfile: ml_system/deployment/Dockerfile
+      target: gpu-base
+    container_name: cvperfect-ml-gpu
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=0
+      - ML_SERVER_MODE=gpu
+      - HUGGINGFACE_CACHE_DIR=/app/.cache
+    volumes:
+      - ml_models:/app/models
+      - ml_cache:/app/.cache
+      - ml_data:/app/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - cvperfect-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ML Inference Server (CPU fallback)
+  ml-inference-cpu:
+    build:
+      context: ../..
+      dockerfile: ml_system/deployment/Dockerfile
+      target: cpu-base
+    container_name: cvperfect-ml-cpu
+    ports:
+      - "8002:8001"  # Different port for CPU fallback
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - ML_SERVER_MODE=cpu
+      - HUGGINGFACE_CACHE_DIR=/app/.cache
+    volumes:
+      - ml_models:/app/models
+      - ml_cache:/app/.cache
+      - ml_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cvperfect-network
+    profiles:
+      - cpu-fallback
+
+  # Redis Cache (for ML inference caching)
+  redis-cache:
+    image: redis:7-alpine
+    container_name: cvperfect-redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-cvperfect2025}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-cvperfect2025} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - cvperfect-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Load Balancer (ML inference routing)
+  nginx-lb:
+    image: nginx:alpine
+    container_name: cvperfect-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - ml-inference-gpu
+      - ml-inference-cpu
+    restart: unless-stopped
+    networks:
+      - cvperfect-network
+    profiles:
+      - load-balancer
+
+  # PostgreSQL Database (local development)
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: cvperfect-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=cvperfect_dev
+      - POSTGRES_USER=cvperfect
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-dev_password_2025}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    networks:
+      - cvperfect-network
+    profiles:
+      - development
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cvperfect-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+    networks:
+      - cvperfect-network
+    profiles:
+      - monitoring
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cvperfect-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin2025}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - cvperfect-network
+    profiles:
+      - monitoring
+
+volumes:
+  ml_models:
+    driver: local
+  ml_cache:
+    driver: local
+  ml_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  cvperfect-network:
+    driver: bridge
+    name: cvperfect-net
+
+# Production deployment commands:
+# 
+# GPU-enabled ML server:
+# docker-compose up ml-inference-gpu redis-cache
+#
+# CPU fallback:  
+# docker-compose --profile cpu-fallback up ml-inference-cpu redis-cache
+#
+# Full development environment:
+# docker-compose --profile development up
+#
+# With monitoring:
+# docker-compose --profile monitoring up prometheus grafana
+#
+# Production with load balancing:
+# docker-compose --profile load-balancer up

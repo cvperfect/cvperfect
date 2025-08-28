@@ -9,7 +9,9 @@ export default function handler(req, res) {
       try {
         const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
         version = pkg.version || version;
-      } catch {}
+      } catch (_error) {
+        // Ignore package.json read errors
+      }
       
       // orchestration from .claude/settings.json
       let orchestrationStatus = 'disabled';
@@ -21,7 +23,9 @@ export default function handler(req, res) {
             orchestrationStatus = 'chained_agent_system_active';
           }
         }
-      } catch {}
+      } catch (_error) {
+        // Ignore settings.json read errors
+      }
       
       const healthData = {
         status: 'healthy',

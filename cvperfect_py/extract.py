@@ -83,7 +83,7 @@ def extract_sections(text: str) -> CVSections:
     # Ekstraktuj języki
     languages = _extract_languages(raw_sections)
     
-    return CVSections(
+    extracted_sections = CVSections(
         contact=contact,
         summary=summary,
         experience=experience,
@@ -95,6 +95,27 @@ def extract_sections(text: str) -> CVSections:
         languages=languages,
         raw_sections=raw_sections
     )
+    
+    # COMPLIANCE GUARD - Validate no new facts were added
+    try:
+        from .compliance import ComplianceGuard
+        
+        guard = ComplianceGuard()
+        compliance_result = guard.validate_no_new_facts(text, extracted_sections)
+        
+        if not compliance_result.is_compliant:
+            logger.warning(f"Compliance violations detected: {compliance_result.summary}")
+            for violation in compliance_result.violations:
+                logger.warning(f"  - {violation.type}: {violation.processed} (severity: {violation.severity})")
+        else:
+            logger.info("✅ Compliance check passed - no hallucinations detected")
+            
+    except ImportError:
+        logger.debug("Compliance guard not available - skipping validation")
+    except Exception as e:
+        logger.error(f"Compliance guard error: {e}")
+    
+    return extracted_sections
 
 
 def _split_into_sections(text: str) -> Dict[str, str]:
@@ -265,6 +286,17 @@ def _extract_experience(sections: Dict[str, str]) -> List[Experience]:
     if not exp_text:
         return experience_list
     
+    # PHRASEBOOK INITIALIZATION - Initialize once for the entire function
+    phrasebook = None
+    try:
+        from .phrasebook import ProfessionalPhrasebook
+        phrasebook = ProfessionalPhrasebook()
+        logger.debug("✅ Professional phrasebook loaded for experience extraction")
+    except ImportError:
+        logger.debug("Phrasebook not available - using original language")
+    except Exception as e:
+        logger.warning(f"Phrasebook initialization error: {e}")
+    
     # Wzorce dla stanowisk - POPRAWIONE (exclude bullet points)
     role_patterns = [
         # Pattern 1: Role w/at Company (dates) - not starting with bullet
@@ -317,8 +349,19 @@ def _extract_experience(sections: Dict[str, str]) -> List[Experience]:
                 # Parsuj daty
                 date_start, date_end = _parse_date_range(dates)
                 
+                # PHRASEBOOK INTEGRATION - Elevate job title
+                if phrasebook:
+                    try:
+                        elevated_role = phrasebook.elevate_job_title(role)
+                        logger.debug(f"Role elevated: '{role}' → '{elevated_role}'")
+                    except Exception as e:
+                        logger.warning(f"Phrasebook role elevation error: {e}")
+                        elevated_role = role
+                else:
+                    elevated_role = role
+                
                 current_exp = Experience(
-                    role=role,
+                    role=elevated_role,
                     company=company,
                     date_start=date_start,
                     date_end=date_end,
@@ -332,9 +375,27 @@ def _extract_experience(sections: Dict[str, str]) -> List[Experience]:
             if stripped.startswith('•') or stripped.startswith('-'):
                 bullet = stripped[1:].strip()
                 if bullet:
-                    current_exp.bullets.append(bullet)
+                    # PHRASEBOOK INTEGRATION - Improve bullet point
+                    if phrasebook:
+                        try:
+                            improved_bullet = phrasebook.improve_bullet_point(bullet)
+                            current_exp.bullets.append(improved_bullet)
+                        except Exception as e:
+                            logger.warning(f"Phrasebook bullet improvement error: {e}")
+                            current_exp.bullets.append(bullet)
+                    else:
+                        current_exp.bullets.append(bullet)
             elif len(stripped) < 150:  # Krótka linia = prawdopodobnie bullet
-                current_exp.bullets.append(stripped)
+                # PHRASEBOOK INTEGRATION - Improve bullet point
+                if phrasebook:
+                    try:
+                        improved_bullet = phrasebook.improve_bullet_point(stripped)
+                        current_exp.bullets.append(improved_bullet)
+                    except Exception as e:
+                        logger.warning(f"Phrasebook bullet improvement error: {e}")
+                        current_exp.bullets.append(stripped)
+                else:
+                    current_exp.bullets.append(stripped)
     
     # Dodaj ostatnie
     if current_exp and current_exp.role:

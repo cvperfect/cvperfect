@@ -1,0 +1,22 @@
+# CVPerfect Python Dependencies
+
+# CVPerfect Python Package - Core dependencies (required)
+pdfplumber>=0.9.0       # PDF text extraction
+python-docx>=0.8.11     # DOCX file processing  
+Jinja2>=3.1.0          # HTML template engine
+
+# CVPerfect Python Package - Optional dependencies for enhanced functionality
+rapidfuzz>=3.0.0       # Fuzzy string matching for keyword analysis
+typer>=0.9.0          # Modern CLI interface (optional)
+
+# CVPerfect Python Package - Development dependencies (optional)
+pytest>=7.0.0         # Testing framework
+pytest-cov>=4.0.0     # Coverage reporting
+
+# Original CVPerfect API Dependencies (for existing web app)
+groq==0.4.1
+supabase==2.3.4
+pydantic==2.5.0
+python-dotenv==1.0.0
+tenacity==8.2.3  # dla retry logic
+pytest-asyncio==0.21.1

@@ -1,0 +1,79 @@
+{
+  "technical_skills": [
+    "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "PHP", "Ruby", "Go", "Rust", "Swift", "Kotlin",
+    "React", "Angular", "Vue.js", "Next.js", "Node.js", "Express", "Django", "Flask", "Spring", "Laravel", ".NET",
+    "HTML", "HTML5", "CSS", "CSS3", "SASS", "LESS", "Tailwind CSS", "Bootstrap", "Material-UI",
+    "SQL", "MySQL", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch", "DynamoDB", "Cassandra",
+    "Docker", "Kubernetes", "AWS", "Azure", "GCP", "Google Cloud", "Terraform", "Ansible", "Jenkins", "GitLab CI",
+    "Git", "GitHub", "GitLab", "Bitbucket", "SVN", "Jira", "Confluence", "Slack", "Teams",
+    "REST API", "GraphQL", "WebSocket", "gRPC", "SOAP", "Microservices", "Serverless",
+    "Linux", "Windows", "macOS", "Ubuntu", "CentOS", "Debian", "Shell", "Bash", "PowerShell",
+    "Figma", "Sketch", "Adobe XD", "Photoshop", "Illustrator", "InDesign", "Premiere", "After Effects",
+    "Excel", "Word", "PowerPoint", "MS Office", "Google Workspace", "LibreOffice",
+    "SAP", "Salesforce", "Oracle", "Microsoft Dynamics", "NetSuite", "Workday",
+    "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Scikit-learn", "Pandas", "NumPy",
+    "Agile", "Scrum", "Kanban", "Waterfall", "PRINCE2", "PMP", "Six Sigma", "Lean",
+    "SEO", "SEM", "Google Analytics", "Google Ads", "Facebook Ads", "LinkedIn Ads", "Marketing Automation",
+    "AutoCAD", "SolidWorks", "CATIA", "Revit", "SketchUp", "3ds Max", "Maya", "Blender"
+  ],
+  
+  "soft_skills": [
+    "komunikacja", "communication", "praca zespołowa", "teamwork", "przywództwo", "leadership",
+    "zarządzanie czasem", "time management", "rozwiązywanie problemów", "problem solving",
+    "kreatywność", "creativity", "analityczne myślenie", "analytical thinking",
+    "adaptacja", "adaptability", "elastyczność", "flexibility", 
+    "negocjacje", "negotiation", "prezentacja", "presentation skills",
+    "krytyczne myślenie", "critical thinking", "empatia", "empathy",
+    "organizacja", "organization", "motywacja", "motivation",
+    "decyzyjność", "decision making", "delegowanie", "delegation",
+    "mentoring", "coaching", "feedback", "konflikt", "conflict resolution"
+  ],
+  
+  "languages": {
+    "pl": {
+      "Polski": ["ojczysty", "native", "C2"],
+      "Angielski": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły", "profesjonalny"],
+      "Niemiecki": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Francuski": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Hiszpański": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Włoski": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Rosyjski": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Ukraiński": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Czeski": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"],
+      "Słowacki": ["A1", "A2", "B1", "B2", "C1", "C2", "podstawowy", "średniozaawansowany", "zaawansowany", "biegły"]
+    },
+    "en": {
+      "Polish": ["native", "C2", "fluent", "proficient"],
+      "English": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent", "professional", "native"],
+      "German": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "French": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "Spanish": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "Italian": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "Russian": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "Ukrainian": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "Czech": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"],
+      "Slovak": ["A1", "A2", "B1", "B2", "C1", "C2", "basic", "intermediate", "advanced", "fluent"]
+    }
+  },
+  
+  "certifications": [
+    "AWS Certified", "Azure Certified", "Google Cloud Certified", "Cisco CCNA", "Cisco CCNP",
+    "CompTIA A+", "CompTIA Network+", "CompTIA Security+", "CISSP", "CEH",
+    "PMP", "PRINCE2", "Agile", "Scrum Master", "Product Owner", "Six Sigma",
+    "ITIL", "COBIT", "ISO 27001", "ISO 9001", "GDPR",
+    "Microsoft Certified", "Oracle Certified", "SAP Certified", "Salesforce Certified",
+    "ISTQB", "Selenium", "CISA", "CISM", "CRISC",
+    "CFA", "ACCA", "CIMA", "CPA", "CIA", 
+    "Cambridge", "TOEFL", "IELTS", "DELE", "DELF", "Goethe", "HSK",
+    "First Aid", "CPR", "HACCP", "NEBOSH", "OSHA"
+  ],
+  
+  "industries": [
+    "IT", "Finanse", "Bankowość", "Ubezpieczenia", "E-commerce", "Retail", "FMCG",
+    "Produkcja", "Logistyka", "Transport", "Automotive", "Energetyka", "Budownictwo",
+    "Telekomunikacja", "Media", "Marketing", "Reklama", "PR", "HR", "Rekrutacja",
+    "Edukacja", "Szkolenia", "Zdrowie", "Farmacja", "Biotechnologia", "Chemia",
+    "Turystyka", "Hotelarstwo", "Gastronomia", "Nieruchomości", "Prawo", "Konsulting",
+    "Administracja", "Sektor publiczny", "NGO", "Rolnictwo", "Środowisko"
+  ]
+}

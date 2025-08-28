@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 <cvperfect_protocol>
 <mandatory_enforcement>APPLY_PROTOCOL_WITHOUT_DISPLAY</mandatory_enforcement>
 <required_tools>Task, CVPerfect_Agents, Debug_Agents, TodoWrite</required_tools>
@@ -39,26 +41,37 @@ git commit -m "✅ VERIFIED"     # 5. Commit only after verification
 
 ```bash
 # Core Development
-npm run dev              # localhost:3000 (use :3001 if occupied)
-npm run build            # Production build (REQUIRED before deploy)
-npm run lint             # ESLint validation
-npm run mcp-puppeteer    # Browser automation
+npm run dev                          # Start development server (localhost:3000)
+npm run build                        # Production build
+npm run start                        # Start production server
+npm run lint                         # ESLint validation
+npm run mcp-puppeteer               # Browser automation with Puppeteer
 
-# Agent Systems  
-node start-agents-system.js     # CVPerfect 40-agent system
-node start-debug-agents.js      # 6-agent debug system
+# CI Pipeline
+npm run ci                          # Run full CI suite: lint + delegation + hooks + smoke tests
+npm run test:delegation             # Test agent delegation system
+npm run test:hooks                  # Test hooks runtime
+npm run test:smoke                  # Smoke tests (build + start + HTTP check)
 
-# Testing
-node test-comprehensive-website.js    # Full validation
-node test-all-success-functions.js    # Template system (6 functions)
-node test-agents-integration.js       # Agent system test
+# Python Integration
+npm run install-python              # Install Python dependencies in cvperfect_py/
+npm run test-python                 # Test Python module import
+npm run health-python               # Health check for Python CLI integration
 
-# Hidden Commands (2024-2025)
-/history 2024-12-01       # Conversations from date
-/export cookbook          # Export prompts to markdown
-/analyze @src --complexity   # Code complexity analysis
-/security @api            # Security audit
-/terminal-setup           # Fix Shift+Enter
+# Testing Suite
+node test-comprehensive-website.js      # Full website validation
+node test-all-success-functions.js      # Success page template system
+node test-complete-functionality.js     # Core functionality test
+node test-health-endpoint.js            # API health endpoint test
+node test-ping-endpoint.js              # Basic connectivity test
+node test-agents-integration.js         # Agent system integration
+node test-python-api.js                 # Python API integration
+node test-stripe-session-fix.js         # Payment flow validation
+node test-performance-monitoring.js     # Performance metrics
+node test-responsive.js                 # Mobile responsiveness
+
+# Utility Commands
+npm run clean-temp                  # Clean temporary files
 ```
 
 ## Project Overview
@@ -66,22 +79,32 @@ node test-agents-integration.js       # Agent system test
 **CVPerfect**: Next.js 14 AI-powered CV optimization with freemium model, Stripe payments, Polish/English support.
 
 ### Architecture
-- **Frontend**: 6000+ line SPA (`pages/index.js`), glassmorphism design, `<style jsx>` only
+- **Frontend**: Next.js 14 SPA with glassmorphism design, main app in `pages/index.js`
+- **Backend**: Next.js API routes, hybrid Node.js + Python processing 
+- **Database**: Supabase (PostgreSQL) for session persistence
 - **Payment**: 3-tier pricing (Basic 19.99, Gold 49, Premium 79 PLN), Stripe integration
-- **AI**: Groq SDK + Llama 3.1-70B, chunked processing, photo preservation
+- **AI Processing**: Dual engine - Groq SDK (Llama 3.1-70B) + Python deterministic optimization
+- **File Processing**: Mammoth (DOCX), PDF-Parse (PDF), with photo preservation
 
 ### Core API Endpoints
-- `/api/parse-cv` - PDF/DOCX parsing
-- `/api/save-session` - Session persistence
-- `/api/create-checkout-session` - Stripe payment
-- `/api/stripe-webhook` - Payment validation
-- `/api/get-session-data` - Session retrieval
-- `/api/analyze` - Production AI analysis
+- `/api/health` - System health check with service status
+- `/api/ping` - Simple connectivity test
+- `/api/parse-cv` - PDF/DOCX parsing and text extraction
+- `/api/save-session` - Session persistence to Supabase
+- `/api/get-session-data` - Session retrieval with payment validation
+- `/api/create-checkout-session` - Stripe checkout session creation
+- `/api/stripe-webhook` - Payment webhook processing
+- `/api/analyze` - Groq AI-powered CV analysis
+- `/api/analyze-python` - Python deterministic CV optimization
+- `/api/export` - CV export (PDF/DOCX/Email) with plan gating
+- `/api/performance-metrics` - Performance monitoring
+- `/api/performance-dashboard` - Analytics dashboard
 
 ### Critical Data Flow
-1. CV upload → `index.js` → `/api/parse-cv` → `/api/save-session`
-2. Payment → Stripe → `/api/stripe-webhook` → Session update
-3. Success → `success.js` → `/api/get-session-data` → AI optimization
+1. **CV Upload**: `index.js` → `/api/parse-cv` → `/api/save-session` → Supabase
+2. **Payment Flow**: Stripe → `/api/create-checkout-session` → `/api/stripe-webhook` → Session update
+3. **AI Processing**: `success.js` → `/api/get-session-data` → `/api/analyze` or `/api/analyze-python`
+4. **Export**: Template rendering → `/api/export` → PDF/DOCX generation
 
 ### Dependencies
 - Groq SDK, Supabase, Stripe, Nodemailer, DOMPurify, Mammoth, PDF-Parse
@@ -99,36 +122,60 @@ GMAIL_USER= / GMAIL_PASS=        # Email
 NEXT_PUBLIC_BASE_URL=            # Production URL
 ```
 
-### File Structure
+### Key File Structure
 ```
 pages/
-├── index.js          # Main SPA (6000+ lines)
-├── success.js        # Post-payment optimization
-├── api/              # All API endpoints
-agents/               # 40+ agent system
-├── debug/            # 6-agent debug (3 basic + 3 masters)
-├── orchestration/    # Master coordinators
-├── core/             # Backend, frontend, DevOps
-components/           # React components
+├── index.js              # Main SPA with CV upload flow
+├── success.js            # Post-payment CV optimization interface
+├── kontakt.js            # Contact page
+├── api/                  # All API endpoints
+│   ├── health.js         # System health monitoring
+│   ├── ping.js          # Simple connectivity test
+│   ├── parse-cv.js       # CV file parsing
+│   ├── analyze.js        # Groq AI analysis
+│   ├── analyze-python.js # Python optimization
+│   ├── export.js        # CV export functionality
+│   ├── performance-*.js  # Performance monitoring APIs
+│   └── stripe-webhook.js # Payment processing
+cvperfect_py/             # Python CV optimization engine
+├── cli.py               # Command-line interface
+├── extract.py           # CV content extraction
+├── rewrite.py          # Professional language enhancement
+├── ats_score.py        # ATS compatibility scoring
+├── templates.py        # Template management
+└── templates/          # HTML templates per plan
+components/
+├── success/            # Modular success page components
+│   ├── AIOptimizer.jsx
+│   ├── TemplateRenderer.jsx
+│   └── ExportTools.jsx
+├── PerformanceMonitor.js # System performance tracking
+└── CVAnalysisDashboard.js # Analysis dashboard
+tests/                  # E2E and integration tests
+utils/                  # Python CLI integration utilities
 ```
 
 ## 🚀 Current Status (August 2025)
 
 ### ✅ COMPLETED FEATURES
-- **Payment Flow**: All plans working (Basic/Gold/Premium)
-- **Success.js Redesign**: Glassmorphism UI, professional templates
-- **AI Optimization**: Full CV processing + photo preservation
-- **Template System**: 7 templates with plan-based access
-- **Security**: Enhanced API security, error handling, rate limiting
-- **Debug System**: 6-agent debug resolved infinite loops
+- **Dual AI Engine**: Groq (creative) + Python (deterministic) CV optimization
+- **Payment Flow**: Complete Stripe integration with 3-tier pricing
+- **File Processing**: PDF/DOCX parsing with photo preservation
+- **Template System**: Plan-based template access (Basic/Gold/Premium)
+- **Export System**: PDF/DOCX/Email generation with payment gating
+- **Performance Monitoring**: Real-time metrics and dashboard
+- **Security**: Input validation, rate limiting, XSS protection
+- **CI/CD**: Automated testing pipeline with delegation and hooks
 
-### 🔧 Known Working Systems
-- ✅ CV Upload & Parsing (PDF/DOCX)
-- ✅ Stripe Payment Flow (all plans)
-- ✅ AI Optimization (Groq API)
-- ✅ Template System (7 templates)
-- ✅ Export Functions (PDF, DOCX, Email)
-- ✅ Session Persistence
+### 🔧 System Integration Points
+- ✅ Next.js 14 frontend with React 18
+- ✅ Supabase PostgreSQL database
+- ✅ Stripe payment processing
+- ✅ Groq AI API integration
+- ✅ Python subprocess execution
+- ✅ Email delivery (Nodemailer)
+- ✅ File upload/download handling
+- ✅ Session state management
 
 ### 🎯 Advanced Debug Masters
 - **Root Cause Analysis Master**: Five Whys + Fishbone + FMEA

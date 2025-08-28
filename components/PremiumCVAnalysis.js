@@ -1,6 +1,4 @@
-import React from 'react';
-
-const PremiumCVAnalysis = ({ optimizedCV, originalCV, jobPosting, plan = 'basic' }) => {
+const PremiumCVAnalysis = ({ optimizedCV, _originalCV, _jobPosting, plan = 'basic' }) => {
   
   // Funkcja do pobierania CV jako PDF
   const downloadPDF = (type) => {

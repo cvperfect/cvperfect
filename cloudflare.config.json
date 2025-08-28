@@ -1,0 +1,174 @@
+{
+  "account_id": "YOUR_CLOUDFLARE_ACCOUNT_ID",
+  "zone_id": "YOUR_CLOUDFLARE_ZONE_ID",
+  "domain": "cvperfect.com",
+  "dns_records": [
+    {
+      "type": "CNAME",
+      "name": "@",
+      "content": "cname.vercel-dns.com",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "CNAME", 
+      "name": "www",
+      "content": "cname.vercel-dns.com",
+      "proxied": true,
+      "ttl": 1
+    }
+  ],
+  "page_rules": [
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "cvperfect.com/static/*"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "cache_level",
+          "value": "cache_everything"
+        },
+        {
+          "id": "edge_cache_ttl",
+          "value": 31536000
+        },
+        {
+          "id": "browser_cache_ttl",
+          "value": 31536000
+        }
+      ]
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "cvperfect.com/*.{js,css,ico,png,jpg,jpeg,gif,svg,webp,woff,woff2,ttf,eot}"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "cache_level",
+          "value": "cache_everything"
+        },
+        {
+          "id": "edge_cache_ttl",
+          "value": 31536000
+        },
+        {
+          "id": "browser_cache_ttl",
+          "value": 31536000
+        },
+        {
+          "id": "polish",
+          "value": "lossy"
+        },
+        {
+          "id": "mirage",
+          "value": "on"
+        }
+      ]
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "cvperfect.com/api/*"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "cache_level",
+          "value": "bypass"
+        },
+        {
+          "id": "security_level",
+          "value": "medium"
+        },
+        {
+          "id": "rocket_loader",
+          "value": "off"
+        }
+      ]
+    },
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "cvperfect.com/*"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "automatic_https_rewrites",
+          "value": "on"
+        },
+        {
+          "id": "always_use_https",
+          "value": "on"
+        },
+        {
+          "id": "brotli",
+          "value": "on"
+        },
+        {
+          "id": "minify",
+          "value": {
+            "css": "on",
+            "html": "on", 
+            "js": "on"
+          }
+        }
+      ]
+    }
+  ],
+  "security_settings": {
+    "security_level": "medium",
+    "challenge_ttl": 1800,
+    "browser_integrity_check": "on",
+    "challenge_passage": 1800,
+    "waf": "on",
+    "rate_limiting": [
+      {
+        "threshold": 1000,
+        "period": 60,
+        "action": "challenge"
+      },
+      {
+        "threshold": 5000,
+        "period": 300,
+        "action": "js_challenge"
+      }
+    ]
+  },
+  "performance_settings": {
+    "brotli": "on",
+    "minify": {
+      "css": "on",
+      "html": "on",
+      "js": "on"
+    },
+    "polish": "lossy",
+    "mirage": "on",
+    "rocket_loader": "off",
+    "auto_minify": "on",
+    "http2": "on",
+    "http3": "on",
+    "zero_rtt": "on",
+    "early_hints": "on"
+  }
+}

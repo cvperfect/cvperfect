@@ -244,7 +244,7 @@ package2Feature3: '✓ Integracja API',
       emailValue: 'pomoccvperfect@gmail.com',
       responseTime: 'Czas odpowiedzi',
       responseValue: '< 24 godziny',
-      availability: 'Dostępność',
+      workHours: 'Dostępność',
       availabilityValue: 'Pon-Pt 9:00-17:00'
     },
     en: {
@@ -253,7 +253,7 @@ package2Feature3: '✓ Integracja API',
       subtitle: 'We are here to help you succeed',
       instantSupport: 'Instant support',
       expertTeam: 'Expert team',
-      availability: '24/7 Availability',
+      supportAvailability: '24/7 Availability',
       backLink: '← Back',
       
       // Tabs
@@ -324,7 +324,7 @@ package2Feature3: '✓ API integration',
       emailValue: 'support@cvperfect.pl',
       responseTime: 'Response time',
       responseValue: '< 24 hours',
-      availability: 'Availability',
+      workHours: 'Availability',
       availabilityValue: 'Mon-Fri 9:00-17:00'
     }
   }

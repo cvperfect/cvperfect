@@ -1,0 +1,15 @@
+=== BUNDLE SIZE ANALYSIS ===
+Date: czw., 28 sie 2025 10:18:20
+
+CRITICAL FINDINGS:
+1. success.js: 293kB (77% of total bundle)
+2. First Load JS: 93.2kB (shared components)
+3. Total success page load: 379kB
+4. Main app: 36.8kB (optimized)
+
+BUNDLE BREAKDOWN:
+- Framework: 45.6kB
+- Main runtime: 35.4kB
+- App component: 3kB
+- Webpack runtime: 2.04kB
+- CSS bundle: 7.15kB

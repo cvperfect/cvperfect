@@ -1,0 +1,13 @@
+Jan Kowalski
+Email: jan@example.com
+Telefon: +48 123 456 789
+
+Doświadczenie:
+- Programista w ABC Company (2020-2024)
+- Junior Developer w XYZ Startup (2018-2020)
+
+Wykształcenie:
+- Informatyka, Uniwersytet Warszawski (2018)
+
+Umiejętności:
+JavaScript, Python, React, Node.js

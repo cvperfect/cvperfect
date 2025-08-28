@@ -1,0 +1,40 @@
+{
+  "phrase_improvements": {
+    "roznosilem paczki": "Realizowalem terminowe dostawy do klientow na wyznaczonych trasach",
+    "roznosilam paczki": "Realizowalam terminowe dostawy do klientow na wyznaczonych trasach", 
+    "pakowalem towary": "Odpowiadaem za profesjonalne pakowanie i przygotowanie przesylek",
+    "pakowalam towary": "Odpowiadalem za profesjonalne pakowanie i przygotowanie przesylek",
+    "obslugiwalem kase": "Prowadziem rozliczenia finansowe i obslugiwalem transakcje platnicze",
+    "obslugiwalam kase": "Prowadzilam rozliczenia finansowe i obslugiwalm transakcje platnicze",
+    "sprzatalem": "Utrzymywalem wysokie standardy czystosci i porzadku w przestrzeni roboczej",
+    "sprzatalam": "Utrzymywalam wysokie standardy czystosci i porzadku w przestrzeni roboczej"
+  },
+  
+  "verb_transformations": {
+    "pomagalem": "wspieralem operacyjnie",
+    "pomagalam": "wspieralam operacyjnie", 
+    "robilem": "realizowalem",
+    "robilam": "realizowalam",
+    "robilem dostawy": "realizowalem procesy logistyczne",
+    "robilam dostawy": "realizowalam procesy logistyczne",
+    "zajmowalem sie": "zarzadzalem",
+    "zajmowalam sie": "zarzadzalam",
+    "pracowalem przy": "uczestniczylem w realizacji",
+    "pracowalam przy": "uczestniczylam w realizacji",
+    "obslugiwalem": "swiadczylem profesjonalne uslugi",
+    "obslugiwalam": "swiadczylam profesjonalne uslugi",
+    "sprzedawalem": "doradzalem klientom w zakresie",
+    "sprzedawalam": "doradzalam klientom w zakresie"
+  },
+  
+  "stop_phrases": [
+    "bylem odpowiedzialny",
+    "bylam odpowiedzialna",
+    "odpowiadalem za",
+    "odpowiadalem za",
+    "zajmowalem sie tym ze",
+    "zajmowalam sie tym ze",
+    "moje obowiazki to",
+    "moje zadania to"
+  ]
+}

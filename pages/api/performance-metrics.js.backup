@@ -1,0 +1,128 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    const {
+      metric_name,
+      metric_value,
+      metric_data,
+      timestamp,
+      user_agent,
+      url
+    } = req.body;
+
+    // Validate required fields
+    if (!metric_name || !timestamp) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Rate limiting - simple implementation based on IP
+    const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+    // Prepare metric data for storage
+    const metricData = {
+      metric_name,
+      metric_value: typeof metric_value === "object" ? JSON.stringify(metric_value) : metric_value,
+      metric_data: typeof metric_data === "object" ? JSON.stringify(metric_data) : metric_data,
+      timestamp,
+      user_agent: user_agent?.substring(0, 500) || null,
+      url: url?.substring(0, 500) || null,
+      client_ip: clientIP,
+      created_at: new Date().toISOString()
+    };
+
+    // Store in Supabase
+    const { data, error } = await supabase
+      .from("performance_metrics")
+      .insert([metricData]);
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    // Enhanced performance analysis and alerting
+    const actualValue = typeof metric_value === "string" ? parseFloat(metric_value) : metric_value;
+    
+    // Core Web Vitals alerts
+    if (metric_name === "LCP" && actualValue > 4000) {
+      console.warn(`🚨 Critical LCP: ${actualValue}ms (target: ≤2500ms) for ${url}`);
+    }
+    
+    if (metric_name === "CLS" && actualValue > 0.25) {
+      console.warn(`🚨 Critical CLS: ${actualValue} (target: ≤0.1) for ${url}`);
+    }
+
+    if (metric_name === "FID" && actualValue > 300) {
+      console.warn(`🚨 Critical FID: ${actualValue}ms (target: ≤100ms) for ${url}`);
+    }
+    
+    if (metric_name === "FCP" && actualValue > 3000) {
+      console.warn(`🚨 Poor FCP: ${actualValue}ms (target: ≤1800ms) for ${url}`);
+    }
+    
+    if (metric_name === "TTFB" && actualValue > 1500) {
+      console.warn(`🚨 Poor TTFB: ${actualValue}ms (target: ≤600ms) for ${url}`);
+    }
+    
+    // API performance alerts
+    if (metric_name === "API" && metric_data?.duration > 1000) {
+      console.warn(`🚨 Slow API: ${metric_data.endpoint} took ${metric_data.duration}ms for ${url}`);
+    }
+    
+    // Bundle performance alerts
+    if (metric_name === "BUNDLE_BUDGET_EXCEEDED") {
+      const sizeKB = Math.round(actualValue / 1024);
+      console.warn(`🚨 Bundle budget exceeded: ${sizeKB}KB (target: 293KB) for ${url}`);
+    }
+    
+    if (metric_name === "BUNDLE" && actualValue > 3000) {
+      console.warn(`🚨 Slow bundle loading: ${actualValue}ms for ${url}`);
+    }
+    
+    // Custom metrics alerts
+    if (metric_name === "CUSTOM_METRICS" && typeof metric_data === "object") {
+      const customData = typeof metric_data === "string" ? JSON.parse(metric_data) : metric_data;
+      
+      // Memory alerts
+      if (customData.memoryUsage?.usedJSMemory > 100000000) { // 100MB
+        const memoryMB = Math.round(customData.memoryUsage.usedJSMemory / 1024 / 1024);
+        console.warn(`🚨 High memory usage: ${memoryMB}MB for ${url}`);
+      }
+      
+      // Load time alerts
+      if (customData.pageLoadTime > 5000) { // 5 seconds
+        console.warn(`🚨 Slow page load: ${customData.pageLoadTime}ms for ${url}`);
+      }
+    }
+    
+    // Long task alerts
+    if (metric_name === "LONG_TASK" && actualValue > 200) {
+      console.warn(`🚨 Very long task detected: ${actualValue}ms (blocking main thread) for ${url}`);
+    }
+    
+    // Critical alert notifications
+    if (metric_name === "PERFORMANCE_CRITICAL_ALERT") {
+      console.error(`🚨🚨 CRITICAL PERFORMANCE ALERT for ${url}:`, metric_data);
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Metric stored successfully",
+      data: data
+    });
+
+  } catch (error) {
+    console.error("Performance metrics API error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}

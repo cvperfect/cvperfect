@@ -1,0 +1,318 @@
+// API endpoint for performance dashboard data aggregation
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
+export default async function handler(req, res) {
+  // Only allow GET requests
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { range = '1h' } = req.query
+    
+    // Calculate time range
+    const now = new Date()
+    let startTime
+    
+    switch (range) {
+      case '1h':
+        startTime = new Date(now.getTime() - 60 * 60 * 1000)
+        break
+      case '24h':
+        startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        break
+      case '7d':
+        startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        startTime = new Date(now.getTime() - 60 * 60 * 1000)
+    }
+
+    // Fetch recent metrics
+    const { data: metrics, error: metricsError } = await supabase
+      .from('performance_metrics')
+      .select('*')
+      .gte('timestamp', startTime.toISOString())
+      .order('timestamp', { ascending: false })
+      .limit(100)
+
+    if (metricsError) {
+      console.error('Metrics fetch error:', metricsError)
+      return res.status(500).json({ error: 'Failed to fetch metrics' })
+    }
+
+    // Aggregate data for dashboard
+    const aggregatedData = aggregateMetrics(metrics || [])
+    
+    // Calculate slow APIs
+    const slowAPIs = getSlowAPIs(metrics || [])
+    
+    // Count alerts (metrics exceeding thresholds)
+    const alertsCount = countAlerts(metrics || [])
+
+    return res.status(200).json({
+      success: true,
+      metrics: metrics || [],
+      aggregated: {
+        ...aggregatedData,
+        slowAPIs,
+        alertsCount
+      }
+    })
+
+  } catch (error) {
+    console.error('Performance dashboard API error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+function aggregateMetrics(metrics) {
+  const aggregated = {
+    avgLCP: 0,
+    avgFID: 0,
+    avgCLS: 0,
+    avgTTFB: 0,
+    avgBundle: 0,
+    avgFCP: 0,
+    avgMemory: 0,
+    avgLoadTime: 0,
+    avgChunkLoadTime: 0,
+    totalMetrics: 0,
+    performanceScore: 0
+  }
+
+  const metricCounts = {}
+  const metricSums = {}
+
+  metrics.forEach(metric => {
+    const metricName = metric.metric_name
+    let metricValue
+
+    // Handle different metric value types
+    if (metricName === 'CUSTOM_METRICS') {
+      try {
+        // Try to parse from metric_data first, then metric_value
+        let customData = null
+        
+        if (typeof metric.metric_data === 'string') {
+          customData = JSON.parse(metric.metric_data)
+        } else if (typeof metric.metric_value === 'string') {
+          customData = JSON.parse(metric.metric_value)
+        }
+        
+        if (customData) {
+          // Process bundle size
+          if (customData.bundleSize) {
+            addToSum('BUNDLE', customData.bundleSize)
+          }
+          
+          // Process memory usage
+          if (customData.memoryUsage && customData.memoryUsage.usedJSMemory) {
+            addToSum('MEMORY', customData.memoryUsage.usedJSMemory)
+          }
+          
+          // Process load times
+          if (customData.pageLoadTime) {
+            addToSum('LOAD_TIME', customData.pageLoadTime)
+          }
+          
+          if (customData.chunkLoadTime) {
+            addToSum('CHUNK_LOAD_TIME', customData.chunkLoadTime)
+          }
+        }
+        
+        return
+      } catch (e) {
+        // Skip invalid JSON, continue with regular processing
+        console.warn('Failed to parse CUSTOM_METRICS JSON:', e.message)
+      }
+    }
+    
+    // Handle numeric metrics
+    metricValue = parseFloat(metric.metric_value)
+    
+    if (!isNaN(metricValue)) {
+      addToSum(metricName, metricValue)
+    }
+  })
+
+  function addToSum(metricName, value) {
+    if (!metricSums[metricName]) {
+      metricSums[metricName] = 0
+      metricCounts[metricName] = 0
+    }
+    
+    metricSums[metricName] += value
+    metricCounts[metricName] += 1
+  }
+
+  // Calculate averages
+  Object.keys(metricSums).forEach(metricName => {
+    const avgValue = metricSums[metricName] / metricCounts[metricName]
+    
+    switch (metricName) {
+      case 'LCP':
+        aggregated.avgLCP = avgValue
+        break
+      case 'FID':
+        aggregated.avgFID = avgValue
+        break
+      case 'CLS':
+        aggregated.avgCLS = avgValue
+        break
+      case 'TTFB':
+        aggregated.avgTTFB = avgValue
+        break
+      case 'BUNDLE':
+        aggregated.avgBundle = avgValue
+        break
+      case 'FCP':
+        aggregated.avgFCP = avgValue
+        break
+      case 'MEMORY':
+        aggregated.avgMemory = avgValue
+        break
+      case 'LOAD_TIME':
+        aggregated.avgLoadTime = avgValue
+        break
+      case 'CHUNK_LOAD_TIME':
+        aggregated.avgChunkLoadTime = avgValue
+        break
+    }
+  })
+
+  // Calculate performance score
+  aggregated.performanceScore = calculatePerformanceScore(aggregated)
+  aggregated.totalMetrics = metrics.length
+
+  return aggregated
+}
+
+function calculatePerformanceScore(aggregated) {
+  const scores = []
+  const thresholds = {
+    avgLCP: { good: 2500, poor: 4000 },
+    avgFID: { good: 100, poor: 300 },
+    avgCLS: { good: 0.1, poor: 0.25 },
+    avgFCP: { good: 1800, poor: 3000 },
+    avgTTFB: { good: 600, poor: 1500 }
+  }
+  
+  Object.entries(thresholds).forEach(([metric, threshold]) => {
+    const value = aggregated[metric]
+    if (value !== undefined && value !== null && value > 0) {
+      if (value <= threshold.good) scores.push(100)
+      else if (value <= threshold.poor) scores.push(75)
+      else scores.push(50)
+    }
+  })
+  
+  // Bundle size score
+  if (aggregated.avgBundle > 0) {
+    if (aggregated.avgBundle <= 300000) scores.push(100) // 293KB target
+    else if (aggregated.avgBundle <= 500000) scores.push(75)
+    else scores.push(50)
+  }
+  
+  // Memory score
+  if (aggregated.avgMemory > 0) {
+    if (aggregated.avgMemory <= 50000000) scores.push(100) // 50MB target
+    else if (aggregated.avgMemory <= 100000000) scores.push(75)
+    else scores.push(50)
+  }
+  
+  if (scores.length === 0) return 0
+  
+  return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+}
+
+function getSlowAPIs(metrics) {
+  const apiMetrics = metrics.filter(m => m.metric_name === 'API')
+  const apiStats = {}
+
+  apiMetrics.forEach(metric => {
+    try {
+      const metricData = typeof metric.metric_data === 'string' 
+        ? JSON.parse(metric.metric_data) 
+        : metric.metric_data
+
+      if (metricData && metricData.endpoint && metricData.duration > 200) {
+        const endpoint = metricData.endpoint
+        
+        if (!apiStats[endpoint]) {
+          apiStats[endpoint] = {
+            endpoint,
+            totalDuration: 0,
+            count: 0,
+            slowCount: 0
+          }
+        }
+        
+        apiStats[endpoint].totalDuration += metricData.duration
+        apiStats[endpoint].count += 1
+        
+        if (metricData.duration > 500) {
+          apiStats[endpoint].slowCount += 1
+        }
+      }
+    } catch (e) {
+      // Skip invalid metric data
+    }
+  })
+
+  // Convert to array and calculate averages
+  const slowAPIs = Object.values(apiStats)
+    .filter(api => api.slowCount > 0)
+    .map(api => ({
+      ...api,
+      avgDuration: api.totalDuration / api.count
+    }))
+    .sort((a, b) => b.avgDuration - a.avgDuration)
+
+  return slowAPIs
+}
+
+function countAlerts(metrics) {
+  const thresholds = {
+    LCP: 2500,
+    FID: 100,
+    CLS: 0.1,
+    TTFB: 600,
+    BUNDLE: 1000,
+    FCP: 1800
+  }
+
+  let alertsCount = 0
+
+  metrics.forEach(metric => {
+    const metricName = metric.metric_name
+    const metricValue = parseFloat(metric.metric_value)
+    const threshold = thresholds[metricName]
+
+    if (threshold && !isNaN(metricValue) && metricValue > threshold) {
+      alertsCount += 1
+    }
+
+    // Check API alerts
+    if (metricName === 'API') {
+      try {
+        const metricData = typeof metric.metric_data === 'string' 
+          ? JSON.parse(metric.metric_data) 
+          : metric.metric_data
+
+        if (metricData && metricData.duration > 1000) {
+          alertsCount += 1
+        }
+      } catch (e) {
+        // Skip invalid metric data
+      }
+    }
+  })
+
+  return alertsCount
+}

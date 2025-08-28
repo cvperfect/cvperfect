@@ -1,0 +1,18 @@
+// Performance Dashboard Page - Admin/Developer view
+import Head from 'next/head'
+import PerformanceDashboard from '../components/PerformanceDashboard'
+
+export default function Performance() {
+  return (
+    <>
+      <Head>
+        <title>Performance Dashboard - CVPerfect</title>
+        <meta name="description" content="CVPerfect Performance Monitoring Dashboard" />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <PerformanceDashboard />
+    </>
+  )
+}

@@ -1,0 +1,199 @@
+
+> cvperfect@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+ ⚠ Port 3001 is in use, trying 3002 instead.
+ ⚠ Port 3002 is in use, trying 3003 instead.
+ ⚠ Port 3003 is in use, trying 3004 instead.
+ ⚠ Port 3004 is in use, trying 3005 instead.
+ ⚠ Port 3005 is in use, trying 3006 instead.
+ ⚠ Port 3006 is in use, trying 3007 instead.
+   ▲ Next.js 14.0.0
+   - Local:        http://localhost:3007
+   - Environments: .env.local
+   - Experiments (use at your own risk):
+     · esmExternals
+
+ ✓ Ready in 1297ms
+   Reload env: .env.local
+ ✓ Compiled /api/health in 391ms (62 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: EPERM: operation not permitted, rename 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\cache\webpack\server-development\3.pack.gz_' -> 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\cache\webpack\server-development\3.pack.gz'
+/c/Program Files/nodejs/npm: line 65:  1831 Killed                  "$NODE_EXE" "$NPM_CLI_JS" "$@"
+ ○ Compiling /success ...
+ ⨯ ./components/success/AIOptimizer.jsx
+Error: Failed to read source code from C:\Users\czupa\OneDrive\Pulpit\cvperfect\components\success\AIOptimizer.jsx
+
+Caused by:
+    stream did not contain valid UTF-8
+
+Import trace for requested module:
+./components/success/AIOptimizer.jsx
+ ⨯ ./components/success/AIOptimizer.jsx
+Error: Failed to read source code from C:\Users\czupa\OneDrive\Pulpit\cvperfect\components\success\AIOptimizer.jsx
+
+Caused by:
+    stream did not contain valid UTF-8
+
+Import trace for requested module:
+./components/success/AIOptimizer.jsx
+ ⨯ ./components/success/AIOptimizer.jsx
+Error: Failed to read source code from C:\Users\czupa\OneDrive\Pulpit\cvperfect\components\success\AIOptimizer.jsx
+
+Caused by:
+    stream did not contain valid UTF-8
+
+Import trace for requested module:
+./components/success/AIOptimizer.jsx
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/next' in C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server for build dependencies doesn't lead to expected result 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js', but to 'Error: Can't resolve './vendor-chunks/next' in 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/next (expected C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js)
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\swc\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\swc\index.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at resolve commonjs C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/next' in C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server for build dependencies doesn't lead to expected result 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js', but to 'Error: Can't resolve './vendor-chunks/next' in 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/next (expected C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js)
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\swc\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\swc\index.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at resolve commonjs C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/next' in C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server for build dependencies doesn't lead to expected result 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js', but to 'Error: Can't resolve './vendor-chunks/next' in 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/next (expected C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js)
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+ ✓ Compiled /_error in 567ms (149 modules)
+ ✓ Compiled in 642ms (149 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/next' in C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server for build dependencies doesn't lead to expected result 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js', but to 'Error: Can't resolve './vendor-chunks/next' in 'C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/next (expected C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\vendor-chunks\next.js)
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\webpack-api-runtime.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\.next\server\pages\api\health.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\node-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\server\future\helpers\module-loader\route-module-loader.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\routes\app-route.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\export\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\worker.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\bundle5.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\compiled\webpack\webpack.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\plugins\define-env-plugin.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\swc\index.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\swc\index.js
+<w>  at file dependencies C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at file C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at resolve commonjs C:\Users\czupa\OneDrive\Pulpit\cvperfect\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+ ✓ Compiled in 223ms (196 modules)
+ ✓ Compiled in 399ms (149 modules)
+ ✓ Compiled in 307ms (149 modules)
+ ✓ Compiled in 306ms (149 modules)
+ ✓ Compiled in 338ms (149 modules)
+ ✓ Compiled in 408ms (149 modules)
+ ✓ Compiled in 275ms (149 modules)
+ ✓ Compiled in 366ms (149 modules)
+ ✓ Compiled in 270ms (149 modules)
+ ✓ Compiled in 198ms (149 modules)
+ ✓ Compiled in 254ms (149 modules)
+ ✓ Compiled in 337ms (149 modules)
+ ✓ Compiled in 387ms (149 modules)
+ ✓ Compiled in 576ms (149 modules)
+ ✓ Compiled in 625ms (149 modules)
+ ✓ Compiled in 302ms (149 modules)
+ ✓ Compiled in 277ms (149 modules)
+ ✓ Compiled in 344ms (149 modules)
+ ✓ Compiled in 296ms (149 modules)
+ ✓ Compiled in 318ms (149 modules)
+ ✓ Compiled in 281ms (149 modules)
+ ✓ Compiled in 271ms (149 modules)
+ ✓ Compiled in 328ms (149 modules)
+ ✓ Compiled in 267ms (149 modules)
+ ✓ Compiled in 274ms (149 modules)
+ ✓ Compiled in 291ms (149 modules)
+ ✓ Compiled in 284ms (149 modules)
+ ✓ Compiled in 291ms (149 modules)
+ ✓ Compiled in 450ms (149 modules)
+ ✓ Compiled in 212ms (149 modules)
+ ✓ Compiled in 177ms (196 modules)
+ ✓ Compiled in 316ms (149 modules)
+ ✓ Compiled in 247ms (149 modules)
+ ✓ Compiled in 223ms (149 modules)

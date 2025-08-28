@@ -79,7 +79,16 @@
       "Bash(cat:*)",
       "Bash(do echo \"Processing $file...\")",
       "Bash(tail:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(tasklist:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(BASE_URL=http://localhost:3015 node -e \"\nconst BASE_URL = process.env.BASE_URL || ''http://localhost:3015'';\n\n// Test performance metrics API with a simple metric\nfetch(BASE_URL + ''/api/performance-metrics'', {\n  method: ''POST'',\n  headers: { ''Content-Type'': ''application/json'' },\n  body: JSON.stringify({\n    metric_name: ''TEST'',\n    metric_value: 100,\n    metric_data: { test: true },\n    timestamp: new Date().toISOString(),\n    user_agent: ''Node.js Test'',\n    url: BASE_URL + ''/test''\n  })\n}).then(res => res.json()).then(data => {\n  console.log(''✅ Performance Metrics API Test:'', data.success ? ''PASSED'' : ''FAILED'');\n  console.log(''   Response:'', JSON.stringify(data, null, 2));\n}).catch(err => {\n  console.log(''❌ Performance Metrics API Test: FAILED'');\n  console.log(''   Error:'', err.message);\n});\n\")",
+      "Bash(echo '🧪 TEST PAYLOADS FOR PERFORMANCE METRICS API\n===========================================\n\n✅ Test Payload 1 (Core Web Vitals):\n{\n  \"\"metric_name\"\": \"\"LCP\"\",\n  \"\"metric_value\"\": 2250.5,\n  \"\"timestamp\"\": \"\"2025-01-28T10:00:00Z\"\",\n  \"\"user_agent\"\": \"\"Mozilla/5.0 Test\"\",\n  \"\"url\"\": \"\"/\"\"\n}\n\n✅ Test Payload 2 (Custom Metrics):\n{\n  \"\"metric_name\"\": \"\"CUSTOM_METRICS\"\",\n  \"\"metric_value\"\": 3200,\n  \"\"metric_data\"\": {\n    \"\"pageLoadTime\"\": 3200,\n    \"\"bundleSize\"\": 290000,\n    \"\"memoryUsage\"\": {\"\"usedJSMemory\"\": 42000000},\n    \"\"chunkLoadTime\"\": 450\n  },\n  \"\"timestamp\"\": \"\"2025-01-28T10:01:00Z\"\",\n  \"\"user_agent\"\": \"\"Mozilla/5.0 Test\"\",\n  \"\"url\"\": \"\"/\"\"\n}\n\n🔍 CURL TEST COMMAND:\ncurl -X POST http://localhost:3000/api/performance-metrics \\\n  -H \"\"Content-Type: application/json\"\" \\\n  -d '\"''\"'{\"\"metric_name\"\":\"\"LCP\"\",\"\"metric_value\"\":2250.5,\"\"timestamp\"\":\"\"2025-01-28T10:00:00Z\"\",\"\"user_agent\"\":\"\"Mozilla/5.0 Test\"\",\"\"url\"\":\"\"/\"\"}'\"''\"'\n\n✅ Expected Response: {\"\"success\"\": true, \"\"message\"\": \"\"Metric stored successfully\"\"}')",
+      "Bash(set NEXT_PUBLIC_SUPABASE_URL=https://cpuotzkxnaitiwdsrzgd.supabase.co)",
+      "Bash(set SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdW90emt4bmFpdGl3ZHNyemdkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzkyODg3MSwiZXhwIjoyMDY5NTA0ODcxfQ.m2VnZ0giB-NnS-t66ZvrqbO8GsQLNheOlEThAbB2zr8)",
+      "Bash(echo:*)",
+      "Bash(touch:*)"
     ],
     "deny": [],
     "ask": [],

@@ -175,3 +175,116 @@ input[type="radio"] {
   border-radius: 32px !important;
 }
 
+/* CVPerfect Success Page Optimized Styles - Bundle Size Optimization */
+.cv-loading {
+  @apply bg-white border border-gray-200 p-8 max-w-2xl mx-auto shadow-lg rounded-lg;
+}
+
+.loading-spinner {
+  @apply animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full inline-block mr-4;
+}
+
+.cv-container {
+  @apply bg-white border border-gray-200 p-10 max-w-2xl mx-auto shadow-lg rounded-lg;
+}
+
+.cv-header {
+  @apply border-b-2 border-blue-600 pb-6 mb-8;
+}
+
+.cv-header-content {
+  @apply flex items-start gap-6;
+}
+
+.cv-photo-wrapper {
+  @apply flex-shrink-0;
+}
+
+.cv-photo-container {
+  @apply flex justify-center mb-8;
+}
+
+.cv-photo {
+  @apply w-24 h-24 rounded-full object-cover border-4 border-blue-600 shadow-lg;
+  will-change: transform; /* Performance optimization */
+}
+
+.cv-personal-info {
+  @apply flex-1;
+}
+
+.cv-name {
+  @apply text-3xl font-bold text-gray-900 mb-2;
+}
+
+.cv-contact {
+  @apply flex flex-wrap gap-4 text-gray-700 font-medium;
+}
+
+.cv-section {
+  @apply mb-8;
+}
+
+.cv-section-title {
+  @apply text-xl font-bold text-blue-600 uppercase mb-4;
+}
+
+.cv-summary {
+  @apply text-gray-800 leading-relaxed;
+}
+
+.cv-list {
+  @apply space-y-4;
+}
+
+.cv-list-item {
+  @apply pl-4 border-l-2 border-blue-200;
+}
+
+.cv-list-item > div {
+  @apply text-gray-800;
+}
+
+.cv-skills {
+  @apply flex flex-wrap gap-3;
+}
+
+.cv-skill {
+  @apply bg-blue-50 text-blue-800 border border-blue-200 px-4 py-2 rounded-lg font-medium text-sm;
+}
+
+.cv-footer {
+  @apply mt-8 pt-4 border-t border-gray-200;
+}
+
+.cv-footer p {
+  @apply text-xs text-gray-600;
+}
+
+.cv-content {
+  @apply max-w-none text-gray-800;
+}
+
+/* Reduce repaints and reflows - Performance optimization */
+.cv-container {
+  contain: layout style paint;
+}
+
+/* Modern template optimizations */
+.modern-template {
+  @apply bg-gradient-to-br from-slate-50 to-blue-50 p-10 max-w-2xl mx-auto shadow-xl rounded-xl border border-slate-200;
+}
+
+.modern-header {
+  @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-lg mb-8 shadow-lg;
+}
+
+/* Executive template optimizations */  
+.executive-template {
+  @apply bg-white p-12 max-w-2xl mx-auto shadow-2xl border-t-4 border-gray-800 rounded-lg;
+}
+
+.executive-header {
+  @apply text-center mb-10 pb-8 border-b-2 border-gray-800;
+}
+

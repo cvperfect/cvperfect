@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from './TypingText.module.css';
 
 const TypingText = ({ text, placeholder }) => {

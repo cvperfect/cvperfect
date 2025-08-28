@@ -291,89 +291,6 @@ useEffect(() => {
   // TEMPORARILY DISABLED TO FIX MODAL ISSUE
   return;
   
-  const buttons = document.querySelectorAll('.hero-button, .nav-cta, .testimonials-button, .timeline-button, .faq-button, .upload-btn.primary, .plan-button')
-  const buttonHandlers = new Map()
-  
-  buttons.forEach(button => {
-    let boundingRect = button.getBoundingClientRect()
-    
-    const handleMouseMove = (e) => {
-      const mousePosX = e.clientX - boundingRect.left
-      const mousePosY = e.clientY - boundingRect.top
-      const centerX = boundingRect.width / 2
-      const centerY = boundingRect.height / 2
-      
-      const percentX = (mousePosX - centerX) / centerX
-      const percentY = (mousePosY - centerY) / centerY
-      
-      const maxMove = 10
-      const moveX = percentX * maxMove
-      const moveY = percentY * maxMove
-      
-      button.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.02)`
-    }
-    
-    const handleMouseEnter = () => {
-      boundingRect = button.getBoundingClientRect()
-      button.style.transition = 'transform 0.2s ease'
-    }
-    
-    const handleMouseLeave = () => {
-      button.style.transform = 'translate(0, 0) scale(1)'
-      button.style.transition = 'transform 0.5s ease'
-    }
-    
-const handleClick = function(e) {
-  // DON'T prevent default - let the original onClick work!
-  // e.preventDefault(); // REMOVED
-  // e.stopPropagation(); // REMOVED
-  
-  // Prevent multiple ripples
-  const existingRipple = this.querySelector('.ripple')
-  if (existingRipple) existingRipple.remove()
-  
-  const ripple = document.createElement('span')
-  ripple.classList.add('ripple')      
-      const rect = this.getBoundingClientRect()
-      const size = Math.max(rect.width, rect.height)
-      const x = e.clientX - rect.left - size / 2
-      const y = e.clientY - rect.top - size / 2
-      
-      ripple.style.width = ripple.style.height = size + 'px'
-      ripple.style.left = x + 'px'
-      ripple.style.top = y + 'px'
-      
-      this.appendChild(ripple)
-      
-      setTimeout(() => ripple.remove(), 600)
-    }
-    
-    // Store handlers for cleanup
-    buttonHandlers.set(button, {
-      mousemove: handleMouseMove,
-      mouseenter: handleMouseEnter,
-      mouseleave: handleMouseLeave,
-      click: handleClick
-    })
-    
-    button.addEventListener('mousemove', handleMouseMove)
-    button.addEventListener('mouseenter', handleMouseEnter)
-    button.addEventListener('mouseleave', handleMouseLeave)
-    button.addEventListener('click', handleClick, { capture: false })
-  })
-
-  return () => {
-    buttons.forEach(button => {
-      const handlers = buttonHandlers.get(button)
-      if (handlers) {
-        button.removeEventListener('mousemove', handlers.mousemove)
-        button.removeEventListener('mouseenter', handlers.mouseenter)
-        button.removeEventListener('mouseleave', handlers.mouseleave)
-        button.removeEventListener('click', handlers.click)
-      }
-    })
-    buttonHandlers.clear()
-  }
 }, [])
 
 
@@ -1359,7 +1276,9 @@ style={{
     <div className="stats-grid">
       <div className="stat-box">
         <div className="stat-icon">📄</div>
-        <div className="stat-value"><span data-stat="cv" suppressHydrationWarning>—</span></div>
+        <div className="stat-value">
+          {typeof window !== 'undefined' ? <span data-stat="cv">—</span> : <span>—</span>}
+        </div>
 
         <div className="stat-label">{currentLanguage==='pl' ? 'CV zoptymalizowanych' : 'CV optimized'}</div>
         <div className="stat-growth">+3 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>
@@ -1367,7 +1286,9 @@ style={{
       
       <div className="stat-box">
         <div className="stat-icon">🎯</div>
-<div className="stat-value"><span data-stat="ats" suppressHydrationWarning>95%</span></div>
+<div className="stat-value">
+  {typeof window !== 'undefined' ? <span data-stat="ats">95%</span> : <span>95%</span>}
+</div>
 
         <div className="stat-label">{currentLanguage==='pl' ? 'Skuteczność ATS' : 'ATS success rate'}</div>
         <div className="stat-growth">{currentLanguage==='pl' ? 'Top 1 w PL' : 'Top 1 in PL'}</div>
@@ -1383,7 +1304,9 @@ style={{
       
       <div className="stat-box">
         <div className="stat-icon">💼</div>
-        <div className="stat-value"><span data-stat="jobs" suppressHydrationWarning>—</span></div>
+        <div className="stat-value">
+          {typeof window !== 'undefined' ? <span data-stat="jobs">—</span> : <span>—</span>}
+        </div>
 
         <div className="stat-label">{currentLanguage==='pl' ? 'Nowych miejsc pracy' : 'New jobs'}</div>
         <div className="stat-growth">+12 {currentLanguage==='pl' ? 'dziś' : 'today'}</div>

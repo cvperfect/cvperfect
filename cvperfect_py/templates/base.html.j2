@@ -1,0 +1,41 @@
+<\!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>CV - {{ sections.contact.name or "Kandydat" }}</title>
+    <style>{{ plan_styles | safe }}</style>
+</head>
+<body>
+    <div class="cv-container">
+        <div class="header">
+            <h1>{{ sections.contact.name or "Kandydat" }}</h1>
+        </div>
+        
+        <div class="contact">
+            <div class="contact-item">📧 {{ sections.contact.email or "email@example.com" }}</div>
+            <div class="contact-item">📱 {{ sections.contact.phone or "+48 xxx xxx xxx" }}</div>
+        </div>
+        
+        {% if sections.experience %}
+        <h2>Doświadczenie zawodowe</h2>
+        {% for exp in sections.experience %}
+        <div class="experience-item">
+            <h3>{{ exp.position }}</h3>
+            <div class="company">{{ exp.company }}</div>
+            <div class="date">{{ exp.duration }}</div>
+            <p>{{ exp.description }}</p>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if sections.skills %}
+        <h2>Umiejętności</h2>
+        <div class="skills">
+            {% for skill in sections.skills %}
+            <span class="skill">{{ skill.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

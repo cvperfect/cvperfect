@@ -1,7 +1,7 @@
 // Plik: components/CVAnalysisDashboard.js
 // Ten komponent jest używany na stronie głównej
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const CVAnalysisDashboard = ({ optimizedCV, onPayment }) => {
   console.log('CVAnalysisDashboard props:', { optimizedCV: !!optimizedCV, onPayment: !!onPayment });
