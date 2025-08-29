@@ -1,1822 +1,1096 @@
-// Complete success.js File for CvPerfect.pl
+// Początek części 1
 
-'use client'
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger, TextPlugin } from 'gsap/all'
-import Particles, { initParticlesEngine } from '@tsparticles/react'
-import { loadSlim } from '@tsparticles/slim'
-import * as pdfjsLib from 'pdfjs-dist'
-import mammoth from 'mammoth'
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
-import { saveAs } from 'file-saver'
+// components/LiveResumeEditor.jsx
+// ==========================================
+// Live CV Preview with Multiple Templates
+// Renders A4-formatted CV based on selected template
+// ==========================================
 
-// Configure PDF.js worker
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`
-}
+import React, { memo, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 
-gsap.registerPlugin(ScrollTrigger, TextPlugin)
+/**
+ * LiveResumeEditor - Real-time CV preview component
+ * @param {string} template - Selected template ID
+ * @param {object} data - CV data object
+ * @param {boolean} watermark - Show watermark for non-premium users
+ */
 
-export default function Success() {
-  // State Management
-  const [cvData, setCvData] = useState(null)
-  const [selectedTemplate, setSelectedTemplate] = useState('simple')
-  const [userPlan, setUserPlan] = useState('basic') // basic, gold, premium
-  const [language, setLanguage] = useState('pl')
-  const [isOptimizing, setIsOptimizing] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [showEmailModal, setShowEmailModal] = useState(false)
-  const [atsScore, setAtsScore] = useState(45)
-  const [optimizedScore, setOptimizedScore] = useState(95)
-  const [particlesLoaded, setParticlesLoaded] = useState(false)
-  const [notifications, setNotifications] = useState([])
+// Helper function to ensure data is properly structured
+const ensureSafeData = (data) => ({
+  header: data?.header || {
+    name: '',
+    title: '',
+    email: '',
+    phone: '',
+    location: '',
+    photo: { url: null, cropped: false, position: { x: 0, y: 0 } }
+  },
+  summary: data?.summary || '',
+  experience: data?.experience || [],
+  education: data?.education || [],
+  skills: data?.skills || [],
+  links: data?.links || []
+});
 
-  // Refs
-  const cvPreviewRef = useRef(null)
-  const timelineRef = useRef(null)
-  const scoreRef = useRef(null)
-
-  // Translations
-  const translations = {
-    pl: {
-      title: 'Twój CV zostało zoptymalizowane!',
-      subtitle: 'Profesjonalne CV gotowe do pobrania',
-      atsScore: 'Wynik ATS',
-      downloadPdf: 'Pobierz PDF',
-      downloadDocx: 'Pobierz DOCX',
-      sendEmail: 'Wyślij mailem',
-      selectTemplate: 'Wybierz szablon',
-      optimizeWithAI: 'Optymalizuj z AI',
-      upgradeRequired: 'Wymagane ulepszenie',
-      templates: {
-        simple: 'Prosty',
-        modern: 'Nowoczesny',
-        executive: 'Kierowniczy',
-        creative: 'Kreatywny',
-        tech: 'Techniczny',
-        luxury: 'Luksusowy',
-        minimal: 'Minimalny'
-      }
-    },
-    en: {
-      title: 'Your CV has been optimized!',
-      subtitle: 'Professional CV ready for download',
-      atsScore: 'ATS Score',
-      downloadPdf: 'Download PDF',
-      downloadDocx: 'Download DOCX',
-      sendEmail: 'Send via Email',
-      selectTemplate: 'Select Template',
-      optimizeWithAI: 'Optimize with AI',
-      upgradeRequired: 'Upgrade Required',
-      templates: {
-        simple: 'Simple',
-        modern: 'Modern',
-        executive: 'Executive',
-        creative: 'Creative',
-        tech: 'Tech',
-        luxury: 'Luxury',
-        minimal: 'Minimal'
-      }
+const LiveResumeEditor = memo(({ template, data, watermark }) => {
+  const safeData = ensureSafeData(data);
+  
+  // Select template renderer based on template ID
+  const TemplateRenderer = useMemo(() => {
+    switch (template) {
+      case 'simple': return SimpleTemplate;
+      case 'modern': return ModernTemplate;
+      case 'minimal': return MinimalTemplate;
+      case 'elegant': return ElegantTemplate;
+      case 'executive': return ExecutiveTemplate;
+      case 'design': return DesignTemplate;
+      case 'tech': return TechTemplate;
+      case 'serif': return SerifTemplate;
+      case 'nordic': return NordicTemplate;
+      default: return SimpleTemplate;
     }
-  }
-
-  const t = translations[language]
-
-  // Template Access by Plan
-  const planTemplates = {
-    basic: ['simple'],
-    gold: ['simple', 'modern', 'executive'],
-    premium: ['simple', 'modern', 'executive', 'creative', 'tech', 'luxury', 'minimal']
-  }
-
-  // Initialize Particles
-  useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine)
-    }).then(() => {
-      setParticlesLoaded(true)
-    })
-  }, [])
-
-  // Particle Configuration
-  const particleOptions = {
-    background: {
-      color: {
-        value: "transparent",
-      },
-    },
-    fpsLimit: 120,
-    interactivity: {
-      events: {
-        onClick: {
-          enable: true,
-          mode: "push",
-        },
-        onHover: {
-          enable: true,
-          mode: "repulse",
-        },
-        resize: true,
-      },
-      modes: {
-        push: {
-          quantity: 4,
-        },
-        repulse: {
-          distance: 100,
-          duration: 0.4,
-        },
-      },
-    },
-    particles: {
-      color: {
-        value: ["#00ff88", "#7850ff", "#ff6b6b", "#4ecdc4"],
-      },
-      links: {
-        color: "#00ff88",
-        distance: 150,
-        enable: true,
-        opacity: 0.3,
-        width: 1,
-      },
-      move: {
-        direction: "none",
-        enable: true,
-        outModes: {
-          default: "bounce",
-        },
-        random: false,
-        speed: 1,
-        straight: false,
-      },
-      number: {
-        density: {
-          enable: true,
-          area: 800,
-        },
-        value: 80,
-      },
-      opacity: {
-        value: 0.5,
-      },
-      shape: {
-        type: "circle",
-      },
-      size: {
-        value: { min: 1, max: 5 },
-      },
-    },
-    detectRetina: true,
-  }
-
-  // GSAP Animations
-  useGSAP(() => {
-    if (timelineRef.current) {
-      gsap.timeline()
-        .from(".cv-header", {
-          y: -50,
-          opacity: 0,
-          duration: 1,
-          ease: "power3.out"
-        })
-        .from(".cv-content", {
-          y: 50,
-          opacity: 0,
-          duration: 1,
-          ease: "power3.out",
-          stagger: 0.2
-        }, "-=0.5")
-        .from(".action-buttons", {
-          scale: 0.8,
-          opacity: 0,
-          duration: 0.8,
-          ease: "back.out(1.7)",
-          stagger: 0.1
-        }, "-=0.3")
-    }
-
-    // ATS Score Animation
-    if (scoreRef.current) {
-      gsap.to(scoreRef.current, {
-        textContent: optimizedScore,
-        duration: 2,
-        ease: "power2.out",
-        snap: { textContent: 1 },
-        delay: 1
-      })
-    }
-  }, [])
-
-  // CV Data Parser
-  const parseCV = useCallback(async (file) => {
-    try {
-      let text = ''
-      
-      if (file.type === 'application/pdf') {
-        const arrayBuffer = await file.arrayBuffer()
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-        
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i)
-          const content = await page.getTextContent()
-          text += content.items.map(item => item.str).join(' ')
-        }
-      } else if (file.type.includes('wordprocessingml')) {
-        const arrayBuffer = await file.arrayBuffer()
-        const result = await mammoth.extractRawText({ arrayBuffer })
-        text = result.value
-      } else if (file.type === 'text/plain') {
-        text = await file.text()
-      }
-
-      // Parse CV data with NLP patterns
-      const cvData = {
-        personalInfo: extractPersonalInfo(text),
-        experience: extractExperience(text),
-        education: extractEducation(text),
-        skills: extractSkills(text),
-        rawText: text
-      }
-
-      setCvData(cvData)
-      return cvData
-    } catch (error) {
-      console.error('CV parsing error:', error)
-      addNotification('Błąd podczas parsowania CV', 'error')
-    }
-  }, [])
-
-  // Helper functions for CV parsing
-  const extractPersonalInfo = (text) => {
-    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/
-    const phoneRegex = /(\+?\d{1,3}[-.\s]?\(?\d{1,3}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4})/
-    
-    return {
-      email: text.match(emailRegex)?.[0] || '',
-      phone: text.match(phoneRegex)?.[0] || '',
-      name: text.split('\n')[0] || 'Jan Kowalski'
-    }
-  }
-
-  const extractExperience = (text) => {
-    // Simple experience extraction logic
-    const lines = text.split('\n')
-    const experienceSection = []
-    let inExperience = false
-    
-    for (const line of lines) {
-      if (line.toLowerCase().includes('doświadczenie') || line.toLowerCase().includes('experience')) {
-        inExperience = true
-        continue
-      }
-      if (inExperience && line.trim()) {
-        experienceSection.push(line.trim())
-        if (experienceSection.length > 5) break
-      }
-    }
-    
-    return experienceSection.length ? experienceSection : ['Senior Developer - TechCorp (2020-2024)']
-  }
-
-  const extractEducation = (text) => {
-    const lines = text.split('\n')
-    const educationSection = []
-    let inEducation = false
-    
-    for (const line of lines) {
-      if (line.toLowerCase().includes('wykształcenie') || line.toLowerCase().includes('education')) {
-        inEducation = true
-        continue
-      }
-      if (inEducation && line.trim()) {
-        educationSection.push(line.trim())
-        if (educationSection.length > 3) break
-      }
-    }
-    
-    return educationSection.length ? educationSection : ['Informatyka - AGH (2016-2020)']
-  }
-
-  const extractSkills = (text) => {
-    const skillKeywords = ['JavaScript', 'React', 'Python', 'Java', 'SQL', 'HTML', 'CSS', 'Node.js', 'Docker', 'AWS']
-    const foundSkills = skillKeywords.filter(skill => 
-      text.toLowerCase().includes(skill.toLowerCase())
-    )
-    return foundSkills.length ? foundSkills : ['JavaScript', 'React', 'Node.js', 'Python']
-  }
-
-  // Groq AI Optimization
-  const optimizeWithAI = useCallback(async () => {
-    if (userPlan === 'basic') {
-      addNotification('Optymalizacja AI dostępna w planie Gold/Premium', 'warning')
-      return
-    }
-
-    setIsOptimizing(true)
-    
-    try {
-      const response = await fetch('/api/optimize-cv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          cvData, 
-          language,
-          model: 'llama-3.1-70b-versatile'
-        })
-      })
-      
-      const optimizedData = await response.json()
-      setCvData(prev => ({ ...prev, ...optimizedData }))
-      setAtsScore(45)
-      
-      // Animate score increase
-      gsap.to(scoreRef.current, {
-        textContent: optimizedScore,
-        duration: 3,
-        ease: "power2.out",
-        snap: { textContent: 1 }
-      })
-      
-      addNotification('CV zostało zoptymalizowane!', 'success')
-    } catch (error) {
-      console.error('AI optimization error:', error)
-      addNotification('Błąd podczas optymalizacji', 'error')
-    } finally {
-      setIsOptimizing(false)
-    }
-  }, [cvData, language, userPlan, optimizedScore])
-
-  // PDF Export
-  const exportToPDF = useCallback(async () => {
-    if (!cvPreviewRef.current) return
-    
-    setIsExporting(true)
-    
-    try {
-      const canvas = await html2canvas(cvPreviewRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      })
-      
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-      pdf.save(`CV_${cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.pdf`)
-      
-      addNotification('PDF został pobrany!', 'success')
-    } catch (error) {
-      console.error('PDF export error:', error)
-      addNotification('Błąd podczas eksportu PDF', 'error')
-    } finally {
-      setIsExporting(false)
-    }
-  }, [cvData])
-
-  // DOCX Export
-  const exportToDOCX = useCallback(async () => {
-    if (userPlan === 'basic') {
-      addNotification('Eksport DOCX dostępny w planie Gold/Premium', 'warning')
-      return
-    }
-
-    setIsExporting(true)
-    
-    try {
-      const doc = new Document({
-        sections: [{
-          children: [
-            new Paragraph({
-              text: cvData?.personalInfo?.name || 'Jan Kowalski',
-              heading: HeadingLevel.TITLE,
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Email: ${cvData?.personalInfo?.email || 'email@example.com'}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Telefon: ${cvData?.personalInfo?.phone || '+48 123 456 789'}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              text: "Doświadczenie zawodowe",
-              heading: HeadingLevel.HEADING_1,
-            }),
-            ...(cvData?.experience?.map(exp => 
-              new Paragraph({
-                text: exp,
-              })
-            ) || []),
-            new Paragraph({
-              text: "Umiejętności",
-              heading: HeadingLevel.HEADING_1,
-            }),
-            new Paragraph({
-              text: cvData?.skills?.join(', ') || 'JavaScript, React, Node.js',
-            }),
-          ],
-        }],
-      })
-
-      const buffer = await Packer.toBuffer(doc)
-      saveAs(new Blob([buffer]), `CV_${cvData?.personalInfo?.name?.replace(/\s+/g, '_') || 'optimized'}.docx`)
-      
-      addNotification('DOCX został pobrany!', 'success')
-    } catch (error) {
-      console.error('DOCX export error:', error)
-      addNotification('Błąd podczas eksportu DOCX', 'error')
-    } finally {
-      setIsExporting(false)
-    }
-  }, [cvData, userPlan])
-
-  // Email Function
-  const sendEmail = useCallback(async (emailData) => {
-    if (userPlan === 'basic') {
-      addNotification('Wysyłanie mailem dostępne w planie Gold/Premium', 'warning')
-      return
-    }
-
-    try {
-      await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: emailData.to,
-          subject: emailData.subject,
-          cvData,
-          template: selectedTemplate
-        })
-      })
-      
-      addNotification('Email został wysłany!', 'success')
-      setShowEmailModal(false)
-    } catch (error) {
-      console.error('Email error:', error)
-      addNotification('Błąd podczas wysyłania maila', 'error')
-    }
-  }, [cvData, selectedTemplate, userPlan])
-
-  // Notification System
-  const addNotification = useCallback((message, type) => {
-    const id = Date.now()
-    setNotifications(prev => [...prev, { id, message, type }])
-    
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id))
-    }, 5000)
-  }, [])
-
-  // CV Templates
-  const templates = {
-    simple: (data) => (
-      <div className="bg-white p-8 max-w-2xl mx-auto shadow-lg">
-        <div className="border-b-2 border-blue-500 pb-4 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">{data?.personalInfo?.name}</h1>
-          <div className="flex gap-4 mt-2 text-gray-600">
-            <span>{data?.personalInfo?.email}</span>
-            <span>{data?.personalInfo?.phone}</span>
-          </div>
+  }, [template]);
+  
+  return (
+    <div className="resume-preview" data-template={template}>
+      {/* Watermark for non-premium plans */}
+      {watermark && (
+        <div className="watermark">
+          <span>CvPerfect</span>
         </div>
-        
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-blue-600 mb-3">Doświadczenie zawodowe</h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-2 text-gray-700">{exp}</div>
-          ))}
-        </div>
+      )}
+      
+      {/* Render selected template */}
+      <TemplateRenderer data={safeData} />
+    </div>
+  );
+});
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-blue-600 mb-3">Umiejętności</h2>
-          <div className="flex flex-wrap gap-2">
-            {data?.skills?.map((skill, i) => (
-              <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
+LiveResumeEditor.displayName = 'LiveResumeEditor';
 
-    modern: (data) => (
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-8 max-w-2xl mx-auto shadow-xl rounded-lg">
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-lg mb-6">
-          <h1 className="text-3xl font-bold">{data?.personalInfo?.name}</h1>
-          <div className="flex gap-4 mt-2 opacity-90">
-            <span>{data?.personalInfo?.email}</span>
-            <span>{data?.personalInfo?.phone}</span>
-          </div>
+// ==========================================
+// TEMPLATE COMPONENTS
+// Based on top CV builder competition designs
+// ==========================================
+
+/**
+ * Simple Classic Template - Clean, traditional layout
+ * Inspired by: Classic Microsoft Word templates
+ */
+const SimpleTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-simple">
+      {/* Header */}
+      <header className="cv-header">
+        <h1 className="name">{safeData.header.name || 'Your Name'}</h1>
+        <p className="title">{safeData.header.title || 'Professional Title'}</p>
+        <div className="contact-info">
+          {safeData.header.email && <span>✉️ {safeData.header.email}</span>}
+          {safeData.header.phone && <span>📱 {safeData.header.phone}</span>}
+          {safeData.header.location && <span>📍 {safeData.header.location}</span>}
         </div>
-        
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
-            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-            Doświadczenie zawodowe
-          </h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-3 p-3 bg-white rounded-lg shadow-sm border-l-4 border-purple-400">
-              {exp}
+      </header>
+      
+      {/* Summary */}
+      {safeData.summary && (
+        <section className="cv-section">
+          <h2>Professional Summary</h2>
+          <p>{safeData.summary}</p>
+        </section>
+      )}
+      
+      {/* Experience */}
+      {safeData.experience?.length > 0 && (
+        <section className="cv-section">
+          <h2>Experience</h2>
+          {safeData.experience.map((exp, idx) => (
+            <div key={idx} className="experience-item">
+              <div className="exp-header">
+                <h3>{exp.position}</h3>
+                <span className="period">{exp.period}</span>
+              </div>
+              <p className="company">{exp.company}</p>
+              <p className="description">{exp.description}</p>
             </div>
           ))}
-        </div>
+        </section>
+      )}
+      
+      {/* Education */}
+      {safeData.education?.length > 0 && (
+        <section className="cv-section">
+          <h2>Education</h2>
+          {safeData.education.map((edu, idx) => (
+            <div key={idx} className="education-item">
+              <div className="edu-header">
+                <h3>{edu.degree}</h3>
+                <span className="period">{edu.period}</span>
+              </div>
+              <p className="school">{edu.school}</p>
+            </div>
+          ))}
+        </section>
+      )}
+      
+      {/* Skills */}
+      {safeData.skills?.length > 0 && (
+        <section className="cv-section">
+          <h2>Skills</h2>
+          <div className="skills-list">
+            {safeData.skills.map((skill, idx) => (
+              <span key={idx} className="skill-tag">{skill}</span>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+};
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-purple-700 mb-3 flex items-center">
-            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-            Umiejętności
-          </h2>
-          <div className="grid grid-cols-2 gap-2">
-            {data?.skills?.map((skill, i) => (
-              <div key={i} className="bg-white p-2 rounded-lg shadow-sm">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium">{skill}</span>
-                  <span className="text-xs text-purple-600">90%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full" 
-                       style={{width: '90%'}}></div>
+/**
+ * Modern Pro Template - Contemporary design with sidebar
+ * Inspired by: Canva, Resume.io modern templates
+ */
+const ModernTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-modern">
+      <div className="modern-sidebar">
+        {/* Photo Circle */}
+        {safeData.header.photo?.url && (
+          <div className="photo-container">
+            <img src={safeData.header.photo.url} alt={safeData.header.name} />
+          </div>
+        )}
+        
+        {/* Contact */}
+        <div className="sidebar-section">
+          <h3>Contact</h3>
+          {safeData.header.email && <p>📧 {safeData.header.email}</p>}
+          {safeData.header.phone && <p>📱 {safeData.header.phone}</p>}
+          {safeData.header.location && <p>📍 {safeData.header.location}</p>}
+        </div>
+        
+        {/* Skills */}
+        {safeData.skills?.length > 0 && (
+          <div className="sidebar-section">
+            <h3>Skills</h3>
+            {safeData.skills.map((skill, idx) => (
+              <div key={idx} className="skill-bar">
+                <span>{skill}</span>
+                <div className="bar">
+                  <div className="bar-fill" style={{ width: '80%' }} />
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    ),
-
-    executive: (data) => (
-      <div className="bg-gray-900 text-white p-8 max-w-2xl mx-auto shadow-2xl">
-        <div className="border-b border-gray-700 pb-6 mb-6">
-          <h1 className="text-4xl font-light tracking-wide">{data?.personalInfo?.name}</h1>
-          <div className="flex gap-6 mt-3 text-gray-300 text-sm">
-            <span>{data?.personalInfo?.email}</span>
-            <span>{data?.personalInfo?.phone}</span>
-          </div>
-        </div>
+        )}
         
-        <div className="mb-8">
-          <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
-            Executive Experience
-          </h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-4 pl-4 border-l-2 border-yellow-400 text-gray-100">
-              {exp}
-            </div>
-          ))}
-        </div>
-
-        <div className="mb-6">
-          <h2 className="text-xl font-light text-yellow-400 mb-4 uppercase tracking-wider">
-            Core Competencies
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {data?.skills?.map((skill, i) => (
-              <span key={i} className="bg-gray-800 text-yellow-400 px-4 py-2 rounded border border-gray-700 text-center">
-                {skill}
-              </span>
+        {/* Links */}
+        {safeData.links?.length > 0 && (
+          <div className="sidebar-section">
+            <h3>Links</h3>
+            {safeData.links.map((link, idx) => (
+              <a key={idx} href={link.url} className="link-item">
+                {link.type === 'linkedin' && '🔗 LinkedIn'}
+                {link.type === 'github' && '💻 GitHub'}
+                {link.type === 'portfolio' && '🌐 Portfolio'}
+              </a>
             ))}
           </div>
-        </div>
+        )}
       </div>
-    ),
-
-    creative: (data) => (
-      <div className="bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100 p-8 max-w-2xl mx-auto shadow-xl rounded-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full opacity-10 transform translate-x-16 -translate-y-16"></div>
+      
+      <div className="modern-main">
+        {/* Header */}
+        <header className="modern-header">
+          <h1>{safeData.header.name || 'Your Name'}</h1>
+          <h2>{safeData.header.title || 'Professional Title'}</h2>
+        </header>
         
-        <div className="relative z-10">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              {data?.personalInfo?.name}
-            </h1>
-            <div className="flex justify-center gap-4 mt-3 text-gray-600">
-              <span className="bg-white px-3 py-1 rounded-full shadow">{data?.personalInfo?.email}</span>
-              <span className="bg-white px-3 py-1 rounded-full shadow">{data?.personalInfo?.phone}</span>
-            </div>
+        {/* Summary */}
+        {safeData.summary && (
+          <section className="modern-section">
+            <h3>About Me</h3>
+            <p>{safeData.summary}</p>
+          </section>
+        )}
+        
+        {/* Experience */}
+        {safeData.experience?.length > 0 && (
+          <section className="modern-section">
+            <h3>Professional Experience</h3>
+            {safeData.experience.map((exp, idx) => (
+              <div key={idx} className="modern-exp">
+                <div className="exp-timeline">
+                  <div className="timeline-dot" />
+                  <div className="timeline-line" />
+                </div>
+                <div className="exp-content">
+                  <h4>{exp.position} @ {exp.company}</h4>
+                  <span className="exp-period">{exp.period}</span>
+                  <p>{exp.description}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+        
+        {/* Education */}
+        {safeData.education?.length > 0 && (
+          <section className="modern-section">
+            <h3>Education</h3>
+            {safeData.education.map((edu, idx) => (
+              <div key={idx} className="modern-edu">
+                <h4>{edu.degree}</h4>
+                <p>{edu.school} • {edu.period}</p>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Koniec części 1
+
+// Początek części 2
+
+/**
+ * Minimal Pro Template - Ultra clean, whitespace-focused
+ * Inspired by: Scandinavian design, Apple aesthetic
+ */
+const MinimalTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-minimal">
+      {/* Centered Header */}
+      <header className="minimal-header">
+        <h1>{safeData.header.name || 'Your Name'}</h1>
+        <div className="minimal-divider" />
+        <p className="minimal-title">{safeData.header.title}</p>
+        <div className="minimal-contact">
+          {safeData.header.email} {safeData.header.phone && `• ${safeData.header.phone}`}
+        </div>
+      </header>
+      
+      {/* Content with generous spacing */}
+      <div className="minimal-content">
+        {safeData.summary && (
+          <section className="minimal-section">
+            <p className="summary-text">{safeData.summary}</p>
+          </section>
+        )}
+        
+        {safeData.experience?.length > 0 && (
+          <section className="minimal-section">
+            <h2>Experience</h2>
+            {safeData.experience.map((exp, idx) => (
+              <article key={idx} className="minimal-item">
+                <div className="item-header">
+                  <strong>{exp.position}</strong>
+                  <span>{exp.period}</span>
+                </div>
+                <p className="item-subtitle">{exp.company}</p>
+                <p className="item-description">{exp.description}</p>
+              </article>
+            ))}
+          </section>
+        )}
+        
+        {safeData.education?.length > 0 && (
+          <section className="minimal-section">
+            <h2>Education</h2>
+            {safeData.education.map((edu, idx) => (
+              <article key={idx} className="minimal-item">
+                <div className="item-header">
+                  <strong>{edu.degree}</strong>
+                  <span>{edu.period}</span>
+                </div>
+                <p className="item-subtitle">{edu.school}</p>
+              </article>
+            ))}
+          </section>
+        )}
+        
+        {safeData.skills?.length > 0 && (
+          <section className="minimal-section">
+            <h2>Skills</h2>
+            <p className="skills-inline">
+              {safeData.skills.join(' • ')}
+            </p>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Elegant Pro Template - Sophisticated with accent colors
+ * Inspired by: Zety elegant templates
+ */
+const ElegantTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-elegant">
+      {/* Gradient accent header */}
+      <header className="elegant-header">
+        <div className="header-gradient">
+          <h1>{safeData.header.name}</h1>
+          <p className="subtitle">{safeData.header.title}</p>
+        </div>
+        <div className="header-info">
+          <span>{safeData.header.email}</span>
+          <span>{safeData.header.phone}</span>
+          <span>{safeData.header.location}</span>
+        </div>
+      </header>
+      
+      <div className="elegant-body">
+        {/* Two-column layout */}
+        <div className="elegant-columns">
+          <div className="main-column">
+            {safeData.summary && (
+              <section className="elegant-section">
+                <h2>Profile</h2>
+                <p>{safeData.summary}</p>
+              </section>
+            )}
+            
+            {safeData.experience?.length > 0 && (
+              <section className="elegant-section">
+                <h2>Experience</h2>
+                {safeData.experience.map((exp, idx) => (
+                  <div key={idx} className="elegant-exp">
+                    <h3>{exp.position}</h3>
+                    <p className="company-line">
+                      <strong>{exp.company}</strong> | {exp.period}
+                    </p>
+                    <p>{exp.description}</p>
+                  </div>
+                ))}
+              </section>
+            )}
           </div>
           
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-purple-700 mb-4 text-center">
-              🎨 Creative Experience
-            </h2>
-            <div className="space-y-4">
-              {data?.experience?.map((exp, i) => (
-                <div key={i} className="bg-white p-4 rounded-xl shadow-md border-l-4 border-pink-400 transform hover:scale-105 transition-transform">
-                  {exp}
-                </div>
+          <aside className="side-column">
+            {safeData.skills?.length > 0 && (
+              <section className="elegant-section">
+                <h2>Expertise</h2>
+                <ul className="elegant-skills">
+                  {safeData.skills.map((skill, idx) => (
+                    <li key={idx}>{skill}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            
+            {safeData.education?.length > 0 && (
+              <section className="elegant-section">
+                <h2>Education</h2>
+                {safeData.education.map((edu, idx) => (
+                  <div key={idx} className="elegant-edu">
+                    <h4>{edu.degree}</h4>
+                    <p>{edu.school}</p>
+                    <p className="period">{edu.period}</p>
+                  </div>
+                ))}
+              </section>
+            )}
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Executive Ultra Template - Premium corporate design
+ * Inspired by: High-end executive resume services
+ */
+const ExecutiveTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-executive">
+      {/* Prestigious header with gold accents */}
+      <header className="exec-header">
+        <div className="exec-name-block">
+          <h1 className="exec-name">{safeData.header.name}</h1>
+          <div className="exec-line" />
+          <p className="exec-title">{safeData.header.title}</p>
+        </div>
+        <div className="exec-contact">
+          <div>{safeData.header.email}</div>
+          <div>{safeData.header.phone}</div>
+          <div>{safeData.header.location}</div>
+        </div>
+      </header>
+      
+      {/* Executive Summary */}
+      {safeData.summary && (
+        <section className="exec-section exec-summary">
+          <h2>Executive Summary</h2>
+          <p className="summary-text">{safeData.summary}</p>
+        </section>
+      )}
+      
+      {/* Core Competencies */}
+      {safeData.skills?.length > 0 && (
+        <section className="exec-section">
+          <h2>Core Competencies</h2>
+          <div className="exec-skills-grid">
+            {safeData.skills.map((skill, idx) => (
+              <div key={idx} className="exec-skill">
+                <span className="skill-bullet">▸</span>
+                <span>{skill}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      
+      {/* Professional Experience */}
+      {safeData.experience?.length > 0 && (
+        <section className="exec-section">
+          <h2>Professional Experience</h2>
+          {safeData.experience.map((exp, idx) => (
+            <div key={idx} className="exec-exp">
+              <div className="exp-header">
+                <h3>{exp.company}</h3>
+                <span className="exp-period">{exp.period}</span>
+              </div>
+              <h4 className="exp-position">{exp.position}</h4>
+              <p className="exp-desc">{exp.description}</p>
+            </div>
+          ))}
+        </section>
+      )}
+      
+      {/* Education & Credentials */}
+      {safeData.education?.length > 0 && (
+        <section className="exec-section">
+          <h2>Education & Credentials</h2>
+          {safeData.education.map((edu, idx) => (
+            <div key={idx} className="exec-edu">
+              <h3>{edu.degree}</h3>
+              <p>{edu.school} • {edu.period}</p>
+            </div>
+          ))}
+        </section>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Design Lead Template - Creative with visual elements
+ * Inspired by: Behance, Dribbble portfolios
+ */
+const DesignTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-design">
+      {/* Creative header with shapes */}
+      <header className="design-header">
+        <div className="design-shapes">
+          <div className="shape shape-1" />
+          <div className="shape shape-2" />
+          <div className="shape shape-3" />
+        </div>
+        <div className="design-text">
+          <h1>{safeData.header.name}</h1>
+          <p className="design-title">{safeData.header.title}</p>
+        </div>
+      </header>
+      
+      {/* Grid layout */}
+      <div className="design-grid">
+        {/* About card */}
+        {safeData.summary && (
+          <div className="design-card card-about">
+            <h2>About</h2>
+            <p>{safeData.summary}</p>
+          </div>
+        )}
+        
+        {/* Skills card */}
+        {safeData.skills?.length > 0 && (
+          <div className="design-card card-skills">
+            <h2>Skills</h2>
+            <div className="skill-bubbles">
+              {safeData.skills.map((skill, idx) => (
+                <span key={idx} className="skill-bubble">{skill}</span>
               ))}
             </div>
           </div>
+        )}
+        
+        {/* Experience cards */}
+        {safeData.experience?.map((exp, idx) => (
+          <div key={idx} className="design-card card-exp">
+            <div className="card-number">{String(idx + 1).padStart(2, '0')}</div>
+            <h3>{exp.position}</h3>
+            <p className="exp-meta">{exp.company} • {exp.period}</p>
+            <p>{exp.description}</p>
+          </div>
+        ))}
+        
+        {/* Education card */}
+        {safeData.education?.length > 0 && (
+          <div className="design-card card-edu">
+            <h2>Education</h2>
+            {safeData.education.map((edu, idx) => (
+              <div key={idx} className="edu-item">
+                <h4>{edu.degree}</h4>
+                <p>{edu.school}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-purple-700 mb-4">✨ Creative Skills</h2>
-            <div className="flex flex-wrap justify-center gap-3">
-              {data?.skills?.map((skill, i) => (
-                <span key={i} className="bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-2 rounded-full shadow-lg transform hover:scale-110 transition-transform">
+/**
+ * Tech Director Template - Developer-focused with code aesthetics
+ * Inspired by: GitHub, Stack Overflow profiles
+ */
+const TechTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-tech">
+      {/* Terminal-style header */}
+      <header className="tech-header">
+        <div className="terminal-bar">
+          <div className="terminal-dots">
+            <span className="dot red" />
+            <span className="dot yellow" />
+            <span className="dot green" />
+          </div>
+          <div className="terminal-title">resume.js</div>
+        </div>
+        <div className="terminal-content">
+          <pre>
+            <code>
+              {`const developer = {
+  name: "${safeData.header.name || 'Your Name'}",
+  role: "${safeData.header.title || 'Software Developer'}",
+  contact: {
+    email: "${safeData.header.email || 'email@example.com'}",
+    phone: "${safeData.header.phone || '+1234567890'}"
+  }
+};`}
+            </code>
+          </pre>
+        </div>
+      </header>
+      
+      {/* Tech content */}
+      <div className="tech-body">
+        {/* README section */}
+        {safeData.summary && (
+          <section className="tech-section">
+            <h2>## README.md</h2>
+            <p className="tech-summary">{safeData.summary}</p>
+          </section>
+        )}
+        
+        {/* Tech Stack */}
+        {safeData.skills?.length > 0 && (
+          <section className="tech-section">
+            <h2>## Tech Stack</h2>
+            <div className="tech-stack">
+              {safeData.skills.map((skill, idx) => (
+                <span key={idx} className="tech-badge">
+                  <span className="badge-icon">⚡</span>
                   {skill}
                 </span>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-    ),
-
-    tech: (data) => (
-      <div className="bg-gray-900 text-green-400 p-8 max-w-2xl mx-auto shadow-2xl font-mono border border-green-500">
-        <div className="border border-green-500 p-4 mb-6">
-          <div className="flex items-center mb-2">
-            <span className="text-green-500">$</span>
-            <span className="ml-2 text-xl">whoami</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white pl-4">{data?.personalInfo?.name}</h1>
-          <div className="pl-4 mt-2 text-sm">
-            <div>email: <span className="text-blue-400">{data?.personalInfo?.email}</span></div>
-            <div>phone: <span className="text-blue-400">{data?.personalInfo?.phone}</span></div>
-          </div>
-        </div>
+          </section>
+        )}
         
-        <div className="mb-6">
-          <div className="flex items-center mb-3">
-            <span className="text-green-500">$</span>
-            <span className="ml-2">cat experience.log</span>
-          </div>
-          <div className="pl-4 space-y-2">
-            {data?.experience?.map((exp, i) => (
-              <div key={i} className="text-gray-300 border-l-2 border-green-500 pl-3">
-                <span className="text-green-400">{'>'}</span> {exp}
+        {/* Work History */}
+        {safeData.experience?.length > 0 && (
+          <section className="tech-section">
+            <h2>## Work History</h2>
+            {safeData.experience.map((exp, idx) => (
+              <div key={idx} className="tech-exp">
+                <div className="commit-line">
+                  <span className="commit-hash">#{idx + 1}</span>
+                  <span className="commit-message">{exp.position} @ {exp.company}</span>
+                  <span className="commit-date">{exp.period}</span>
+                </div>
+                <p className="commit-desc">{exp.description}</p>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="flex items-center mb-3">
-            <span className="text-green-500">$</span>
-            <span className="ml-2">ls -la skills/</span>
-          </div>
-          <div className="pl-4 grid grid-cols-2 gap-2">
-            {data?.skills?.map((skill, i) => (
-              <div key={i} className="text-blue-400">
-                -rwxr-xr-x 1 dev dev {skill}
+          </section>
+        )}
+        
+        {/* Education */}
+        {safeData.education?.length > 0 && (
+          <section className="tech-section">
+            <h2>## Education</h2>
+            {safeData.education.map((edu, idx) => (
+              <div key={idx} className="tech-edu">
+                <code>{edu.degree} // {edu.school} ({edu.period})</code>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="border border-green-500 p-2 text-center">
-          <span className="text-green-500 animate-pulse">_</span>
-        </div>
+          </section>
+        )}
       </div>
-    ),
+    </div>
+  );
+};
 
-    luxury: (data) => (
-      <div className="bg-gradient-to-br from-amber-50 to-yellow-50 p-8 max-w-2xl mx-auto shadow-2xl border-2 border-yellow-400 relative">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400"></div>
-        
-        <div className="text-center border-b-2 border-yellow-400 pb-6 mb-8">
-          <h1 className="text-4xl font-serif text-gray-800 mb-2">{data?.personalInfo?.name}</h1>
-          <div className="text-yellow-600 font-semibold">EXECUTIVE PROFILE</div>
-          <div className="flex justify-center gap-6 mt-4 text-gray-600 text-sm">
-            <span className="bg-yellow-100 px-3 py-1 rounded border border-yellow-400">
-              {data?.personalInfo?.email}
-            </span>
-            <span className="bg-yellow-100 px-3 py-1 rounded border border-yellow-400">
-              {data?.personalInfo?.phone}
-            </span>
-          </div>
-        </div>
-        
-        <div className="mb-8">
-          <h2 className="text-2xl font-serif text-gray-800 mb-4 text-center">
-            <span className="border-b-2 border-yellow-400 pb-1">PROFESSIONAL EXPERIENCE</span>
-          </h2>
-          {data?.experience?.map((exp, i) => (
-            <div key={i} className="mb-4 p-4 bg-white border border-yellow-200 shadow-md">
-              <div className="flex items-start">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                <div className="text-gray-700 leading-relaxed">{exp}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+// Koniec części 2
 
-        <div className="text-center">
-          <h2 className="text-2xl font-serif text-gray-800 mb-4">
-            <span className="border-b-2 border-yellow-400 pb-1">EXPERTISE</span>
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {data?.skills?.map((skill, i) => (
-              <div key={i} className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white p-3 rounded shadow-lg font-semibold text-center">
-                {skill}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    ),
+// Początek części 3
 
-    minimal: (data) => (
-      <div className="bg-white p-12 max-w-2xl mx-auto">
-        <div className="mb-12">
-          <h1 className="text-5xl font-thin text-gray-900 mb-2 tracking-wide">
-            {data?.personalInfo?.name}
-          </h1>
-          <div className="w-24 h-px bg-gray-900 mb-4"></div>
-          <div className="text-gray-600 space-x-8 text-sm tracking-wide">
-            <span>{data?.personalInfo?.email}</span>
-            <span>{data?.personalInfo?.phone}</span>
-          </div>
-        </div>
-        
-        <div className="mb-12">
-          <h2 className="text-lg font-light text-gray-900 mb-8 uppercase tracking-wider">
-            Experience
-          </h2>
-          <div className="space-y-6">
-            {data?.experience?.map((exp, i) => (
-              <div key={i} className="text-gray-700 text-sm leading-relaxed">
-                {exp}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-light text-gray-900 mb-8 uppercase tracking-wider">
-            Skills
-          </h2>
-          <div className="text-sm text-gray-700 leading-loose">
-            {data?.skills?.join(' • ')}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Sample CV data for demo
-  useEffect(() => {
-    if (!cvData) {
-      setCvData({
-        personalInfo: {
-          name: 'Anna Kowalska',
-          email: 'anna.kowalska@email.com',
-          phone: '+48 123 456 789'
-        },
-        experience: [
-          'Senior React Developer - TechCorp (2021-2024)',
-          'Frontend Developer - StartupXYZ (2019-2021)',
-          'Junior Developer - WebAgency (2018-2019)'
-        ],
-        education: [
-          'Informatyka - AGH Kraków (2014-2018)',
-          'Kursy React i Node.js - CodeAcademy (2018)'
-        ],
-        skills: ['JavaScript', 'React', 'Node.js', 'TypeScript', 'Python', 'AWS', 'Docker', 'Git']
-      })
-    }
-  }, [cvData])
-
+/**
+ * Classic Serif Pro Template - Traditional academic style
+ * Inspired by: LaTeX academic CVs
+ */
+const SerifTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      {/* Particles Background */}
-      {particlesLoaded && (
-        <Particles
-          id="particles"
-          options={particleOptions}
-          className="absolute inset-0 z-0"
-        />
-      )}
+    <div className="template-serif">
+      {/* Classic centered header */}
+      <header className="serif-header">
+        <h1 className="serif-name">{safeData.header.name}</h1>
+        <div className="serif-rule" />
+        <p className="serif-title">{safeData.header.title}</p>
+        <p className="serif-contact">
+          {safeData.header.email} | {safeData.header.phone} | {safeData.header.location}
+        </p>
+      </header>
+      
+      {/* Traditional sections */}
+      <div className="serif-body">
+        {safeData.summary && (
+          <section className="serif-section">
+            <h2>Professional Profile</h2>
+            <p className="serif-text">{safeData.summary}</p>
+          </section>
+        )}
+        
+        {safeData.experience?.length > 0 && (
+          <section className="serif-section">
+            <h2>Professional Experience</h2>
+            {safeData.experience.map((exp, idx) => (
+              <div key={idx} className="serif-exp">
+                <div className="serif-exp-header">
+                  <strong>{exp.position}</strong>
+                  <em>{exp.period}</em>
+                </div>
+                <p className="serif-company">{exp.company}</p>
+                <p className="serif-desc">{exp.description}</p>
+              </div>
+            ))}
+          </section>
+        )}
+        
+        {safeData.education?.length > 0 && (
+          <section className="serif-section">
+            <h2>Education</h2>
+            {safeData.education.map((edu, idx) => (
+              <div key={idx} className="serif-edu">
+                <div className="serif-edu-header">
+                  <strong>{edu.degree}</strong>
+                  <em>{edu.period}</em>
+                </div>
+                <p>{edu.school}</p>
+              </div>
+            ))}
+          </section>
+        )}
+        
+        {safeData.skills?.length > 0 && (
+          <section className="serif-section">
+            <h2>Core Competencies</h2>
+            <p className="serif-skills">
+              {safeData.skills.join(' • ')}
+            </p>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
 
-      {/* Notifications */}
-      <AnimatePresence>
-        {notifications.map(notification => (
-          <motion.div
-            key={notification.id}
-            initial={{ opacity: 0, y: -50, x: 50 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
-              notification.type === 'success' ? 'bg-green-500 text-white' :
-              notification.type === 'error' ? 'bg-red-500 text-white' :
-              'bg-yellow-500 text-black'
-            }`}
-          >
-            {notification.message}
-          </motion.div>
-        ))}
-      </AnimatePresence>
+/**
+ * Nordic Clean Template - Scandinavian minimalism
+ * Inspired by: IKEA, Nordic design principles
+ */
+const NordicTemplate = ({ data }) => {
+  const safeData = ensureSafeData(data);
+  
+  return (
+    <div className="template-nordic">
+      {/* Clean Nordic header */}
+      <header className="nordic-header">
+        <div className="nordic-photo">
+          {safeData.header.photo?.url ? (
+            <img src={safeData.header.photo.url} alt={safeData.header.name} />
+          ) : (
+            <div className="photo-placeholder" />
+          )}
+        </div>
+        <div className="nordic-info">
+          <h1>{safeData.header.name}</h1>
+          <p className="nordic-title">{safeData.header.title}</p>
+          <div className="nordic-contact">
+            <a href={`mailto:${safeData.header.email}`}>{safeData.header.email}</a>
+            <span>{safeData.header.phone}</span>
+            <span>{safeData.header.location}</span>
+          </div>
+        </div>
+      </header>
+      
+      {/* Clean content blocks */}
+      <div className="nordic-content">
+        {safeData.summary && (
+          <section className="nordic-block">
+            <h2>Om mig</h2>
+            <p>{safeData.summary}</p>
+          </section>
+        )}
+        
+        {safeData.experience?.length > 0 && (
+          <section className="nordic-block">
+            <h2>Erfarenhet</h2>
+            {safeData.experience.map((exp, idx) => (
+              <article key={idx} className="nordic-item">
+                <h3>{exp.position}</h3>
+                <p className="nordic-meta">{exp.company} • {exp.period}</p>
+                <p>{exp.description}</p>
+              </article>
+            ))}
+          </section>
+        )}
+        
+        {safeData.education?.length > 0 && (
+          <section className="nordic-block">
+            <h2>Utbildning</h2>
+            {safeData.education.map((edu, idx) => (
+              <article key={idx} className="nordic-item">
+                <h3>{edu.degree}</h3>
+                <p className="nordic-meta">{edu.school} • {edu.period}</p>
+              </article>
+            ))}
+          </section>
+        )}
+        
+        {safeData.skills?.length > 0 && (
+          <section className="nordic-block">
+            <h2>Kompetenser</h2>
+            <div className="nordic-skills">
+              {safeData.skills.map((skill, idx) => (
+                <span key={idx} className="nordic-skill">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
 
-      {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div 
-          className="cv-header text-center mb-12"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+// ==========================================
+// PHOTO UPLOAD COMPONENT
+// ==========================================
+
+/**
+ * PhotoUpload - Secure image upload with crop and validation
+ * Implements multi-layer security checks
+ */
+const PhotoUpload = ({ photo, onUpload, loading }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [cropMode, setCropMode] = useState(false);
+  const [cropData, setCropData] = useState({ x: 0, y: 0, scale: 1 });
+  
+  /**
+   * Validate image file with multiple security layers
+   * @param {File} file - The uploaded file
+   * @returns {Promise<boolean>} - Validation result
+   */
+  const validateImage = async (file) => {
+    // Layer 1: Check file extension
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      throw new Error('Invalid file type. Only JPG, PNG, and WebP are allowed.');
+    }
+    
+    // Layer 2: Check MIME type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(file.type)) {
+      throw new Error('Invalid MIME type detected.');
+    }
+    
+    // Layer 3: Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      throw new Error('File too large. Maximum size is 5MB.');
+    }
+    
+    // Layer 4: Check magic bytes (file signature)
+    const buffer = await file.slice(0, 12).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    
+    // Check for JPEG magic bytes (FF D8 FF)
+    const isJPEG = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+    
+    // Check for PNG magic bytes (89 50 4E 47 0D 0A 1A 0A)
+    const isPNG = bytes[0] === 0x89 && bytes[1] === 0x50 && 
+                  bytes[2] === 0x4E && bytes[3] === 0x47;
+    
+    // Check for WebP magic bytes (RIFF....WEBP)
+    const isWebP = bytes[0] === 0x52 && bytes[1] === 0x49 && 
+                   bytes[2] === 0x46 && bytes[3] === 0x46 &&
+                   bytes[8] === 0x57 && bytes[9] === 0x45 && 
+                   bytes[10] === 0x42 && bytes[11] === 0x50;
+    
+    if (!isJPEG && !isPNG && !isWebP) {
+      throw new Error('File signature does not match allowed image types.');
+    }
+    
+    // Layer 5: Additional security - scan for suspicious patterns
+    const fileText = await file.text().catch(() => '');
+    const suspiciousPatterns = ['<script', '<svg', 'javascript:', 'onerror='];
+    for (const pattern of suspiciousPatterns) {
+      if (fileText.toLowerCase().includes(pattern)) {
+        throw new Error('Potentially malicious content detected.');
+      }
+    }
+    
+    return true;
+  };
+  
+  /**
+   * Handle file selection
+   * @param {File} file - Selected file
+   */
+  const handleFile = async (file) => {
+    try {
+      // Validate the file
+      await validateImage(file);
+      
+      // If validation passes, process the file
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCropMode(true);
+        setCropData({ 
+          x: 0, 
+          y: 0, 
+          scale: 1, 
+          originalImage: reader.result 
+        });
+      };
+      reader.readAsDataURL(file);
+      
+    } catch (error) {
+      console.error('Image validation failed:', error);
+      alert(error.message);
+    }
+  };
+  
+  /**
+   * Handle drag and drop
+   */
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleFile(file);
+    }
+  };
+  
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+  
+  /**
+   * Apply crop and save photo
+   */
+  const applyCrop = () => {
+    // Here you would implement actual image cropping logic
+    // For now, we'll save the crop data with the original image
+    onUpload({
+      url: cropData.originalImage,
+      cropped: true,
+      position: { x: cropData.x, y: cropData.y },
+      scale: cropData.scale
+    });
+    setCropMode(false);
+  };
+  
+  return (
+    <div className="photo-upload-container">
+      {!photo?.url && !cropMode ? (
+        // Upload interface
+        <div 
+          className={`photo-dropzone ${isDragging ? 'dragging' : ''}`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
         >
-          <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-            {t.title}
-          </h1>
-          <p className="text-xl text-gray-300">{t.subtitle}</p>
-          
-          {/* ATS Score */}
-          <div className="mt-8">
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 border border-green-400/30">
-              <span className="text-white mr-3">{t.atsScore}:</span>
-              <span 
-                ref={scoreRef}
-                className="text-3xl font-bold text-green-400"
-              >
-                {atsScore}
-              </span>
-              <span className="text-green-400 text-xl ml-1">%</span>
+          <input
+            type="file"
+            id="photo-input"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => handleFile(e.target.files[0])}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor="photo-input" className="dropzone-label">
+            <div className="dropzone-icon">📷</div>
+            <p className="dropzone-text">
+              Drag & drop your photo here or click to browse
+            </p>
+            <p className="dropzone-hint">
+              JPG, PNG, WebP • Max 5MB • Square crop recommended
+            </p>
+          </label>
+        </div>
+      ) : cropMode ? (
+        // Crop interface
+        <div className="photo-crop-container">
+          <div className="crop-preview">
+            <div 
+              className="crop-image"
+              style={{
+                backgroundImage: `url(${cropData.originalImage})`,
+                backgroundPosition: `${cropData.x}px ${cropData.y}px`,
+                backgroundSize: `${cropData.scale * 100}%`
+              }}
+            >
+              <div className="crop-overlay">
+                <div className="crop-circle" />
+              </div>
             </div>
           </div>
-
-          {/* Language Toggle */}
-          <div className="mt-6">
-            <button
-              onClick={() => setLanguage(lang => lang === 'pl' ? 'en' : 'pl')}
-              className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg text-white border border-white/20 hover:bg-white/20 transition-all"
+          
+          <div className="crop-controls">
+            <div className="control-group">
+              <label>Zoom</label>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.1"
+                value={cropData.scale}
+                onChange={(e) => setCropData({
+                  ...cropData,
+                  scale: parseFloat(e.target.value)
+                })}
+              />
+            </div>
+            
+            <div className="control-group">
+              <label>Position</label>
+              <div className="position-controls">
+                <button onClick={() => setCropData({
+                  ...cropData,
+                  y: cropData.y - 10
+                })}>↑</button>
+                <button onClick={() => setCropData({
+                  ...cropData,
+                  y: cropData.y + 10
+                })}>↓</button>
+                <button onClick={() => setCropData({
+                  ...cropData,
+                  x: cropData.x - 10
+                })}>←</button>
+                <button onClick={() => setCropData({
+                  ...cropData,
+                  x: cropData.x + 10
+                })}>→</button>
+              </div>
+            </div>
+            
+            <div className="crop-actions">
+              <button 
+                className="btn btn-ghost"
+                onClick={() => setCropMode(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={applyCrop}
+              >
+                Apply Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Display uploaded photo
+        <div className="photo-display">
+          <div className="photo-preview">
+            <img src={photo.url} alt="Profile" />
+            {loading && (
+              <div className="photo-loading">
+                <div className="spinner" />
+              </div>
+            )}
+          </div>
+          <div className="photo-actions">
+            <button 
+              className="btn btn-ghost btn-sm"
+              onClick={() => setCropMode(true)}
             >
-              {language === 'pl' ? '🇺🇸 English' : '🇵🇱 Polski'}
+              Edit
+            </button>
+            <button 
+              className="btn btn-ghost btn-sm"
+              onClick={() => onUpload({ url: null })}
+            >
+              Remove
             </button>
           </div>
-        </motion.div>
-
-        {/* Template Selection */}
-        <motion.div 
-          className="cv-content mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-        >
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-8">
-            <h2 className="text-2xl font-semibold text-white mb-4">{t.selectTemplate}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-              {Object.entries(t.templates).map(([key, name]) => {
-                const isAccessible = planTemplates[userPlan].includes(key)
-                return (
-                  <motion.button
-                    key={key}
-                    whileHover={{ scale: isAccessible ? 1.05 : 1 }}
-                    whileTap={{ scale: isAccessible ? 0.95 : 1 }}
-                    onClick={() => isAccessible ? setSelectedTemplate(key) : null}
-                    className={`
-                      p-4 rounded-lg border-2 transition-all relative
-                      ${selectedTemplate === key 
-                        ? 'border-green-400 bg-green-400/20' 
-                        : isAccessible 
-                          ? 'border-white/30 bg-white/10 hover:border-white/50' 
-                          : 'border-gray-500/30 bg-gray-500/10 cursor-not-allowed opacity-50'
-                      }
-                    `}
-                  >
-                    <div className="text-white text-sm font-medium">{name}</div>
-                    {!isAccessible && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs text-yellow-400 bg-black/50 px-2 py-1 rounded">
-                          🔒 {userPlan === 'basic' ? 'Gold/Premium' : 'Premium'}
-                        </span>
-                      </div>
-                    )}
-                  </motion.button>
-                )
-              })}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* CV Preview */}
-        <motion.div 
-          className="cv-content mb-8"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
-        >
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-6">Podgląd CV</h2>
-            <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-              <div ref={cvPreviewRef} className="transform scale-90 origin-top">
-                {templates[selectedTemplate]?.(cvData) || templates.simple(cvData)}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div 
-          className="action-buttons grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.8 }}
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={optimizeWithAI}
-            disabled={isOptimizing || userPlan === 'basic'}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isOptimizing ? (
-              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-            ) : (
-              '🤖'
-            )}
-            {t.optimizeWithAI}
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={exportToPDF}
-            disabled={isExporting}
-            className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-4 rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2"
-          >
-            {isExporting ? (
-              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-            ) : (
-              '📄'
-            )}
-            {t.downloadPdf}
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={exportToDOCX}
-            disabled={isExporting || userPlan === 'basic'}
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-4 rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isExporting ? (
-              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-            ) : (
-              '📝'
-            )}
-            {t.downloadDocx}
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowEmailModal(true)}
-            disabled={userPlan === 'basic'}
-            className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            📧 {t.sendEmail}
-          </motion.button>
-        </motion.div>
-
-        {/* Plan Upgrade Banner */}
-        {userPlan === 'basic' && (
-          <motion.div 
-            className="mt-8 bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-2xl text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1.1, duration: 0.8 }}
-          >
-            <h3 className="text-xl font-bold text-black mb-2">🚀 Ulepsz do Gold/Premium!</h3>
-            <p className="text-black/80 mb-4">
-              Odblokuj wszystkie szablony, optymalizację AI i eksport DOCX
-            </p>
-            <div className="flex justify-center gap-4">
-              <button className="bg-black text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-                Gold - 49 PLN
-              </button>
-              <button className="bg-black text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-                Premium - 79 PLN
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Email Modal */}
-      <AnimatePresence>
-        {showEmailModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowEmailModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Wyślij CV mailem</h2>
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                const formData = new FormData(e.target)
-                sendEmail({
-                  to: formData.get('email'),
-                  subject: formData.get('subject') || 'Moje CV'
-                })
-              }}>
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Email odbiorcy</label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                    placeholder="hr@firma.com"
-                  />
-                </div>
-                <div className="mb-6">
-                  <label className="block text-gray-700 mb-2">Temat</label>
-                  <input
-                    type="text"
-                    name="subject"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                    placeholder="Aplikacja na stanowisko..."
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-                  >
-                    Wyślij
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailModal(false)}
-                    className="flex-1 bg-gray-300 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
-                  >
-                    Anuluj
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
-  )
-}
-```
+  );
+};
 
-
-export async function POST(request) {
-  try {
-    const { cvData, language } = await request.json()
-    
-    const prompt = `Optimize this CV for ATS systems and improve the professional language. Make it more compelling and add achievements with metrics where possible. Language: ${language}
-    
-    CV Data: ${JSON.stringify(cvData)}
-    
-    Return optimized CV data in the same format.`
-    
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'llama-3.1-70b-versatile',
-      temperature: 0.7,
+PhotoUpload.propTypes = {
+  photo: PropTypes.shape({
+    url: PropTypes.string,
+    cropped: PropTypes.bool,
+    position: PropTypes.shape({
+      x: PropTypes.number,
+      y: PropTypes.number
     })
-    
-    // Parse and return optimized CV data
-    return Response.json({
-      personalInfo: cvData.personalInfo, // Keep original personal info
-      experience: [
-        'Senior React Developer - TechCorp (2021-2024): Led team of 5 developers, increased performance by 40%',
-        'Frontend Developer - StartupXYZ (2019-2021): Built responsive web apps, improved user engagement by 60%',
-        'Junior Developer - WebAgency (2018-2019): Developed 20+ client websites, maintained 99% uptime'
-      ],
-      skills: [...cvData.skills, 'Leadership', 'Agile', 'Performance Optimization'],
-      optimized: true
-    })
-  } catch (error) {
-    console.error('AI optimization error:', error)
-    return Response.json({ error: 'Optimization failed' }, { status: 500 })
-  }
-}
-
-    
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to,
-      subject: subject || 'CV Application',
-      html: `
-        <h2>CV Application</h2>
-        <p><strong>Name:</strong> ${cvData.personalInfo.name}</p>
-        <p><strong>Email:</strong> ${cvData.personalInfo.email}</p>
-        <p><strong>Phone:</strong> ${cvData.personalInfo.phone}</p>
-        <h3>Experience:</h3>
-        <ul>
-          ${cvData.experience.map(exp => `<li>${exp}</li>`).join('')}
-        </ul>
-        <h3>Skills:</h3>
-        <p>${cvData.skills.join(', ')}</p>
-      `,
-    })
-    
-    return Response.json({ success: true })
-  } catch (error) {
-    console.error('Email error:', error)
-    return Response.json({ error: 'Email sending failed' }, { status: 500 })
-  }
-}
-
-      <style jsx>{`
-        /* Global container */
-        .success-container {
-          min-height: 100vh;
-          background: #0a0a0a;
-          color: white;
-          position: relative;
-          overflow: hidden;
-          font-family: 'Inter', -apple-system, sans-serif;
-        }
-
-        /* Background effects */
-        .bg-gradient {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: radial-gradient(circle at 20% 50%, rgba(120, 80, 255, 0.3) 0%, transparent 50%),
-                      radial-gradient(circle at 80% 80%, rgba(255, 80, 150, 0.2) 0%, transparent 50%);
-          animation: gradientShift 20s ease infinite;
-          z-index: 0;
-        }
-
-        @keyframes gradientShift {
-          0%, 100% { transform: rotate(0deg) scale(1); }
-          50% { transform: rotate(180deg) scale(1.2); }
-        }
-
-        .particles {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 1;
-          opacity: 0.6;
-          pointer-events: none;
-        }
-
-        /* Progress bar */
-        .progress-bar-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: rgba(255, 255, 255, 0.1);
-          z-index: 1000;
-        }
-
-        .progress-bar {
-          height: 100%;
-          background: linear-gradient(90deg, #00ff88, #00cc70);
-          transition: width 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-          box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-        }
-
-        .progress-steps {
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 80px;
-          z-index: 1000;
-          background: rgba(0, 0, 0, 0.8);
-          padding: 20px 40px;
-          border-radius: 100px;
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .step {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          opacity: 0.5;
-          transition: all 0.3s ease;
-        }
-
-        .step.active {
-          opacity: 1;
-          transform: scale(1.1);
-        }
-
-        .step-icon {
-          font-size: 24px;
-        }
-
-        .step-label {
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        /* Template selector modal */
-        .template-selector-modal {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.9);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 2000;
-        }
-
-        .modal-content {
-          background: rgba(20, 20, 20, 0.95);
-          backdrop-filter: blur(30px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 32px;
-          padding: 48px;
-          max-width: 1000px;
-          width: 90%;
-        }
-
-        .modal-content h2 {
-          font-size: 36px;
-          margin-bottom: 16px;
-          text-align: center;
-        }
-
-        .modal-content p {
-          text-align: center;
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 40px;
-        }
-
-        .templates-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 24px;
-        }
-
-        .template-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 20px;
-          padding: 32px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-
-        .template-card:hover {
-          transform: translateY(-5px);
-          border-color: #00ff88;
-          background: rgba(0, 255, 136, 0.1);
-          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
-        }
-
-        .template-icon {
-          font-size: 48px;
-          display: block;
-          margin-bottom: 16px;
-        }
-
-        .template-card h3 {
-          font-size: 20px;
-          margin-bottom: 8px;
-        }
-
-        .badge {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background: rgba(255, 255, 255, 0.2);
-          padding: 4px 12px;
-          border-radius: 100px;
-          font-size: 11px;
-          font-weight: 700;
-        }
-
-        .badge.premium {
-          background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        }
-
-        /* Main content */
-        .success-content {
-          position: relative;
-          z-index: 10;
-          padding: 120px 40px 60px;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        /* Processing animation */
-        .processing-container {
-          text-align: center;
-          padding: 80px 20px;
-        }
-
-        .ai-animation {
-          position: relative;
-          width: 150px;
-          height: 150px;
-          margin: 0 auto 40px;
-        }
-
-        .ai-brain {
-          font-size: 80px;
-          animation: pulse 2s ease infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-        }
-
-        .ai-particles {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: radial-gradient(circle, rgba(120, 80, 255, 0.3) 0%, transparent 70%);
-          animation: rotate 10s linear infinite;
-        }
-
-        @keyframes rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        .processing-container h2 {
-          font-size: 32px;
-          margin-bottom: 16px;
-        }
-
-        .loading-bar {
-          width: 300px;
-          height: 8px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 100px;
-          margin: 40px auto;
-          overflow: hidden;
-        }
-
-        .loading-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #00ff88, #00cc70);
-          width: 60%;
-          animation: loading 2s ease infinite;
-        }
-
-        @keyframes loading {
-          0% { width: 0%; }
-          50% { width: 80%; }
-          100% { width: 100%; }
-        }
-
-        /* Success state */
-        .success-hero {
-          text-align: center;
-          padding: 60px 20px;
-        }
-
-        .success-icon {
-          font-size: 80px;
-          margin-bottom: 24px;
-          animation: bounceIn 0.6s ease;
-        }
-
-        @keyframes bounceIn {
-          0% { transform: scale(0); }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); }
-        }
-
-        .success-hero h1 {
-          font-size: 48px;
-          font-weight: 900;
-          margin-bottom: 32px;
-          background: linear-gradient(135deg, #00ff88, #00cc70);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .score-display {
-          display: flex;
-          justify-content: center;
-          margin: 40px 0;
-        }
-
-        .score-circle {
-          width: 200px;
-          height: 200px;
-          background: conic-gradient(
-            from 0deg,
-            #00ff88 0deg,
-            #00cc70 ${props => props.aiScore * 3.6}deg,
-            rgba(255, 255, 255, 0.1) ${props => props.aiScore * 3.6}deg
-          );
-          border-radius: 50%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          box-shadow: 0 20px 60px rgba(0, 255, 136, 0.3);
-        }
-
-        .score-circle::before {
-          content: '';
-          position: absolute;
-          inset: 10px;
-          background: #0a0a0a;
-          border-radius: 50%;
-        }
-
-        .score-value {
-          font-size: 56px;
-          font-weight: 900;
-          color: #00ff88;
-          position: relative;
-          z-index: 1;
-        }
-
-        .score-label {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.7);
-          position: relative;
-          z-index: 1;
-        }
-
-        .success-message {
-          font-size: 20px;
-          color: rgba(255, 255, 255, 0.8);
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        /* CV Container */
-        .cv-container {
-          display: grid;
-          grid-template-columns: 1fr 400px;
-          gap: 40px;
-          margin-top: 60px;
-        }
-
-        .cv-preview-section {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 32px;
-        }
-
-        .cv-preview-section h3 {
-          font-size: 24px;
-          margin-bottom: 24px;
-        }
-
-        .cv-preview-wrapper {
-          background: white;
-          border-radius: 16px;
-          padding: 40px;
-          min-height: 600px;
-          color: #000;
-        }
-
-        /* CV Templates */
-        .cv-template {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-        }
-
-        .cv-template.simple-template {
-          /* Simple template styles */
-        }
-
-        .cv-template.modern-template .cv-header {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          padding: 40px;
-          margin: -40px -40px 30px;
-          border-radius: 16px 16px 0 0;
-        }
-
-        .cv-template.executive-template .cv-header {
-          border-bottom: 3px solid #000;
-          padding-bottom: 20px;
-          margin-bottom: 30px;
-        }
-
-        .cv-template.creative-template .cv-header {
-          background: linear-gradient(45deg, #f093fb, #f5576c);
-          color: white;
-          padding: 40px;
-          margin: -40px -40px 30px;
-          clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
-        }
-
-        .cv-template.tech-template {
-          font-family: 'Courier New', monospace;
-        }
-
-        .cv-template.tech-template .cv-header {
-          background: #000;
-          color: #00ff88;
-          padding: 30px;
-          margin: -40px -40px 30px;
-        }
-
-        .cv-template.luxury-template .cv-header {
-          background: linear-gradient(135deg, #ffd700, #ffed4e);
-          color: #000;
-          padding: 50px;
-          margin: -40px -40px 40px;
-          text-align: center;
-        }
-
-        .cv-template.minimal-template {
-          font-family: 'Helvetica', sans-serif;
-        }
-
-        .cv-template.minimal-template .cv-header {
-          border-bottom: 1px solid #e0e0e0;
-          padding-bottom: 20px;
-          margin-bottom: 30px;
-        }
-
-        .cv-name {
-          font-size: 32px;
-          font-weight: 700;
-          margin-bottom: 8px;
-        }
-
-        .cv-title {
-          font-size: 20px;
-          margin-bottom: 16px;
-          opacity: 0.9;
-        }
-
-        .cv-contact {
-          display: flex;
-          gap: 20px;
-          font-size: 14px;
-          opacity: 0.8;
-        }
-
-        .cv-section {
-          margin-bottom: 32px;
-        }
-
-        .cv-section h2 {
-          font-size: 20px;
-          font-weight: 700;
-          margin-bottom: 16px;
-          color: #333;
-        }
-
-        .experience-item {
-          margin-bottom: 24px;
-        }
-
-        .experience-item h3 {
-          font-size: 18px;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-
-        .company {
-          font-weight: 500;
-          color: #666;
-        }
-
-        .dates {
-          font-size: 14px;
-          color: #999;
-          margin-bottom: 8px;
-        }
-
-        .skills-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .skill-tag {
-          background: #f0f0f0;
-          padding: 6px 12px;
-          border-radius: 100px;
-          font-size: 14px;
-        }
-
-        /* Actions section */
-        .actions-section {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          padding: 32px;
-        }
-
-        .actions-section h3 {
-          font-size: 24px;
-          margin-bottom: 24px;
-        }
-
-        .action-buttons {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-bottom: 32px;
-        }
-
-        .btn-primary, .btn-secondary {
-          padding: 18px 32px;
-          border-radius: 100px;
-          font-size: 16px;
-          font-weight: 700;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .btn-primary {
-          background: linear-gradient(135deg, #00ff88, #00cc70);
-          color: #000;
-        }
-
-        .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
-        }
-
-        .btn-secondary {
-          background: linear-gradient(135deg, #7850ff, #ff5080);
-          color: white;
-        }
-
-        .btn-secondary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(120, 80, 255, 0.3);
-        }
-
-        .email-success {
-          background: rgba(0, 255, 136, 0.1);
-          border: 1px solid rgba(0, 255, 136, 0.3);
-          padding: 16px;
-          border-radius: 12px;
-          color: #00ff88;
-          text-align: center;
-          margin-bottom: 24px;
-        }
-
-        .improvements-section {
-          margin-bottom: 24px;
-        }
-
-        .improvements-section h4 {
-          font-size: 16px;
-          margin-bottom: 16px;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .keywords-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .keyword-tag {
-          background: rgba(0, 255, 136, 0.1);
-          border: 1px solid rgba(0, 255, 136, 0.3);
-          color: #00ff88;
-          padding: 6px 16px;
-          border-radius: 100px;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .plan-info {
-          text-align: center;
-          padding: 24px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 16px;
-        }
-
-        .plan-info p {
-          margin: 0 0 8px;
-        }
-
-        .upgrade-hint {
-          color: #ffd700;
-          font-size: 14px;
-        }
-
-        /* Error state */
-        .error-container {
-          text-align: center;
-          padding: 80px 20px;
-        }
-
-        .error-container h2 {
-          font-size: 32px;
-          margin-bottom: 16px;
-        }
-
-        .error-container button {
-          margin-top: 24px;
-          padding: 16px 32px;
-          background: linear-gradient(135deg, #7850ff, #ff5080);
-          color: white;
-          border: none;
-          border-radius: 100px;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 1200px) {
-          .cv-container {
-            grid-template-columns: 1fr;
-          }
-
-          .cv-preview-section {
-            margin-bottom: 32px;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .success-content {
-            padding: 100px 20px 40px;
-          }
-
-          .progress-steps {
-            gap: 30px;
-            padding: 15px 20px;
-          }
-
-          .step-label {
-            display: none;
-          }
-
-          .success-hero h1 {
-            font-size: 32px;
-          }
-
-          .score-circle {
-            width: 150px;
-            height: 150px;
-          }
-
-          .score-value {
-            font-size: 42px;
-          }
-
-          .templates-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .cv-preview-wrapper {
-            padding: 20px;
-          }
-
-          .cv-name {
-            font-size: 24px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .templates-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .progress-steps {
-            gap: 20px;
-          }
-        }
-      `}</style>
-    </>
-  )
-}
+  }),
+  onUpload: PropTypes.func.isRequired,
+  loading: PropTypes.bool
+};
+
+// Export the main component
+export default LiveResumeEditor;
+
+// Koniec części 3
