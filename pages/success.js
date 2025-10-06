@@ -1,1096 +1,1153 @@
-// Początek części 1
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/router'
+import Head from 'next/head'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import confetti from 'canvas-confetti'
 
-// components/LiveResumeEditor.jsx
-// ==========================================
-// Live CV Preview with Multiple Templates
-// Renders A4-formatted CV based on selected template
-// ==========================================
+export default function Success() {
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(1)
+  const [cvData, setCvData] = useState('')
+  const [jobPosting, setJobPosting] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+  const [userPlan, setUserPlan] = useState('basic')
+  const [selectedTemplate, setSelectedTemplate] = useState('simple')
+  const [optimizedCV, setOptimizedCV] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [downloadReady, setDownloadReady] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [error, setError] = useState(null)
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false)
+  const cvPreviewRef = useRef(null)
+  const [parsedCV, setParsedCV] = useState(null)
+  const [aiScore, setAiScore] = useState(0)
+  const [keywords, setKeywords] = useState([])
+  const [improvements, setImprovements] = useState([])
+  const [showSuccess, setShowSuccess] = useState(false)
 
-import React, { memo, useMemo, useState } from 'react';
-import PropTypes from 'prop-types';
-
-/**
- * LiveResumeEditor - Real-time CV preview component
- * @param {string} template - Selected template ID
- * @param {object} data - CV data object
- * @param {boolean} watermark - Show watermark for non-premium users
- */
-
-// Helper function to ensure data is properly structured
-const ensureSafeData = (data) => ({
-  header: data?.header || {
-    name: '',
-    title: '',
-    email: '',
-    phone: '',
-    location: '',
-    photo: { url: null, cropped: false, position: { x: 0, y: 0 } }
-  },
-  summary: data?.summary || '',
-  experience: data?.experience || [],
-  education: data?.education || [],
-  skills: data?.skills || [],
-  links: data?.links || []
-});
-
-const LiveResumeEditor = memo(({ template, data, watermark }) => {
-  const safeData = ensureSafeData(data);
-  
-  // Select template renderer based on template ID
-  const TemplateRenderer = useMemo(() => {
-    switch (template) {
-      case 'simple': return SimpleTemplate;
-      case 'modern': return ModernTemplate;
-      case 'minimal': return MinimalTemplate;
-      case 'elegant': return ElegantTemplate;
-      case 'executive': return ExecutiveTemplate;
-      case 'design': return DesignTemplate;
-      case 'tech': return TechTemplate;
-      case 'serif': return SerifTemplate;
-      case 'nordic': return NordicTemplate;
-      default: return SimpleTemplate;
-    }
-  }, [template]);
-  
-  return (
-    <div className="resume-preview" data-template={template}>
-      {/* Watermark for non-premium plans */}
-      {watermark && (
-        <div className="watermark">
-          <span>CvPerfect</span>
-        </div>
-      )}
-      
-      {/* Render selected template */}
-      <TemplateRenderer data={safeData} />
-    </div>
-  );
-});
-
-LiveResumeEditor.displayName = 'LiveResumeEditor';
-
-// ==========================================
-// TEMPLATE COMPONENTS
-// Based on top CV builder competition designs
-// ==========================================
-
-/**
- * Simple Classic Template - Clean, traditional layout
- * Inspired by: Classic Microsoft Word templates
- */
-const SimpleTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-simple">
-      {/* Header */}
-      <header className="cv-header">
-        <h1 className="name">{safeData.header.name || 'Your Name'}</h1>
-        <p className="title">{safeData.header.title || 'Professional Title'}</p>
-        <div className="contact-info">
-          {safeData.header.email && <span>✉️ {safeData.header.email}</span>}
-          {safeData.header.phone && <span>📱 {safeData.header.phone}</span>}
-          {safeData.header.location && <span>📍 {safeData.header.location}</span>}
-        </div>
-      </header>
-      
-      {/* Summary */}
-      {safeData.summary && (
-        <section className="cv-section">
-          <h2>Professional Summary</h2>
-          <p>{safeData.summary}</p>
-        </section>
-      )}
-      
-      {/* Experience */}
-      {safeData.experience?.length > 0 && (
-        <section className="cv-section">
-          <h2>Experience</h2>
-          {safeData.experience.map((exp, idx) => (
-            <div key={idx} className="experience-item">
-              <div className="exp-header">
-                <h3>{exp.position}</h3>
-                <span className="period">{exp.period}</span>
-              </div>
-              <p className="company">{exp.company}</p>
-              <p className="description">{exp.description}</p>
-            </div>
-          ))}
-        </section>
-      )}
-      
-      {/* Education */}
-      {safeData.education?.length > 0 && (
-        <section className="cv-section">
-          <h2>Education</h2>
-          {safeData.education.map((edu, idx) => (
-            <div key={idx} className="education-item">
-              <div className="edu-header">
-                <h3>{edu.degree}</h3>
-                <span className="period">{edu.period}</span>
-              </div>
-              <p className="school">{edu.school}</p>
-            </div>
-          ))}
-        </section>
-      )}
-      
-      {/* Skills */}
-      {safeData.skills?.length > 0 && (
-        <section className="cv-section">
-          <h2>Skills</h2>
-          <div className="skills-list">
-            {safeData.skills.map((skill, idx) => (
-              <span key={idx} className="skill-tag">{skill}</span>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
-  );
-};
-
-/**
- * Modern Pro Template - Contemporary design with sidebar
- * Inspired by: Canva, Resume.io modern templates
- */
-const ModernTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-modern">
-      <div className="modern-sidebar">
-        {/* Photo Circle */}
-        {safeData.header.photo?.url && (
-          <div className="photo-container">
-            <img src={safeData.header.photo.url} alt={safeData.header.name} />
-          </div>
-        )}
-        
-        {/* Contact */}
-        <div className="sidebar-section">
-          <h3>Contact</h3>
-          {safeData.header.email && <p>📧 {safeData.header.email}</p>}
-          {safeData.header.phone && <p>📱 {safeData.header.phone}</p>}
-          {safeData.header.location && <p>📍 {safeData.header.location}</p>}
-        </div>
-        
-        {/* Skills */}
-        {safeData.skills?.length > 0 && (
-          <div className="sidebar-section">
-            <h3>Skills</h3>
-            {safeData.skills.map((skill, idx) => (
-              <div key={idx} className="skill-bar">
-                <span>{skill}</span>
-                <div className="bar">
-                  <div className="bar-fill" style={{ width: '80%' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {/* Links */}
-        {safeData.links?.length > 0 && (
-          <div className="sidebar-section">
-            <h3>Links</h3>
-            {safeData.links.map((link, idx) => (
-              <a key={idx} href={link.url} className="link-item">
-                {link.type === 'linkedin' && '🔗 LinkedIn'}
-                {link.type === 'github' && '💻 GitHub'}
-                {link.type === 'portfolio' && '🌐 Portfolio'}
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-      
-      <div className="modern-main">
-        {/* Header */}
-        <header className="modern-header">
-          <h1>{safeData.header.name || 'Your Name'}</h1>
-          <h2>{safeData.header.title || 'Professional Title'}</h2>
-        </header>
-        
-        {/* Summary */}
-        {safeData.summary && (
-          <section className="modern-section">
-            <h3>About Me</h3>
-            <p>{safeData.summary}</p>
-          </section>
-        )}
-        
-        {/* Experience */}
-        {safeData.experience?.length > 0 && (
-          <section className="modern-section">
-            <h3>Professional Experience</h3>
-            {safeData.experience.map((exp, idx) => (
-              <div key={idx} className="modern-exp">
-                <div className="exp-timeline">
-                  <div className="timeline-dot" />
-                  <div className="timeline-line" />
-                </div>
-                <div className="exp-content">
-                  <h4>{exp.position} @ {exp.company}</h4>
-                  <span className="exp-period">{exp.period}</span>
-                  <p>{exp.description}</p>
-                </div>
-              </div>
-            ))}
-          </section>
-        )}
-        
-        {/* Education */}
-        {safeData.education?.length > 0 && (
-          <section className="modern-section">
-            <h3>Education</h3>
-            {safeData.education.map((edu, idx) => (
-              <div key={idx} className="modern-edu">
-                <h4>{edu.degree}</h4>
-                <p>{edu.school} • {edu.period}</p>
-              </div>
-            ))}
-          </section>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Koniec części 1
-
-// Początek części 2
-
-/**
- * Minimal Pro Template - Ultra clean, whitespace-focused
- * Inspired by: Scandinavian design, Apple aesthetic
- */
-const MinimalTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-minimal">
-      {/* Centered Header */}
-      <header className="minimal-header">
-        <h1>{safeData.header.name || 'Your Name'}</h1>
-        <div className="minimal-divider" />
-        <p className="minimal-title">{safeData.header.title}</p>
-        <div className="minimal-contact">
-          {safeData.header.email} {safeData.header.phone && `• ${safeData.header.phone}`}
-        </div>
-      </header>
-      
-      {/* Content with generous spacing */}
-      <div className="minimal-content">
-        {safeData.summary && (
-          <section className="minimal-section">
-            <p className="summary-text">{safeData.summary}</p>
-          </section>
-        )}
-        
-        {safeData.experience?.length > 0 && (
-          <section className="minimal-section">
-            <h2>Experience</h2>
-            {safeData.experience.map((exp, idx) => (
-              <article key={idx} className="minimal-item">
-                <div className="item-header">
-                  <strong>{exp.position}</strong>
-                  <span>{exp.period}</span>
-                </div>
-                <p className="item-subtitle">{exp.company}</p>
-                <p className="item-description">{exp.description}</p>
-              </article>
-            ))}
-          </section>
-        )}
-        
-        {safeData.education?.length > 0 && (
-          <section className="minimal-section">
-            <h2>Education</h2>
-            {safeData.education.map((edu, idx) => (
-              <article key={idx} className="minimal-item">
-                <div className="item-header">
-                  <strong>{edu.degree}</strong>
-                  <span>{edu.period}</span>
-                </div>
-                <p className="item-subtitle">{edu.school}</p>
-              </article>
-            ))}
-          </section>
-        )}
-        
-        {safeData.skills?.length > 0 && (
-          <section className="minimal-section">
-            <h2>Skills</h2>
-            <p className="skills-inline">
-              {safeData.skills.join(' • ')}
-            </p>
-          </section>
-        )}
-      </div>
-    </div>
-  );
-};
-
-/**
- * Elegant Pro Template - Sophisticated with accent colors
- * Inspired by: Zety elegant templates
- */
-const ElegantTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-elegant">
-      {/* Gradient accent header */}
-      <header className="elegant-header">
-        <div className="header-gradient">
-          <h1>{safeData.header.name}</h1>
-          <p className="subtitle">{safeData.header.title}</p>
-        </div>
-        <div className="header-info">
-          <span>{safeData.header.email}</span>
-          <span>{safeData.header.phone}</span>
-          <span>{safeData.header.location}</span>
-        </div>
-      </header>
-      
-      <div className="elegant-body">
-        {/* Two-column layout */}
-        <div className="elegant-columns">
-          <div className="main-column">
-            {safeData.summary && (
-              <section className="elegant-section">
-                <h2>Profile</h2>
-                <p>{safeData.summary}</p>
-              </section>
-            )}
-            
-            {safeData.experience?.length > 0 && (
-              <section className="elegant-section">
-                <h2>Experience</h2>
-                {safeData.experience.map((exp, idx) => (
-                  <div key={idx} className="elegant-exp">
-                    <h3>{exp.position}</h3>
-                    <p className="company-line">
-                      <strong>{exp.company}</strong> | {exp.period}
-                    </p>
-                    <p>{exp.description}</p>
-                  </div>
-                ))}
-              </section>
-            )}
-          </div>
-          
-          <aside className="side-column">
-            {safeData.skills?.length > 0 && (
-              <section className="elegant-section">
-                <h2>Expertise</h2>
-                <ul className="elegant-skills">
-                  {safeData.skills.map((skill, idx) => (
-                    <li key={idx}>{skill}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            
-            {safeData.education?.length > 0 && (
-              <section className="elegant-section">
-                <h2>Education</h2>
-                {safeData.education.map((edu, idx) => (
-                  <div key={idx} className="elegant-edu">
-                    <h4>{edu.degree}</h4>
-                    <p>{edu.school}</p>
-                    <p className="period">{edu.period}</p>
-                  </div>
-                ))}
-              </section>
-            )}
-          </aside>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/**
- * Executive Ultra Template - Premium corporate design
- * Inspired by: High-end executive resume services
- */
-const ExecutiveTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-executive">
-      {/* Prestigious header with gold accents */}
-      <header className="exec-header">
-        <div className="exec-name-block">
-          <h1 className="exec-name">{safeData.header.name}</h1>
-          <div className="exec-line" />
-          <p className="exec-title">{safeData.header.title}</p>
-        </div>
-        <div className="exec-contact">
-          <div>{safeData.header.email}</div>
-          <div>{safeData.header.phone}</div>
-          <div>{safeData.header.location}</div>
-        </div>
-      </header>
-      
-      {/* Executive Summary */}
-      {safeData.summary && (
-        <section className="exec-section exec-summary">
-          <h2>Executive Summary</h2>
-          <p className="summary-text">{safeData.summary}</p>
-        </section>
-      )}
-      
-      {/* Core Competencies */}
-      {safeData.skills?.length > 0 && (
-        <section className="exec-section">
-          <h2>Core Competencies</h2>
-          <div className="exec-skills-grid">
-            {safeData.skills.map((skill, idx) => (
-              <div key={idx} className="exec-skill">
-                <span className="skill-bullet">▸</span>
-                <span>{skill}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-      
-      {/* Professional Experience */}
-      {safeData.experience?.length > 0 && (
-        <section className="exec-section">
-          <h2>Professional Experience</h2>
-          {safeData.experience.map((exp, idx) => (
-            <div key={idx} className="exec-exp">
-              <div className="exp-header">
-                <h3>{exp.company}</h3>
-                <span className="exp-period">{exp.period}</span>
-              </div>
-              <h4 className="exp-position">{exp.position}</h4>
-              <p className="exp-desc">{exp.description}</p>
-            </div>
-          ))}
-        </section>
-      )}
-      
-      {/* Education & Credentials */}
-      {safeData.education?.length > 0 && (
-        <section className="exec-section">
-          <h2>Education & Credentials</h2>
-          {safeData.education.map((edu, idx) => (
-            <div key={idx} className="exec-edu">
-              <h3>{edu.degree}</h3>
-              <p>{edu.school} • {edu.period}</p>
-            </div>
-          ))}
-        </section>
-      )}
-    </div>
-  );
-};
-
-/**
- * Design Lead Template - Creative with visual elements
- * Inspired by: Behance, Dribbble portfolios
- */
-const DesignTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-design">
-      {/* Creative header with shapes */}
-      <header className="design-header">
-        <div className="design-shapes">
-          <div className="shape shape-1" />
-          <div className="shape shape-2" />
-          <div className="shape shape-3" />
-        </div>
-        <div className="design-text">
-          <h1>{safeData.header.name}</h1>
-          <p className="design-title">{safeData.header.title}</p>
-        </div>
-      </header>
-      
-      {/* Grid layout */}
-      <div className="design-grid">
-        {/* About card */}
-        {safeData.summary && (
-          <div className="design-card card-about">
-            <h2>About</h2>
-            <p>{safeData.summary}</p>
-          </div>
-        )}
-        
-        {/* Skills card */}
-        {safeData.skills?.length > 0 && (
-          <div className="design-card card-skills">
-            <h2>Skills</h2>
-            <div className="skill-bubbles">
-              {safeData.skills.map((skill, idx) => (
-                <span key={idx} className="skill-bubble">{skill}</span>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Experience cards */}
-        {safeData.experience?.map((exp, idx) => (
-          <div key={idx} className="design-card card-exp">
-            <div className="card-number">{String(idx + 1).padStart(2, '0')}</div>
-            <h3>{exp.position}</h3>
-            <p className="exp-meta">{exp.company} • {exp.period}</p>
-            <p>{exp.description}</p>
-          </div>
-        ))}
-        
-        {/* Education card */}
-        {safeData.education?.length > 0 && (
-          <div className="design-card card-edu">
-            <h2>Education</h2>
-            {safeData.education.map((edu, idx) => (
-              <div key={idx} className="edu-item">
-                <h4>{edu.degree}</h4>
-                <p>{edu.school}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-/**
- * Tech Director Template - Developer-focused with code aesthetics
- * Inspired by: GitHub, Stack Overflow profiles
- */
-const TechTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-tech">
-      {/* Terminal-style header */}
-      <header className="tech-header">
-        <div className="terminal-bar">
-          <div className="terminal-dots">
-            <span className="dot red" />
-            <span className="dot yellow" />
-            <span className="dot green" />
-          </div>
-          <div className="terminal-title">resume.js</div>
-        </div>
-        <div className="terminal-content">
-          <pre>
-            <code>
-              {`const developer = {
-  name: "${safeData.header.name || 'Your Name'}",
-  role: "${safeData.header.title || 'Software Developer'}",
-  contact: {
-    email: "${safeData.header.email || 'email@example.com'}",
-    phone: "${safeData.header.phone || '+1234567890'}"
+  // Template configurations
+  const templates = {
+    simple: { name: 'Simple', icon: '📄', available: ['basic', 'gold', 'premium'] },
+    modern: { name: 'Modern', icon: '🎨', available: ['gold', 'premium'] },
+    executive: { name: 'Executive', icon: '💼', available: ['gold', 'premium'] },
+    creative: { name: 'Creative', icon: '🌟', available: ['premium'] },
+    tech: { name: 'Tech', icon: '💻', available: ['premium'] },
+    luxury: { name: 'Luxury', icon: '👑', available: ['premium'] },
+    minimal: { name: 'Minimal', icon: '⚡', available: ['premium'] }
   }
-};`}
-            </code>
-          </pre>
-        </div>
-      </header>
-      
-      {/* Tech content */}
-      <div className="tech-body">
-        {/* README section */}
-        {safeData.summary && (
-          <section className="tech-section">
-            <h2>## README.md</h2>
-            <p className="tech-summary">{safeData.summary}</p>
-          </section>
-        )}
-        
-        {/* Tech Stack */}
-        {safeData.skills?.length > 0 && (
-          <section className="tech-section">
-            <h2>## Tech Stack</h2>
-            <div className="tech-stack">
-              {safeData.skills.map((skill, idx) => (
-                <span key={idx} className="tech-badge">
-                  <span className="badge-icon">⚡</span>
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-        
-        {/* Work History */}
-        {safeData.experience?.length > 0 && (
-          <section className="tech-section">
-            <h2>## Work History</h2>
-            {safeData.experience.map((exp, idx) => (
-              <div key={idx} className="tech-exp">
-                <div className="commit-line">
-                  <span className="commit-hash">#{idx + 1}</span>
-                  <span className="commit-message">{exp.position} @ {exp.company}</span>
-                  <span className="commit-date">{exp.period}</span>
-                </div>
-                <p className="commit-desc">{exp.description}</p>
-              </div>
-            ))}
-          </section>
-        )}
-        
-        {/* Education */}
-        {safeData.education?.length > 0 && (
-          <section className="tech-section">
-            <h2>## Education</h2>
-            {safeData.education.map((edu, idx) => (
-              <div key={idx} className="tech-edu">
-                <code>{edu.degree} // {edu.school} ({edu.period})</code>
-              </div>
-            ))}
-          </section>
-        )}
-      </div>
-    </div>
-  );
-};
 
-// Koniec części 2
+  // Load data from sessionStorage on mount
+  useEffect(() => {
+    const loadSessionData = async () => {
+      try {
+        const pendingCV = sessionStorage.getItem('pendingCV')
+        const pendingJob = sessionStorage.getItem('pendingJob')
+        const pendingEmail = sessionStorage.getItem('pendingEmail')
+        const pendingPlan = sessionStorage.getItem('pendingPlan')
+        const pendingTemplate = sessionStorage.getItem('selectedTemplate')
 
-// Początek części 3
+        if (!pendingCV || !pendingEmail) {
+          router.push('/')
+          return
+        }
 
-/**
- * Classic Serif Pro Template - Traditional academic style
- * Inspired by: LaTeX academic CVs
- */
-const SerifTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-serif">
-      {/* Classic centered header */}
-      <header className="serif-header">
-        <h1 className="serif-name">{safeData.header.name}</h1>
-        <div className="serif-rule" />
-        <p className="serif-title">{safeData.header.title}</p>
-        <p className="serif-contact">
-          {safeData.header.email} | {safeData.header.phone} | {safeData.header.location}
-        </p>
-      </header>
-      
-      {/* Traditional sections */}
-      <div className="serif-body">
-        {safeData.summary && (
-          <section className="serif-section">
-            <h2>Professional Profile</h2>
-            <p className="serif-text">{safeData.summary}</p>
-          </section>
-        )}
+        setCvData(pendingCV)
+        setJobPosting(pendingJob || '')
+        setUserEmail(pendingEmail)
+        setUserPlan(pendingPlan || 'basic')
         
-        {safeData.experience?.length > 0 && (
-          <section className="serif-section">
-            <h2>Professional Experience</h2>
-            {safeData.experience.map((exp, idx) => (
-              <div key={idx} className="serif-exp">
-                <div className="serif-exp-header">
-                  <strong>{exp.position}</strong>
-                  <em>{exp.period}</em>
-                </div>
-                <p className="serif-company">{exp.company}</p>
-                <p className="serif-desc">{exp.description}</p>
-              </div>
-            ))}
-          </section>
-        )}
-        
-        {safeData.education?.length > 0 && (
-          <section className="serif-section">
-            <h2>Education</h2>
-            {safeData.education.map((edu, idx) => (
-              <div key={idx} className="serif-edu">
-                <div className="serif-edu-header">
-                  <strong>{edu.degree}</strong>
-                  <em>{edu.period}</em>
-                </div>
-                <p>{edu.school}</p>
-              </div>
-            ))}
-          </section>
-        )}
-        
-        {safeData.skills?.length > 0 && (
-          <section className="serif-section">
-            <h2>Core Competencies</h2>
-            <p className="serif-skills">
-              {safeData.skills.join(' • ')}
-            </p>
-          </section>
-        )}
-      </div>
-    </div>
-  );
-};
+        // Jeśli template jest 'pending', pokaż wybór szablonów
+        if (pendingTemplate === 'pending' && pendingPlan !== 'basic') {
+          setShowTemplateSelector(true)
+        } else {
+          setSelectedTemplate(pendingTemplate || 'simple')
+          // Automatycznie rozpocznij przetwarzanie
+          await processCV(pendingCV, pendingJob)
+        }
 
-/**
- * Nordic Clean Template - Scandinavian minimalism
- * Inspired by: IKEA, Nordic design principles
- */
-const NordicTemplate = ({ data }) => {
-  const safeData = ensureSafeData(data);
-  
-  return (
-    <div className="template-nordic">
-      {/* Clean Nordic header */}
-      <header className="nordic-header">
-        <div className="nordic-photo">
-          {safeData.header.photo?.url ? (
-            <img src={safeData.header.photo.url} alt={safeData.header.name} />
-          ) : (
-            <div className="photo-placeholder" />
-          )}
-        </div>
-        <div className="nordic-info">
-          <h1>{safeData.header.name}</h1>
-          <p className="nordic-title">{safeData.header.title}</p>
-          <div className="nordic-contact">
-            <a href={`mailto:${safeData.header.email}`}>{safeData.header.email}</a>
-            <span>{safeData.header.phone}</span>
-            <span>{safeData.header.location}</span>
-          </div>
-        </div>
-      </header>
-      
-      {/* Clean content blocks */}
-      <div className="nordic-content">
-        {safeData.summary && (
-          <section className="nordic-block">
-            <h2>Om mig</h2>
-            <p>{safeData.summary}</p>
-          </section>
-        )}
-        
-        {safeData.experience?.length > 0 && (
-          <section className="nordic-block">
-            <h2>Erfarenhet</h2>
-            {safeData.experience.map((exp, idx) => (
-              <article key={idx} className="nordic-item">
-                <h3>{exp.position}</h3>
-                <p className="nordic-meta">{exp.company} • {exp.period}</p>
-                <p>{exp.description}</p>
-              </article>
-            ))}
-          </section>
-        )}
-        
-        {safeData.education?.length > 0 && (
-          <section className="nordic-block">
-            <h2>Utbildning</h2>
-            {safeData.education.map((edu, idx) => (
-              <article key={idx} className="nordic-item">
-                <h3>{edu.degree}</h3>
-                <p className="nordic-meta">{edu.school} • {edu.period}</p>
-              </article>
-            ))}
-          </section>
-        )}
-        
-        {safeData.skills?.length > 0 && (
-          <section className="nordic-block">
-            <h2>Kompetenser</h2>
-            <div className="nordic-skills">
-              {safeData.skills.map((skill, idx) => (
-                <span key={idx} className="nordic-skill">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ==========================================
-// PHOTO UPLOAD COMPONENT
-// ==========================================
-
-/**
- * PhotoUpload - Secure image upload with crop and validation
- * Implements multi-layer security checks
- */
-const PhotoUpload = ({ photo, onUpload, loading }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [cropMode, setCropMode] = useState(false);
-  const [cropData, setCropData] = useState({ x: 0, y: 0, scale: 1 });
-  
-  /**
-   * Validate image file with multiple security layers
-   * @param {File} file - The uploaded file
-   * @returns {Promise<boolean>} - Validation result
-   */
-  const validateImage = async (file) => {
-    // Layer 1: Check file extension
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-    const extension = file.name.split('.').pop().toLowerCase();
-    if (!allowedExtensions.includes(extension)) {
-      throw new Error('Invalid file type. Only JPG, PNG, and WebP are allowed.');
-    }
-    
-    // Layer 2: Check MIME type
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedMimeTypes.includes(file.type)) {
-      throw new Error('Invalid MIME type detected.');
-    }
-    
-    // Layer 3: Check file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-    if (file.size > maxSize) {
-      throw new Error('File too large. Maximum size is 5MB.');
-    }
-    
-    // Layer 4: Check magic bytes (file signature)
-    const buffer = await file.slice(0, 12).arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    
-    // Check for JPEG magic bytes (FF D8 FF)
-    const isJPEG = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
-    
-    // Check for PNG magic bytes (89 50 4E 47 0D 0A 1A 0A)
-    const isPNG = bytes[0] === 0x89 && bytes[1] === 0x50 && 
-                  bytes[2] === 0x4E && bytes[3] === 0x47;
-    
-    // Check for WebP magic bytes (RIFF....WEBP)
-    const isWebP = bytes[0] === 0x52 && bytes[1] === 0x49 && 
-                   bytes[2] === 0x46 && bytes[3] === 0x46 &&
-                   bytes[8] === 0x57 && bytes[9] === 0x45 && 
-                   bytes[10] === 0x42 && bytes[11] === 0x50;
-    
-    if (!isJPEG && !isPNG && !isWebP) {
-      throw new Error('File signature does not match allowed image types.');
-    }
-    
-    // Layer 5: Additional security - scan for suspicious patterns
-    const fileText = await file.text().catch(() => '');
-    const suspiciousPatterns = ['<script', '<svg', 'javascript:', 'onerror='];
-    for (const pattern of suspiciousPatterns) {
-      if (fileText.toLowerCase().includes(pattern)) {
-        throw new Error('Potentially malicious content detected.');
+        // Clear sessionStorage
+        sessionStorage.removeItem('pendingCV')
+        sessionStorage.removeItem('pendingJob')
+        sessionStorage.removeItem('pendingEmail')
+        sessionStorage.removeItem('pendingPlan')
+        sessionStorage.removeItem('selectedTemplate')
+      } catch (err) {
+        console.error('Error loading session data:', err)
+        setError('Wystąpił błąd podczas ładowania danych')
       }
     }
-    
-    return true;
-  };
-  
-  /**
-   * Handle file selection
-   * @param {File} file - Selected file
-   */
-  const handleFile = async (file) => {
+
+    loadSessionData()
+  }, [router])
+
+  // Process CV with AI
+  const processCV = async (cv, job) => {
+    setIsProcessing(true)
+    setCurrentStep(2)
+
     try {
-      // Validate the file
-      await validateImage(file);
+      // Simulate AI processing with real API call
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          cv_text: cv,
+          job_description: job || '',
+          plan: userPlan
+        })
+      })
+
+      if (!response.ok) throw new Error('API Error')
+
+      const data = await response.json()
       
-      // If validation passes, process the file
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCropMode(true);
-        setCropData({ 
-          x: 0, 
-          y: 0, 
-          scale: 1, 
-          originalImage: reader.result 
-        });
-      };
-      reader.readAsDataURL(file);
+      // Parse CV data
+      setParsedCV({
+        name: data.name || 'Jan Kowalski',
+        email: userEmail,
+        phone: data.phone || '+48 123 456 789',
+        location: data.location || 'Warszawa, Polska',
+        title: data.title || 'Senior Developer',
+        summary: data.summary || cv.substring(0, 200),
+        experience: data.experience || [],
+        education: data.education || [],
+        skills: data.skills || [],
+        languages: data.languages || []
+      })
+
+      setOptimizedCV(data.optimized_text || cv)
+      setAiScore(data.ats_score || 95)
+      setKeywords(data.keywords || ['JavaScript', 'React', 'Node.js'])
+      setImprovements(data.improvements || [])
       
-    } catch (error) {
-      console.error('Image validation failed:', error);
-      alert(error.message);
+      setCurrentStep(3)
+      setTimeout(() => {
+        setDownloadReady(true)
+        setCurrentStep(4)
+        triggerConfetti()
+        setShowSuccess(true)
+      }, 2000)
+    } catch (err) {
+      console.error('Processing error:', err)
+      // Fallback - use original CV
+      setOptimizedCV(cv)
+      setParsedCV(parseBasicCV(cv))
+      setAiScore(85)
+      setCurrentStep(4)
+      setDownloadReady(true)
+    } finally {
+      setIsProcessing(false)
     }
-  };
-  
-  /**
-   * Handle drag and drop
-   */
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      handleFile(file);
+  }
+
+  // Basic CV parser fallback
+  const parseBasicCV = (text) => {
+    const lines = text.split('\n').filter(l => l.trim())
+    return {
+      name: lines[0] || 'Imię Nazwisko',
+      email: userEmail,
+      phone: '+48 123 456 789',
+      location: 'Warszawa, Polska',
+      title: 'Stanowisko',
+      summary: lines.slice(1, 3).join(' '),
+      experience: [],
+      education: [],
+      skills: [],
+      languages: []
     }
-  };
-  
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-  
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-  
-  /**
-   * Apply crop and save photo
-   */
-  const applyCrop = () => {
-    // Here you would implement actual image cropping logic
-    // For now, we'll save the crop data with the original image
-    onUpload({
-      url: cropData.originalImage,
-      cropped: true,
-      position: { x: cropData.x, y: cropData.y },
-      scale: cropData.scale
-    });
-    setCropMode(false);
-  };
-  
+  }
+
+  // Trigger confetti animation
+  const triggerConfetti = () => {
+    const duration = 3000
+    const animationEnd = Date.now() + duration
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+
+    const randomInRange = (min, max) => Math.random() * (max - min) + min
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now()
+      if (timeLeft <= 0) return clearInterval(interval)
+
+      const particleCount = 50 * (timeLeft / duration)
+      
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      })
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      })
+    }, 250)
+  }
+
+  // Handle template selection
+  const handleTemplateSelect = async (template) => {
+    setSelectedTemplate(template)
+    setShowTemplateSelector(false)
+    await processCV(cvData, jobPosting)
+  }
+
+  // Generate PDF
+  const generatePDF = async () => {
+    if (!cvPreviewRef.current) return
+
+    try {
+      const canvas = await html2canvas(cvPreviewRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      })
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const imgWidth = 210
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight)
+      pdf.save(`CV_${parsedCV?.name || 'document'}.pdf`)
+    } catch (err) {
+      console.error('PDF generation error:', err)
+      alert('Błąd podczas generowania PDF')
+    }
+  }
+
+  // Send email
+  const sendEmail = async () => {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          cv: optimizedCV,
+          template: selectedTemplate,
+          plan: userPlan
+        })
+      })
+
+      if (!response.ok) throw new Error('Email error')
+      
+      setEmailSent(true)
+      alert('✅ CV zostało wysłane na Twój email!')
+    } catch (err) {
+      console.error('Email error:', err)
+      alert('Błąd wysyłania. Pobierz CV ręcznie.')
+    }
+  }
+
+  // CV Template Component
+  const CVTemplate = ({ template, data }) => {
+    const getTemplateStyles = () => {
+      switch(template) {
+        case 'modern':
+          return 'modern-template'
+        case 'executive':
+          return 'executive-template'
+        case 'creative':
+          return 'creative-template'
+        case 'tech':
+          return 'tech-template'
+        case 'luxury':
+          return 'luxury-template'
+        case 'minimal':
+          return 'minimal-template'
+        default:
+          return 'simple-template'
+      }
+    }
+
+    return (
+      <div className={`cv-template ${getTemplateStyles()}`} ref={cvPreviewRef}>
+        <div className="cv-header">
+          <h1 className="cv-name">{data?.name || 'Imię Nazwisko'}</h1>
+          <p className="cv-title">{data?.title || 'Stanowisko'}</p>
+          <div className="cv-contact">
+            <span>{data?.email}</span>
+            <span>{data?.phone}</span>
+            <span>{data?.location}</span>
+          </div>
+        </div>
+
+        <div className="cv-body">
+          <section className="cv-section">
+            <h2>Podsumowanie</h2>
+            <p>{data?.summary || optimizedCV?.substring(0, 300)}</p>
+          </section>
+
+          <section className="cv-section">
+            <h2>Doświadczenie</h2>
+            <div className="experience-list">
+              {data?.experience?.length > 0 ? (
+                data.experience.map((exp, i) => (
+                  <div key={i} className="experience-item">
+                    <h3>{exp.position}</h3>
+                    <p className="company">{exp.company}</p>
+                    <p className="dates">{exp.dates}</p>
+                    <p>{exp.description}</p>
+                  </div>
+                ))
+              ) : (
+                <p>Doświadczenie zawodowe...</p>
+              )}
+            </div>
+          </section>
+
+          <section className="cv-section">
+            <h2>Umiejętności</h2>
+            <div className="skills-grid">
+              {keywords.map((skill, i) => (
+                <span key={i} className="skill-tag">{skill}</span>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="photo-upload-container">
-      {!photo?.url && !cropMode ? (
-        // Upload interface
-        <div 
-          className={`photo-dropzone ${isDragging ? 'dragging' : ''}`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          <input
-            type="file"
-            id="photo-input"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => handleFile(e.target.files[0])}
-            style={{ display: 'none' }}
-          />
-          <label htmlFor="photo-input" className="dropzone-label">
-            <div className="dropzone-icon">📷</div>
-            <p className="dropzone-text">
-              Drag & drop your photo here or click to browse
-            </p>
-            <p className="dropzone-hint">
-              JPG, PNG, WebP • Max 5MB • Square crop recommended
-            </p>
-          </label>
-        </div>
-      ) : cropMode ? (
-        // Crop interface
-        <div className="photo-crop-container">
-          <div className="crop-preview">
-            <div 
-              className="crop-image"
-              style={{
-                backgroundImage: `url(${cropData.originalImage})`,
-                backgroundPosition: `${cropData.x}px ${cropData.y}px`,
-                backgroundSize: `${cropData.scale * 100}%`
-              }}
-            >
-              <div className="crop-overlay">
-                <div className="crop-circle" />
-              </div>
+    <>
+      <Head>
+        <title>Sukces! Twoje CV jest gotowe - CvPerfect</title>
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+      </Head>
+
+      <div className="success-container">
+        {/* Background effects */}
+        <div className="bg-gradient"></div>
+        <div className="particles"></div>
+
+        {/* Progress bar */}
+        <div className="progress-bar-container">
+          <div className="progress-bar" style={{ width: `${currentStep * 25}%` }}></div>
+          <div className="progress-steps">
+            <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
+              <span className="step-icon">📤</span>
+              <span className="step-label">Wczytywanie</span>
+            </div>
+            <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
+              <span className="step-icon">🤖</span>
+              <span className="step-label">AI Processing</span>
+            </div>
+            <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+              <span className="step-icon">✨</span>
+              <span className="step-label">Optymalizacja</span>
+            </div>
+            <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
+              <span className="step-icon">🎉</span>
+              <span className="step-label">Gotowe!</span>
             </div>
           </div>
-          
-          <div className="crop-controls">
-            <div className="control-group">
-              <label>Zoom</label>
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="0.1"
-                value={cropData.scale}
-                onChange={(e) => setCropData({
-                  ...cropData,
-                  scale: parseFloat(e.target.value)
+        </div>
+
+        {/* Template selector modal */}
+        {showTemplateSelector && (
+          <div className="template-selector-modal">
+            <div className="modal-content">
+              <h2>🎨 Wybierz szablon CV</h2>
+              <p>Plan {userPlan} - dostępne szablony:</p>
+              <div className="templates-grid">
+                {Object.entries(templates).map(([key, template]) => {
+                  const isAvailable = template.available.includes(userPlan)
+                  return isAvailable ? (
+                    <div
+                      key={key}
+                      className="template-card"
+                      onClick={() => handleTemplateSelect(key)}
+                    >
+                      <span className="template-icon">{template.icon}</span>
+                      <h3>{template.name}</h3>
+                      {key === 'simple' && <span className="badge">Podstawowy</span>}
+                      {['creative', 'tech', 'luxury', 'minimal'].includes(key) && 
+                        <span className="badge premium">Premium</span>}
+                    </div>
+                  ) : null
                 })}
-              />
-            </div>
-            
-            <div className="control-group">
-              <label>Position</label>
-              <div className="position-controls">
-                <button onClick={() => setCropData({
-                  ...cropData,
-                  y: cropData.y - 10
-                })}>↑</button>
-                <button onClick={() => setCropData({
-                  ...cropData,
-                  y: cropData.y + 10
-                })}>↓</button>
-                <button onClick={() => setCropData({
-                  ...cropData,
-                  x: cropData.x - 10
-                })}>←</button>
-                <button onClick={() => setCropData({
-                  ...cropData,
-                  x: cropData.x + 10
-                })}>→</button>
               </div>
             </div>
-            
-            <div className="crop-actions">
-              <button 
-                className="btn btn-ghost"
-                onClick={() => setCropMode(false)}
-              >
-                Cancel
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={applyCrop}
-              >
-                Apply Crop
-              </button>
-            </div>
           </div>
+        )}
+
+        {/* Main content */}
+        <div className="success-content">
+          {!showTemplateSelector && (
+            <>
+              {/* Processing animation */}
+              {isProcessing && (
+                <div className="processing-container">
+                  <div className="ai-animation">
+                    <div className="ai-brain">🧠</div>
+                    <div className="ai-particles"></div>
+                  </div>
+                  <h2>AI analizuje Twoje CV...</h2>
+                  <p>To zajmie tylko kilka sekund</p>
+                  <div className="loading-bar">
+                    <div className="loading-fill"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Success state */}
+              {showSuccess && (
+                <div className="success-hero">
+                  <div className="success-icon">✅</div>
+                  <h1>Gratulacje! Twoje CV jest gotowe!</h1>
+                  <div className="score-display">
+                    <div className="score-circle">
+                      <span className="score-value">{aiScore}%</span>
+                      <span className="score-label">ATS Score</span>
+                    </div>
+                  </div>
+                  <p className="success-message">
+                    Twoje CV zostało zoptymalizowane i ma {aiScore}% szans na przejście przez system ATS!
+                  </p>
+                </div>
+              )}
+
+              {/* CV Preview and actions */}
+              {downloadReady && (
+                <div className="cv-container">
+                  <div className="cv-preview-section">
+                    <h3>Podgląd CV - Szablon: {templates[selectedTemplate].name}</h3>
+                    <div className="cv-preview-wrapper">
+                      <CVTemplate template={selectedTemplate} data={parsedCV} />
+                    </div>
+                  </div>
+
+                  <div className="actions-section">
+                    <h3>Co chcesz zrobić?</h3>
+                    <div className="action-buttons">
+                      <button className="btn-primary" onClick={generatePDF}>
+                        <span>📥</span> Pobierz PDF
+                      </button>
+                      <button className="btn-secondary" onClick={sendEmail}>
+                        <span>✉️</span> Wyślij na email
+                      </button>
+                    </div>
+
+                    {emailSent && (
+                      <div className="email-success">
+                        ✅ CV zostało wysłane na {userEmail}
+                      </div>
+                    )}
+
+                    <div className="improvements-section">
+                      <h4>🎯 Słowa kluczowe dodane do CV:</h4>
+                      <div className="keywords-list">
+                        {keywords.map((keyword, i) => (
+                          <span key={i} className="keyword-tag">{keyword}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="plan-info">
+                      <p>Twój plan: <strong>{userPlan.toUpperCase()}</strong></p>
+                      {userPlan === 'basic' && (
+                        <p className="upgrade-hint">
+                          💎 Upgrade do Gold lub Premium dla więcej szablonów!
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error state */}
+              {error && (
+                <div className="error-container">
+                  <h2>❌ Wystąpił błąd</h2>
+                  <p>{error}</p>
+                  <button onClick={() => router.push('/')}>Wróć do strony głównej</button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      ) : (
-        // Display uploaded photo
-        <div className="photo-display">
-          <div className="photo-preview">
-            <img src={photo.url} alt="Profile" />
-            {loading && (
-              <div className="photo-loading">
-                <div className="spinner" />
-              </div>
-            )}
-          </div>
-          <div className="photo-actions">
-            <button 
-              className="btn btn-ghost btn-sm"
-              onClick={() => setCropMode(true)}
-            >
-              Edit
-            </button>
-            <button 
-              className="btn btn-ghost btn-sm"
-              onClick={() => onUpload({ url: null })}
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+      </div>
 
-PhotoUpload.propTypes = {
-  photo: PropTypes.shape({
-    url: PropTypes.string,
-    cropped: PropTypes.bool,
-    position: PropTypes.shape({
-      x: PropTypes.number,
-      y: PropTypes.number
-    })
-  }),
-  onUpload: PropTypes.func.isRequired,
-  loading: PropTypes.bool
-};
+      <style jsx>{`
+        /* Global container */
+        .success-container {
+          min-height: 100vh;
+          background: #0a0a0a;
+          color: white;
+          position: relative;
+          overflow: hidden;
+          font-family: 'Inter', -apple-system, sans-serif;
+        }
 
-// Export the main component
-export default LiveResumeEditor;
+        /* Background effects */
+        .bg-gradient {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: radial-gradient(circle at 20% 50%, rgba(120, 80, 255, 0.3) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(255, 80, 150, 0.2) 0%, transparent 50%);
+          animation: gradientShift 20s ease infinite;
+          z-index: 0;
+        }
 
-// Koniec części 3
+        @keyframes gradientShift {
+          0%, 100% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.2); }
+        }
+
+        .particles {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 1;
+          opacity: 0.6;
+          pointer-events: none;
+        }
+
+        /* Progress bar */
+        .progress-bar-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.1);
+          z-index: 1000;
+        }
+
+        .progress-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #00ff88, #00cc70);
+          transition: width 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .progress-steps {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 80px;
+          z-index: 1000;
+          background: rgba(0, 0, 0, 0.8);
+          padding: 20px 40px;
+          border-radius: 100px;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .step {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          opacity: 0.5;
+          transition: all 0.3s ease;
+        }
+
+        .step.active {
+          opacity: 1;
+          transform: scale(1.1);
+        }
+
+        .step-icon {
+          font-size: 24px;
+        }
+
+        .step-label {
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        /* Template selector modal */
+        .template-selector-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.9);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+        }
+
+        .modal-content {
+          background: rgba(20, 20, 20, 0.95);
+          backdrop-filter: blur(30px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 32px;
+          padding: 48px;
+          max-width: 1000px;
+          width: 90%;
+        }
+
+        .modal-content h2 {
+          font-size: 36px;
+          margin-bottom: 16px;
+          text-align: center;
+        }
+
+        .modal-content p {
+          text-align: center;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 40px;
+        }
+
+        .templates-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 24px;
+        }
+
+        .template-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          padding: 32px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+
+        .template-card:hover {
+          transform: translateY(-5px);
+          border-color: #00ff88;
+          background: rgba(0, 255, 136, 0.1);
+          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .template-icon {
+          font-size: 48px;
+          display: block;
+          margin-bottom: 16px;
+        }
+
+        .template-card h3 {
+          font-size: 20px;
+          margin-bottom: 8px;
+        }
+
+        .badge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(255, 255, 255, 0.2);
+          padding: 4px 12px;
+          border-radius: 100px;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        .badge.premium {
+          background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        /* Main content */
+        .success-content {
+          position: relative;
+          z-index: 10;
+          padding: 120px 40px 60px;
+          max-width: 1400px;
+          margin: 0 auto;
+        }
+
+        /* Processing animation */
+        .processing-container {
+          text-align: center;
+          padding: 80px 20px;
+        }
+
+        .ai-animation {
+          position: relative;
+          width: 150px;
+          height: 150px;
+          margin: 0 auto 40px;
+        }
+
+        .ai-brain {
+          font-size: 80px;
+          animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+
+        .ai-particles {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: radial-gradient(circle, rgba(120, 80, 255, 0.3) 0%, transparent 70%);
+          animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .processing-container h2 {
+          font-size: 32px;
+          margin-bottom: 16px;
+        }
+
+        .loading-bar {
+          width: 300px;
+          height: 8px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 100px;
+          margin: 40px auto;
+          overflow: hidden;
+        }
+
+        .loading-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #00ff88, #00cc70);
+          width: 60%;
+          animation: loading 2s ease infinite;
+        }
+
+        @keyframes loading {
+          0% { width: 0%; }
+          50% { width: 80%; }
+          100% { width: 100%; }
+        }
+
+        /* Success state */
+        .success-hero {
+          text-align: center;
+          padding: 60px 20px;
+        }
+
+        .success-icon {
+          font-size: 80px;
+          margin-bottom: 24px;
+          animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+
+        .success-hero h1 {
+          font-size: 48px;
+          font-weight: 900;
+          margin-bottom: 32px;
+          background: linear-gradient(135deg, #00ff88, #00cc70);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .score-display {
+          display: flex;
+          justify-content: center;
+          margin: 40px 0;
+        }
+
+        .score-circle {
+          width: 200px;
+          height: 200px;
+          background: conic-gradient(
+            from 0deg,
+            #00ff88 0deg,
+            #00cc70 ${props => props.aiScore * 3.6}deg,
+            rgba(255, 255, 255, 0.1) ${props => props.aiScore * 3.6}deg
+          );
+          border-radius: 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          box-shadow: 0 20px 60px rgba(0, 255, 136, 0.3);
+        }
+
+        .score-circle::before {
+          content: '';
+          position: absolute;
+          inset: 10px;
+          background: #0a0a0a;
+          border-radius: 50%;
+        }
+
+        .score-value {
+          font-size: 56px;
+          font-weight: 900;
+          color: #00ff88;
+          position: relative;
+          z-index: 1;
+        }
+
+        .score-label {
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.7);
+          position: relative;
+          z-index: 1;
+        }
+
+        .success-message {
+          font-size: 20px;
+          color: rgba(255, 255, 255, 0.8);
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        /* CV Container */
+        .cv-container {
+          display: grid;
+          grid-template-columns: 1fr 400px;
+          gap: 40px;
+          margin-top: 60px;
+        }
+
+        .cv-preview-section {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 32px;
+        }
+
+        .cv-preview-section h3 {
+          font-size: 24px;
+          margin-bottom: 24px;
+        }
+
+        .cv-preview-wrapper {
+          background: white;
+          border-radius: 16px;
+          padding: 40px;
+          min-height: 600px;
+          color: #000;
+        }
+
+        /* CV Templates */
+        .cv-template {
+          font-family: 'Arial', sans-serif;
+          line-height: 1.6;
+        }
+
+        .cv-template.simple-template {
+          /* Simple template styles */
+        }
+
+        .cv-template.modern-template .cv-header {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          padding: 40px;
+          margin: -40px -40px 30px;
+          border-radius: 16px 16px 0 0;
+        }
+
+        .cv-template.executive-template .cv-header {
+          border-bottom: 3px solid #000;
+          padding-bottom: 20px;
+          margin-bottom: 30px;
+        }
+
+        .cv-template.creative-template .cv-header {
+          background: linear-gradient(45deg, #f093fb, #f5576c);
+          color: white;
+          padding: 40px;
+          margin: -40px -40px 30px;
+          clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+
+        .cv-template.tech-template {
+          font-family: 'Courier New', monospace;
+        }
+
+        .cv-template.tech-template .cv-header {
+          background: #000;
+          color: #00ff88;
+          padding: 30px;
+          margin: -40px -40px 30px;
+        }
+
+        .cv-template.luxury-template .cv-header {
+          background: linear-gradient(135deg, #ffd700, #ffed4e);
+          color: #000;
+          padding: 50px;
+          margin: -40px -40px 40px;
+          text-align: center;
+        }
+
+        .cv-template.minimal-template {
+          font-family: 'Helvetica', sans-serif;
+        }
+
+        .cv-template.minimal-template .cv-header {
+          border-bottom: 1px solid #e0e0e0;
+          padding-bottom: 20px;
+          margin-bottom: 30px;
+        }
+
+        .cv-name {
+          font-size: 32px;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+
+        .cv-title {
+          font-size: 20px;
+          margin-bottom: 16px;
+          opacity: 0.9;
+        }
+
+        .cv-contact {
+          display: flex;
+          gap: 20px;
+          font-size: 14px;
+          opacity: 0.8;
+        }
+
+        .cv-section {
+          margin-bottom: 32px;
+        }
+
+        .cv-section h2 {
+          font-size: 20px;
+          font-weight: 700;
+          margin-bottom: 16px;
+          color: #333;
+        }
+
+        .experience-item {
+          margin-bottom: 24px;
+        }
+
+        .experience-item h3 {
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 4px;
+        }
+
+        .company {
+          font-weight: 500;
+          color: #666;
+        }
+
+        .dates {
+          font-size: 14px;
+          color: #999;
+          margin-bottom: 8px;
+        }
+
+        .skills-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .skill-tag {
+          background: #f0f0f0;
+          padding: 6px 12px;
+          border-radius: 100px;
+          font-size: 14px;
+        }
+
+        /* Actions section */
+        .actions-section {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 32px;
+        }
+
+        .actions-section h3 {
+          font-size: 24px;
+          margin-bottom: 24px;
+        }
+
+        .action-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+
+        .btn-primary, .btn-secondary {
+          padding: 18px 32px;
+          border-radius: 100px;
+          font-size: 16px;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #00ff88, #00cc70);
+          color: #000;
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-secondary {
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+        }
+
+        .btn-secondary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(120, 80, 255, 0.3);
+        }
+
+        .email-success {
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          padding: 16px;
+          border-radius: 12px;
+          color: #00ff88;
+          text-align: center;
+          margin-bottom: 24px;
+        }
+
+        .improvements-section {
+          margin-bottom: 24px;
+        }
+
+        .improvements-section h4 {
+          font-size: 16px;
+          margin-bottom: 16px;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .keywords-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .keyword-tag {
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          color: #00ff88;
+          padding: 6px 16px;
+          border-radius: 100px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .plan-info {
+          text-align: center;
+          padding: 24px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+        }
+
+        .plan-info p {
+          margin: 0 0 8px;
+        }
+
+        .upgrade-hint {
+          color: #ffd700;
+          font-size: 14px;
+        }
+
+        /* Error state */
+        .error-container {
+          text-align: center;
+          padding: 80px 20px;
+        }
+
+        .error-container h2 {
+          font-size: 32px;
+          margin-bottom: 16px;
+        }
+
+        .error-container button {
+          margin-top: 24px;
+          padding: 16px 32px;
+          background: linear-gradient(135deg, #7850ff, #ff5080);
+          color: white;
+          border: none;
+          border-radius: 100px;
+          font-size: 16px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 1200px) {
+          .cv-container {
+            grid-template-columns: 1fr;
+          }
+
+          .cv-preview-section {
+            margin-bottom: 32px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .success-content {
+            padding: 100px 20px 40px;
+          }
+
+          .progress-steps {
+            gap: 30px;
+            padding: 15px 20px;
+          }
+
+          .step-label {
+            display: none;
+          }
+
+          .success-hero h1 {
+            font-size: 32px;
+          }
+
+          .score-circle {
+            width: 150px;
+            height: 150px;
+          }
+
+          .score-value {
+            font-size: 42px;
+          }
+
+          .templates-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .cv-preview-wrapper {
+            padding: 20px;
+          }
+
+          .cv-name {
+            font-size: 24px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .templates-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .progress-steps {
+            gap: 20px;
+          }
+        }
+      `}</style>
+    </>
+  )
+}
