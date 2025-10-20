@@ -4,7 +4,7 @@ import Head from 'next/head'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import confetti from 'canvas-confetti'
-import html2pdf from 'html2pdf.js'
+// html2pdf will be loaded dynamically on client-side only
 
 export default function Success() {
   const router = useRouter()
@@ -331,36 +331,34 @@ export default function Success() {
     if (!cvPreviewRef.current) return
 
     try {
-      // Use html2pdf.js which respects @media print CSS
-      // This preserves text as selectable text in PDF (ATS-compatible!)
       const element = cvPreviewRef.current
       const fileName = `CV_${parsedCV?.name?.replace(/\s+/g, '_') || 'document'}.pdf`
 
-      const opt = {
-        margin: 0, // No margin - CSS @media print handles it
-        filename: fileName,
-        image: { type: 'jpeg', quality: 0.98 },
+      // Create PDF with jsPDF - respects @media print CSS
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
+      })
+
+      // Use jsPDF.html() which preserves text and respects @media print
+      await pdf.html(element, {
+        callback: function (doc) {
+          doc.save(fileName)
+          console.log('✅ PDF downloaded:', fileName)
+        },
+        x: 0,
+        y: 0,
+        width: 210, // A4 width in mm
+        windowWidth: 800,
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
+          logging: false,
         },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-          compress: true,
-        },
-        pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy'],
-          before: '.cv-section',
-        }
-      }
-
-      // Generate and download PDF
-      await html2pdf().set(opt).from(element).save()
-
-      console.log('✅ PDF downloaded:', fileName)
+      })
     } catch (err) {
       console.error('❌ PDF generation error:', err)
       alert('Błąd podczas generowania PDF. Spróbuj ponownie.')
