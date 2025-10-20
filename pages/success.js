@@ -4,6 +4,7 @@ import Head from 'next/head'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import confetti from 'canvas-confetti'
+import html2pdf from 'html2pdf.js'
 
 export default function Success() {
   const router = useRouter()
@@ -330,32 +331,39 @@ export default function Success() {
     if (!cvPreviewRef.current) return
 
     try {
-      // Use browser's native print function with @media print CSS
+      // Use html2pdf.js which respects @media print CSS
       // This preserves text as selectable text in PDF (ATS-compatible!)
-      window.print()
+      const element = cvPreviewRef.current
+      const fileName = `CV_${parsedCV?.name?.replace(/\s+/g, '_') || 'document'}.pdf`
 
-      // Alternative: For more control, use jsPDF.html() which preserves text
-      // Uncomment below if you want programmatic PDF download:
-      /*
-      const pdf = new jsPDF('p', 'pt', 'a4')
-
-      await pdf.html(cvPreviewRef.current, {
-        callback: function (doc) {
-          doc.save(`CV_${parsedCV?.name || 'document'}.pdf`)
-        },
-        x: 72,    // 1 inch = 72 pt
-        y: 72,
-        width: 468, // A4 width (8.5in) - 2in margins = 6.5in * 72pt
-        windowWidth: 800,
+      const opt = {
+        margin: 0, // No margin - CSS @media print handles it
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-          scale: 0.75,
+          scale: 2,
           useCORS: true,
+          letterRendering: true,
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait',
+          compress: true,
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'],
+          before: '.cv-section',
         }
-      })
-      */
+      }
+
+      // Generate and download PDF
+      await html2pdf().set(opt).from(element).save()
+
+      console.log('✅ PDF downloaded:', fileName)
     } catch (err) {
-      console.error('PDF generation error:', err)
-      alert('Błąd podczas generowania PDF. Użyj Ctrl+P / Cmd+P aby wydrukować.')
+      console.error('❌ PDF generation error:', err)
+      alert('Błąd podczas generowania PDF. Spróbuj ponownie.')
     }
   }
 
@@ -784,8 +792,8 @@ export default function Success() {
                       <p className="cv-subtitle">Szablon: {templates[selectedTemplate].name} • Plan: {userPlan.toUpperCase()}</p>
                     </div>
                     <div className="actions-right">
-                      <button className="btn-primary" onClick={generatePDF} title="Drukuj/Zapisz jako PDF - tekst pozostaje edytowalny (ATS-friendly!)">
-                        <span>🖨️</span> Drukuj/Zapisz PDF
+                      <button className="btn-primary" onClick={generatePDF} title="Pobierz jako PDF - tekst pozostaje edytowalny (ATS-friendly!)">
+                        <span>📥</span> Pobierz PDF
                       </button>
                       <button className="btn-secondary" onClick={sendEmail}>
                         <span>✉️</span> Wyślij email
