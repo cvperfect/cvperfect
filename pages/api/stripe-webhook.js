@@ -119,8 +119,7 @@ export default async function handler(req, res) {
           stripe_customer_id: session.customer, // Zapisz ID klienta Stripe
           stripe_subscription_id: session.subscription || null,
           expires_at: expiresAt,
-          last_payment_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          last_payment_at: new Date().toISOString()
         }, {
           onConflict: 'email',
           ignoreDuplicates: false // Zawsze aktualizuj przy konflikcie

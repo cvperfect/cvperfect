@@ -7,11 +7,11 @@ export default async function handler(req, res) {
   }
   
   // Pobierz parametry z POST lub GET
-  const { plan, email, priceId, cv, job } = req.method === 'POST' ? req.body : req.query
-  
+  const { plan, email, priceId } = req.method === 'POST' ? req.body : req.query
+
   let finalPriceId
   let mode = 'payment'
-  
+
   try {
     // Określ cenę i tryb płatności
     if (priceId) {
@@ -29,11 +29,11 @@ export default async function handler(req, res) {
           break
         case 'gold':
         case 'pro':
-          finalPriceId = 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł miesięcznie (musisz zmienić na właściwy price ID)
+          finalPriceId = 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł miesięcznie
           mode = 'subscription'
           break
         case 'premium-monthly':
-          finalPriceId = 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł miesięcznie (musisz zmienić na właściwy price ID)
+          finalPriceId = 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł miesięcznie
           mode = 'subscription'
           break
         default:
@@ -41,35 +41,26 @@ export default async function handler(req, res) {
           mode = 'payment'
       }
     }
-    
-    // Przygotuj metadata z CV i job posting
+
+    // Przygotuj metadata (CV i job posting są w sessionStorage klienta)
     const metadata = {
       plan: plan || 'direct',
       email: email || '',
       timestamp: Date.now().toString(),
       userId: 'user_' + Math.random().toString(36).substr(2, 9)
     }
-    
-    // Dodaj CV do metadata jeśli istnieje (Stripe ma limit 500 znaków per pole)
-    if (cv) {
-      // Ogranicz do 400 znaków dla bezpieczeństwa
-      metadata.cv = cv.substring(0, 400)
-    }
-    
-    // Dodaj job posting do metadata jeśli istnieje
-    if (job) {
-      // Ogranicz do 200 znaków
-      metadata.job = job.substring(0, 200)
-    }
-    
+
     console.log('🎯 Creating checkout session:', {
       plan: plan,
       email: email,
-      mode: mode,
-      hasCV: !!cv,
-      hasJob: !!job
+      mode: mode
     })
     
+    // Określ URL bazowy (development vs production)
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? process.env.NEXT_PUBLIC_BASE_URL || 'https://cvperfect.com'
+      : `http://localhost:${process.env.PORT || 3000}`
+
     // Utwórz sesję Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: mode === 'payment' ? ['card', 'blik'] : ['card'],
@@ -80,8 +71,8 @@ export default async function handler(req, res) {
       mode: mode,
       customer_email: email,
       metadata: metadata,
-      success_url: `http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}`,
-      cancel_url: `http://localhost:3000/`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}`,
+      cancel_url: `${baseUrl}/`,
       // Dodaj opis produktu dla lepszego UX
       locale: 'pl', // Polski język w Stripe Checkout
       payment_intent_data: mode === 'payment' ? {

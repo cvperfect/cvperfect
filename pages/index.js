@@ -3,6 +3,12 @@ import CVAnalysisDashboard from '../components/CVAnalysisDashboard'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Footer from '../components/Footer'
+import * as pdfjsLib from 'pdfjs-dist'
+
+// Konfiguracja PDF.js worker
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`
+}
 
 
 
@@ -71,6 +77,7 @@ const [dragActive, setDragActive] = useState(false);
 const [uploadProgress, setUploadProgress] = useState(0);
 
 const [savedCV, setSavedCV] = useState('');
+const [savedCVImage, setSavedCVImage] = useState(null); // NOWE: PNG pierwszej strony dla Visual AI
 
 const [errors, setErrors] = useState({});
 // Modal state control
@@ -476,75 +483,172 @@ useEffect(() => {
 }, [typingText, typingIndex, isDeleting, loopNum, typingSpeed, typingPhrases]);
 
 
-// Obsługa powrotu ze Stripe i automatyczna optymalizacja
-useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const sessionId = urlParams.get('session_id');
-  
-  if (sessionId && !window.location.pathname.includes('/success')) {
-    // Pobierz zapisane dane
-    const pendingCV = sessionStorage.getItem('pendingCV');
-    const pendingJob = sessionStorage.getItem('pendingJob');
-    const pendingEmail = sessionStorage.getItem('pendingEmail');
-    const pendingPlan = sessionStorage.getItem('pendingPlan');
-    
-    if (pendingCV && pendingEmail) {
-      console.log('🔄 Powrót z płatności, przekierowuję na stronę sukcesu...');
-      
-      // Wyczyść dane tymczasowe
-      sessionStorage.removeItem('pendingCV');
-      sessionStorage.removeItem('pendingJob');
-      sessionStorage.removeItem('pendingEmail');
-      sessionStorage.removeItem('pendingPlan');
-      
-      // Przekieruj na stronę sukcesu z danymi
-      window.location.href = `/success?session_id=${sessionId}`;
-    }
-  }
-}, []);
+
+// Funkcja parsująca PDF po stronie klienta - ZWRACA TEKST + PNG PIERWSZEJ STRONY
+const parsePDFFile = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const arrayBuffer = e.target.result;
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+
+        let fullText = '';
+        let firstPageImage = null;
+
+        // Przejdź przez wszystkie strony
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+
+          // === NOWE: Renderuj pierwszą stronę do PNG dla Visual AI ===
+          if (pageNum === 1) {
+            console.log('📸 Rendering first page to PNG for Visual AI...');
+            const viewport = page.getViewport({ scale: 2.0 }); // 2x scale for better quality
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({
+              canvasContext: context,
+              viewport: viewport
+            }).promise;
+
+            // Konwertuj canvas do PNG base64
+            firstPageImage = canvas.toDataURL('image/png');
+            console.log('✅ First page rendered to PNG:', firstPageImage.substring(0, 100) + '...');
+          }
+
+          // === DOTYCHCZASOWA LOGIKA: Wyciągaj tekst ===
+          const textContent = await page.getTextContent();
+
+          // Buduj tekst z zachowaniem struktury
+          let lastY = null;
+          let pageText = '';
+
+          textContent.items.forEach((item, index) => {
+            const currentY = item.transform[5]; // pozycja Y
+
+            // Jeśli zmienia się pozycja Y (nowa linia), dodaj nową linię
+            if (lastY !== null && Math.abs(currentY - lastY) > 5) {
+              pageText += '\n';
+            }
+
+            // Dodaj tekst z odpowiednią separacją
+            if (item.str.trim()) {
+              // Sprawdź czy poprzedni element kończy się spacją lub obecny zaczyna
+              const needsSpace = pageText.length > 0 &&
+                               !pageText.endsWith(' ') &&
+                               !pageText.endsWith('\n') &&
+                               !item.str.startsWith(' ');
+
+              pageText += (needsSpace ? ' ' : '') + item.str;
+            }
+
+            lastY = currentY;
+          });
+
+          fullText += pageText + '\n\n';
+        }
+
+        // Zwróć obiekt z tekstem i obrazem
+        resolve({
+          text: fullText,
+          imageData: firstPageImage
+        });
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+};
 
 const handleFileInputChange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  
+
   // Sprawdź rozmiar
   if (file.size > 5 * 1024 * 1024) {
     alert(currentLanguage === 'pl' ? '❌ Plik jest za duży (max 5MB)' : '❌ File too large (max 5MB)');
     return;
   }
-  
+
   // Sprawdź format
   const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
   if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
     alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku' : '❌ Invalid file format');
     return;
   }
-  
-  // Symuluj upload progress
-  setUploadProgress(0);
-  const interval = setInterval(() => {
-    setUploadProgress(prev => {
-      if (prev >= 100) {
-        clearInterval(interval);
-        return 100;
-      }
-      return prev + 20;
-    });
-  }, 200);
-  
+
   // Zapisz plik
   setFormData(prev => ({
     ...prev,
     cvFile: file,
     cvFileName: file.name
   }));
-  
-  // Czytaj zawartość pliku
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    setSavedCV(event.target.result);
-  };
-  reader.readAsText(file);
+
+  // Sprawdź czy to PDF
+  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    console.log('📄 PDF detected, parsing...');
+    setUploadProgress(10);
+
+    // Parsuj PDF po stronie klienta
+    parsePDFFile(file)
+      .then(result => {
+        console.log('✅ PDF parsed, text length:', result.text.length);
+        console.log('✅ PDF image captured:', result.imageData ? 'YES' : 'NO');
+        console.log('🖼️ Image data length:', result.imageData ? result.imageData.length : 0, 'chars');
+
+        setSavedCV(result.text);
+        setSavedCVImage(result.imageData);
+
+        // 🔥 FIX: Zapisz obraz OD RAZU do sessionStorage (nie czekaj na React state!)
+        // To eliminuje race condition gdy user od razu kliknie "Zapłać"
+        if (result.imageData) {
+          try {
+            sessionStorage.setItem('pendingCVImage', result.imageData);
+            console.log('✅ CV image saved to sessionStorage IMMEDIATELY after parsing');
+          } catch (e) {
+            if (e.name === 'QuotaExceededError') {
+              console.error('❌ SessionStorage full! Image too large:', result.imageData.length, 'chars');
+              alert(currentLanguage === 'pl'
+                ? 'Obraz CV jest za duży. Kontynuuję bez zachowania formatu.'
+                : 'CV image too large. Continuing without format preservation.');
+            } else {
+              console.error('❌ Failed to save image to sessionStorage:', e.message);
+            }
+          }
+        } else {
+          console.warn('⚠️ No image data from PDF parser - Visual AI will be disabled');
+        }
+
+        setUploadProgress(100);
+      })
+      .catch(error => {
+        console.error('❌ PDF parsing error:', error);
+        alert(currentLanguage === 'pl' ? 'Błąd parsowania PDF. Spróbuj ponownie.' : 'PDF parsing error. Try again.');
+        setUploadProgress(0);
+        // Resetuj dane pliku
+        setFormData(prev => ({
+          ...prev,
+          cvFile: null,
+          cvFileName: ''
+        }));
+      });
+  } else {
+    // Dla zwykłych plików tekstowych
+    setUploadProgress(50);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSavedCV(event.target.result);
+      setUploadProgress(100);
+    };
+    reader.readAsText(file);
+  }
 };
 
 const handleDrag = (e) => {
@@ -561,44 +665,61 @@ const handleDrop = (e) => {
   e.preventDefault();
   e.stopPropagation();
   setDragActive(false);
-  
+
   if (e.dataTransfer.files && e.dataTransfer.files[0]) {
     const file = e.dataTransfer.files[0];
-    
+
     // Użyj tej samej logiki co handleFileInputChange
     if (file.size > 5 * 1024 * 1024) {
       alert(currentLanguage === 'pl' ? '❌ Plik jest za duży (max 5MB)' : '❌ File too large (max 5MB)');
       return;
     }
-    
+
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type) && !file.type.includes('word')) {
       alert(currentLanguage === 'pl' ? '❌ Nieprawidłowy format pliku' : '❌ Invalid file format');
       return;
     }
-    
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 20;
-      });
-    }, 200);
-    
+
     setFormData(prev => ({
       ...prev,
       cvFile: file,
       cvFileName: file.name
     }));
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSavedCV(event.target.result);
-    };
-    reader.readAsText(file);
+
+    // Sprawdź czy to PDF
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      console.log('📄 PDF detected (drag&drop), parsing...');
+      setUploadProgress(10);
+
+      // Parsuj PDF po stronie klienta
+      parsePDFFile(file)
+        .then(text => {
+          console.log('✅ PDF parsed, text length:', text.length);
+          setSavedCV(text);
+          setUploadProgress(100);
+        })
+        .catch(error => {
+          console.error('❌ PDF parsing error:', error);
+          alert(currentLanguage === 'pl' ? 'Błąd parsowania PDF. Spróbuj ponownie.' : 'PDF parsing error. Try again.');
+          setUploadProgress(0);
+          // Resetuj dane pliku
+          setFormData(prev => ({
+            ...prev,
+            cvFile: null,
+            cvFileName: ''
+          }));
+        });
+    } else {
+      // Dla zwykłych plików tekstowych
+      setUploadProgress(50);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSavedCV(event.target.result);
+        setUploadProgress(100);
+      };
+      reader.readAsText(file);
+    }
   }
 };
 
@@ -788,13 +909,13 @@ const handlePlanSelect = (plan) => {
   sessionStorage.setItem('pendingEmail', email);
   sessionStorage.setItem('pendingCV', cvText);
   sessionStorage.setItem('pendingJob', jobPosting);
-  
-  // Dla wszystkich planów - od razu do płatności
-  // Wybór szablonu będzie w success.js po płatności
-  sessionStorage.setItem('selectedTemplate', 'pending'); // oznaczymy jako "do wyboru"
-  
+  sessionStorage.setItem('pendingPlan', plan);
+  sessionStorage.setItem('selectedTemplate', 'simple'); // zawsze szablon simple
+
+  // ✅ CV image already saved to sessionStorage after PDF parsing (no race condition!)
+
   console.log('📤 Przekierowuję do Stripe dla planu:', plan);
-  proceedToCheckout(plan, 'pending');
+  proceedToCheckout(plan, 'simple');
 };
 
 const handlePayment = async (plan) => {
@@ -827,21 +948,12 @@ const handlePayment = async (plan) => {
   sessionStorage.setItem('pendingJob', jobPosting);
   sessionStorage.setItem('pendingEmail', email);
   sessionStorage.setItem('pendingPlan', plan);
-  
-  // LOGIKA SZABLONÓW:
-  // Basic - brak wyboru, domyślny szablon "simple"
-  // Pro/Gold - wybór z 3 szablonów
-  // Premium - wybór z 7 szablonów
-  
-  if (plan === 'basic') {
-    // Basic - od razu do płatności z domyślnym szablonem
-    sessionStorage.setItem('selectedTemplate', 'simple');
-    proceedToCheckout(plan, 'simple');
-  } else {
-    // Pro/Premium - pokaż modal z szablonami
-    setShowMainModal(true); // Zamknij modal z cenami
-    setShowTemplateModal(true); // Otwórz modal z szablonami
-  }
+  sessionStorage.setItem('selectedTemplate', 'simple'); // zawsze szablon simple
+
+  // ✅ CV image already saved to sessionStorage after PDF parsing (no race condition!)
+
+  // Dla wszystkich planów - od razu do płatności z domyślnym szablonem
+  proceedToCheckout(plan, 'simple');
 };
 
 
@@ -850,12 +962,12 @@ const proceedToCheckout = (plan, template) => {
   const email = sessionStorage.getItem('pendingEmail');
   const cvText = sessionStorage.getItem('pendingCV');
   const jobPosting = sessionStorage.getItem('pendingJob') || '';
-  
-  const cvPreview = cvText.substring(0, 400);
-  const jobPreview = jobPosting.substring(0, 200);
-  
-  // Przekieruj do Stripe (template ustawimy w success.js)
-  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}&cv=${encodeURIComponent(cvPreview)}&job=${encodeURIComponent(jobPreview)}`;
+
+  console.log('🚀 Proceeding to checkout:', { plan, email, hasCv: !!cvText, hasJob: !!jobPosting });
+
+  // WAŻNE: NIE czyścimy sessionStorage tutaj - będzie potrzebny po powrocie ze Stripe
+  // Przekieruj do Stripe (CV i Job zostają w sessionStorage)
+  window.location.href = `/api/create-checkout-session?plan=${plan}&email=${encodeURIComponent(email)}`;
 };
 
 // Testimonials data (12) — w PL pokazujemy 5 PL + 7 EN; w EN wszystkie EN

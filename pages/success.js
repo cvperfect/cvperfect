@@ -10,6 +10,7 @@ export default function Success() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [cvData, setCvData] = useState('')
+  const [cvImageData, setCvImageData] = useState(null) // NOWE: PNG pierwszej strony dla Visual AI
   const [jobPosting, setJobPosting] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [userPlan, setUserPlan] = useState('basic')
@@ -62,11 +63,12 @@ export default function Success() {
           // Wyciągnij dane z metadata
           const metadata = data.session.metadata || {}
           const cvText = sessionStorage.getItem('pendingCV') || metadata.cv || ''
+          const cvImage = sessionStorage.getItem('pendingCVImage') || null // NOWE: Obraz CV
           const jobText = sessionStorage.getItem('pendingJob') || metadata.job || ''
           const email = data.session.customer_email || metadata.email || ''
           const plan = planFromUrl || metadata.plan || 'basic'
 
-          console.log('✅ Session loaded:', { plan, email, hasCV: !!cvText, hasJob: !!jobText })
+          console.log('✅ Session loaded:', { plan, email, hasCV: !!cvText, hasJob: !!jobText, hasImage: !!cvImage })
 
           if (!cvText || !email) {
             console.error('❌ Missing CV or email')
@@ -76,6 +78,7 @@ export default function Success() {
           }
 
           setCvData(cvText)
+          setCvImageData(cvImage) // NOWE: Zapisz obraz CV
           setJobPosting(jobText)
           setUserEmail(email)
           setUserPlan(plan)
@@ -108,11 +111,12 @@ export default function Success() {
           // KROK 2: Zawsze używaj szablonu 'simple', bez wyboru
           setSelectedTemplate('simple')
 
-          // KROK 3: Automatycznie rozpocznij przetwarzanie CV (przekaż email)
-          await processCV(cvText, jobText, email)
+          // KROK 3: Automatycznie rozpocznij przetwarzanie CV (przekaż email i obraz)
+          await processCV(cvText, jobText, email, cvImage)
 
           // Clear sessionStorage
           sessionStorage.removeItem('pendingCV')
+          sessionStorage.removeItem('pendingCVImage') // NOWE: Usuń obraz
           sessionStorage.removeItem('pendingJob')
           sessionStorage.removeItem('pendingEmail')
           sessionStorage.removeItem('pendingPlan')
@@ -122,6 +126,7 @@ export default function Success() {
           // Fallback: spróbuj sessionStorage (dla starych przepływów)
           console.log('⚠️ No session_id in URL, trying sessionStorage...')
           const pendingCV = sessionStorage.getItem('pendingCV')
+          const pendingCVImage = sessionStorage.getItem('pendingCVImage') // NOWE: Obraz CV
           const pendingJob = sessionStorage.getItem('pendingJob')
           const pendingEmail = sessionStorage.getItem('pendingEmail')
           const pendingPlan = sessionStorage.getItem('pendingPlan')
@@ -135,17 +140,19 @@ export default function Success() {
           }
 
           setCvData(pendingCV)
+          setCvImageData(pendingCVImage) // NOWE: Zapisz obraz CV
           setJobPosting(pendingJob || '')
           setUserEmail(pendingEmail)
           setUserPlan(pendingPlan || 'basic')
 
           // Zawsze używaj szablonu 'simple', bez wyboru
           setSelectedTemplate('simple')
-          // Automatycznie rozpocznij przetwarzanie (przekaż email)
-          await processCV(pendingCV, pendingJob, pendingEmail)
+          // Automatycznie rozpocznij przetwarzanie (przekaż email i obraz)
+          await processCV(pendingCV, pendingJob, pendingEmail, pendingCVImage)
 
           // Clear sessionStorage
           sessionStorage.removeItem('pendingCV')
+          sessionStorage.removeItem('pendingCVImage') // NOWE: Usuń obraz
           sessionStorage.removeItem('pendingJob')
           sessionStorage.removeItem('pendingEmail')
           sessionStorage.removeItem('pendingPlan')
@@ -161,21 +168,31 @@ export default function Success() {
   }, [router])
 
   // Process CV with AI
-  const processCV = async (cv, job, email) => {
+  const processCV = async (cv, job, email, cvImage = null) => {
     setIsProcessing(true)
     setCurrentStep(2)
 
     try {
-      console.log('🔄 Processing CV...', { hasCV: !!cv, hasJob: !!job, email: email })
+      console.log('🔄 Processing CV...', { hasCV: !!cv, hasJob: !!job, email: email, hasImage: !!cvImage })
 
-      // Call API with correct parameter names
+      // CRITICAL DEBUG: Sprawdź czy obraz dociera
+      console.log('🖼️ CRITICAL DEBUG: cvImage exists?', cvImage ? 'YES' : 'NO')
+      console.log('🖼️ CRITICAL DEBUG: cvImage length:', cvImage ? cvImage.length : 0)
+
+      if (!cvImage) {
+        console.error('❌ CRITICAL: NO CV IMAGE! Visual AI will NOT work!')
+        console.error('❌ This means frontend did not capture PDF image or sessionStorage failed')
+      }
+
+      // Call API with correct parameter names + NOWE: imageData dla Visual AI
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           currentCV: cv,
           jobPosting: job || '',
-          email: email
+          email: email,
+          imageData: cvImage // NOWE: PNG pierwszej strony dla Visual AI reconstruction
         })
       })
 
@@ -252,9 +269,12 @@ export default function Success() {
         return el ? el.textContent.trim() : ''
       }
 
-      // Spróbuj wyciągnąć dane z typowych znaczników
+      // FIXED: Extract name from correct location - cv-name class or h1 tag
+      // The CV structure uses: <h1 class="cv-name">[Name]</h1>
+      const nameElement = htmlDiv.querySelector('.cv-name') || htmlDiv.querySelector('h1')
+      const name = nameElement?.textContent.trim() || 'Imię Nazwisko'
+
       const h2Elements = htmlDiv.querySelectorAll('h2')
-      const name = h2Elements[0]?.textContent.trim() || 'Imię Nazwisko'
 
       const allText = htmlDiv.textContent
       const lines = allText.split('\n').filter(l => l.trim())
@@ -326,39 +346,222 @@ export default function Success() {
     await processCV(cvData, jobPosting, userEmail)
   }
 
-  // Generate PDF - ATS-OPTIMIZED (text remains text, not image!)
+  // Decode HTML entities helper function
+  const decodeHTMLEntities = (text) => {
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = text
+    return textarea.value
+  }
+
+  // Sanitize HTML before sending to PDF generator
+  const sanitizeHTMLForPDF = (html) => {
+    if (!html) return ''
+
+    console.log('🧹 Sanitizing HTML for PDF generation...')
+    console.log('📊 Original HTML length:', html.length)
+    console.log('🔍 First 500 chars:', html.substring(0, 500))
+
+    let sanitized = html
+
+    // 0. CRITICAL: Decode HTML entities to fix &Z&a&m type issues
+    // This fixes double-encoded or incorrectly encoded entities
+    try {
+      sanitized = decodeHTMLEntities(sanitized)
+      console.log('✅ Decoded HTML entities')
+      console.log('🔍 After decode - first 500 chars:', sanitized.substring(0, 500))
+    } catch (decodeError) {
+      console.warn('⚠️ Failed to decode HTML entities:', decodeError)
+    }
+
+    // 1. Remove React-specific attributes that can break PDF
+    sanitized = sanitized.replace(/\s+data-react[^=]*="[^"]*"/gi, '')
+    sanitized = sanitized.replace(/\s+data-reactid="[^"]*"/gi, '')
+    sanitized = sanitized.replace(/\s+data-reactroot="[^"]*"/gi, '')
+
+    // 2. Fix common HTML issues
+    // Remove empty style attributes
+    sanitized = sanitized.replace(/\s+style=""\s*/gi, ' ')
+
+    // 3. Ensure all self-closing tags are properly closed
+    sanitized = sanitized.replace(/<(img|br|hr|input|meta|link)([^>]*)>/gi, '<$1$2 />')
+
+    // 4. Fix potential unclosed tags by checking balance
+    const tagPattern = /<(\w+)[^>]*>/g
+    const closingTagPattern = /<\/(\w+)>/g
+
+    const openTags = []
+    let match
+
+    // Count opening tags
+    while ((match = tagPattern.exec(sanitized)) !== null) {
+      const tag = match[1].toLowerCase()
+      // Skip self-closing tags
+      if (!['img', 'br', 'hr', 'input', 'meta', 'link', 'area', 'base', 'col', 'embed', 'source', 'track', 'wbr'].includes(tag)) {
+        openTags.push(tag)
+      }
+    }
+
+    // Remove closing tags
+    while ((match = closingTagPattern.exec(sanitized)) !== null) {
+      const tag = match[1].toLowerCase()
+      const index = openTags.lastIndexOf(tag)
+      if (index !== -1) {
+        openTags.splice(index, 1)
+      }
+    }
+
+    // 5. Add missing closing tags
+    if (openTags.length > 0) {
+      console.warn('⚠️ Found unclosed tags:', openTags)
+      // Add closing tags in reverse order
+      for (let i = openTags.length - 1; i >= 0; i--) {
+        sanitized += `</${openTags[i]}>`
+      }
+      console.log('✅ Added missing closing tags')
+    }
+
+    // 6. Validate critical structure
+    if (!sanitized.includes('cv-document') && !sanitized.includes('<div')) {
+      console.error('❌ Invalid HTML structure - missing cv-document')
+      throw new Error('Invalid CV HTML structure')
+    }
+
+    console.log('✅ HTML sanitized successfully')
+    return sanitized
+  }
+
+  // Generate PDF - ULTRA ATS-FRIENDLY with server-side rendering
   const generatePDF = async () => {
     if (!cvPreviewRef.current) return
 
     try {
-      const element = cvPreviewRef.current
-      const fileName = `CV_${parsedCV?.name?.replace(/\s+/g, '_') || 'document'}.pdf`
+      console.log('📄 Generating ULTRA ATS-friendly PDF (server-side)...')
 
-      // Create PDF with jsPDF - respects @media print CSS
+      const element = cvPreviewRef.current
+
+      // FIXED: Extract name with defensive fallback to DOM query
+      let personName = parsedCV?.name
+      if (!personName || personName === 'Imię Nazwisko' || personName.includes('DOŚWIADCZENIE') || personName.includes('ZAWODOWE')) {
+        // Fallback: extract directly from DOM
+        const nameEl = element.querySelector('.cv-name') || element.querySelector('h1')
+        personName = nameEl?.textContent?.trim()
+      }
+      const fileName = `CV_${personName?.replace(/\s+/g, '_') || 'document'}.pdf`
+
+      // Get HTML content from CV - use outerHTML to preserve structure
+      const cvContainer = element.querySelector('.cv-html-content') || element
+      let cvHTML = cvContainer.outerHTML || cvContainer.innerHTML
+
+      // CRITICAL: Sanitize HTML before sending to PDF generator
+      try {
+        cvHTML = sanitizeHTMLForPDF(cvHTML)
+      } catch (sanitizeError) {
+        console.error('❌ HTML sanitization failed:', sanitizeError)
+        alert('Błąd podczas przygotowania CV do eksportu. Spróbuj ponownie.')
+        return
+      }
+
+      // METODA 1: Spróbuj server-side PDF generation (najlepsze dla ATS)
+      try {
+        console.log('🚀 Attempting server-side PDF generation...')
+        const response = await fetch('/api/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            html: cvHTML,
+            fileName: fileName
+          })
+        })
+
+        if (response.ok) {
+          // Pobierz PDF jako blob
+          const blob = await response.blob()
+
+          // Sprawdź czy blob jest prawidłowy
+          if (blob.size === 0) {
+            console.error('❌ PDF blob is empty (0 bytes)')
+            throw new Error('Generated PDF is empty')
+          }
+
+          console.log(`📦 PDF blob received: ${blob.size} bytes, type: ${blob.type}`)
+
+          // Utwórz link do pobrania
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = fileName
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          window.URL.revokeObjectURL(url)
+
+          console.log('✅ ULTRA ATS-friendly PDF downloaded (server-side):', fileName)
+          return // Sukces - kończymy
+        } else {
+          // Sprawdź błąd z API
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          console.error('❌ Server-side PDF generation failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          })
+
+          // Show detailed error to user if critical
+          if (response.status === 400) {
+            alert(`Błąd generowania PDF: ${errorData.error || 'Nieprawidłowa struktura CV'}. Spróbuj ponownie zoptymalizować CV.`)
+            return
+          }
+
+          console.warn('⚠️ Falling back to client-side generation...')
+        }
+      } catch (serverError) {
+        console.warn('⚠️ Server-side PDF not available:', serverError.message)
+        console.log('📦 Using client-side fallback...')
+
+        // If sanitization failed, don't try fallback
+        if (serverError.message.includes('sanitiz')) {
+          return
+        }
+      }
+
+      // METODA 2: Fallback - client-side jsPDF z text rendering
+      console.log('📦 Using client-side jsPDF (fallback mode)...')
+
+      const jsPDF = (await import('jspdf')).default
+
+      // Użyj trybu HTML rendering (zachowuje więcej struktury niż html2canvas)
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
         compress: true,
+        putOnlyUsedFonts: true,
       })
 
-      // Use jsPDF.html() which preserves text and respects @media print
+      // Próba zachowania tekstu poprzez html2canvas + addHTML
       await pdf.html(element, {
         callback: function (doc) {
           doc.save(fileName)
-          console.log('✅ PDF downloaded:', fileName)
+          console.log('✅ PDF downloaded (client-side jsPDF):', fileName)
+          console.warn('⚠️ Note: Server-side PDF is better for ATS. Restart the app to use Puppeteer.')
         },
-        x: 0,
-        y: 0,
-        width: 210, // A4 width in mm
+        x: 10,
+        y: 10,
+        width: 190, // A4 width - margins
         windowWidth: 800,
+        autoPaging: 'text',
         html2canvas: {
-          scale: 2,
+          scale: 2, // Higher scale for better quality
           useCORS: true,
           letterRendering: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
           logging: false,
-        },
+        }
       })
+
+      console.log('ℹ️ Tip: Restart the app (npm run dev) to use server-side Puppeteer PDF (better ATS)')
+
     } catch (err) {
       console.error('❌ PDF generation error:', err)
       alert('Błąd podczas generowania PDF. Spróbuj ponownie.')
@@ -422,27 +625,30 @@ export default function Success() {
     return sections
   }
 
-  // Convert plain text CV to HTML - PROFESSIONAL STRUCTURE MATCHING PDF
+  // Convert plain text CV to HTML - SIMPLIFIED VERSION (AI now returns proper HTML)
   const convertTextToHTML = (text) => {
     if (!text) return ''
 
-    // Check if already has proper HTML structure with our custom classes
-    const hasProperStructure = text.includes('cv-document') || text.includes('cv-entry')
+    // KROK 1: Sprawdź czy AI zwrócił już dobrze sformatowany HTML
+    const hasProperStructure = text.includes('cv-document') && text.includes('cv-header')
     if (hasProperStructure) {
+      console.log('✅ AI returned properly structured HTML')
       return text
     }
 
-    // If it has basic HTML tags but not our structure, strip them and reparse
-    if (text.includes('<h1>') || text.includes('<h2>') || text.includes('<p>')) {
-      // Strip HTML tags to get plain text
-      const tempDiv = document.createElement('div')
-      tempDiv.innerHTML = text
-      text = tempDiv.textContent || tempDiv.innerText || ''
+    // KROK 2: Sprawdź czy ma jakąkolwiek strukturę HTML
+    const hasBasicHTML = text.includes('<div') || text.includes('<h1') || text.includes('<h2')
+    if (hasBasicHTML && !hasProperStructure) {
+      console.log('⚠️ AI returned HTML but without proper classes - wrapping it')
+      // FIXED: Don't create nested cv-html-content divs
+      // The component already wraps in cv-html-content, so we only need cv-document wrapper
+      return `<div class="cv-document">
+  ${text}
+</div>`
     }
 
-    // PROFESSIONAL CV PARSER - ULTRA AGGRESSIVE STRUCTURE DETECTION
-    console.log('🔍 Parser input length:', text.length)
-    console.log('📝 First 200 chars:', text.substring(0, 200))
+    console.log('⚠️ Received plain text - using simple parser')
+    // KROK 3: Fallback - prosty parser dla zwykłego tekstu
 
     let workingText = text
 
@@ -1373,57 +1579,33 @@ export default function Success() {
           font-size: 16px;
         }
 
-        /* CV Preview Section - GLASSMORPHIC DESIGN */
+        /* CV Preview Section - CLEAN WHITE WITH SUBTLE BORDER */
         .cv-preview-section {
-          background: rgba(26, 31, 46, 0.4);
-          border-radius: 24px;
+          background: #ffffff;
+          border-radius: 16px;
           padding: 0;
-          border: 1.5px solid rgba(120, 80, 255, 0.25);
+          border: 2px solid #e5e7eb;
           overflow: hidden;
           max-height: 900px;
           position: relative;
-          backdrop-filter: blur(40px) saturate(180%);
-          -webkit-backdrop-filter: blur(40px) saturate(180%);
-          box-shadow:
-            0 8px 32px rgba(120, 80, 255, 0.12),
-            0 16px 64px rgba(217, 70, 239, 0.08),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1),
-            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
         }
 
-        /* Subtle animated glow effect */
-        .cv-preview-section::before {
-          content: '';
-          position: absolute;
-          top: -2px;
-          left: -2px;
-          right: -2px;
-          bottom: -2px;
-          background: linear-gradient(
-            135deg,
-            rgba(120, 80, 255, 0.2),
-            rgba(217, 70, 239, 0.2),
-            rgba(255, 80, 150, 0.15)
-          );
-          border-radius: 24px;
-          z-index: -1;
-          opacity: 0;
-          transition: opacity 0.6s ease;
-          filter: blur(20px);
-        }
-
-        .cv-preview-section:hover::before {
-          opacity: 0.3;
+        /* Subtle hover effect */
+        .cv-preview-section:hover {
+          box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+          border-color: #2563eb;
+          transition: all 0.3s ease;
         }
 
         .cv-preview-wrapper {
-          background: rgba(26, 31, 46, 0.3);
+          background: #ffffff;
           padding: 40px;
           min-height: 600px;
           max-height: 900px;
           overflow-y: auto;
           overflow-x: hidden;
-          color: #e5e7eb;
+          color: #1f2937;
           position: relative;
           z-index: 2;
           /* Smooth scrolling */
@@ -1431,85 +1613,64 @@ export default function Success() {
           -webkit-overflow-scrolling: touch;
         }
 
-        /* Premium Custom Scrollbar - Dark Mode Elegant */
+        /* Custom Scrollbar - Clean Professional */
         .cv-preview-wrapper::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
         }
 
         .cv-preview-wrapper::-webkit-scrollbar-track {
-          background: transparent;
-          margin: 12px 0;
+          background: #f3f4f6;
+          border-radius: 4px;
         }
 
         .cv-preview-wrapper::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-          border-radius: 100px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: #cbd5e1;
+          border-radius: 4px;
+          transition: all 0.2s ease;
         }
 
         .cv-preview-wrapper::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.15));
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-          transform: scaleX(1.2);
+          background: #2563eb;
         }
 
         .cv-preview-wrapper::-webkit-scrollbar-thumb:active {
-          background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2));
+          background: #1e40af;
         }
 
-        /* Professional CV Template - ULTRA PREMIUM DARK THEME (NO WHITE!) */
+        /* Professional CV Template - CLEAN WHITE PROFESSIONAL THEME (ATS-FRIENDLY) */
         .cv-template.professional-cv {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-          color: #e5e7eb;
+          font-family: 'Calibri', 'Arial', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          color: #1f2937;
           line-height: 1.6;
-          letter-spacing: -0.01em;
+          letter-spacing: 0;
           position: relative;
-          background: transparent !important;
+          background: #ffffff !important;
         }
 
-        /* FORCE DARK MODE - ABSOLUTELY NO WHITE/GRAY BACKGROUNDS */
+        /* Ensure clean white backgrounds */
         .cv-template.professional-cv *,
         .cv-template.professional-cv *::before,
-        .cv-template.professional-cv *::after,
-        .cv-html-content *,
-        .cv-html-content *::before,
-        .cv-html-content *::after,
-        .cv-html-content div,
-        .cv-html-content section,
-        .cv-html-content article {
-          background-color: transparent !important;
-          background-image: none !important;
-        }
-
-        /* Override any inline styles that might have white/gray backgrounds */
-        .cv-html-content [style*="background"],
-        .cv-template.professional-cv [style*="background"] {
-          background: transparent !important;
-          background-color: transparent !important;
+        .cv-template.professional-cv *::after {
+          box-sizing: border-box;
         }
 
         /* Ensure readable text colors */
-        .cv-template.professional-cv *:not(strong):not(b):not(h1):not(h2):not(h3):not(.cv-name):not(.section-header):not(.entry-title) {
-          color: #cbd5e1 !important;
+        .cv-template.professional-cv * {
+          color: #374151;
         }
 
-        /* CV HTML Content - GLASSMORPHIC CARD */
+        /* CV HTML Content - CLEAN WHITE PROFESSIONAL */
         .cv-html-content {
-          color: #e5e7eb !important;
-          max-width: 100%;
-          background: rgba(26, 31, 46, 0.35) !important;
-          padding: 50px 60px !important;
+          color: #1f2937 !important;
+          max-width: 210mm;
+          min-height: 297mm;
+          background: #ffffff !important;
+          padding: 40px 50px !important;
+          margin: 0 auto;
           position: relative;
-          border-radius: 16px;
-          border: 1px solid rgba(120, 80, 255, 0.2);
-          backdrop-filter: blur(20px) saturate(150%);
-          -webkit-backdrop-filter: blur(20px) saturate(150%);
-          box-shadow:
-            0 4px 16px rgba(120, 80, 255, 0.08),
-            0 8px 32px rgba(217, 70, 239, 0.06),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
         /* No overlays - clean transparent design */
@@ -1519,55 +1680,50 @@ export default function Success() {
           padding: 0;
         }
 
-        /* CV HEADER - Name and Contact - DARK MODE */
+        /* CV HEADER - Name and Contact - PROFESSIONAL WHITE WITH BLUE BAR */
         .cv-html-content .cv-header {
           text-align: center;
-          margin-bottom: 52px;
-          padding-bottom: 32px;
-          border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+          margin: -40px -50px 36px -50px;
+          padding: 30px 50px 24px 50px;
+          background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
           position: relative;
+          box-shadow: 0 4px 6px rgba(37, 99, 235, 0.15);
         }
 
         .cv-html-content .cv-header::after {
           content: '';
           position: absolute;
-          bottom: -2px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 80px;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
         }
 
         .cv-html-content .cv-label {
           font-size: 11px;
-          background: linear-gradient(90deg, #7850ff, #d946ef);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin-bottom: 14px;
-          letter-spacing: 3px;
+          color: #dbeafe;
+          margin-bottom: 12px;
+          letter-spacing: 2px;
           text-transform: uppercase;
           font-weight: 700;
-          text-shadow: 0 0 8px rgba(120, 80, 255, 0.4);
-          filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.3));
         }
 
         .cv-html-content .cv-name {
-          font-size: 40px;
-          font-weight: 900;
+          font-size: 36px;
+          font-weight: 700;
           color: #ffffff !important;
-          margin: 0 0 22px 0;
-          letter-spacing: -0.03em;
-          line-height: 1.1;
-          text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
+          margin: 0 0 16px 0;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .cv-html-content .cv-contact {
-          font-size: 14px;
-          color: #e5e7eb;
-          line-height: 1.9;
-          letter-spacing: 0.01em;
+          font-size: 13px;
+          color: #eff6ff;
+          line-height: 1.8;
+          letter-spacing: 0;
         }
 
         .cv-html-content .cv-contact div {
@@ -1575,27 +1731,26 @@ export default function Success() {
         }
 
         .cv-html-content .cv-contact strong {
-          font-weight: 700;
+          font-weight: 600;
           color: #ffffff !important;
         }
 
-        /* CV SECTION - PROFESSIONAL DARK THEME (like Stripe/GitHub) */
+        /* CV SECTION - PROFESSIONAL WHITE THEME */
         .cv-html-content .cv-section {
-          margin-top: 48px;
-          margin-bottom: 38px;
+          margin-top: 32px;
+          margin-bottom: 28px;
         }
 
         .cv-html-content .section-header {
-          font-size: 18px;
-          font-weight: 900;
-          color: #ffffff !important;
+          font-size: 16px;
+          font-weight: 700;
+          color: #2563eb !important;
           text-transform: uppercase;
-          letter-spacing: 2.5px;
-          margin: 0 0 32px 0;
-          padding-bottom: 16px;
-          border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+          letter-spacing: 1.5px;
+          margin: 0 0 20px 0;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #2563eb;
           position: relative;
-          text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
         }
 
         .cv-html-content .section-header::after {
@@ -1603,149 +1758,138 @@ export default function Success() {
           position: absolute;
           bottom: -2px;
           left: 0;
-          width: 80px;
+          width: 60px;
           height: 2px;
-          background: linear-gradient(90deg, #7850ff 0%, #d946ef 50%, transparent 100%);
-          box-shadow: 0 0 12px rgba(120, 80, 255, 0.5);
+          background: #1e40af;
         }
 
         .cv-html-content .section-content {
-          font-size: 14px;
-          color: #cbd5e1;
-          margin: 12px 0;
-          line-height: 1.7;
+          font-size: 13px;
+          color: #374151;
+          margin: 10px 0;
+          line-height: 1.6;
         }
 
-        /* CV ENTRY (Job/Education) - DARK MODE */
+        /* CV ENTRY (Job/Education) - PROFESSIONAL WHITE */
         .cv-html-content .cv-entry {
-          margin-bottom: 32px;
+          margin-bottom: 24px;
           padding-left: 0;
           position: relative;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
         }
 
         .cv-html-content .entry-date {
-          font-size: 13px;
-          background: linear-gradient(90deg, #7850ff, #d946ef);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin-bottom: 8px;
+          font-size: 12px;
+          color: #2563eb;
+          margin-bottom: 6px;
           font-weight: 600;
-          letter-spacing: 0.02em;
-          filter: drop-shadow(0 0 6px rgba(120, 80, 255, 0.3));
+          letter-spacing: 0;
         }
 
         .cv-html-content .entry-title {
-          font-size: 17px;
-          font-weight: 800;
-          color: #ffffff !important;
-          margin: 10px 0;
+          font-size: 15px;
+          font-weight: 700;
+          color: #111827 !important;
+          margin: 6px 0;
           line-height: 1.4;
-          letter-spacing: -0.01em;
-          text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+          letter-spacing: 0;
         }
 
         .cv-html-content .entry-company {
-          font-size: 14px;
-          color: #cbd5e1;
+          font-size: 13px;
+          color: #6b7280;
           font-style: italic;
-          margin: 8px 0 12px 0;
+          margin: 4px 0 10px 0;
           font-weight: 500;
         }
 
         .cv-html-content .entry-description {
-          margin-top: 14px;
+          margin-top: 10px;
         }
 
         .cv-html-content .entry-description p {
-          font-size: 14px;
-          color: #cbd5e1;
-          line-height: 1.8;
-          margin: 10px 0;
-          letter-spacing: 0.005em;
+          font-size: 13px;
+          color: #374151;
+          line-height: 1.6;
+          margin: 8px 0;
+          letter-spacing: 0;
         }
 
-        /* SKILLS AND LANGUAGES - DARK MODE */
+        /* SKILLS AND LANGUAGES - PROFESSIONAL WHITE */
         .cv-html-content .skill-item {
-          font-size: 14px;
-          color: #cbd5e1;
-          margin: 12px 0;
-          line-height: 1.7;
+          font-size: 13px;
+          color: #374151;
+          margin: 10px 0;
+          line-height: 1.6;
         }
 
         .cv-html-content .skill-tags,
         .cv-html-content .interest-tags {
           display: flex;
           flex-wrap: wrap;
-          gap: 12px;
-          margin: 18px 0;
+          gap: 8px;
+          margin: 14px 0;
         }
 
         .cv-html-content .skill-tag {
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
-          color: #e5e7eb;
-          padding: 9px 18px;
-          border-radius: 8px;
-          font-size: 13px;
+          background: #eff6ff;
+          color: #1e40af;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-size: 12px;
           font-weight: 600;
-          border: 1.5px solid rgba(255, 255, 255, 0.15);
+          border: 1px solid #bfdbfe;
           display: inline-block;
-          transition: all 0.3s ease;
-          letter-spacing: 0.01em;
+          transition: all 0.2s ease;
+          letter-spacing: 0;
         }
 
         .cv-html-content .skill-tag:hover {
-          transform: translateY(-1px);
-          border-color: rgba(255, 255, 255, 0.25);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+          background: #dbeafe;
+          border-color: #93c5fd;
         }
 
         .cv-html-content .interest-tag {
-          background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.15));
-          color: #fbbf24;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-size: 13px;
+          background: #fef3c7;
+          color: #92400e;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-size: 12px;
           font-weight: 600;
-          border: 1.5px solid rgba(251, 191, 36, 0.3);
+          border: 1px solid #fde68a;
           display: inline-block;
-          transition: all 0.3s ease;
-          letter-spacing: 0.01em;
+          transition: all 0.2s ease;
+          letter-spacing: 0;
         }
 
         .cv-html-content .interest-tag:hover {
-          transform: translateY(-1px);
-          border-color: rgba(251, 191, 36, 0.5);
-          box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+          background: #fde68a;
+          border-color: #fcd34d;
         }
 
-        /* Fallback styles for non-structured HTML - PROFESSIONAL DARK */
+        /* Fallback styles for non-structured HTML - PROFESSIONAL WHITE */
         .cv-html-content h1:not(.cv-name) {
-          font-size: 36px;
-          font-weight: 900;
-          color: #ffffff !important;
-          margin: 0 0 20px 0;
-          padding-bottom: 20px;
-          border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-          letter-spacing: -0.02em;
+          font-size: 32px;
+          font-weight: 700;
+          color: #111827 !important;
+          margin: 0 0 16px 0;
+          padding-bottom: 16px;
+          border-bottom: 3px solid #2563eb;
+          letter-spacing: -0.01em;
           text-align: center;
           line-height: 1.2;
-          text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
         }
 
         .cv-html-content h2:not(.section-header) {
-          font-size: 18px;
-          font-weight: 900;
-          color: #ffffff !important;
+          font-size: 16px;
+          font-weight: 700;
+          color: #2563eb !important;
           text-transform: uppercase;
-          letter-spacing: 2.5px;
-          margin: 36px 0 18px 0;
-          padding-bottom: 14px;
-          border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+          letter-spacing: 1.5px;
+          margin: 24px 0 14px 0;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #2563eb;
           position: relative;
-          text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
         }
 
         .cv-html-content h2:not(.section-header)::before {
@@ -1753,62 +1897,60 @@ export default function Success() {
           position: absolute;
           bottom: -2px;
           left: 0;
-          width: 80px;
+          width: 60px;
           height: 2px;
-          background: linear-gradient(90deg, #7850ff 0%, #d946ef 50%, transparent 100%);
-          box-shadow: 0 0 12px rgba(120, 80, 255, 0.5);
+          background: #1e40af;
         }
 
         .cv-html-content h3 {
-          font-size: 17px;
-          font-weight: 800;
-          color: #ffffff !important;
-          margin: 20px 0 10px 0;
+          font-size: 15px;
+          font-weight: 700;
+          color: #111827 !important;
+          margin: 16px 0 8px 0;
           line-height: 1.4;
-          letter-spacing: -0.01em;
-          text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+          letter-spacing: 0;
         }
 
         .cv-html-content h4 {
-          font-size: 15px;
-          font-weight: 700;
-          color: #e5e7eb !important;
-          margin: 16px 0 8px 0;
-          letter-spacing: -0.01em;
+          font-size: 14px;
+          font-weight: 600;
+          color: #1f2937 !important;
+          margin: 14px 0 6px 0;
+          letter-spacing: 0;
         }
 
         .cv-html-content p:not(.section-content):not(.entry-description p) {
-          font-size: 14px;
-          color: #cbd5e1;
-          margin: 10px 0;
-          line-height: 1.7;
+          font-size: 13px;
+          color: #374151;
+          margin: 8px 0;
+          line-height: 1.6;
           text-align: left;
           letter-spacing: 0;
         }
 
-        /* Lists - Professional bullet points - DARK MODE */
+        /* Lists - Professional bullet points - WHITE */
         .cv-html-content ul {
-          margin: 14px 0 22px 0;
+          margin: 12px 0 18px 0;
           padding-left: 20px;
           list-style-position: outside;
         }
 
         .cv-html-content li {
-          font-size: 14px;
-          color: #cbd5e1;
-          margin: 7px 0;
-          line-height: 1.7;
+          font-size: 13px;
+          color: #374151;
+          margin: 6px 0;
+          line-height: 1.6;
           list-style-type: disc;
-          padding-left: 8px;
+          padding-left: 4px;
         }
 
         .cv-html-content li::marker {
-          color: #e5e7eb;
-          font-size: 0.85em;
+          color: #2563eb;
+          font-size: 0.9em;
         }
 
         .cv-html-content ol {
-          margin: 14px 0 22px 0;
+          margin: 12px 0 18px 0;
           padding-left: 20px;
         }
 
@@ -1821,37 +1963,37 @@ export default function Success() {
         .cv-html-content ul ol,
         .cv-html-content ol ul,
         .cv-html-content ol ol {
-          margin: 6px 0;
-          padding-left: 24px;
+          margin: 4px 0;
+          padding-left: 20px;
         }
 
-        /* Links - DARK MODE */
+        /* Links - PROFESSIONAL WHITE */
         .cv-html-content a {
-          color: #e5e7eb;
+          color: #2563eb;
           text-decoration: underline;
-          text-decoration-color: rgba(255, 255, 255, 0.3);
+          text-decoration-color: #93c5fd;
           text-underline-offset: 2px;
           font-weight: 500;
           transition: all 0.2s ease;
         }
 
         .cv-html-content a:hover {
-          text-decoration-color: #ffffff;
-          color: #ffffff;
+          text-decoration-color: #1e40af;
+          color: #1e40af;
         }
 
         /* Strong/Bold text - HIGH VISIBILITY */
         .cv-html-content strong,
         .cv-html-content b {
           font-weight: 700;
-          color: #ffffff !important;
+          color: #111827 !important;
         }
 
-        /* Emphasis/Italic - DARK MODE */
+        /* Emphasis/Italic - PROFESSIONAL */
         .cv-html-content em,
         .cv-html-content i {
           font-style: italic;
-          color: #94a3b8;
+          color: #6b7280;
         }
 
         /* Spacing and structure */
@@ -1910,10 +2052,12 @@ export default function Success() {
             background: white !important;
             background-color: white !important;
             background-image: none !important;
-            color: black !important;
             box-shadow: none !important;
             text-shadow: none !important;
-            border-color: black !important;
+          }
+
+          body {
+            background: white !important;
           }
 
           /* Hide UI elements */
