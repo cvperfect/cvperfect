@@ -152,6 +152,7 @@ export default async function handler(req, res) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CV</title>
   <style>
+    /* MINIMAL STYLES - Pozwól inline styles z szablonu działać */
     @page {
       size: A4;
       margin: 0;
@@ -166,279 +167,38 @@ export default async function handler(req, res) {
     body {
       font-family: 'Calibri', 'Arial', sans-serif;
       background: white;
-      color: #1f2937;
-      line-height: 1.6;
+      color: #000000;
+      line-height: 1.4;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
-      overflow-x: hidden;
       word-wrap: break-word;
       overflow-wrap: break-word;
     }
 
-    /* Prevent text overflow globally */
+    /* Zapobiegaj overflow */
     * {
       word-wrap: break-word;
       overflow-wrap: break-word;
       hyphens: auto;
-    }
-
-    .cv-document {
-      width: 210mm;
-      min-height: 297mm;
-      max-width: 210mm;
-      background: white;
-      padding: 15mm;
-      margin: 0 auto;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-
-    .cv-html-content {
-      width: 100%;
       max-width: 100%;
-      overflow: hidden;
-      box-sizing: border-box;
     }
 
-    /* CRITICAL: If cv-html-content wraps cv-document, ensure proper width */
-    .cv-html-content .cv-document {
-      width: 100%;
+    /* Zdjęcia - KRYTYCZNE dla base64 images */
+    img {
       max-width: 100%;
-      padding: 15mm;
-      box-sizing: border-box;
+      height: auto;
+      display: block;
     }
 
-    /* Ensure all text elements respect boundaries */
-    p, li, div, span, h1, h2, h3, h4, h5, h6 {
-      max-width: 100%;
-      overflow-wrap: break-word;
-      word-break: break-word;
-    }
-
-    /* CV HEADER - Professional Blue Bar */
-    .cv-header {
-      text-align: center;
-      margin: -15mm -15mm 10mm -15mm;
-      padding: 8mm 15mm 6mm 15mm;
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-      color: white;
-      position: relative;
-    }
-
-    .cv-header::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1mm;
-      background: #1e40af;
-    }
-
-    .cv-label {
-      font-size: 10pt;
-      color: #dbeafe;
-      margin-bottom: 3mm;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-
-    .cv-name {
-      font-size: 24pt;
-      font-weight: 700;
-      color: white;
-      margin: 0 0 4mm 0;
-      letter-spacing: -0.02em;
-    }
-
-    .cv-contact {
-      font-size: 11pt;
-      color: #eff6ff;
-      line-height: 1.6;
-    }
-
-    .cv-contact div {
-      display: inline-block;
-      margin: 0 4mm;
-    }
-
-    .cv-contact strong {
-      font-weight: 600;
-      color: white;
-    }
-
-    /* CV SECTIONS */
-    .cv-section {
-      margin-top: 8mm;
-      margin-bottom: 6mm;
+    .cv-photo {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
       page-break-inside: avoid;
     }
 
-    .section-header {
-      font-size: 14pt;
-      font-weight: 700;
-      color: #2563eb;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin: 0 0 4mm 0;
-      padding-bottom: 2mm;
-      border-bottom: 1pt solid #2563eb;
-      position: relative;
-    }
-
-    .section-header::after {
-      content: '';
-      position: absolute;
-      bottom: -1pt;
-      left: 0;
-      width: 15mm;
-      height: 1pt;
-      background: #1e40af;
-    }
-
-    /* CV ENTRIES (Jobs/Education) */
-    .cv-entry {
-      margin-bottom: 6mm;
-      padding-left: 0;
+    /* Zapobiegaj rozjeżdżaniu sekcji */
+    .cv-section, .cv-entry {
       page-break-inside: avoid;
-    }
-
-    .entry-date {
-      font-size: 10pt;
-      color: #2563eb;
-      margin-bottom: 1mm;
-      font-weight: 600;
-    }
-
-    .entry-title {
-      font-size: 12pt;
-      font-weight: 700;
-      color: #111827;
-      margin: 1mm 0;
-      line-height: 1.4;
-    }
-
-    .entry-company {
-      font-size: 11pt;
-      color: #6b7280;
-      font-style: italic;
-      margin: 1mm 0 2mm 0;
-      font-weight: 500;
-    }
-
-    .entry-description p {
-      font-size: 11pt;
-      color: #374151;
-      line-height: 1.6;
-      margin: 2mm 0;
-    }
-
-    /* SKILLS AND TAGS */
-    .skill-tags, .interest-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2mm;
-      margin: 3mm 0;
-    }
-
-    .skill-tag {
-      background: #eff6ff;
-      color: #1e40af;
-      padding: 1.5mm 3mm;
-      border-radius: 1.5mm;
-      font-size: 10pt;
-      font-weight: 600;
-      border: 0.3mm solid #bfdbfe;
-      display: inline-block;
-    }
-
-    .interest-tag {
-      background: #fef3c7;
-      color: #92400e;
-      padding: 1.5mm 3mm;
-      border-radius: 1.5mm;
-      font-size: 10pt;
-      font-weight: 600;
-      border: 0.3mm solid #fde68a;
-      display: inline-block;
-    }
-
-    .skill-item {
-      font-size: 11pt;
-      color: #374151;
-      margin: 2mm 0;
-      line-height: 1.6;
-    }
-
-    .skill-item strong {
-      font-weight: 700;
-      color: #111827;
-    }
-
-    /* LISTS */
-    ul {
-      margin: 3mm 0 4mm 5mm;
-      padding-left: 5mm;
-    }
-
-    li {
-      font-size: 11pt;
-      color: #374151;
-      margin: 1.5mm 0;
-      line-height: 1.6;
-      list-style-type: disc;
-    }
-
-    li::marker {
-      color: #2563eb;
-    }
-
-    /* GENERAL TEXT */
-    p {
-      font-size: 11pt;
-      color: #374151;
-      line-height: 1.6;
-      margin: 2mm 0;
-    }
-
-    strong, b {
-      font-weight: 700;
-      color: #111827;
-    }
-
-    em, i {
-      font-style: italic;
-      color: #6b7280;
-    }
-
-    /* Fallback h1-h3 */
-    h1 {
-      font-size: 20pt;
-      font-weight: 700;
-      color: #111827;
-      margin: 0 0 4mm 0;
-      padding-bottom: 3mm;
-      border-bottom: 1pt solid #2563eb;
-      text-align: center;
-    }
-
-    h2 {
-      font-size: 14pt;
-      font-weight: 700;
-      color: #2563eb;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 6mm 0 3mm 0;
-      padding-bottom: 2mm;
-      border-bottom: 1pt solid #2563eb;
-    }
-
-    h3 {
-      font-size: 12pt;
-      font-weight: 700;
-      color: #111827;
-      margin: 4mm 0 2mm 0;
     }
   </style>
 </head>

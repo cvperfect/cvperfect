@@ -875,7 +875,23 @@ export default function Success() {
   const CVTemplate = ({ template, data }) => {
     // Convert to HTML if needed
     const rawContent = optimizedCV || cvData
-    const cvContent = convertTextToHTML(rawContent)
+    let cvContent = convertTextToHTML(rawContent)
+
+    // DEBUG: Sprawdź co mamy
+    console.log('🔍 CVTemplate DEBUG:');
+    console.log('- cvImageData exists?', !!cvImageData);
+    console.log('- cvContent length:', cvContent?.length);
+    console.log('- First 500 chars of cvContent:', cvContent?.substring(0, 500));
+    console.log('- Contains cv-photo class?', cvContent?.includes('cv-photo'));
+
+    // NOWY SYSTEM: Zdjęcie jest już wbudowane w szablon przez backend
+    // Szablon używa: <div class="cv-photo" style="background-image: url(...)">
+    // Nie musimy nic robić - zdjęcie jest już w HTML
+    if (cvContent?.includes('cv-photo')) {
+      console.log('✅ Photo is already embedded in template');
+    } else {
+      console.log('ℹ️ No photo in this CV (expected if original CV had no photo)');
+    }
 
     return (
       <div className="cv-template professional-cv" ref={cvPreviewRef}>

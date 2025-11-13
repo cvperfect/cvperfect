@@ -19,6 +19,174 @@ export const config = {
   },
 }
 
+// === ULTRA-PROFESJONALNY SZABLON CV (ATS-FRIENDLY) ===
+function generateProfessionalCVHTML(data, imageData = null) {
+  const {
+    hasPhoto = false,
+    name = 'Imię Nazwisko',
+    email = '',
+    phone = '',
+    location = '',
+    birthDate = null,
+    experience = [],
+    education = [],
+    skills = [],
+    languages = [],
+    certifications = [],
+    interests = []
+  } = data
+
+  // DIAGNOSTYKA: Sprawdź co mamy
+  console.log('🖼️ PHOTO DEBUG IN TEMPLATE:')
+  console.log('  - hasPhoto (from AI):', hasPhoto)
+  console.log('  - imageData exists:', !!imageData)
+  console.log('  - imageData length:', imageData?.length || 0)
+  console.log('  - imageData prefix (first 50 chars):', imageData?.substring(0, 50))
+
+  // PROFESJONALNY LAYOUT: Zdjęcie po lewej + dane wyśrodkowane (flexbox)
+  const photoSection = imageData ? `
+    <img src="${imageData}" alt="Zdjęcie" class="cv-photo" style="width: 130px; height: 130px; border-radius: 6px; object-fit: cover; flex-shrink: 0;" />
+  ` : ''
+
+  console.log('🖼️ PHOTO SECTION GENERATED:', photoSection ? 'YES' : 'NO')
+
+  // Sekcja doświadczenia - KOMPAKTOWA
+  const experienceHTML = experience.map(exp => `
+    <div class="cv-entry" style="margin-bottom: 16px; page-break-inside: avoid;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+        <div class="entry-title" style="font-weight: 700; font-size: 11pt; color: #000000;">
+          ${exp.position || ''}
+        </div>
+        <div class="entry-date" style="font-size: 10pt; color: #555555; white-space: nowrap; margin-left: 10px;">
+          ${exp.period || ''} ${exp.duration || ''}
+        </div>
+      </div>
+      <div class="entry-company" style="font-size: 10pt; color: #333333; margin-bottom: 4px; font-style: italic;">
+        ${exp.company || ''} ${exp.location ? `· ${exp.location}` : ''}
+      </div>
+      <div class="entry-description" style="font-size: 10pt; line-height: 1.5; color: #000000; margin-top: 4px;">
+        ${exp.description || ''}
+      </div>
+    </div>
+  `).join('')
+
+  // Sekcja wykształcenia - KOMPAKTOWA
+  const educationHTML = education.map(edu => `
+    <div class="cv-entry" style="margin-bottom: 14px; page-break-inside: avoid;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+        <div class="entry-title" style="font-weight: 700; font-size: 11pt; color: #000000;">
+          ${edu.school || ''}
+        </div>
+        <div class="entry-date" style="font-size: 10pt; color: #555555; margin-left: 10px;">
+          ${edu.period || ''}
+        </div>
+      </div>
+      <div class="entry-description" style="font-size: 10pt; color: #333333;">
+        ${edu.field || ''} ${edu.location ? `· ${edu.location}` : ''}
+      </div>
+    </div>
+  `).join('')
+
+  // Certyfikaty - KOMPAKTOWE
+  const certificationsHTML = certifications && certifications.length > 0 ? `
+    <div class="cv-section" style="margin-top: 10px; page-break-inside: avoid;">
+      <h2 class="section-header" style="font-size: 13pt; font-weight: 700; text-transform: uppercase; color: #000000; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #000000;">
+        CERTYFIKATY
+      </h2>
+      ${certifications.map(cert => `
+        <div style="margin-bottom: 6px; page-break-inside: avoid; font-size: 10pt;">
+          <strong>${cert.date || ''}</strong> · ${cert.name || ''}
+          ${cert.issuer ? `<span style="color: #555555;"> (${cert.issuer})</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  ` : ''
+
+  // Języki - KOMPAKTOWE
+  const languagesHTML = languages && languages.length > 0 ? `
+    <div class="cv-section" style="margin-top: 10px; page-break-inside: avoid;">
+      <h2 class="section-header" style="font-size: 13pt; font-weight: 700; text-transform: uppercase; color: #000000; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #000000;">
+        JĘZYKI
+      </h2>
+      <div style="font-size: 10pt;">
+        ${languages.map(lang => `<span style="margin-right: 15px;"><strong>${lang.lang || ''}</strong> - ${lang.level || ''}</span>`).join('')}
+      </div>
+    </div>
+  ` : ''
+
+  // Umiejętności - PROSTE (bez kolorowych tagów - lepiej dla ATS)
+  const skillsHTML = skills && skills.length > 0 ? `
+    <div class="cv-section" style="margin-top: 10px; page-break-inside: avoid;">
+      <h2 class="section-header" style="font-size: 13pt; font-weight: 700; text-transform: uppercase; color: #000000; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #000000;">
+        UMIEJĘTNOŚCI
+      </h2>
+      <div style="font-size: 10pt; line-height: 1.5;">
+        ${skills.join(' · ')}
+      </div>
+    </div>
+  ` : ''
+
+  // Zainteresowania - KOMPAKTOWE
+  const interestsHTML = interests && interests.length > 0 ? `
+    <div class="cv-section" style="margin-top: 10px; page-break-inside: avoid;">
+      <h2 class="section-header" style="font-size: 13pt; font-weight: 700; text-transform: uppercase; color: #000000; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #000000;">
+        ZAINTERESOWANIA
+      </h2>
+      <div style="font-size: 10pt; line-height: 1.5;">
+        ${interests.join(' · ')}
+      </div>
+    </div>
+  ` : ''
+
+  // Główny szablon - ULTRA PROFESJONALNY z FLEXBOX
+  return `
+<div class="cv-document" style="max-width: 210mm; margin: 0 auto; padding: 12mm; background: #ffffff; font-family: 'Calibri', 'Arial', 'Helvetica', sans-serif; color: #000000; line-height: 1.4; font-size: 11pt;">
+
+  <!-- HEADER - Flexbox: Zdjęcie lewo + Dane wyśrodkowane prawo -->
+  <div class="cv-header" style="display: flex; align-items: center; gap: 20px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #000000; page-break-inside: avoid;">
+    ${photoSection}
+    <div style="flex: 1; text-align: center;">
+      <h1 class="cv-name" style="font-size: 26pt; font-weight: 700; margin: 0 0 8px 0; color: #000000; letter-spacing: 0.5px;">
+        ${name}
+      </h1>
+      <div class="cv-contact" style="font-size: 10pt; color: #333333; line-height: 1.6;">
+        ${email ? `<div style="margin-bottom: 2px;">${email}</div>` : ''}
+        ${phone ? `<div style="margin-bottom: 2px;">${phone}</div>` : ''}
+        ${location ? `<div style="margin-bottom: 2px;">${location}</div>` : ''}
+        ${birthDate ? `<div>Data urodzenia: ${birthDate}</div>` : ''}
+      </div>
+    </div>
+  </div>
+
+  <!-- DOŚWIADCZENIE ZAWODOWE -->
+  ${experience.length > 0 ? `
+  <div class="cv-section" style="margin-top: 10px; page-break-inside: avoid;">
+    <h2 class="section-header" style="font-size: 13pt; font-weight: 700; text-transform: uppercase; color: #000000; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #000000;">
+      DOŚWIADCZENIE ZAWODOWE
+    </h2>
+    ${experienceHTML}
+  </div>
+  ` : ''}
+
+  <!-- WYKSZTAŁCENIE -->
+  ${education.length > 0 ? `
+  <div class="cv-section" style="margin-top: 10px; page-break-inside: avoid;">
+    <h2 class="section-header" style="font-size: 13pt; font-weight: 700; text-transform: uppercase; color: #000000; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1.5px solid #000000;">
+      WYKSZTAŁCENIE
+    </h2>
+    ${educationHTML}
+  </div>
+  ` : ''}
+
+  ${certificationsHTML}
+  ${languagesHTML}
+  ${skillsHTML}
+  ${interestsHTML}
+
+</div>
+`.trim()
+}
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -104,92 +272,56 @@ export default async function handler(req, res) {
     // 5. PROMPT - Wybór: Visual AI (zachowuje format) vs Template (nowy layout)
     const hasVisualAI = !!imageData
 
-    const optimizedPrompt = hasVisualAI
-      ? // === NOWY: VISUAL AI RECONSTRUCTION - UPROSZCZONY PROMPT ===
-        `WIDZISZ CV NA OBRAZIE. Twoje zadanie: skopiuj jego WYGLĄD 1:1, ale popraw TEKST.
+    // === NOWY SYSTEM: AI WYPEŁNIA STAŁY SZABLON ===
+    const optimizedPrompt = `Jesteś ekspertem HR. Wypełnij profesjonalny szablon CV danymi z podanego CV.
 
-KROK 1 - ANALIZA WIZUALNA:
-- Jakie kolory? (header, tło, akcenty)
-- Ile kolumn? (1, 2, 3)
-- Czy jest zdjęcie? Gdzie?
-- Jaki układ sekcji?
+ZASADY KRYTYCZNE:
+✓ ZACHOWAJ: imię, nazwisko, email, telefon, daty, nazwy firm, stanowiska (NIE wymyślaj!)
+✓ ULEPSZ OPISY: mocne czasowniki + metryki (np. "Kurier" → "Zrealizowano 80+ dostaw/dzień z 98% terminowością")
+✓ PŁEĆ: Jeśli kobieta (Anna, Iwona, Maria) → "obsługiwałam", jeśli mężczyzna → "obsługiwałem"
+${jobPosting ? `✓ DOPASUJ do oferty pracy (naturalnie wpleć słowa kluczowe)\n` : ''}
 
-KROK 2 - ZOPTYMALIZUJ TEKST (NIE ZMIENIAJ formatu!):
-✓ Mocne czasowniki + metryki: "Kurier" → "Zrealizowano 80+ dostaw/dzień z 98% terminowością"
-✓ Rozwiń opisy stanowisk
-✓ Dodaj konkretne liczby
-✗ NIE zmieniaj dat, nazw firm, imion!
-
-KROK 3 - GENERUJ HTML IDENTYCZNY WIZUALNIE:
-Jeśli oryginał ma:
-- Niebieski header → użyj: <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%)">
-- Zdjęcie po lewej → dodaj: <img src="" style="position: absolute; left: 20px; top: 20px; width: 120px; height: 120px; border-radius: 50%;"/>
-- 2 kolumny → użyj: <div style="display: grid; grid-template-columns: 35% 65%;">
+ANALIZA OBRAZU (jeśli dostępny):
+${hasVisualAI ? '- Widzisz obraz CV - wyciągnij dokładne dane\n- Jeśli widzisz ZDJĘCIE osoby - ustaw hasPhoto: true' : '- Brak obrazu - użyj tylko tekstu'}
 
 ZWRÓĆ JSON:
 {
-  "cv": "<div style=\"...\">[HTML DOKŁADNIE ODTWARZAJĄCY OBRAZ]</div>",
-  "coverLetter": "list motywacyjny"
+  "hasPhoto": ${hasVisualAI ? 'true/false (czy widzisz zdjęcie osoby?)' : 'false'},
+  "name": "Imię Nazwisko",
+  "email": "email@example.com",
+  "phone": "+48 123 456 789",
+  "location": "Miasto",
+  "birthDate": "DD.MM.RRRR lub null",
+  "experience": [
+    {
+      "period": "MM.RRRR - MM.RRRR",
+      "duration": "(X lat Y mies.)",
+      "position": "Stanowisko",
+      "company": "Firma",
+      "location": "Miasto",
+      "description": "Ulepszone opisy z liczbami i metrykami. Drugi opis. Trzeci opis."
+    }
+  ],
+  "education": [
+    {
+      "period": "MM.RRRR - MM.RRRR",
+      "school": "Nazwa szkoły/uczelni",
+      "field": "Kierunek/profil",
+      "location": "Miasto"
+    }
+  ],
+  "skills": ["umiejętność 1", "umiejętność 2", ...],
+  "languages": [{"lang": "Polski", "level": "Ojczysty"}, ...],
+  "certifications": [{"date": "MM.RRRR", "name": "Nazwa certyfikatu", "issuer": "Organizator"}],
+  "interests": ["zainteresowanie 1", "zainteresowanie 2", ...],
+  "coverLetter": "List motywacyjny 2-3 akapity"
 }
 
-WAŻNE:
-- Użyj INLINE STYLES dla wszystkich kolorów/pozycjonowania
-- Skopiuj DOKŁADNIE rozmiar czcionek, marginesy, spacing z obrazu
-- Jeśli widzisz elementy graficzne - odtwórz je HTML/CSS
-
-${jobPosting ? `OFERTA:\n${jobPosting}\n` : ''}
-
-TEKST Z CV:
+${jobPosting ? `OFERTA PRACY:\n${jobPosting}\n\n` : ''}
+TEKST CV:
 ${currentCV}
 
 ZWRÓĆ TYLKO JSON (bez \`\`\`).`
-
-      : // === STARY: TEMPLATE MODE (nowy layout gdy brak obrazu) ===
-        `Jesteś ekspertem HR z 15-letnim doświadczeniem. Ulepsz CV i napisz list motywacyjny.
-
-ZASADY:
-✓ ZACHOWAJ: dane osobowe, firmy, daty, wykształcenie (NIE wymyślaj!)
-✓ ULEPSZ: użyj mocnych czasowników, dodaj metryki, rozwiń opisy, dostosuj słowa kluczowe
-
-STRUKTURA ODPOWIEDZI - Zwróć JSON:
-{
-  "cv": "<div class=\"cv-document\">...</div>",
-  "coverLetter": "tekst listu 2-3 akapity"
-}
-
-KRYTYCZNE:
-- Zwróć TYLKO czysty JSON (bez \`\`\`json, bez \`\`\`html, bez markdown)
-- HTML musi być KOMPLETNY z wszystkimi zamykającymi tagami
-- Użyj DOKŁADNIE tych klas CSS (nie zmieniaj nazw!)
-
-HTML CV (użyj klas: cv-document, cv-header, cv-name, cv-contact, cv-section, section-header, cv-entry, entry-date, entry-title, entry-company, entry-description, skill-tags, skill-tag):
-
-<div class="cv-document">
-  <div class="cv-header">
-    <div class="cv-label">— CV —</div>
-    <h1 class="cv-name">[Imię Nazwisko]</h1>
-    <div class="cv-contact"><div>E-mail: <strong>[email]</strong></div><div>Tel: <strong>[tel]</strong></div></div>
-  </div>
-  <div class="cv-section">
-    <h2 class="section-header">DOŚWIADCZENIE ZAWODOWE</h2>
-    <div class="cv-entry">
-      <div class="entry-date">[daty]</div>
-      <div class="entry-title">■ [Stanowisko]</div>
-      <div class="entry-company">[Firma]</div>
-      <div class="entry-description"><p>[Ulepszone opisy z liczbami i metrykami]</p></div>
-    </div>
-  </div>
-  [więcej sekcji: WYKSZTAŁCENIE, UMIEJĘTNOŚCI, JĘZYKI]
-</div>
-
-PRZYKŁAD: "Kurier" → "Zapewniałem dostawę 80 przesyłek/dzień z 98% terminowością"
-
-${jobPosting ? `\nOFERTA PRACY:\n${jobPosting}\n` : ''}
-
-CV DO ULEPSZENIA:
-${currentCV}
-
-PAMIĘTAJ: Zwróć TYLKO poprawny JSON (bez markdown, bez \`\`\`).`
 
     // 6. JEDNO WYWOŁANIE AI Z GROQ BACKUP
     console.log('🤖 Starting CV+CoverLetter optimization...')
@@ -244,64 +376,51 @@ PAMIĘTAJ: Zwróć TYLKO poprawny JSON (bez markdown, bez \`\`\`).`
 
       try {
         const parsed = JSON.parse(responseText)
-        optimizedCV = parsed.cv
-        coverLetter = parsed.coverLetter
+
+        // NOWY SYSTEM: AI zwraca dane, my generujemy HTML
+        const cvData = parsed
+        coverLetter = cvData.coverLetter || 'List motywacyjny niedostępny'
+
+        // Generuj HTML z profesjonalnego szablonu
+        optimizedCV = generateProfessionalCVHTML(cvData, imageData)
+
         usedProvider = 'Gemini'
-        console.log('✅ Gemini success!')
-        console.log('🖼️ Visual AI was:', hasVisualAI ? 'ENABLED' : 'DISABLED')
-        console.log('🔍 AI returned CV HTML (first 1000 chars):', optimizedCV?.substring(0, 1000))
-
-        // CRITICAL: Validate Visual AI worked (check for inline styles)
-        if (hasVisualAI && !optimizedCV.includes('style=')) {
-          console.warn('⚠️ WARNING: Visual AI mode was ENABLED but AI did NOT use inline styles!')
-          console.warn('⚠️ This means AI ignored visual reconstruction instructions!')
-        }
+        console.log('✅ Gemini success! CV data parsed:', {
+          name: cvData.name,
+          hasPhoto: cvData.hasPhoto,
+          experienceCount: cvData.experience?.length || 0,
+          educationCount: cvData.education?.length || 0
+        })
       } catch (parseError) {
-        // FIXED: Proper HTML extraction that doesn't truncate
-        console.warn('⚠️ Gemini JSON parse failed, extracting manually')
+        console.warn('⚠️ Gemini JSON parse failed, using fallback data')
 
-        // Try to extract cv-document by finding matching closing tag
-        const startTag = '<div class="cv-document">'
-        const startIndex = responseText.indexOf(startTag)
-
-        if (startIndex !== -1) {
-          // Count nested divs to find the correct closing tag
-          let depth = 0
-          let foundStart = false
-          let endIndex = -1
-
-          for (let i = startIndex; i < responseText.length; i++) {
-            // Check for opening div tags
-            if (responseText.substr(i, 4) === '<div') {
-              depth++
-              foundStart = true
-            }
-            // Check for closing div tags
-            else if (responseText.substr(i, 6) === '</div>') {
-              depth--
-              if (depth === 0 && foundStart) {
-                endIndex = i + 6
-                break
-              }
-            }
-          }
-
-          if (endIndex !== -1) {
-            optimizedCV = responseText.substring(startIndex, endIndex)
-            console.log('✅ Extracted cv-document:', optimizedCV.length, 'chars')
-          } else {
-            // Fallback: use entire response
-            optimizedCV = responseText
-            console.warn('⚠️ Could not find closing tag, using full response')
-          }
-        } else {
-          // No cv-document found, use entire response
-          optimizedCV = responseText
-          console.warn('⚠️ No cv-document found, using full response')
+        // Fallback: użyj podstawowych danych z tekstu CV
+        const fallbackData = {
+          hasPhoto: false,
+          name: currentCV.split('\n')[0]?.trim() || 'Imię Nazwisko',
+          email: email,
+          phone: '',
+          location: '',
+          birthDate: null,
+          experience: [{
+            period: '',
+            duration: '',
+            position: 'Stanowisko',
+            company: 'Firma',
+            location: '',
+            description: currentCV.substring(0, 500)
+          }],
+          education: [],
+          skills: [],
+          languages: [],
+          certifications: [],
+          interests: []
         }
 
-        coverLetter = responseText.split('coverLetter')[1]?.trim() || 'List motywacyjny niedostępny'
-        usedProvider = 'Gemini (manual parse)'
+        optimizedCV = generateProfessionalCVHTML(fallbackData, imageData)
+        coverLetter = 'List motywacyjny niedostępny'
+        usedProvider = 'Gemini (fallback)'
+        console.log('✅ Generated fallback CV template')
       }
 
     } catch (geminiError) {
@@ -324,11 +443,16 @@ PAMIĘTAJ: Zwróć TYLKO poprawny JSON (bez markdown, bez \`\`\`).`
         })
 
         const groqResponse = groqCompletion.choices[0].message.content
-        const parsed = JSON.parse(groqResponse)
-        optimizedCV = parsed.cv
-        coverLetter = parsed.coverLetter
+        const cvData = JSON.parse(groqResponse)
+        coverLetter = cvData.coverLetter || 'List motywacyjny niedostępny'
+
+        // KRYTYCZNE: Groq nie ma Vision, ale PRZEKAŻ imageData do szablonu!
+        // imageData pochodzi z frontendu (PDF capture), nie z AI
+        optimizedCV = generateProfessionalCVHTML(cvData, imageData)
+
         usedProvider = 'Groq (backup)'
         console.log('✅ Groq backup success!')
+        console.log('🖼️ Groq backup: imageData was', imageData ? 'PASSED to template' : 'NULL')
 
       } catch (groqError) {
         console.error('❌ Groq backup also failed:', groqError.message)
@@ -341,16 +465,16 @@ PAMIĘTAJ: Zwróć TYLKO poprawny JSON (bez markdown, bez \`\`\`).`
     console.log(`🤖 AI optimization complete using: ${usedProvider}`)
     console.log('🔍 optimizedCV length:', optimizedCV?.length, 'chars')
 
-    // === CRITICAL: Validate and sanitize AI response ===
-    console.log('🔍 Validating AI-generated HTML...')
+    // === CRITICAL: Validate generated HTML ===
+    console.log('🔍 Validating generated HTML...')
 
     // 1. Check if optimizedCV is not empty
     if (!optimizedCV || optimizedCV.trim().length === 0) {
-      console.error('❌ AI returned empty CV')
-      throw new Error('AI returned empty CV content')
+      console.error('❌ Generated CV is empty')
+      throw new Error('Generated CV content is empty')
     }
 
-    // 2. Check for minimum required structure
+    // 2. Check for minimum required structure (szablon zawsze ma te klasy)
     const requiredElements = [
       { name: 'cv-document', pattern: /cv-document/i },
       { name: 'cv-header', pattern: /cv-header/i },
@@ -359,52 +483,22 @@ PAMIĘTAJ: Zwróć TYLKO poprawny JSON (bez markdown, bez \`\`\`).`
 
     for (const element of requiredElements) {
       if (!element.pattern.test(optimizedCV)) {
-        console.warn(`⚠️ Missing required element: ${element.name}`)
+        console.error(`❌ Missing required element in template: ${element.name}`)
+        throw new Error(`Template generation failed - missing ${element.name}`)
       }
     }
 
-    // 3. Validate HTML tag balance
-    const divOpenCount = (optimizedCV.match(/<div/gi) || []).length
-    const divCloseCount = (optimizedCV.match(/<\/div>/gi) || []).length
-
-    console.log(`📊 HTML balance check: ${divOpenCount} <div> vs ${divCloseCount} </div>`)
-
-    // Auto-fix: Add missing closing divs if needed
-    if (divOpenCount > divCloseCount) {
-      const missing = divOpenCount - divCloseCount
-      console.warn(`⚠️ Missing ${missing} closing </div> tags - auto-fixing...`)
-      for (let i = 0; i < missing; i++) {
-        optimizedCV += '</div>'
-      }
-      console.log('✅ Added missing closing tags')
+    // 3. Validate minimum content length
+    if (optimizedCV.length < 300) {
+      console.error(`❌ Generated CV too short: ${optimizedCV.length} chars`)
+      throw new Error(`Generated CV is incomplete: ${optimizedCV.length} characters`)
     }
 
-    // 4. Ensure CV ends with proper closing tag
-    if (!optimizedCV.trim().endsWith('</div>')) {
-      console.warn('⚠️ CV does not end with </div> - adding it')
-      optimizedCV = optimizedCV.trim() + '</div>'
-    }
-
-    // 5. Check for common AI formatting issues
-    // Remove markdown code fences if AI added them despite instructions
-    if (optimizedCV.includes('```html')) {
-      console.warn('⚠️ AI added markdown code fences - removing...')
-      optimizedCV = optimizedCV
-        .replace(/```html\s*/gi, '')
-        .replace(/```\s*$/gi, '')
-    }
-
-    // 6. Validate minimum content length (should be at least 500 chars)
-    if (optimizedCV.length < 500) {
-      console.error(`❌ AI response too short: ${optimizedCV.length} chars (minimum 500)`)
-      throw new Error(`AI generated incomplete CV: ${optimizedCV.length} characters`)
-    }
-
-    // 7. Check if CV contains actual content (not just structure)
+    // 4. Check if CV contains actual text content (not just HTML tags)
     const textContent = optimizedCV.replace(/<[^>]+>/g, '').trim()
-    if (textContent.length < 200) {
+    if (textContent.length < 50) {
       console.error(`❌ CV has insufficient text content: ${textContent.length} chars`)
-      throw new Error('AI generated CV with insufficient content')
+      throw new Error('Generated CV has insufficient content')
     }
 
     console.log(`✅ HTML validation passed - ${optimizedCV.length} chars, ${textContent.length} text chars`)

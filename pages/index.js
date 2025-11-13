@@ -501,24 +501,75 @@ const parsePDFFile = async (file) => {
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
 
-          // === NOWE: Renderuj pierwszą stronę do PNG dla Visual AI ===
+          // === SCREENSHOT + CROP: Renderuj stronę i wytnij górny lewy róg (tam zwykle zdjęcie) ===
           if (pageNum === 1) {
-            console.log('📸 Rendering first page to PNG for Visual AI...');
-            const viewport = page.getViewport({ scale: 2.0 }); // 2x scale for better quality
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+            console.log('📸 Rendering first page and cropping top-left corner for profile photo...');
 
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
+            try {
+              // 1. Renderuj całą pierwszą stronę
+              const viewport = page.getViewport({ scale: 2.0 }); // 2x scale for quality
+              const fullCanvas = document.createElement('canvas');
+              const fullContext = fullCanvas.getContext('2d');
 
-            await page.render({
-              canvasContext: context,
-              viewport: viewport
-            }).promise;
+              fullCanvas.width = viewport.width;
+              fullCanvas.height = viewport.height;
 
-            // Konwertuj canvas do PNG base64
-            firstPageImage = canvas.toDataURL('image/png');
-            console.log('✅ First page rendered to PNG:', firstPageImage.substring(0, 100) + '...');
+              await page.render({
+                canvasContext: fullContext,
+                viewport: viewport
+              }).promise;
+
+              console.log(`✅ Page rendered: ${fullCanvas.width}x${fullCanvas.height}px`);
+
+              // 2. CROP górny lewy róg (tam zwykle jest zdjęcie profilowe)
+              // Typowe CV: zdjęcie w lewym górnym rogu, ~150-200px
+              const cropSize = 300; // Crop 300x300px region (enough for most profile photos)
+              const cropCanvas = document.createElement('canvas');
+              const cropContext = cropCanvas.getContext('2d');
+
+              cropCanvas.width = cropSize;
+              cropCanvas.height = cropSize;
+
+              // Skopiuj górny lewy róg
+              cropContext.drawImage(
+                fullCanvas,
+                0, 0, cropSize, cropSize, // source (top-left corner)
+                0, 0, cropSize, cropSize  // destination
+              );
+
+              // 3. Sprawdź czy w tym rogu jest coś (nie jest puste/białe)
+              const imageData = cropContext.getImageData(0, 0, cropSize, cropSize);
+              const pixels = imageData.data;
+              let nonWhitePixels = 0;
+
+              // Zlicz ile pikseli NIE jest białych (RGB > 250 = białe)
+              for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                if (r < 250 || g < 250 || b < 250) {
+                  nonWhitePixels++;
+                }
+              }
+
+              const totalPixels = (cropSize * cropSize);
+              const contentPercentage = (nonWhitePixels / totalPixels) * 100;
+
+              console.log(`📊 Top-left corner analysis: ${contentPercentage.toFixed(1)}% non-white pixels`);
+
+              // Jeśli >5% pikseli to nie-białe → prawdopodobnie jest tam zdjęcie/grafika
+              if (contentPercentage > 5) {
+                firstPageImage = cropCanvas.toDataURL('image/png');
+                console.log(`✅ Profile photo detected in top-left corner (${cropSize}x${cropSize}px)`);
+              } else {
+                firstPageImage = null;
+                console.log('ℹ️ Top-left corner is mostly empty - CV without photo');
+              }
+
+            } catch (renderError) {
+              console.error('❌ Screenshot rendering failed:', renderError.message);
+              firstPageImage = null;
+            }
           }
 
           // === DOTYCHCZASOWA LOGIKA: Wyciągaj tekst ===
