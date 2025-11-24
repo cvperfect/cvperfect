@@ -9,38 +9,11 @@ export default async function handler(req, res) {
   // Pobierz parametry z POST lub GET
   const { plan, email, priceId } = req.method === 'POST' ? req.body : req.query
 
-  let finalPriceId
-  let mode = 'payment'
+  // NOWY MODEL: Tylko jednorazowa płatność 49 PLN
+  const finalPriceId = priceId || 'price_1SWwW74FWb3xY5tDYe0RUSze' // 49 PLN jednorazowo
+  const mode = 'payment' // Zawsze jednorazowa płatność
 
   try {
-    // Określ cenę i tryb płatności
-    if (priceId) {
-      finalPriceId = priceId
-      mode = 'payment'
-    } else {
-      switch (plan) {
-        case 'basic':
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 19.99 zł jednorazowo
-          mode = 'payment'
-          break
-        case 'premium':
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69' // 19.99 zł jednorazowo (tymczasowo ta sama cena)
-          mode = 'payment'
-          break
-        case 'gold':
-        case 'pro':
-          finalPriceId = 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 zł miesięcznie
-          mode = 'subscription'
-          break
-        case 'premium-monthly':
-          finalPriceId = 'price_1RxuKK4FWb3xY5tD28TyEG9e' // 79 zł miesięcznie
-          mode = 'subscription'
-          break
-        default:
-          finalPriceId = 'price_1Rwooh4FWb3xY5tDRxqQ4y69'
-          mode = 'payment'
-      }
-    }
 
     // Przygotuj metadata (CV i job posting są w sessionStorage klienta)
     const metadata = {
@@ -51,9 +24,10 @@ export default async function handler(req, res) {
     }
 
     console.log('🎯 Creating checkout session:', {
-      plan: plan,
+      plan: plan || 'direct',
       email: email,
-      mode: mode
+      priceId: finalPriceId,
+      mode: 'payment'
     })
     
     // Określ URL bazowy (development vs production)
@@ -61,35 +35,30 @@ export default async function handler(req, res) {
       ? process.env.NEXT_PUBLIC_BASE_URL || 'https://cvperfect.com'
       : `http://localhost:${process.env.PORT || 3000}`
 
-    // Utwórz sesję Stripe
+    // Utwórz sesję Stripe - jednorazowa płatność
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: mode === 'payment' ? ['card', 'blik'] : ['card'],
+      payment_method_types: ['card', 'blik'],
       line_items: [{
         price: finalPriceId,
         quantity: 1,
       }],
-      mode: mode,
+      mode: 'payment',
       customer_email: email,
       metadata: metadata,
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&plan=${plan || 'direct'}`,
       cancel_url: `${baseUrl}/`,
-      // Dodaj opis produktu dla lepszego UX
       locale: 'pl', // Polski język w Stripe Checkout
-      payment_intent_data: mode === 'payment' ? {
-        description: `Optymalizacja CV - Plan ${plan || 'basic'}`,
+      payment_intent_data: {
+        description: 'CVPerfect - Optymalizacja CV',
         metadata: metadata
-      } : undefined,
-      subscription_data: mode === 'subscription' ? {
-        description: `Subskrypcja CV - Plan ${plan}`,
-        metadata: metadata
-      } : undefined
+      }
     })
     
     console.log('✅ SUCCESS - Created session:', {
       sessionId: session.id,
-      plan: plan,
+      plan: plan || 'direct',
       email: email,
-      mode: mode
+      mode: 'payment'
     })
     
     // Zwróć odpowiedź

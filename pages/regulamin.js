@@ -44,12 +44,11 @@ export default function Regulamin() {
         { id: 'warunki', title: '§ 3. Warunki korzystania', icon: '⚙️' },
         { id: 'uslugi', title: '§ 4. Usługi i cennik', icon: '💎' },
         { id: 'umowa', title: '§ 5. Zawarcie umowy', icon: '✍️' },
-        { id: 'abonament', title: '§ 6. Abonament', icon: '🔄' },
-        { id: 'dane', title: '§ 7. Ochrona danych', icon: '🔒' },
-        { id: 'odpowiedzialnosc', title: '§ 8. Odpowiedzialność', icon: '⚖️' },
-        { id: 'reklamacje', title: '§ 9. Reklamacje', icon: '📮' },
-        { id: 'odstapienie', title: '§ 10. Odstąpienie', icon: '↩️' },
-        { id: 'postanowienia-koncowe', title: '§ 11. Postanowienia końcowe', icon: '📜' }
+        { id: 'dane', title: '§ 6. Ochrona danych', icon: '🔒' },
+        { id: 'odpowiedzialnosc', title: '§ 7. Odpowiedzialność', icon: '⚖️' },
+        { id: 'reklamacje', title: '§ 8. Reklamacje', icon: '📮' },
+        { id: 'odstapienie', title: '§ 9. Odstąpienie', icon: '↩️' },
+        { id: 'postanowienia-koncowe', title: '§ 10. Postanowienia końcowe', icon: '📜' }
       ],
       infoCards: [
         { icon: '🚀', title: 'Szybki start', desc: 'Zapoznaj się z najważniejszymi punktami regulaminu' },
@@ -96,32 +95,18 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
         s4: {
           title: '§ 4. Usługi i cennik',
           plans: {
-            basic: {
-              name: 'Plan Basic',
-              price: '19,99',
-              currency: 'PLN',
-              period: 'jednorazowo',
-              features: ['1 optymalizacja CV', 'Technologia GPT-3.5', '95% skuteczność ATS', 'Eksport PDF/DOCX']
-            },
-            gold: {
-              name: 'Plan Gold',
+            single: {
+              name: 'Jednorazowa płatność',
               price: '49,00',
               currency: 'PLN',
-              period: '/miesiąc',
-              features: ['10 optymalizacji/mies.', 'Technologia GPT-4', 'Priorytetowa obsługa', 'Dostęp do nowych funkcji']
-            },
-            premium: {
-              name: 'Plan Premium',
-              price: '79,00',
-              currency: 'PLN',
-              period: '/miesiąc',
-              features: ['25 optymalizacji/mies.', 'Najnowsze GPT-5 VIP', 'Wsparcie VIP 24/7', 'Beta tester funkcji']
+              period: 'jednorazowo',
+              features: ['1 optymalizacja CV', 'Technologia AI GPT-4', 'Profesjonalny szablon', 'Eksport PDF', 'List motywacyjny']
             }
           },
           notes: [
-            '💡 Wszystkie ceny zawierają podatek VAT',
+            '💡 Cena zawiera podatek VAT',
             '🔒 Płatności obsługuje Stripe - światowy lider płatności online',
-'🔄 Limity odnawiają się automatycznie co miesiąc'
+            '✅ Bez abonamentów, bez odnowień, bez ukrytych kosztów'
           ]
         },
         s5: {
@@ -133,15 +118,7 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
           ]
         },
         s6: {
-          title: '§ 6. Abonament i rezygnacja',
-          items: [
-            'Abonament (plany Gold i Premium) jest automatycznie odnawiany co miesiąc.',
-            'Możesz anulować abonament w każdym momencie bez dodatkowych kosztów.',
-            'Po anulowaniu zachowujesz dostęp do końca opłaconego okresu.'
-          ]
-        },
-        s7: {
-          title: '§ 7. Ochrona danych osobowych',
+          title: '§ 6. Ochrona danych osobowych',
           icon: '🔐',
           mainTitle: 'Twoje dane są bezpieczne',
           items: [
@@ -151,16 +128,16 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
 '✅ Płatności przez Stripe (PCI DSS)'
           ]
         },
-        s8: {
-          title: '§ 8. Odpowiedzialność',
+        s7: {
+          title: '§ 7. Odpowiedzialność',
           items: [
             'Ponosimy odpowiedzialność za należyte wykonanie usługi zgodnie z Kodeksem cywilnym.',
             'Nie gwarantujemy uzyskania konkretnej pracy - sukces zależy od wielu czynników.',
             'Odpowiedzialność ograniczona do dwukrotności kwoty zapłaconej za usługę.'
           ]
         },
-        s9: {
-          title: '§ 9. Reklamacje',
+        s8: {
+          title: '§ 8. Reklamacje',
           howToTitle: '📮 Jak złożyć reklamację?',
           emailText: 'Wyślij e-mail na adres:',
           email: 'pomoc@cvperfect.pl',
@@ -173,14 +150,14 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
           ],
           responseTime: '⏱️ Odpowiadamy w ciągu 14 dni roboczych'
         },
-        s10: {
-          title: '§ 10. Prawo odstąpienia od umowy',
+        s9: {
+          title: '§ 9. Prawo odstąpienia od umowy',
           warningTitle: 'Ważne informacje',
           warningText: 'Zgodnie z art. 38 pkt 13 ustawy o prawach konsumenta, prawo odstąpienia nie przysługuje po rozpoczęciu świadczenia usługi za Twoją zgodą.',
-highlight: 'W przypadku planów abonamentowych możesz odstąpić w ciągu 14 dni, jeśli nie wykorzystałeś żadnej optymalizacji.'
+highlight: 'Prawo odstąpienia nie przysługuje po zakończeniu świadczenia usługi - tj. po optymalizacji CV.'
         },
-        s11: {
-          title: '§ 11. Postanowienia końcowe',
+        s10: {
+          title: '§ 10. Postanowienia końcowe',
           items: [
             'Zastrzegamy prawo do zmian w Regulaminie z ważnych przyczyn (zmiany prawne, nowe funkcje, bezpieczeństwo).',
             'O zmianach informujemy z 7-dniowym wyprzedzeniem przez e-mail i na stronie.',
@@ -221,12 +198,11 @@ highlight: 'W przypadku planów abonamentowych możesz odstąpić w ciągu 14 dn
         { id: 'warunki', title: '§ 3. Terms of use', icon: '⚙️' },
         { id: 'uslugi', title: '§ 4. Services and pricing', icon: '💎' },
         { id: 'umowa', title: '§ 5. Contract conclusion', icon: '✍️' },
-        { id: 'abonament', title: '§ 6. Subscription', icon: '🔄' },
-        { id: 'dane', title: '§ 7. Data protection', icon: '🔒' },
-        { id: 'odpowiedzialnosc', title: '§ 8. Liability', icon: '⚖️' },
-        { id: 'reklamacje', title: '§ 9. Complaints', icon: '📮' },
-        { id: 'odstapienie', title: '§ 10. Withdrawal', icon: '↩️' },
-        { id: 'postanowienia-koncowe', title: '§ 11. Final provisions', icon: '📜' }
+        { id: 'dane', title: '§ 6. Data protection', icon: '🔒' },
+        { id: 'odpowiedzialnosc', title: '§ 7. Liability', icon: '⚖️' },
+        { id: 'reklamacje', title: '§ 8. Complaints', icon: '📮' },
+        { id: 'odstapienie', title: '§ 9. Withdrawal', icon: '↩️' },
+        { id: 'postanowienia-koncowe', title: '§ 10. Final provisions', icon: '📜' }
       ],
       infoCards: [
         { icon: '🚀', title: 'Quick start', desc: 'Learn about the most important points of the terms' },

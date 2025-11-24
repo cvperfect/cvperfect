@@ -1983,58 +1983,24 @@ style={{
               ← {currentLanguage === 'pl' ? 'Wróć' : 'Back'}
             </button>
             
-            <div className="pricing-grid-compact">
-              {/* BASIC */}
-              <div className="plan-card-compact">
-                <div className="plan-name">Basic</div>
-                <div className="plan-price">19,99 zł</div>
-                <ul className="plan-features-compact">
-                  <li>✅ Optymalizacja CV</li>
-                  <li>✅ 1 szablon</li>
-                  <li>✅ Format PDF</li>
-                </ul>
-                <button 
-                  className="select-plan-button" 
-                  onClick={() => handlePlanSelect('basic')}
-                >
-                  Wybierz Basic
-                </button>
-              </div>
-
-              {/* GOLD */}
-              <div className="plan-card-compact gold">
-                <div className="popular-badge">POPULARNY</div>
-                <div className="plan-name">Gold</div>
+            <div className="pricing-single-centered">
+              {/* JEDYNA OPCJA - 49 PLN */}
+              <div className="plan-card-single">
+                <div className="popular-badge">JEDNORAZOWA PŁATNOŚĆ</div>
+                <div className="plan-name">CVPerfect</div>
                 <div className="plan-price">49 zł</div>
                 <ul className="plan-features-compact">
-                  <li>✅ Wszystko z Basic</li>
-                  <li>✅ 3 szablony</li>
+                  <li>✅ Optymalizacja CV przez AI</li>
+                  <li>✅ Profesjonalny szablon</li>
                   <li>✅ List motywacyjny</li>
-                  <li>✅ PDF + DOCX</li>
+                  <li>✅ Format PDF</li>
+                  <li>✅ 1 użycie</li>
                 </ul>
-                <button 
-                  className="select-plan-button gold" 
-                  onClick={() => handlePlanSelect('gold')}
+                <button
+                  className="select-plan-button primary"
+                  onClick={() => handlePlanSelect('basic')}
                 >
-                  Wybierz Gold
-                </button>
-              </div>
-
-              {/* PREMIUM */}
-              <div className="plan-card-compact premium">
-                <div className="plan-name">Premium</div>
-                <div className="plan-price">79 zł</div>
-                <ul className="plan-features-compact">
-                  <li>✅ Wszystko z Gold</li>
-                  <li>✅ 7 szablonów</li>
-                  <li>✅ LinkedIn profil</li>
-                  <li>✅ Priorytet support</li>
-                </ul>
-                <button 
-                  className="select-plan-button premium" 
-                  onClick={() => handlePlanSelect('premium')}
-                >
-                  Wybierz Premium
+                  Zapłać 49 zł i zoptymalizuj CV
                 </button>
               </div>
             </div>
@@ -2060,16 +2026,16 @@ style={{
                 <div className="faq-question">
                   <span className="faq-icon">💰</span>
                   <h3>
-  {currentLanguage === 'pl' 
-  ? 'Czy naprawdę kosztuje tylko 19,99 zł?' 
-  : 'Does it really cost only ≈ €4.40?'}
+  {currentLanguage === 'pl'
+  ? 'Ile kosztuje optymalizacja CV?'
+  : 'How much does CV optimization cost?'}
 </h3>
                 </div>
                 <div className="faq-answer">
                  <p>
-  {currentLanguage === 'pl' 
-    ? 'Tak! Plan Basic to jednorazowa płatność 19,99 zł za 1 optymalizację CV. Bez ukrytych kosztów, bez subskrypcji.' 
-    : 'Yes! The Basic plan is a one‑time payment of ≈ €4.40 for 1 CV optimization. No hidden fees, no subscription.'}
+  {currentLanguage === 'pl'
+    ? 'Jednorazowa płatność 49 zł za 1 optymalizację CV z AI. Bez ukrytych kosztów, bez abonamentów, bez odnowień.'
+    : 'One-time payment of ≈ €11 for 1 AI CV optimization. No hidden fees, no subscriptions, no renewals.'}
 </p>
                 </div>
               </div>
@@ -7418,12 +7384,58 @@ html, body { margin:0 !important; padding:0 !important; }
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
 
+/* ========== SINGLE PRICING LAYOUT ========== */
+.pricing-single-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.plan-card-single {
+  background: rgba(255, 255, 255, 0.03);
+  border: 3px solid rgba(120, 80, 255, 0.4);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 15px 50px rgba(120, 80, 255, 0.3);
+}
+
+.plan-card-single:hover {
+  transform: translateY(-8px);
+  border-color: rgba(120, 80, 255, 0.6);
+  box-shadow: 0 20px 60px rgba(120, 80, 255, 0.4);
+}
+
+.plan-card-single .select-plan-button.primary {
+  background: linear-gradient(135deg, #7850ff, #ff5080);
+  font-size: 17px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(120, 80, 255, 0.4);
+}
+
+.plan-card-single .select-plan-button.primary:hover {
+  box-shadow: 0 12px 32px rgba(120, 80, 255, 0.6);
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .pricing-grid-compact {
     grid-template-columns: 1fr;
   }
-  
+
+  .pricing-single-centered {
+    padding: 0 10px;
+  }
+
+  .plan-card-single {
+    max-width: 100%;
+  }
+
   .optimize-modal {
     width: 95%;
     margin: 20px;

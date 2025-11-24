@@ -41,23 +41,11 @@ export default async function handler(req, res) {
         return res.json({ received: true, error: 'No email' })
       }
 
-      // Określ limity na podstawie planu
-      let usageLimit = 1
-      let expiresAt = null
+      // NOWY MODEL: 49 PLN = 1 użycie, jednorazowa płatność
+      const usageLimit = 1
+      const expiresAt = null // Brak wygaśnięcia
 
-      if (plan === 'basic' || plan === 'premium') {
-        // Jednorazowe - 1 użycie, brak wygaśnięcia
-        usageLimit = 1
-        expiresAt = null
-      } else if (plan === 'gold' || plan === 'pro') {
-        // Subskrypcja - 10 użyć miesięcznie
-        usageLimit = 10
-        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dni
-      } else if (plan === 'premium-monthly') {
-        // Subskrypcja Premium - nielimitowane
-        usageLimit = 9999
-        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dni
-      }
+      console.log('💳 Jednorazowa płatność - 1 użycie')
 
       // Zapisz lub zaktualizuj użytkownika w Supabase
       const { data: existingUser, error: checkError } = await supabase

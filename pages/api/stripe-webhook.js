@@ -61,49 +61,20 @@ export default async function handler(req, res) {
 
       // Pobierz email (Stripe może go przechowywać w różnych miejscach)
       const email = session.customer_email || session.customer_details?.email
-      
+
       if (!email) {
         console.error('❌ Brak emaila w sesji!')
         return res.status(400).json({ error: 'Brak emaila' })
       }
 
-      // Określ plan na podstawie kwoty
+      // NOWY MODEL: 49 PLN = 1 użycie, jednorazowa płatność
       const amountPLN = session.amount_total / 100
-      let plan = 'basic'
-      let usageLimit = 1
-      let planType = 'one_time'
-      let expiresAt = null
+      const plan = 'single_use'
+      const usageLimit = 1
+      const planType = 'one_time'
+      const expiresAt = null // Brak wygaśnięcia dla jednorazowej płatności
 
-      // Dopasuj plan do ceny
-      if (amountPLN === 19.99 || (amountPLN >= 19 && amountPLN < 49)) {
-        plan = 'basic'
-        usageLimit = 1
-        planType = 'one_time'
-        // Basic nie wygasa lub bardzo długi okres
-        expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 rok
-      } else if (amountPLN === 49 || (amountPLN >= 49 && amountPLN < 79)) {
-        plan = 'gold'
-        usageLimit = 10
-        planType = 'subscription'
-        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dni
-      } else if (amountPLN === 79 || amountPLN >= 79) {
-        plan = 'premium'
-        usageLimit = 25
-        planType = 'subscription'
-        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dni
-      }
-
-      // Sprawdź czy to subskrypcja
-      if (session.mode === 'subscription' && session.subscription) {
-        // Pobierz szczegóły subskrypcji
-        const subscription = await stripe.subscriptions.retrieve(session.subscription)
-        
-        // Ustaw datę wygaśnięcia na podstawie okresu rozliczeniowego
-        expiresAt = new Date(subscription.current_period_end * 1000).toISOString()
-        planType = 'subscription'
-        
-        console.log('📅 Subskrypcja aktywna do:', expiresAt)
-      }
+      console.log('💳 Jednorazowa płatność 49 PLN - 1 użycie')
 
       // Zapisz lub zaktualizuj użytkownika w bazie
       const { data, error } = await supabase
@@ -117,7 +88,6 @@ export default async function handler(req, res) {
           usage_count: 0, // Reset użycia przy nowej płatności
           stripe_session_id: session.id,
           stripe_customer_id: session.customer, // Zapisz ID klienta Stripe
-          stripe_subscription_id: session.subscription || null,
           expires_at: expiresAt,
           last_payment_at: new Date().toISOString()
         }, {
@@ -144,64 +114,6 @@ export default async function handler(req, res) {
 
       // TODO: Wyślij email potwierdzający (opcjonalne)
       // await sendConfirmationEmail(email, plan, amountPLN)
-    }
-
-    // Obsługa odnowienia subskrypcji
-    if (event.type === 'invoice.payment_succeeded') {
-      const invoice = event.data.object
-      
-      // Pomiń pierwszą fakturę (to jest utworzenie subskrypcji)
-      if (invoice.billing_reason === 'subscription_create') {
-        return res.status(200).json({ received: true })
-      }
-
-      console.log('🔄 Subskrypcja odnowiona:', {
-        customerId: invoice.customer,
-        subscriptionId: invoice.subscription
-      })
-
-      // Pobierz email klienta
-      const customer = await stripe.customers.retrieve(invoice.customer)
-      const email = customer.email
-
-      if (email) {
-        // Znajdź użytkownika i przedłuż subskrypcję
-        const subscription = await stripe.subscriptions.retrieve(invoice.subscription)
-        
-        const { error } = await supabase
-          .from('users')
-          .update({
-            expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
-            last_payment_at: new Date().toISOString(),
-            usage_count: 0 // Reset miesięcznego limitu
-          })
-          .eq('email', email.toLowerCase())
-
-        if (!error) {
-          console.log('✅ Subskrypcja przedłużona dla:', email)
-        }
-      }
-    }
-
-    // Obsługa anulowania subskrypcji
-    if (event.type === 'customer.subscription.deleted') {
-      const subscription = event.data.object
-      const customer = await stripe.customers.retrieve(subscription.customer)
-      const email = customer.email
-
-      if (email) {
-        console.log('❌ Subskrypcja anulowana:', email)
-        
-        // Ustaw plan na free po wygaśnięciu
-        const { error } = await supabase
-          .from('users')
-          .update({
-            plan_type: 'cancelled',
-            // Pozwól dokończyć opłacony okres
-            expires_at: new Date(subscription.current_period_end * 1000).toISOString()
-          })
-          .eq('email', email.toLowerCase())
-      }
     }
 
     // Zawsze zwróć 200 dla Stripe
