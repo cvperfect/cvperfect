@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const { plan, email, priceId } = req.method === 'POST' ? req.body : req.query
 
   // NOWY MODEL: Tylko jednorazowa płatność 49 PLN
-  const finalPriceId = priceId || 'price_1SWwW74FWb3xY5tDYe0RUSze' // 49 PLN jednorazowo
+  const finalPriceId = priceId || 'price_1RxuK64FWb3xY5tDOjAPfwRX' // 49 PLN jednorazowo
   const mode = 'payment' // Zawsze jednorazowa płatność
 
   try {
