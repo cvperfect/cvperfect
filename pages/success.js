@@ -1681,7 +1681,7 @@ export default function Success() {
           max-width: 210mm;
           min-height: 297mm;
           background: #ffffff !important;
-          padding: 40px 50px !important;
+          padding: 20px 40px !important;
           margin: 0 auto;
           position: relative;
           border-radius: 8px;
@@ -1699,8 +1699,8 @@ export default function Success() {
         /* CV HEADER - Name and Contact - PROFESSIONAL WHITE WITH BLUE BAR */
         .cv-html-content .cv-header {
           text-align: center;
-          margin: -40px -50px 36px -50px;
-          padding: 30px 50px 24px 50px;
+          margin: -20px -40px 20px -40px;
+          padding: 30px 40px 24px 40px;
           background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
           position: relative;
           box-shadow: 0 4px 6px rgba(37, 99, 235, 0.15);
@@ -1753,7 +1753,8 @@ export default function Success() {
 
         /* CV SECTION - PROFESSIONAL WHITE THEME */
         .cv-html-content .cv-section {
-          margin-top: 32px;
+          margin-top: 20px !important;
+          padding-top: 0px !important;
           margin-bottom: 28px;
         }
 
@@ -1763,7 +1764,8 @@ export default function Success() {
           color: #2563eb !important;
           text-transform: uppercase;
           letter-spacing: 1.5px;
-          margin: 0 0 20px 0;
+          margin: 0 0 20px 0 !important;
+          padding-top: 0px !important;
           padding-bottom: 10px;
           border-bottom: 2px solid #2563eb;
           position: relative;
@@ -1902,7 +1904,8 @@ export default function Success() {
           color: #2563eb !important;
           text-transform: uppercase;
           letter-spacing: 1.5px;
-          margin: 24px 0 14px 0;
+          margin: 0px 0 14px 0 !important;
+          padding-top: 0px !important;
           padding-bottom: 10px;
           border-bottom: 2px solid #2563eb;
           position: relative;
@@ -2091,13 +2094,13 @@ export default function Success() {
             display: none !important;
           }
 
-          /* MAIN CV CONTAINER - Clean white, 1-inch margins */
+          /* MAIN CV CONTAINER - Clean white, compact margins */
           .cv-html-content,
           .cv-template,
           .cv-preview-wrapper,
           .cv-preview-section {
             background: white !important;
-            padding: 1in !important;
+            padding: 0.5in !important;
             margin: 0 !important;
             border: none !important;
             border-radius: 0 !important;
@@ -2125,7 +2128,7 @@ export default function Success() {
           /* CV HEADER - Name and Contact */
           .cv-html-content .cv-header {
             text-align: center;
-            margin-bottom: 24pt;
+            margin-bottom: 16pt;
             padding-bottom: 16pt;
             border-bottom: 1pt solid black !important;
           }
