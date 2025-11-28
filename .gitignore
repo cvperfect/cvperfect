@@ -37,3 +37,4 @@ nul
 
 # Backup files
 *.backup
+.vercel
