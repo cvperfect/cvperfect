@@ -574,58 +574,83 @@ return (
                 </div>
                 <div className="section-content">
                   <div className="pricing-cards">
-                    <div className="price-card basic">
-                      <div className="price-badge">BASIC</div>
-                      <div className="price-header">
-                        <h3>{t.content.s4.plans.basic.name}</h3>
-                        <div className="price-amount">
-                          <span className="currency">{t.content.s4.plans.basic.currency}</span>
-                          <span className="value">{t.content.s4.plans.basic.price}</span>
-                          <span className="period">{t.content.s4.plans.basic.period}</span>
+                    {t.content.s4.plans.single && (
+                      <div className="price-card basic">
+                        <div className="price-badge">JEDNORAZOWO</div>
+                        <div className="price-header">
+                          <h3>{t.content.s4.plans.single.name}</h3>
+                          <div className="price-amount">
+                            <span className="value">{t.content.s4.plans.single.price}</span>
+                            <span className="currency">{t.content.s4.plans.single.currency}</span>
+                            <span className="period">/{t.content.s4.plans.single.period}</span>
+                          </div>
                         </div>
+                        <ul className="price-features">
+                          {t.content.s4.plans.single.features.map((feature, index) => (
+                            <li key={index}>✅ {feature}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="price-features">
-                        {t.content.s4.plans.basic.features.map((feature, index) => (
-                          <li key={index}>✅ {feature}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="price-card gold">
-                      <div className="price-badge">GOLD</div>
-                      <div className="price-header">
-                        <h3>{t.content.s4.plans.gold.name}</h3>
-                        <div className="price-amount">
-                          <span className="currency">{t.content.s4.plans.gold.currency}</span>
-                          <span className="value">{t.content.s4.plans.gold.price}</span>
-                          <span className="period">{t.content.s4.plans.gold.period}</span>
+                    )}
+
+                    {t.content.s4.plans.basic && (
+                      <div className="price-card basic">
+                        <div className="price-badge">BASIC</div>
+                        <div className="price-header">
+                          <h3>{t.content.s4.plans.basic.name}</h3>
+                          <div className="price-amount">
+                            <span className="currency">{t.content.s4.plans.basic.currency}</span>
+                            <span className="value">{t.content.s4.plans.basic.price}</span>
+                            <span className="period">{t.content.s4.plans.basic.period}</span>
+                          </div>
                         </div>
+                        <ul className="price-features">
+                          {t.content.s4.plans.basic.features.map((feature, index) => (
+                            <li key={index}>✅ {feature}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="price-features">
-                        {t.content.s4.plans.gold.features.map((feature, index) => (
-                          <li key={index}>✅ {feature}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <div className="price-card premium">
-                      <div className="price-badge">PREMIUM</div>
-                      <div className="price-header">
-                        <h3>{t.content.s4.plans.premium.name}</h3>
-                        <div className="price-amount">
-                          <span className="currency">{t.content.s4.plans.premium.currency}</span>
-                          <span className="value">{t.content.s4.plans.premium.price}</span>
-                          <span className="period">{t.content.s4.plans.premium.period}</span>
+                    )}
+
+                    {t.content.s4.plans.gold && (
+                      <div className="price-card gold">
+                        <div className="price-badge">GOLD</div>
+                        <div className="price-header">
+                          <h3>{t.content.s4.plans.gold.name}</h3>
+                          <div className="price-amount">
+                            <span className="currency">{t.content.s4.plans.gold.currency}</span>
+                            <span className="value">{t.content.s4.plans.gold.price}</span>
+                            <span className="period">{t.content.s4.plans.gold.period}</span>
+                          </div>
                         </div>
+                        <ul className="price-features">
+                          {t.content.s4.plans.gold.features.map((feature, index) => (
+                            <li key={index}>✅ {feature}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="price-features">
-                        {t.content.s4.plans.premium.features.map((feature, index) => (
-                          <li key={index}>✅ {feature}</li>
-                        ))}
-                      </ul>
-                    </div>
+                    )}
+
+                    {t.content.s4.plans.premium && (
+                      <div className="price-card premium">
+                        <div className="price-badge">PREMIUM</div>
+                        <div className="price-header">
+                          <h3>{t.content.s4.plans.premium.name}</h3>
+                          <div className="price-amount">
+                            <span className="currency">{t.content.s4.plans.premium.currency}</span>
+                            <span className="value">{t.content.s4.plans.premium.price}</span>
+                            <span className="period">{t.content.s4.plans.premium.period}</span>
+                          </div>
+                        </div>
+                        <ul className="price-features">
+                          {t.content.s4.plans.premium.features.map((feature, index) => (
+                            <li key={index}>✅ {feature}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                  
+
                   <div className="pricing-notes">
                     {t.content.s4.notes.map((note, index) => (
                       <p key={index}>{note}</p>
@@ -664,12 +689,24 @@ return (
                   <h2 className="section-title">{t.content.s6.title}</h2>
                 </div>
                 <div className="section-content">
-                  {t.content.s6.items.map((text, index) => (
-                    <div key={index} className="content-item">
-                      <span className="item-number">6.{index + 1}</span>
-                      <p>{text}</p>
+                  {t.content.s6.icon ? (
+                    <div className="security-box">
+                      <div className="security-icon">{t.content.s6.icon}</div>
+                      <h3>{t.content.s6.mainTitle}</h3>
+                      <ul className="security-list">
+                        {t.content.s6.items && t.content.s6.items.map((item, index) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                      </ul>
                     </div>
-                  ))}
+                  ) : t.content.s6.items ? (
+                    t.content.s6.items.map((text, index) => (
+                      <div key={index} className="content-item">
+                        <span className="item-number">6.{index + 1}</span>
+                        <p>{text}</p>
+                      </div>
+                    ))
+                  ) : null}
                 </div>
               </section>
 
@@ -749,21 +786,23 @@ return (
                 </div>
               </section>
 
-{/* Section 11 */}
-              <section id="postanowienia-koncowe" className="legal-section">
-                <div className="section-header">
-                  <span className="section-number">11</span>
-                  <h2 className="section-title">{t.content.s11.title}</h2>
-                </div>
-                <div className="section-content">
-                  {t.content.s11.items.map((text, index) => (
-                    <div key={index} className="content-item">
-                      <span className="item-number">11.{index + 1}</span>
-                      <p dangerouslySetInnerHTML={{ __html: text }} />
-                    </div>
-                  ))}
-                </div>
-              </section>
+{/* Section 11 - only for EN */}
+              {t.content.s11 && (
+                <section id="postanowienia-koncowe" className="legal-section">
+                  <div className="section-header">
+                    <span className="section-number">11</span>
+                    <h2 className="section-title">{t.content.s11.title}</h2>
+                  </div>
+                  <div className="section-content">
+                    {t.content.s11.items.map((text, index) => (
+                      <div key={index} className="content-item">
+                        <span className="item-number">11.{index + 1}</span>
+                        <p dangerouslySetInnerHTML={{ __html: text }} />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             {/* Contact Footer */}
