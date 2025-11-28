@@ -27,3 +27,13 @@ pids
 # OS files
 .DS_Store
 Thumbs.db
+
+# Development tools
+.bmad-core/
+.claude/
+.playwright-mcp/
+dev.log
+nul
+
+# Backup files
+*.backup
