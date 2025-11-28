@@ -44,11 +44,12 @@ export default function Regulamin() {
         { id: 'warunki', title: '§ 3. Warunki korzystania', icon: '⚙️' },
         { id: 'uslugi', title: '§ 4. Usługi i cennik', icon: '💎' },
         { id: 'umowa', title: '§ 5. Zawarcie umowy', icon: '✍️' },
-        { id: 'dane', title: '§ 6. Ochrona danych', icon: '🔒' },
-        { id: 'odpowiedzialnosc', title: '§ 7. Odpowiedzialność', icon: '⚖️' },
-        { id: 'reklamacje', title: '§ 8. Reklamacje', icon: '📮' },
-        { id: 'odstapienie', title: '§ 9. Odstąpienie', icon: '↩️' },
-        { id: 'postanowienia-koncowe', title: '§ 10. Postanowienia końcowe', icon: '📜' }
+        { id: 'abonament', title: '§ 6. Abonament', icon: '🔄' },
+        { id: 'dane', title: '§ 7. Ochrona danych', icon: '🔒' },
+        { id: 'odpowiedzialnosc', title: '§ 8. Odpowiedzialność', icon: '⚖️' },
+        { id: 'reklamacje', title: '§ 9. Reklamacje', icon: '📮' },
+        { id: 'odstapienie', title: '§ 10. Odstąpienie', icon: '↩️' },
+        { id: 'postanowienia-koncowe', title: '§ 11. Postanowienia końcowe', icon: '📜' }
       ],
       infoCards: [
         { icon: '🚀', title: 'Szybki start', desc: 'Zapoznaj się z najważniejszymi punktami regulaminu' },
@@ -95,18 +96,32 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
         s4: {
           title: '§ 4. Usługi i cennik',
           plans: {
-            single: {
-              name: 'Jednorazowa płatność',
-              price: '49,00',
+            basic: {
+              name: 'Plan Basic',
+              price: '19,99',
               currency: 'PLN',
               period: 'jednorazowo',
-              features: ['1 optymalizacja CV', 'Technologia AI GPT-4', 'Profesjonalny szablon', 'Eksport PDF', 'List motywacyjny']
+              features: ['1 optymalizacja CV', 'Technologia GPT-3.5', '95% skuteczność ATS', 'Eksport PDF/DOCX']
+            },
+            gold: {
+              name: 'Plan Gold',
+              price: '49,00',
+              currency: 'PLN',
+              period: '/miesiąc',
+              features: ['10 optymalizacji/mies.', 'Technologia GPT-4', 'Priorytetowa obsługa', 'Dostęp do nowych funkcji']
+            },
+            premium: {
+              name: 'Plan Premium',
+              price: '79,00',
+              currency: 'PLN',
+              period: '/miesiąc',
+              features: ['25 optymalizacji/mies.', 'Najnowsze GPT-5 VIP', 'Wsparcie VIP 24/7', 'Beta tester funkcji']
             }
           },
           notes: [
-            '💡 Cena zawiera podatek VAT',
+            '💡 Wszystkie ceny zawierają podatek VAT',
             '🔒 Płatności obsługuje Stripe - światowy lider płatności online',
-            '✅ Bez abonamentów, bez odnowień, bez ukrytych kosztów'
+'🔄 Limity odnawiają się automatycznie co miesiąc'
           ]
         },
         s5: {
@@ -118,7 +133,15 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
           ]
         },
         s6: {
-          title: '§ 6. Ochrona danych osobowych',
+          title: '§ 6. Abonament i rezygnacja',
+          items: [
+            'Abonament (plany Gold i Premium) jest automatycznie odnawiany co miesiąc.',
+            'Możesz anulować abonament w każdym momencie bez dodatkowych kosztów.',
+            'Po anulowaniu zachowujesz dostęp do końca opłaconego okresu.'
+          ]
+        },
+        s7: {
+          title: '§ 7. Ochrona danych osobowych',
           icon: '🔐',
           mainTitle: 'Twoje dane są bezpieczne',
           items: [
@@ -128,16 +151,16 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
 '✅ Płatności przez Stripe (PCI DSS)'
           ]
         },
-        s7: {
-          title: '§ 7. Odpowiedzialność',
+        s8: {
+          title: '§ 8. Odpowiedzialność',
           items: [
             'Ponosimy odpowiedzialność za należyte wykonanie usługi zgodnie z Kodeksem cywilnym.',
             'Nie gwarantujemy uzyskania konkretnej pracy - sukces zależy od wielu czynników.',
             'Odpowiedzialność ograniczona do dwukrotności kwoty zapłaconej za usługę.'
           ]
         },
-        s8: {
-          title: '§ 8. Reklamacje',
+        s9: {
+          title: '§ 9. Reklamacje',
           howToTitle: '📮 Jak złożyć reklamację?',
           emailText: 'Wyślij e-mail na adres:',
           email: 'pomoc@cvperfect.pl',
@@ -150,14 +173,14 @@ items: ['Naruszające prawa osób trzecich', 'Dane osobowe bez zgody', 'Treści 
           ],
           responseTime: '⏱️ Odpowiadamy w ciągu 14 dni roboczych'
         },
-        s9: {
-          title: '§ 9. Prawo odstąpienia od umowy',
+        s10: {
+          title: '§ 10. Prawo odstąpienia od umowy',
           warningTitle: 'Ważne informacje',
           warningText: 'Zgodnie z art. 38 pkt 13 ustawy o prawach konsumenta, prawo odstąpienia nie przysługuje po rozpoczęciu świadczenia usługi za Twoją zgodą.',
-highlight: 'Prawo odstąpienia nie przysługuje po zakończeniu świadczenia usługi - tj. po optymalizacji CV.'
+highlight: 'W przypadku planów abonamentowych możesz odstąpić w ciągu 14 dni, jeśli nie wykorzystałeś żadnej optymalizacji.'
         },
-        s10: {
-          title: '§ 10. Postanowienia końcowe',
+        s11: {
+          title: '§ 11. Postanowienia końcowe',
           items: [
             'Zastrzegamy prawo do zmian w Regulaminie z ważnych przyczyn (zmiany prawne, nowe funkcje, bezpieczeństwo).',
             'O zmianach informujemy z 7-dniowym wyprzedzeniem przez e-mail i na stronie.',
@@ -198,11 +221,12 @@ highlight: 'Prawo odstąpienia nie przysługuje po zakończeniu świadczenia us�
         { id: 'warunki', title: '§ 3. Terms of use', icon: '⚙️' },
         { id: 'uslugi', title: '§ 4. Services and pricing', icon: '💎' },
         { id: 'umowa', title: '§ 5. Contract conclusion', icon: '✍️' },
-        { id: 'dane', title: '§ 6. Data protection', icon: '🔒' },
-        { id: 'odpowiedzialnosc', title: '§ 7. Liability', icon: '⚖️' },
-        { id: 'reklamacje', title: '§ 8. Complaints', icon: '📮' },
-        { id: 'odstapienie', title: '§ 9. Withdrawal', icon: '↩️' },
-        { id: 'postanowienia-koncowe', title: '§ 10. Final provisions', icon: '📜' }
+        { id: 'abonament', title: '§ 6. Subscription', icon: '🔄' },
+        { id: 'dane', title: '§ 7. Data protection', icon: '🔒' },
+        { id: 'odpowiedzialnosc', title: '§ 8. Liability', icon: '⚖️' },
+        { id: 'reklamacje', title: '§ 9. Complaints', icon: '📮' },
+        { id: 'odstapienie', title: '§ 10. Withdrawal', icon: '↩️' },
+        { id: 'postanowienia-koncowe', title: '§ 11. Final provisions', icon: '📜' }
       ],
       infoCards: [
         { icon: '🚀', title: 'Quick start', desc: 'Learn about the most important points of the terms' },
@@ -574,83 +598,58 @@ return (
                 </div>
                 <div className="section-content">
                   <div className="pricing-cards">
-                    {t.content.s4.plans.single && (
-                      <div className="price-card basic">
-                        <div className="price-badge">JEDNORAZOWO</div>
-                        <div className="price-header">
-                          <h3>{t.content.s4.plans.single.name}</h3>
-                          <div className="price-amount">
-                            <span className="value">{t.content.s4.plans.single.price}</span>
-                            <span className="currency">{t.content.s4.plans.single.currency}</span>
-                            <span className="period">/{t.content.s4.plans.single.period}</span>
-                          </div>
+                    <div className="price-card basic">
+                      <div className="price-badge">BASIC</div>
+                      <div className="price-header">
+                        <h3>{t.content.s4.plans.basic.name}</h3>
+                        <div className="price-amount">
+                          <span className="currency">{t.content.s4.plans.basic.currency}</span>
+                          <span className="value">{t.content.s4.plans.basic.price}</span>
+                          <span className="period">{t.content.s4.plans.basic.period}</span>
                         </div>
-                        <ul className="price-features">
-                          {t.content.s4.plans.single.features.map((feature, index) => (
-                            <li key={index}>✅ {feature}</li>
-                          ))}
-                        </ul>
                       </div>
-                    )}
-
-                    {t.content.s4.plans.basic && (
-                      <div className="price-card basic">
-                        <div className="price-badge">BASIC</div>
-                        <div className="price-header">
-                          <h3>{t.content.s4.plans.basic.name}</h3>
-                          <div className="price-amount">
-                            <span className="currency">{t.content.s4.plans.basic.currency}</span>
-                            <span className="value">{t.content.s4.plans.basic.price}</span>
-                            <span className="period">{t.content.s4.plans.basic.period}</span>
-                          </div>
+                      <ul className="price-features">
+                        {t.content.s4.plans.basic.features.map((feature, index) => (
+                          <li key={index}>✅ {feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="price-card gold">
+                      <div className="price-badge">GOLD</div>
+                      <div className="price-header">
+                        <h3>{t.content.s4.plans.gold.name}</h3>
+                        <div className="price-amount">
+                          <span className="currency">{t.content.s4.plans.gold.currency}</span>
+                          <span className="value">{t.content.s4.plans.gold.price}</span>
+                          <span className="period">{t.content.s4.plans.gold.period}</span>
                         </div>
-                        <ul className="price-features">
-                          {t.content.s4.plans.basic.features.map((feature, index) => (
-                            <li key={index}>✅ {feature}</li>
-                          ))}
-                        </ul>
                       </div>
-                    )}
-
-                    {t.content.s4.plans.gold && (
-                      <div className="price-card gold">
-                        <div className="price-badge">GOLD</div>
-                        <div className="price-header">
-                          <h3>{t.content.s4.plans.gold.name}</h3>
-                          <div className="price-amount">
-                            <span className="currency">{t.content.s4.plans.gold.currency}</span>
-                            <span className="value">{t.content.s4.plans.gold.price}</span>
-                            <span className="period">{t.content.s4.plans.gold.period}</span>
-                          </div>
+                      <ul className="price-features">
+                        {t.content.s4.plans.gold.features.map((feature, index) => (
+                          <li key={index}>✅ {feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="price-card premium">
+                      <div className="price-badge">PREMIUM</div>
+                      <div className="price-header">
+                        <h3>{t.content.s4.plans.premium.name}</h3>
+                        <div className="price-amount">
+                          <span className="currency">{t.content.s4.plans.premium.currency}</span>
+                          <span className="value">{t.content.s4.plans.premium.price}</span>
+                          <span className="period">{t.content.s4.plans.premium.period}</span>
                         </div>
-                        <ul className="price-features">
-                          {t.content.s4.plans.gold.features.map((feature, index) => (
-                            <li key={index}>✅ {feature}</li>
-                          ))}
-                        </ul>
                       </div>
-                    )}
-
-                    {t.content.s4.plans.premium && (
-                      <div className="price-card premium">
-                        <div className="price-badge">PREMIUM</div>
-                        <div className="price-header">
-                          <h3>{t.content.s4.plans.premium.name}</h3>
-                          <div className="price-amount">
-                            <span className="currency">{t.content.s4.plans.premium.currency}</span>
-                            <span className="value">{t.content.s4.plans.premium.price}</span>
-                            <span className="period">{t.content.s4.plans.premium.period}</span>
-                          </div>
-                        </div>
-                        <ul className="price-features">
-                          {t.content.s4.plans.premium.features.map((feature, index) => (
-                            <li key={index}>✅ {feature}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                      <ul className="price-features">
+                        {t.content.s4.plans.premium.features.map((feature, index) => (
+                          <li key={index}>✅ {feature}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-
+                  
                   <div className="pricing-notes">
                     {t.content.s4.notes.map((note, index) => (
                       <p key={index}>{note}</p>
@@ -689,24 +688,12 @@ return (
                   <h2 className="section-title">{t.content.s6.title}</h2>
                 </div>
                 <div className="section-content">
-                  {t.content.s6.icon ? (
-                    <div className="security-box">
-                      <div className="security-icon">{t.content.s6.icon}</div>
-                      <h3>{t.content.s6.mainTitle}</h3>
-                      <ul className="security-list">
-                        {t.content.s6.items && t.content.s6.items.map((item, index) => (
-                          <li key={index}>{item}</li>
-                        ))}
-                      </ul>
+                  {t.content.s6.items.map((text, index) => (
+                    <div key={index} className="content-item">
+                      <span className="item-number">6.{index + 1}</span>
+                      <p>{text}</p>
                     </div>
-                  ) : t.content.s6.items ? (
-                    t.content.s6.items.map((text, index) => (
-                      <div key={index} className="content-item">
-                        <span className="item-number">6.{index + 1}</span>
-                        <p>{text}</p>
-                      </div>
-                    ))
-                  ) : null}
+                  ))}
                 </div>
               </section>
 
@@ -786,23 +773,21 @@ return (
                 </div>
               </section>
 
-{/* Section 11 - only for EN */}
-              {t.content.s11 && (
-                <section id="postanowienia-koncowe" className="legal-section">
-                  <div className="section-header">
-                    <span className="section-number">11</span>
-                    <h2 className="section-title">{t.content.s11.title}</h2>
-                  </div>
-                  <div className="section-content">
-                    {t.content.s11.items.map((text, index) => (
-                      <div key={index} className="content-item">
-                        <span className="item-number">11.{index + 1}</span>
-                        <p dangerouslySetInnerHTML={{ __html: text }} />
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+{/* Section 11 */}
+              <section id="postanowienia-koncowe" className="legal-section">
+                <div className="section-header">
+                  <span className="section-number">11</span>
+                  <h2 className="section-title">{t.content.s11.title}</h2>
+                </div>
+                <div className="section-content">
+                  {t.content.s11.items.map((text, index) => (
+                    <div key={index} className="content-item">
+                      <span className="item-number">11.{index + 1}</span>
+                      <p dangerouslySetInnerHTML={{ __html: text }} />
+                    </div>
+                  ))}
+                </div>
+              </section>
             </div>
 
             {/* Contact Footer */}
